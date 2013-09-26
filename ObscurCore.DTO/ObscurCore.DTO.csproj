@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FB25CBE4-2B49-4C7E-89CD-EF20B2493591}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ObscurCore.DTO</RootNamespace>
+    <AssemblyName>ObscurCore.DTO</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProductVersion>12.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="AfterBuild" command="bash pc-dto-auto.sh ${TargetName} ObscurCore.DTOSerialiser" workingdir="${TargetDir}/precompiler/" />
+      </CustomCommands>
+    </CustomCommands>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="protobuf-net">
+      <HintPath>lib\protobuf-net\net30\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CompressionConfiguration.cs" />
+    <Compile Include="ECKeyConfiguration.cs" />
+    <Compile Include="Enums.cs" />
+    <Compile Include="Interfaces.cs" />
+    <Compile Include="KeyConfirmationConfiguration.cs" />
+    <Compile Include="KeyDerivationConfiguration.cs" />
+    <Compile Include="Manifest.cs" />
+    <Compile Include="ManifestHeader.cs" />
+    <Compile Include="PayloadItem.cs" />
+    <Compile Include="PayloadLayoutConfiguration.cs" />
+    <Compile Include="SymmetricCipherConfiguration.cs" />
+    <Compile Include="SymmetricManifestCryptographyConfiguration.cs" />
+    <Compile Include="UM1IESConfiguration.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>"$(TargetDir)precompiler\precompile.exe" "$(TargetPath)" -o:"$(TargetDir)$(TargetName)Serialiser.dll" -t:$(ProjectName)Serialiser
+</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties>
+        <Policies>
+          <StandardHeader Text="&#xA; Copyright ${Year}  ${CopyrightHolder}&#xA;&#xA;   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);&#xA;   you may not use this file except in compliance with the License.&#xA;   You may obtain a copy of the License at&#xA;&#xA;       http://www.apache.org/licenses/LICENSE-2.0&#xA;&#xA;   Unless required by applicable law or agreed to in writing, software&#xA;   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,&#xA;   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.&#xA;   See the License for the specific language governing permissions and&#xA;   limitations under the License." IncludeInNewFiles="True" />
+        </Policies>
+      </Properties>
+    </MonoDevelop>
+  </ProjectExtensions>
+</Project>
