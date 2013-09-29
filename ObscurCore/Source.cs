@@ -265,7 +265,7 @@ namespace ObscurCore
         /// </summary>
         /// <returns>An IBlockCipher cipher object implementing the relevant cipher algorithm.</returns>
         public static IBlockCipher CreateBlockCipher (SymmetricBlockCiphers cipher, int? blockSize = null) {
-            if (blockSize == null) blockSize = Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize;
+            if (blockSize == null) blockSize = Athena.Cryptography.BlockCipherDirectory[cipher].DefaultBlockSize;
             return EngineInstantiatorsBlock[cipher](blockSize.Value);
         }
 
@@ -300,7 +300,7 @@ namespace ObscurCore
         /// </returns>
         public static IBlockCipher CreateBlockCipherWithMode (IBlockCipher cipher, BlockCipherModes mode, int? size = null) {
             var cipherMode = ModeInstantiatorsBlock[mode](cipher, size ??
-                (cipher != null ? Athena.Cryptography.BlockCiphers[cipher.AlgorithmName.ToEnum<SymmetricBlockCiphers>(true)]
+                (cipher != null ? Athena.Cryptography.BlockCipherDirectory[cipher.AlgorithmName.ToEnum<SymmetricBlockCiphers>(true)]
                     .DefaultBlockSize : cipher.GetBlockSize()));
             //return mode != BlockCipherModes.CTS_CBC ? cipherMode : new CtsBlockCipher(cipher) as IBlockCipher;
             return cipherMode;
@@ -356,21 +356,18 @@ namespace ObscurCore
 
         public static ICipherParameters CreateBlockCipherParameters(SymmetricBlockCiphers cipher, byte[] key, byte[] iv) {
             ICipherParameters cipherParams = null;
-            
-            
-            if(!Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizes.Contains(key.Length * 8)) 
-                    throw new InvalidDataException("Key is incorrect size.");
 
-            if(iv == null || iv.Length == 0) 
+            if((iv == null || iv.Length == 0) && Athena.Cryptography.BlockCipherDirectory[cipher].DefaultIVSize != -1) 
                 throw new NotSupportedException("IV is null or zero-zength.");
 
 
             if (cipher.ToString().Equals(SymmetricBlockCiphers.TripleDES.ToString())) {
+                if(!Athena.Cryptography.BlockCipherDirectory[cipher].AllowableKeySizes.Contains(key.Length * 8)) 
+                    throw new InvalidDataException("Key size is unsupported/incompatible.");
                 cipherParams = new ParametersWithIV(new DesEdeParameters(key, 0, key.Length), iv, 0,
                     iv.Length);
             } else {
-                cipherParams = new ParametersWithIV(new KeyParameter(key, 0, key.Length), iv, 0,
-                    iv.Length);
+                cipherParams = new ParametersWithIV(CreateKeyParameter(cipher, key), iv, 0, iv.Length);
             }
 
             return cipherParams;
@@ -386,25 +383,20 @@ namespace ObscurCore
 
             //if (iv == null || !Athena.Cryptography.BlockCiphers[cipher].AllowableIVSizes.Contains(iv.Length * 8))
                 //throw new InvalidDataException("Nonce is null or incorrect size.");
-            // NOTE: May not need to check IV length outside of congriuence with block/mac length
+            // NOTE: May not need to check IV length outside of congruence with block/mac length
 
-            if(!Athena.Cryptography.BlockCiphers[cipher]
+            if(!Athena.Cryptography.BlockCipherDirectory[cipher]
                         .AllowableBlockSizes.Contains(macSizeBits)) 
-                        throw new InvalidDataException("MAC size is unsupported.");
-
-            if (!Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizes.Contains(key.Length * 8))
-                throw new InvalidDataException("Key is incorrect size.");
+                        throw new InvalidDataException("MAC size is unsupported/incompatible.");
 
             
 
             // Create the key+IV AEAD parameter object (here, nonce = IV)
             // Treat 3DES differently to other ciphers for key parameter object creation
-            if (cipher == SymmetricBlockCiphers.TripleDES)
-            {
+            if (cipher == SymmetricBlockCiphers.TripleDES) {
                 cipherParams = new AeadParameters(new DesEdeParameters(key, 0, key.Length), macSizeBits, iv,
                     ad ?? new byte[0]);
-            } else
-            {
+            } else {
                 cipherParams = new AeadParameters(new KeyParameter(key, 0, key.Length), macSizeBits, iv,
                     ad ?? new byte[0]);
             }
@@ -412,12 +404,33 @@ namespace ObscurCore
             return cipherParams;
         }
 
-        public static ICipherParameters CreateStreamCipherParameters(byte[]key, byte[] iv) {
-            var cipherParams = new ParametersWithIV(new KeyParameter(key), iv);
+        public static ICipherParameters CreateStreamCipherParameters(SymmetricStreamCiphers cipher, byte[] key, byte[] iv) {
+#if(INCLUDE_RC4)
+            if (cipher == SymmetricStreamCiphers.RC4) return CreateKeyParameter(key);
+#endif
+            if (cipher == SymmetricStreamCiphers.ISAAC) return CreateKeyParameter(cipher, key);
+
+            if (iv == null || iv.Length == 0) throw new InvalidDataException("IV is null or zero-length.");
+            if (!Athena.Cryptography.StreamCipherDirectory[cipher].AllowableIVSizes.Contains(iv.Length * 8)) {
+                throw new InvalidDataException("IV size is unsupported/incompatible.");
+            }
+
+            var cipherParams = new ParametersWithIV(CreateKeyParameter(cipher, key), iv);
             return cipherParams;
         }
 
-        public static ICipherParameters CreateKeyParameter(byte[] key) {
+        public static ICipherParameters CreateKeyParameter(SymmetricBlockCiphers cipher, byte[] key) {
+            if (!Athena.Cryptography.BlockCipherDirectory[cipher].AllowableKeySizes.Contains(key.Length * 8))
+                throw new InvalidDataException("Key size is unsupported/incompatible.");
+            
+            var cipherParams = new KeyParameter(key);
+            return cipherParams;
+        }
+
+        public static ICipherParameters CreateKeyParameter(SymmetricStreamCiphers cipher, byte[] key) {
+            if (!Athena.Cryptography.StreamCipherDirectory[cipher].AllowableKeySizes.Contains(key.Length * 8))
+                throw new InvalidDataException("Key size is unsupported/incompatible.");
+
             var cipherParams = new KeyParameter(key);
             return cipherParams;
         }
@@ -491,7 +504,7 @@ namespace ObscurCore
         public static IMac CreateMac (MACFunctions mac, byte[] key, byte[] salt = null) {
 			var macObj = MacInstantiators[mac]();
 
-			if (Athena.Cryptography.MACFunctions[mac].SaltSupported) {
+			if (Athena.Cryptography.MACFunctionDirectory[mac].SaltSupported) {
 			    ((IMacWithSalt) macObj).Init(key, salt);
 			} else {
 			    macObj.Init(new KeyParameter(key));

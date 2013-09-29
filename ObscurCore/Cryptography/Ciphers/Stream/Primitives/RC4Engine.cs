@@ -2,6 +2,7 @@ using System;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
+#if(INCLUDE_RC4)
     public class RC4Engine
 		: IStreamCipher
     {
@@ -141,5 +142,5 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
         }
     }
-
+#endif
 }

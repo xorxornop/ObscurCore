@@ -15,10 +15,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using NUnit.Framework;
 using ObscurCore.Cryptography;
+using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
 using ObscurCore.Extensions.DTO;
 using ObscurCore.Extensions.Enumerations;
@@ -58,7 +60,7 @@ namespace ObscurCore.Tests.Packaging
 #if(INCLUDE_FABRIC)
         [Test]
 		public void Fabric () {
-			var items = GetItems (_Files.Count);
+			var items = GetItems (Files.Count);
             //var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Fabric);
 
 		    var payloadConfig = new PayloadLayoutConfiguration()
@@ -66,13 +68,13 @@ namespace ObscurCore.Tests.Packaging
 		            SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
                     SchemeConfiguration = FabricConfigurationUtility.WriteFixedStriping(FabricMux.DefaultFixedStripeLength),
 		            //SchemeConfiguration = FabricConfigurationUtility.WriteVariableStriping(FabricMux.MinimumStripeLength, FabricMux.MaximumStripeLength),
-		            StreamPRNGName = "Salsa20",
-		            StreamPRNGConfiguration = Salsa20GeneratorConfigurationUtility.WriteRandom(),
-		            SecondaryPRNGName = "Salsa20",
-		            SecondaryPRNGConfiguration = Salsa20GeneratorConfigurationUtility.WriteRandom()
+		            StreamPRNGName = "SOSEMANUK",
+		            StreamPRNGConfiguration = SOSEMANUKGeneratorConfigurationUtility.WriteRandom(),
+		            SecondaryPRNGName = "SOSEMANUK",
+		            SecondaryPRNGConfiguration = SOSEMANUKGeneratorConfigurationUtility.WriteRandom()
 		        };
 
-			DoMux (payloadConfig, items, _Files);
+			DoMux (payloadConfig, items, Files);
 		}
 #endif
 
@@ -117,6 +119,8 @@ namespace ObscurCore.Tests.Packaging
 			
 			Assert.DoesNotThrow (mux.ExecuteAll);
 
+            Debug.Print("\n##### END OF MUXING OPERATION #####\n");
+
             // Get internal lengths
 	        for (var i = 0; i < items.Count; i++) {
 	            items[i].InternalLength = mux.GetItemIO(i);
@@ -154,6 +158,8 @@ namespace ObscurCore.Tests.Packaging
                 items.ToList<IStreamBinding>(), transforms, payloadConfig);
 
             Assert.DoesNotThrow(mux.ExecuteAll);
+
+            Debug.Print("\n##### END OF DEMUXING OPERATION #####\n");
 
 	        var muxOut = mux.TotalDestinationIO;
 

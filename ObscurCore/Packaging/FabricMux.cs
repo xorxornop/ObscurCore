@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Entropy;
@@ -33,7 +34,7 @@ namespace ObscurCore.Packaging
 							MaximumStripeLength         = 65536,
 							DefaultFixedStripeLength    = 4096;
 
-		protected readonly CSPRNG prngStripe;
+		protected readonly CSPRNG PrngStripe;
 	    protected readonly FabricStripeModes mode;
 		protected readonly int minStripe, maxStripe;
 
@@ -49,11 +50,9 @@ namespace ObscurCore.Packaging
             mode = FabricConfigurationUtility.CheckMode(minStripe, maxStripe);
 
             if(mode == FabricStripeModes.VariableLength) {
-                prngStripe = Source.CreateCSPRNG(config.SecondaryPRNGName.ToEnum<CSPRNumberGenerators>(),
+                PrngStripe = Source.CreateCSPRNG(config.SecondaryPRNGName.ToEnum<CSPRNumberGenerators>(),
                     config.SecondaryPRNGConfiguration);
             }
-
-		    NextOperationLength();
 		}
 		
 		/// <summary>
@@ -62,7 +61,9 @@ namespace ObscurCore.Packaging
 		/// </summary>
 		/// <returns>The operation length.</returns>
 		protected override long NextOperationLength() {
-		    return mode == FabricStripeModes.VariableLength ? prngStripe.Next(minStripe, maxStripe) : maxStripe;
+		    var opLen = mode == FabricStripeModes.VariableLength ? PrngStripe.Next(minStripe, maxStripe) : maxStripe;
+            Debug.Print("NextOperationLength() : " + opLen);
+		    return opLen;
 		}
 	}
 #endif

@@ -37,7 +37,7 @@ namespace ObscurCore.Packaging
 			PrngStream = Source.CreateCSPRNG(config.StreamPRNGName.ToEnum<CSPRNumberGenerators>(),
 		        config.StreamPRNGConfiguration);
 
-			AdvanceSource ();
+		    NextSource();
 		}
 
 		/// <summary>
@@ -47,6 +47,7 @@ namespace ObscurCore.Packaging
 		/// <returns>The next stream index.</returns>
 		protected override sealed int NextSource() {
 		    CurrentIndex = PrngStream.Next(0, ItemCount - 1);
+            Debug.Print("NextSource() : " + CurrentIndex);
 			return CurrentIndex;
 		}
 	}

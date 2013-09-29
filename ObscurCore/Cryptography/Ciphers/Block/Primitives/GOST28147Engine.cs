@@ -3,6 +3,7 @@ using System.Collections;
 
 namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 {
+#if(INCLUDE_GOST28147)
 	/**
 	* implementation of GOST 28147-89
 	*/
@@ -370,4 +371,5 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 		    return sBox; // was Clone();
 		}
 	}
+#endif
 }

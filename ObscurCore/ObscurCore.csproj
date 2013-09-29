@@ -20,14 +20,14 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;INCLUDE_IDEA</DefineConstants>
+    <DefineConstants>TRACE;INCLUDE_IDEA;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -97,26 +97,23 @@
     <Compile Include="Cryptography\Ciphers\Block\Padding\Pkcs7Padding.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\TbcPadding.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\X923Padding.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Primitives\AesEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\AesFastEngine.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Primitives\AesLightEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\BlowfishEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\CamelliaEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\CamelliaLightEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\Cast5Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\Cast6Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\DesEdeEngine.cs" />
-    <None Include="Cryptography\Ciphers\Block\Primitives\GOST28147Engine.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\Primitives\GOST28147Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\Parameters\DesEdeParameters.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\DesEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\Parameters\DesParameters.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\IdeaEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\NoekeonEngine.cs" />
-    <None Include="Cryptography\Ciphers\ParametersWithSBox.cs" />
+    <Compile Include="Cryptography\Ciphers\ParametersWithSBox.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\RC6Engine.cs" />
     <None Include="Cryptography\Ciphers\Block\Primitives\RijndaelEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\SerpentEngine.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Primitives\SkipjackEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\TwofishEngine.cs" />
     <Compile Include="Cryptography\Ciphers\BufferedCipherBase.cs" />
     <Compile Include="Cryptography\Ciphers\InvalidCipherTextException.cs" />
@@ -133,11 +130,11 @@
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\HC256Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\ISAACEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\RabbitEngine.cs" />
-    <None Include="Cryptography\Ciphers\Stream\Primitives\RC4Engine.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Primitives\RC4Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Salsa20Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\SOSEMANUKEngine.cs" />
-    <None Include="Cryptography\Ciphers\Stream\Primitives\VMPCEngine.cs" />
-    <None Include="Cryptography\Ciphers\Stream\Primitives\VMPCKSA3Engine.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Primitives\VMPCEngine.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Primitives\VMPCKSA3Engine.cs" />
     <Compile Include="Cryptography\Entropy\DigestRandomGenerator.cs" />
     <Compile Include="Cryptography\Entropy\IRandomGenerator.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\ReversedWindowGenerator.cs" />

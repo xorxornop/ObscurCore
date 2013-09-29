@@ -46,12 +46,14 @@ namespace ObscurCore.Cryptography
 		/// Block cipher published in June 1998. Also known as CAST-256.
 		/// </summary><seealso cref="CAST5"/>
 		CAST6,
-        /*
-		/// <summary>
+
+#if(INCLUDE_GOST28147)
+        /// <summary>
 		/// GOST 28147-89; Soviet/Russian government standard symmetric key block cipher.
 		/// </summary>
 		GOST28147,
-        */
+#endif
+
 		/// <summary>
 		/// International Data Encryption Algorithm - patent unencumbered as of 2012. 64 bit block size.
 		/// </summary>
@@ -79,7 +81,7 @@ namespace ObscurCore.Cryptography
 		Serpent,
 
 		/// <summary>
-		/// Triple Data Encryption Algorithm, or 3DES. 64-bit block cipher. Derivative of DES. 3 [optionally different] 56-bit keys. 
+		/// Triple Data Encryption Algorithm, or 3DES. 64-bit block cipher. Derivative of DES. 3 (optionally different) 56-bit keys. 
 		/// Use is popular in the financial industries.
 		/// </summary>
 		TripleDES,
@@ -96,6 +98,7 @@ namespace ObscurCore.Cryptography
 	public enum SymmetricStreamCiphers
 	{
 		None,
+
 		/// <summary>
 		/// Stream cipher designed for fast operation in software.
 		/// </summary>
@@ -117,12 +120,14 @@ namespace ObscurCore.Cryptography
         /// eSTREAM Phase 3 candidate. Patented, but free for non-commercial use.
         /// </summary>
         Rabbit,
-        /*
+
+#if(INCLUDE_RC4)
 		/// <summary>
         /// 40-to-2048-bit adjustible-length key stream cipher, used most famously in SSL and WEP encryption.
 		/// </summary>
 		RC4,
-        */
+#endif
+
 		/// <summary>
 		/// 256-bit key stream cipher. eSTREAM Phase 3 candidate. Unpatented, free for any use.
 		/// </summary>
@@ -133,7 +138,8 @@ namespace ObscurCore.Cryptography
         /// eSTREAM Phase 3 candidate. Free for any use.
         /// </summary>
         SOSEMANUK,
-        /*
+
+#if(INCLUDE_VMPC)
 		/// <summary>
 		/// Variably Modified Permutation Composition. Very simple implementation, high performance stream cipher.
 		/// </summary><seealso cref="VMPC_KSA3"/>
@@ -143,7 +149,7 @@ namespace ObscurCore.Cryptography
         /// Variant of VMPC with a strengthened key setup procedure.
         /// </summary><seealso cref="VMPC"/>
         VMPC_KSA3
-        */
+#endif
 	}
 	
 	/// <summary>

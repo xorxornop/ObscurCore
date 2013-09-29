@@ -64,11 +64,8 @@ namespace ObscurCore.Cryptography
                 if(!config.Key.Length.Equals(config.KeySize / 8))
                     throw new InvalidDataException("Specified key size does not match the supplied key.");
 
-                if(!Athena.Cryptography.BlockCiphers[blockCipherEnum].AllowableBlockSizes.Contains(config.BlockSize)) 
+                if(!Athena.Cryptography.BlockCipherDirectory[blockCipherEnum].AllowableBlockSizes.Contains(config.BlockSize)) 
                     throw new NotSupportedException("Specified block size is unsupported.");
-                
-                if(config.IV.Length != config.BlockSize / 8)
-                    throw new NotSupportedException("IV length does not match block length.");
                 
                 BufferRequirementOverride = (config.BlockSize / 8) * 2;
 
@@ -77,6 +74,9 @@ namespace ObscurCore.Cryptography
 				if (Enum.GetNames(typeof(BlockCipherModes)).Contains(config.ModeName)) {
 					// Requested a block cipher.
 
+                    if(config.IV.Length != config.BlockSize / 8)
+                        throw new NotSupportedException("IV length does not match block length.");
+
                     cipherParams = Source.CreateBlockCipherParameters(config);
 
                     // Overlay the cipher with the mode of operation
@@ -84,15 +84,16 @@ namespace ObscurCore.Cryptography
 				        config.BlockSize);
 
 				    // Create the I/O-enabled transform object
-					if (!config.PaddingName.Equals(BlockCipherPaddings.None.ToString()) && !String.IsNullOrEmpty(config.PaddingName)) {
+					if (!String.IsNullOrEmpty(config.PaddingName) && !config.PaddingName.Equals(BlockCipherPaddings.None.ToString())) {
 						var padding = Source.CreatePadding(config.PaddingName.ToEnum<BlockCipherPaddings>());
 						cipher = new PaddedBufferedBlockCipher(blockCipher, padding);
 					} else if (config.ModeName.Equals(BlockCipherModes.CTS_CBC.ToString())) {
 						cipher = new CtsBlockCipher(blockCipher);
 					} else {
 						// No padding specified - is this OK in the context of the mode of operation?
-						if(Athena.Cryptography.BlockModes[config.ModeName.ToEnum<BlockCipherModes>()].PaddingRequirement
-                            == PaddingRequirements.Always) {
+						if(Athena.Cryptography.BlockCipherModeDirectory[config.ModeName.ToEnum<BlockCipherModes>()]
+                            .PaddingRequirement == PaddingRequirements.Always)
+                        {
 							throw new NotSupportedException("Cipher configuration does not specify the use of padding, " + 
                                 "which is required for the specified mode of operation.");
 						}
@@ -102,8 +103,9 @@ namespace ObscurCore.Cryptography
 				} else if (Enum.GetNames(typeof(AEADBlockCipherModes)).Contains(config.ModeName)) {
 					// Requested an AEAD cipher (block cipher inside).
 
-                    if(config.MACSize / 8 != config.IV.Length)
-                    throw new NotSupportedException("Nonce size does not match MAC size.");
+                    //if(config.MACSize / 8 != config.IV.Length)
+                        //throw new NotSupportedException("Nonce size does not match MAC size.");
+                    // TODO: Determine if this check (disabled currently) is appropriate.
 
 				    cipherParams = Source.CreateAEADBlockCipherParameters(config);
 
@@ -120,11 +122,7 @@ namespace ObscurCore.Cryptography
 
 			} else if (Enum.GetNames(typeof(SymmetricStreamCiphers)).Contains(config.CipherName)) {
 				// Requested a stream cipher.
-#if(INCLUDE_RC4)
-                cipherParams = Source.CreateKeyParameter(config.Key);
-#else
-                cipherParams = Source.CreateStreamCipherParameters(config.Key, config.IV);
-#endif
+                cipherParams = Source.CreateStreamCipherParameters(config.CipherName.ToEnum<SymmetricStreamCiphers>(), config.Key, config.IV);
 				// Instantiate the cipher
 				var streamCipher = Source.CreateStreamCipher(config.CipherName.ToEnum<SymmetricStreamCiphers>());
 				// Create the I/O-enabled transform object
@@ -140,7 +138,7 @@ namespace ObscurCore.Cryptography
 
 		/// <summary>
 		/// Closing the stream will cause the internal cipher to perform transformation of the final block automagically. Best practice is use of a 'using' block. 
-		/// Closure may also cause the base stream to close - this depends on the provided value of the constructor parameter 'leaveOpen'.
+		/// Closure may also cause the base stream to close.
 		/// </summary>
 		/// <exception cref="PaddingException">Thrown when no padding, malformed padding, or misaligned padding is found.</exception>
 		/// <exception cref="IncompleteBlockException">Thrown when ciphertext is not a multiple of block size (unexpected length).</exception>

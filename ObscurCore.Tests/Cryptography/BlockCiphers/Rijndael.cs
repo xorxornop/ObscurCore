@@ -6,10 +6,12 @@ using ObscurCore.Cryptography;
 
 namespace ObscurCore.Tests.Cryptography.BlockCiphers
 {
+#if(INCLUDE_RIJNDAEL)
     class Rijndael : BlockCipherTestBase
     {
         public Rijndael ()
             : base(SymmetricBlockCiphers.Rijndael, 128, 256) {
         }
     }
+#endif
 }

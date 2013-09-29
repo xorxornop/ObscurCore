@@ -16,7 +16,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
+    <DefineConstants>DEBUG;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -28,6 +28,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <DefineConstants>INCLUDE_FABRIC</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="nunit.framework">
@@ -78,8 +79,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Cryptography\BlockCiphers\GOST28147.cs" />
-    <None Include="Cryptography\BlockCiphers\Rijndael.cs" />
+    <Compile Include="Cryptography\BlockCiphers\GOST28147.cs" />
+    <Compile Include="Cryptography\BlockCiphers\Rijndael.cs" />
     <None Include="packages.config" />
     <None Include="Packaging\Serialisation\Compression.cs" />
   </ItemGroup>

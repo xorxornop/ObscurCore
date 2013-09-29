@@ -204,8 +204,8 @@ namespace ObscurCore.Packaging
             }
 
             var nextOpLen = NextOperationLength();
-            Debug.Print("ExecuteSingle() : Next operation length: " + nextOpLen);
             var targetPosition = Math.Min(SourceAccumulator + nextOpLen, Writing ? CurrentItem.ExternalLength : CurrentItem.InternalLength);
+            Debug.Print("ExecuteSingle() : Target position: {0}, opLength: {1}", targetPosition, targetPosition - SourceAccumulator);
 
             bool sourceDepleted = false;
             while (SourceAccumulator < targetPosition) {
@@ -254,6 +254,7 @@ namespace ObscurCore.Packaging
                 DestinationAccumulator *= 1;
                 ItemsCompleted++;
                 if(Writing) CurrentSource.Close();
+                Debug.Print("ExecuteSingle() : ##### END OF ITEM #####");
             }
         }
 

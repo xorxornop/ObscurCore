@@ -2,6 +2,7 @@ using System;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
+#if(INCLUDE_VMPC)
 	public class VMPCEngine
 		: IStreamCipher
 	{
@@ -134,4 +135,5 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return (byte) (input ^ z);
 		}
 	}
+#endif
 }

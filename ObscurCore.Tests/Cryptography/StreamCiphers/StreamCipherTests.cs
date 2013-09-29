@@ -23,12 +23,19 @@ namespace ObscurCore.Tests.Cryptography.StreamCiphers
         }
 
         [Test]
+        public void ISAAC () {
+            var config = new StreamCipherConfiguration(SymmetricStreamCiphers.ISAAC);
+            RunEqualityTest(config);
+        }
+
+        [Test]
         public void Rabbit () {
             var config = new StreamCipherConfiguration(SymmetricStreamCiphers.Rabbit);
             RunEqualityTest(config, CreateRandomKey(128));
         }
 
-        /*[Test]
+#if(INCLUDE_RC4)
+        [Test]
         public void RC4_96 () {
             var config = new StreamCipherConfiguration(SymmetricStreamCiphers.RC4, 96) { IV = CreateRandomKey(96) };
             RunEqualityTest(config, CreateRandomKey(96));
@@ -38,7 +45,8 @@ namespace ObscurCore.Tests.Cryptography.StreamCiphers
         public void RC4_128 () {
             var config = new StreamCipherConfiguration(SymmetricStreamCiphers.RC4, 128) { IV = CreateRandomKey(128) };
             RunEqualityTest(config, CreateRandomKey(128));
-        }*/
+        }
+#endif
 
         [Test]
         public void Salsa20_256 () {
@@ -52,10 +60,12 @@ namespace ObscurCore.Tests.Cryptography.StreamCiphers
             RunEqualityTest(config);
         }
 
-        /*[Test]
+#if(INCLUDE_VMPC)
+        [Test]
         public void VMPC_256 () {
             var config = new StreamCipherConfiguration(SymmetricStreamCiphers.VMPC) { IV = CreateRandomKey(256) };
             RunEqualityTest(config);
-        }*/
+        }
+#endif
     }
 }

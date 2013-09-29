@@ -1,5 +1,6 @@
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
+#if(INCLUDE_VMPC)
 	public class VMPCKSA3Engine
 		: VMPCEngine
 	{
@@ -46,4 +47,5 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			n = 0;
 		}
 	}
+#endif
 }

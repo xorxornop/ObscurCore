@@ -36,17 +36,17 @@ namespace ObscurCore.Cryptography
 		public BlockCipherConfiguration(SymmetricBlockCiphers cipher, BlockCipherModes mode, BlockCipherPaddings padding, 
 		                                int? blockSize = null, int? keySize = null) {
 			// Set the block size
-			var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize;
-			if (Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull))
+			var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCipherDirectory[cipher].DefaultBlockSize;
+			if (Athena.Cryptography.BlockCipherDirectory[cipher].AllowableBlockSizes.Contains(blockSizeNonNull))
 				BlockSize = blockSizeNonNull;
-			else throw new BlockSizeException(blockSizeNonNull, Athena.Cryptography.BlockCiphers[cipher].DisplayName + " specification");
+			else throw new BlockSizeException(blockSizeNonNull, Athena.Cryptography.BlockCipherDirectory[cipher].DisplayName + " specification");
 			// Set the key size
-			var keySizeNonNull = keySize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultKeySize;
-			if (Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull))
+			var keySizeNonNull = keySize ?? Athena.Cryptography.BlockCipherDirectory[cipher].DefaultKeySize;
+			if (Athena.Cryptography.BlockCipherDirectory[cipher].AllowableKeySizes.Contains(keySizeNonNull))
 				KeySize = keySizeNonNull;
-			else throw new KeySizeException(keySizeNonNull, Athena.Cryptography.BlockCiphers[cipher].DisplayName + " specification");
+			else throw new KeySizeException(keySizeNonNull, Athena.Cryptography.BlockCipherDirectory[cipher].DisplayName + " specification");
 			// Set the mode
-			if (Athena.Cryptography.BlockModes[mode].PaddingRequirement == PaddingRequirements.Always && padding == BlockCipherPaddings.None) { // TODO: Refine my logic!
+			if (Athena.Cryptography.BlockCipherModeDirectory[mode].PaddingRequirement == PaddingRequirements.Always && padding == BlockCipherPaddings.None) { // TODO: Refine my logic!
 				throw new ArgumentException(mode + " mode must be used with padding or errors will occur when plaintext length is not equal to or a multiple of the block size.");
 			}
 			Mode = mode;
@@ -105,10 +105,10 @@ namespace ObscurCore.Cryptography
 		/// <param name="includeValues">Whether to include values of relevant byte arrays as hex strings.</param>
 		/// <returns></returns>
 		public override string ToString (bool includeValues) {
-			string cipher = Athena.Cryptography.BlockCiphers[CipherName.ToEnum<SymmetricBlockCiphers>()].DisplayName;
-			string mode = Athena.Cryptography.BlockModes[Mode].DisplayName;
+			string cipher = Athena.Cryptography.BlockCipherDirectory[CipherName.ToEnum<SymmetricBlockCiphers>()].DisplayName;
+			string mode = Athena.Cryptography.BlockCipherModeDirectory[Mode].DisplayName;
             string padding = Padding == BlockCipherPaddings.None ?
-                "None" : Athena.Cryptography.BlockPaddings[Padding].DisplayName;
+                "None" : Athena.Cryptography.BlockCipherPaddingDirectory[Padding].DisplayName;
 			if (includeValues) {
 				string hexIV = ByteArrayToHexString(IV);
 				return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" + 
@@ -140,31 +140,31 @@ namespace ObscurCore.Cryptography
                                        BlockCipherPaddings padding = BlockCipherPaddings.None,
                                        int? keySize = null, int? blockSize = null, int? macSize = null) {
             // Set the block size
-            var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize;
+            var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCipherDirectory[cipher].DefaultBlockSize;
             // TODO: Add in a section to handle MAC and block sizes seperately.
-            if (Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) BlockSize = blockSizeNonNull;
+            if (Athena.Cryptography.BlockCipherDirectory[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) BlockSize = blockSizeNonNull;
             else
                 throw new BlockSizeException(blockSizeNonNull,
-                                           Athena.Cryptography.BlockCiphers[cipher].DisplayName +
+                                           Athena.Cryptography.BlockCipherDirectory[cipher].DisplayName +
                                            " specification");
             // Set the key size
-            int keySizeNonNull = keySize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultKeySize;
-            if (Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) KeySize = keySizeNonNull;
+            int keySizeNonNull = keySize ?? Athena.Cryptography.BlockCipherDirectory[cipher].DefaultKeySize;
+            if (Athena.Cryptography.BlockCipherDirectory[cipher].AllowableKeySizes.Contains(keySizeNonNull)) KeySize = keySizeNonNull;
             else
                 throw new KeySizeException(keySizeNonNull,
-                                           Athena.Cryptography.BlockCiphers[cipher].DisplayName +
+                                           Athena.Cryptography.BlockCipherDirectory[cipher].DisplayName +
                                            " specification");
             // Set the mode
-            if (Athena.Cryptography.AEADBlockModes[mode].PaddingRequirement == PaddingRequirements.Always && padding == BlockCipherPaddings.None) // TODO: Refine my logic!
+            if (Athena.Cryptography.AEADBlockCipherModeDirectory[mode].PaddingRequirement == PaddingRequirements.Always && padding == BlockCipherPaddings.None) // TODO: Refine my logic!
             {
                 throw new ArgumentException(mode +
                                             " mode must be used with padding or errors will occur when plaintext length is not equal to or a multiple of the block size.");
             }
             // Check if the AEAD mode supports the block size
             int macSizeNonNull = macSize ?? BlockSize;
-            if (!Athena.Cryptography.AEADBlockModes[mode].AllowableBlockSizes.Contains(-1)) {
-                if (Athena.Cryptography.AEADBlockModes[mode].AllowableBlockSizes.Contains(BlockSize)) MACSize = macSizeNonNull;
-                    else throw new MACSizeException(macSizeNonNull, Athena.Cryptography.AEADBlockModes[mode].DisplayName +
+            if (!Athena.Cryptography.AEADBlockCipherModeDirectory[mode].AllowableBlockSizes.Contains(-1)) {
+                if (Athena.Cryptography.AEADBlockCipherModeDirectory[mode].AllowableBlockSizes.Contains(BlockSize)) MACSize = macSizeNonNull;
+                    else throw new MACSizeException(macSizeNonNull, Athena.Cryptography.AEADBlockCipherModeDirectory[mode].DisplayName +
                                             " specification");
             }
 
@@ -231,10 +231,10 @@ namespace ObscurCore.Cryptography
 		/// <param name="includeValues">Whether to include values of relevant byte arrays as hex strings.</param>
 		/// <returns></returns>
 		public override string ToString (bool includeValues) {
-			string cipher = Athena.Cryptography.BlockCiphers[BlockCipher].DisplayName;
-			string mode = Athena.Cryptography.AEADBlockModes[Mode].DisplayName;
+			string cipher = Athena.Cryptography.BlockCipherDirectory[BlockCipher].DisplayName;
+			string mode = Athena.Cryptography.AEADBlockCipherModeDirectory[Mode].DisplayName;
 			string padding = Padding == BlockCipherPaddings.None ? 
-                "None" : Athena.Cryptography.BlockPaddings[Padding].DisplayName;
+                "None" : Athena.Cryptography.BlockCipherPaddingDirectory[Padding].DisplayName;
 			if (includeValues) {
 				string hexNonce = (Nonce.Length == 0 ? "n/a" : ByteArrayToHexString(Nonce));
 				string hexAD = (AssociatedData.Length == 0 ? "n/a" : ByteArrayToHexString(AssociatedData));
@@ -260,12 +260,12 @@ namespace ObscurCore.Cryptography
 		/// <param name="cipher">Enumeration of the cipher algorithm to use.</param>
 		/// <param name="keySize">Size of the key used in the cipher, in bits. Set to null to use default for the cipher.</param>
 		public StreamCipherConfiguration(SymmetricStreamCiphers cipher, int? keySize = null) {
-			int keySizeNonNull = keySize ?? Athena.Cryptography.StreamCiphers[cipher].DefaultKeySize;
-			if (Athena.Cryptography.StreamCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) KeySize = keySizeNonNull;
-			else throw new KeySizeException(keySizeNonNull, Athena.Cryptography.StreamCiphers[cipher].DisplayName + " specification");
+			int keySizeNonNull = keySize ?? Athena.Cryptography.StreamCipherDirectory[cipher].DefaultKeySize;
+			if (Athena.Cryptography.StreamCipherDirectory[cipher].AllowableKeySizes.Contains(keySizeNonNull)) KeySize = keySizeNonNull;
+			else throw new KeySizeException(keySizeNonNull, Athena.Cryptography.StreamCipherDirectory[cipher].DisplayName + " specification");
 			StreamCipherName = cipher;
             // TODO: Review this code, make more resource efficient.
-			IV = new byte[Athena.Cryptography.StreamCiphers[cipher].DefaultIVSize / 8];
+			IV = new byte[Athena.Cryptography.StreamCipherDirectory[cipher].DefaultIVSize / 8];
 
             StratCom.EntropySource.NextBytes(IV);
 		}

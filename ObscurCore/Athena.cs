@@ -25,8 +25,8 @@ using ObscurCore.Packaging;
 namespace ObscurCore
 {
     /// <summary>
-    /// Athena provides knowledge of how all core functions must be configured for proper operation 
-	/// and provides low friction instantiation facilities for core objects.
+    /// Athena provides knowledge of how all core functions must be configured for proper operation, 
+    /// and provides end-user-display-friendly names.
     /// </summary>
     public static class Athena
     {
@@ -37,8 +37,10 @@ namespace ObscurCore
         public static class Cryptography
         {
             static Cryptography() {
-                // Add all symmetric block ciphers
-                BlockCiphers.Add(SymmetricBlockCiphers.AES, new SymmetricCipherDescription {
+
+                // Add symmetric block ciphers
+
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.AES, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.AES.ToString(),
                     DisplayName = "Advanced Encryption Standard (AES)",
                     AllowableBlockSizes = new[] { 128 },
@@ -46,7 +48,7 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128, 192, 256 },
                     DefaultKeySize = 256
                 });
-                BlockCiphers.Add(SymmetricBlockCiphers.Blowfish, new SymmetricCipherDescription {
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.Blowfish, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.Blowfish.ToString(),
                     DisplayName = "Blowfish",
                     AllowableBlockSizes = new[] { 64 },
@@ -54,7 +56,7 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448 },
                     DefaultKeySize = 256
                 });
-                BlockCiphers.Add(SymmetricBlockCiphers.Camellia, new SymmetricCipherDescription {
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.Camellia, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.Camellia.ToString(),
                     DisplayName = "Camellia",
                     AllowableBlockSizes = new[] { 128 },
@@ -62,7 +64,7 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128, 192, 256 },
                     DefaultKeySize = 256
                 });
-                BlockCiphers.Add(SymmetricBlockCiphers.CAST5, new SymmetricCipherDescription {
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.CAST5, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.CAST5.ToString(),
                     DisplayName = "CAST-5 / CAST-128",
                     AllowableBlockSizes = new[] { 64 },
@@ -70,7 +72,7 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128 },
                     DefaultKeySize = 128
                 });
-                BlockCiphers.Add(SymmetricBlockCiphers.CAST6, new SymmetricCipherDescription {
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.CAST6, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.CAST6.ToString(),
                     DisplayName = "CAST-6 / CAST-256",
                     AllowableBlockSizes = new[] { 128 },
@@ -78,8 +80,9 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128, 160, 192, 224, 256 },
                     DefaultKeySize = 256
                 });
-                /*
-                BlockCiphers.Add(SymmetricBlockCiphers.GOST28147, new SymmetricCipherDescription {
+
+#if(INCLUDE_GOST28147)
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.GOST28147, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.GOST28147.ToString(),
                     DisplayName = "GOST 28147-89",
                     AllowableBlockSizes = new[] { 64 },
@@ -87,16 +90,17 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 256 },
                     DefaultKeySize = 256
                 });
-                */
-                BlockCiphers.Add(SymmetricBlockCiphers.IDEA, new SymmetricCipherDescription {
+#endif
+
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.IDEA, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.IDEA.ToString(),
-                    DisplayName = "IDEA",
+                    DisplayName = "International Data Encryption Algorithm (IDEA)",
                     AllowableBlockSizes = new[] { 64 },
                     DefaultBlockSize = 64,
                     AllowableKeySizes = new[] { 128 },
                     DefaultKeySize = 128
                 });
-                BlockCiphers.Add(SymmetricBlockCiphers.NOEKEON, new SymmetricCipherDescription {
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.NOEKEON, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.NOEKEON.ToString(),
                     DisplayName = "NOEKEON",
                     AllowableBlockSizes = new[] { 128 },
@@ -104,7 +108,7 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128 },
                     DefaultKeySize = 128
                 });
-                BlockCiphers.Add(SymmetricBlockCiphers.RC6, new SymmetricCipherDescription {
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.RC6, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.RC6.ToString(),
                     DisplayName = "RC6",
                     AllowableBlockSizes = new[] { 128 },
@@ -112,7 +116,8 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128, 192, 256 },
                     DefaultKeySize = 256
                 });
-                /*
+                
+#if(INCLUDE_RIJNDAEL)
                 BlockCiphers.Add(SymmetricBlockCiphers.Rijndael, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.Rijndael.ToString(),
                     DisplayName = "Rijndael",
@@ -121,8 +126,9 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128, 192, 256 },
                     DefaultKeySize = 256
                 });
-                */
-                BlockCiphers.Add(SymmetricBlockCiphers.Serpent, new SymmetricCipherDescription {
+#endif
+
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.Serpent, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.Serpent.ToString(),
                     DisplayName = "Serpent",
                     AllowableBlockSizes = new[] { 128 },
@@ -130,15 +136,15 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128, 192, 256 },
                     DefaultKeySize = 256
                 });
-                BlockCiphers.Add(SymmetricBlockCiphers.TripleDES, new SymmetricCipherDescription {
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.TripleDES, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.TripleDES.ToString(),
-                    DisplayName = "Triple DES / 3DES / DESEDE",
+                    DisplayName = "Triple DES (3DES, DESEDE; Triple Data Encryption Standard)",
                     AllowableBlockSizes = new[] { 64 },
                     DefaultBlockSize = 64,
                     AllowableKeySizes = new[] { 128, 192 },
                     DefaultKeySize = 192
                 });
-                BlockCiphers.Add(SymmetricBlockCiphers.Twofish, new SymmetricCipherDescription {
+                BlockCipherDirectory.Add(SymmetricBlockCiphers.Twofish, new SymmetricCipherDescription {
                     Name = SymmetricBlockCiphers.Twofish.ToString(),
                     DisplayName = "Twofish",
                     AllowableBlockSizes = new[] { 128 },
@@ -147,9 +153,9 @@ namespace ObscurCore
                     DefaultKeySize = 256
                 });
 
-                // Add all symmetric stream ciphers
+                // Add symmetric stream ciphers
 
-                StreamCiphers.Add(SymmetricStreamCiphers.HC128, new SymmetricCipherDescription {
+                StreamCipherDirectory.Add(SymmetricStreamCiphers.HC128, new SymmetricCipherDescription {
                     Name = SymmetricStreamCiphers.HC128.ToString(),
                     DisplayName = "HC-128",
                     AllowableBlockSizes = new[] { -1 },
@@ -159,7 +165,7 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128 },
                     DefaultKeySize = 128
                 });
-                StreamCiphers.Add(SymmetricStreamCiphers.HC256, new SymmetricCipherDescription {
+                StreamCipherDirectory.Add(SymmetricStreamCiphers.HC256, new SymmetricCipherDescription {
                     Name = SymmetricStreamCiphers.HC256.ToString(),
                     DisplayName = "HC-256",
                     AllowableBlockSizes = new[] { -1 },
@@ -170,9 +176,9 @@ namespace ObscurCore
                     DefaultKeySize = 256
                 });
 
-                StreamCiphers.Add(SymmetricStreamCiphers.ISAAC, new SymmetricCipherDescription {
-                    Name = SymmetricStreamCiphers.HC256.ToString(),
-                    DisplayName = "HC-256",
+                StreamCipherDirectory.Add(SymmetricStreamCiphers.ISAAC, new SymmetricCipherDescription {
+                    Name = SymmetricStreamCiphers.ISAAC.ToString(),
+                    DisplayName = "Indirection, Shift, Accumulate, Add, and Count (ISAAC)",
                     AllowableBlockSizes = new[] { -1 },
                     DefaultBlockSize = -1,
                     AllowableIVSizes = new[] { 256 },
@@ -181,7 +187,7 @@ namespace ObscurCore
                     DefaultKeySize = 256
                 });
 
-                StreamCiphers.Add(SymmetricStreamCiphers.Rabbit, new SymmetricCipherDescription {
+                StreamCipherDirectory.Add(SymmetricStreamCiphers.Rabbit, new SymmetricCipherDescription {
                     Name = SymmetricStreamCiphers.Rabbit.ToString(),
                     DisplayName = "Rabbit",
                     AllowableBlockSizes = new[] { -1 },
@@ -192,8 +198,8 @@ namespace ObscurCore
                     DefaultKeySize = 128
                 });
 
-                /*
-                StreamCiphers.Add(SymmetricStreamCiphers.RC4, new SymmetricCipherDescription {
+#if(INCLUDE_RC4)
+                StreamCipherDirectory.Add(SymmetricStreamCiphers.RC4, new SymmetricCipherDescription {
                     Name = SymmetricStreamCiphers.RC4,
                     DisplayName = "RC4",
                     AllowableBlockSizes = new[] { -1 },
@@ -203,9 +209,9 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 40, 56, 96, 128, 192, 256 },
                     DefaultKeySize = 128
                 });
-                */
+#endif
  
-                StreamCiphers.Add(SymmetricStreamCiphers.Salsa20, new SymmetricCipherDescription {
+                StreamCipherDirectory.Add(SymmetricStreamCiphers.Salsa20, new SymmetricCipherDescription {
                     Name = SymmetricStreamCiphers.Salsa20.ToString(),
                     DisplayName = "Salsa20",
                     AllowableBlockSizes = new[] { -1 },
@@ -215,7 +221,7 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 256 },
                     DefaultKeySize = 256
                 });
-                StreamCiphers.Add(SymmetricStreamCiphers.SOSEMANUK, new SymmetricCipherDescription {
+                StreamCipherDirectory.Add(SymmetricStreamCiphers.SOSEMANUK, new SymmetricCipherDescription {
                     Name = SymmetricStreamCiphers.SOSEMANUK.ToString(),
                     DisplayName = "SOSEMANUK",
                     AllowableBlockSizes = new[] { -1 },
@@ -226,8 +232,8 @@ namespace ObscurCore
                     DefaultKeySize = 256
                 });
 
-                /*
-                StreamCiphers.Add(SymmetricStreamCiphers.VMPC, new SymmetricCipherDescription {
+#if(INCLUDE_VMPC)
+                StreamCipherDirectory.Add(SymmetricStreamCiphers.VMPC, new SymmetricCipherDescription {
                     Name = SymmetricStreamCiphers.VMPC.ToString(),
                     DisplayName = "Variably Modified Permutation Composition (VMPC)",
                     AllowableBlockSizes = new[] { -1 },
@@ -237,7 +243,7 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128, 192, 256 },
                     DefaultKeySize = 256
                 });
-                StreamCiphers.Add(SymmetricStreamCiphers.VMPC_KSA3, new SymmetricCipherDescription {
+                StreamCipherDirectory.Add(SymmetricStreamCiphers.VMPC_KSA3, new SymmetricCipherDescription {
                     Name = SymmetricStreamCiphers.VMPC_KSA3.ToString(),
                     DisplayName = "Variably Modified Permutation Composition with Key Scheduling Algorithm 3 (VMPC-KSA3)",
                     AllowableBlockSizes = new[] { -1 },
@@ -247,10 +253,11 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128, 192, 256 },
                     DefaultKeySize = 256
                 });
-                */
+#endif
 
                 // Add block cipher modes of operation
-                BlockModes.Add(BlockCipherModes.CBC, new SymmetricCipherModeDescription {
+
+                BlockCipherModeDirectory.Add(BlockCipherModes.CBC, new SymmetricCipherModeDescription {
                     Name = BlockCipherModes.CBC.ToString(),
                     DisplayName = "Ciphertext Block Chaining (CBC)",
                     PaddingRequirement = PaddingRequirements.Always,
@@ -258,7 +265,7 @@ namespace ObscurCore
                     IsAEADMode = false,
                     NonceReusePolicy = NonceReusePolicies.NotApplicable
                 });
-                BlockModes.Add(BlockCipherModes.CFB, new SymmetricCipherModeDescription {
+                BlockCipherModeDirectory.Add(BlockCipherModes.CFB, new SymmetricCipherModeDescription {
                     Name = BlockCipherModes.CFB.ToString(),
                     DisplayName = "Cipher Feedback (CFB)",
                     PaddingRequirement = PaddingRequirements.None,
@@ -266,7 +273,7 @@ namespace ObscurCore
                     IsAEADMode = false,
                     NonceReusePolicy = NonceReusePolicies.NotApplicable
                 });
-                BlockModes.Add(BlockCipherModes.CTR, new SymmetricCipherModeDescription {
+                BlockCipherModeDirectory.Add(BlockCipherModes.CTR, new SymmetricCipherModeDescription {
                     Name = BlockCipherModes.CTR.ToString(),
                     DisplayName = "Counter/Segmented Integer Counter (CTR/SIC)",
                     PaddingRequirement = PaddingRequirements.None,
@@ -274,7 +281,7 @@ namespace ObscurCore
                     IsAEADMode = false,
                     NonceReusePolicy = NonceReusePolicies.NotApplicable
                 });
-                BlockModes.Add(BlockCipherModes.CTS_CBC, new SymmetricCipherModeDescription {
+                BlockCipherModeDirectory.Add(BlockCipherModes.CTS_CBC, new SymmetricCipherModeDescription {
                     Name = BlockCipherModes.CTS_CBC.ToString(),
                     DisplayName = "Ciphertext Stealing with Ciphertext Block Chaining (CTS-CBC)",
                     PaddingRequirement = PaddingRequirements.IfUnderOneBlock,
@@ -282,7 +289,7 @@ namespace ObscurCore
                     IsAEADMode = false,
                     NonceReusePolicy = NonceReusePolicies.NotApplicable
                 });
-                BlockModes.Add(BlockCipherModes.OFB, new SymmetricCipherModeDescription {
+                BlockCipherModeDirectory.Add(BlockCipherModes.OFB, new SymmetricCipherModeDescription {
                     Name = BlockCipherModes.OFB.ToString(),
                     DisplayName = "Output Feedback (OFB)",
                     PaddingRequirement = PaddingRequirements.None,
@@ -291,7 +298,7 @@ namespace ObscurCore
                     NonceReusePolicy = NonceReusePolicies.NotApplicable
                 });
                 // Add AEAD modes of operation
-                AEADBlockModes.Add(AEADBlockCipherModes.EAX, new SymmetricCipherModeDescription {
+                AEADBlockCipherModeDirectory.Add(AEADBlockCipherModes.EAX, new SymmetricCipherModeDescription {
                     Name = AEADBlockCipherModes.EAX.ToString(),
                     DisplayName = "Counter with OMAC (EAX)",
                     PaddingRequirement = PaddingRequirements.None,
@@ -299,7 +306,7 @@ namespace ObscurCore
                     IsAEADMode = true,
                     NonceReusePolicy = NonceReusePolicies.NotAllowed
                 });
-                AEADBlockModes.Add(AEADBlockCipherModes.GCM, new SymmetricCipherModeDescription {
+                AEADBlockCipherModeDirectory.Add(AEADBlockCipherModes.GCM, new SymmetricCipherModeDescription {
                     Name = AEADBlockCipherModes.GCM.ToString(),
                     DisplayName = "Galois/Counter Mode (GCM)",
                     PaddingRequirement = PaddingRequirements.None,
@@ -309,7 +316,7 @@ namespace ObscurCore
                 });
                 // TODO: Implement OCB mode
                 /*
-                AEADBlockModes.Add(AEADBlockCipherModes.OCB, new SymmetricCipherModeDescription {
+                AEADBlockCipherModeDirectory.Add(AEADBlockCipherModes.OCB, new SymmetricCipherModeDescription {
                     Name = AEADBlockCipherModes.OCB.ToString(),
                     DisplayName = "Offset Codebook (OCB)",
                     PaddingRequirement = PaddingRequirements.None,
@@ -320,7 +327,7 @@ namespace ObscurCore
                 */
 				// TODO: Implement SIV mode
 				/*
-                AEADBlockModes.Add(AEADBlockCipherModes.SIV, new SymmetricCipherModeDescription {
+                AEADBlockCipherModeDirectory.Add(AEADBlockCipherModes.SIV, new SymmetricCipherModeDescription {
                     Name = AEADBlockCipherModes.SIV.ToString(),
                     DisplayName = "Synthetic Initialisation Vector (SIV)",
                     PaddingRequirement = PaddingRequirements.None,
@@ -331,68 +338,69 @@ namespace ObscurCore
                 */
 
                 // Add block cipher padding schemes
-                BlockPaddings.Add(BlockCipherPaddings.ISO10126D2, new SymmetricCipherPaddingDescription {
+
+                BlockCipherPaddingDirectory.Add(BlockCipherPaddings.ISO10126D2, new SymmetricCipherPaddingDescription {
                     Name = BlockCipherPaddings.ISO10126D2.ToString(),
                     DisplayName = "ISO 10126-2"
                 });
-                BlockPaddings.Add(BlockCipherPaddings.ISO7816D4, new SymmetricCipherPaddingDescription {
+                BlockCipherPaddingDirectory.Add(BlockCipherPaddings.ISO7816D4, new SymmetricCipherPaddingDescription {
                     Name = BlockCipherPaddings.ISO7816D4.ToString(),
                     DisplayName = "ISO/IEC 7816-4"
                 });
-                BlockPaddings.Add(BlockCipherPaddings.PKCS7, new SymmetricCipherPaddingDescription {
+                BlockCipherPaddingDirectory.Add(BlockCipherPaddings.PKCS7, new SymmetricCipherPaddingDescription {
                     Name = BlockCipherPaddings.PKCS7.ToString(),
                     DisplayName = "PKCS 7"
                 });
-                BlockPaddings.Add(BlockCipherPaddings.TBC, new SymmetricCipherPaddingDescription {
+                BlockCipherPaddingDirectory.Add(BlockCipherPaddings.TBC, new SymmetricCipherPaddingDescription {
                     Name = BlockCipherPaddings.TBC.ToString(),
                     DisplayName = "Trailing Bit Complement (TBC)"
                 });
-                BlockPaddings.Add(BlockCipherPaddings.X923, new SymmetricCipherPaddingDescription {
+                BlockCipherPaddingDirectory.Add(BlockCipherPaddings.X923, new SymmetricCipherPaddingDescription {
                     Name = BlockCipherPaddings.X923.ToString(),
                     DisplayName = "ANSI X.923"
                 });
 
-
-
                 // Add key derivation schemes
-				KeyDerivationFunctions.Add(ObscurCore.Cryptography.KeyDerivationFunctions.PBKDF2, new KDFDescription {
-					Name = ObscurCore.Cryptography.KeyDerivationFunctions.PBKDF2.ToString(),
-                    DisplayName = "Password Based Key Derivation Function 2 (PBKDF2)"
+
+				KDFDirectory.Add(KeyDerivationFunctions.PBKDF2, new KDFDescription {
+					Name = KeyDerivationFunctions.PBKDF2.ToString(),
+                    DisplayName = "Password-Based Key Derivation Function 2 (PBKDF2)"
                 });
-				KeyDerivationFunctions.Add(ObscurCore.Cryptography.KeyDerivationFunctions.Scrypt, new KDFDescription {
-					Name = ObscurCore.Cryptography.KeyDerivationFunctions.Scrypt.ToString(),
+				KDFDirectory.Add(KeyDerivationFunctions.Scrypt, new KDFDescription {
+					Name = KeyDerivationFunctions.Scrypt.ToString(),
                     DisplayName = "scrypt"
                 });
 
-                // Add PRNGs
-                PRNGs.Add(CSPRNumberGenerators.Salsa20, new CSPRNGDescription {
+                // Add CSPRNG functions
+
+                PRNGDirectory.Add(CSPRNumberGenerators.Salsa20, new CSPRNGDescription {
                     Name = CSPRNumberGenerators.Salsa20.ToString(),
                     DisplayName = "Salsa20 cipher based CSPRNG"
                 });
-				PRNGs.Add(CSPRNumberGenerators.SOSEMANUK, new CSPRNGDescription {
+				PRNGDirectory.Add(CSPRNumberGenerators.SOSEMANUK, new CSPRNGDescription {
 					Name = CSPRNumberGenerators.SOSEMANUK.ToString(),
 					DisplayName = "SOSEMANUK cipher based CSPRNG"
 				});
             }
 
             // Data storage.
-            internal static Dictionary<SymmetricBlockCiphers, SymmetricCipherDescription> BlockCiphers =
+            internal static Dictionary<SymmetricBlockCiphers, SymmetricCipherDescription> BlockCipherDirectory =
                 new Dictionary<SymmetricBlockCiphers, SymmetricCipherDescription>();
-            internal static Dictionary<SymmetricStreamCiphers, SymmetricCipherDescription> StreamCiphers =
+            internal static Dictionary<SymmetricStreamCiphers, SymmetricCipherDescription> StreamCipherDirectory =
                 new Dictionary<SymmetricStreamCiphers, SymmetricCipherDescription>();
-            internal static Dictionary<BlockCipherModes, SymmetricCipherModeDescription> BlockModes =
+            internal static Dictionary<BlockCipherModes, SymmetricCipherModeDescription> BlockCipherModeDirectory =
                 new Dictionary<BlockCipherModes, SymmetricCipherModeDescription>();
-            internal static Dictionary<AEADBlockCipherModes, SymmetricCipherModeDescription> AEADBlockModes =
+            internal static Dictionary<AEADBlockCipherModes, SymmetricCipherModeDescription> AEADBlockCipherModeDirectory =
                 new Dictionary<AEADBlockCipherModes, SymmetricCipherModeDescription>();
-            internal static Dictionary<BlockCipherPaddings, SymmetricCipherPaddingDescription> BlockPaddings =
+            internal static Dictionary<BlockCipherPaddings, SymmetricCipherPaddingDescription> BlockCipherPaddingDirectory =
                 new Dictionary<BlockCipherPaddings, SymmetricCipherPaddingDescription>();
-			internal static Dictionary<HashFunctions, HashFunctionDescription> HashFunctions =
+			internal static Dictionary<HashFunctions, HashFunctionDescription> HashFunctionDirectory =
 				new Dictionary<HashFunctions, HashFunctionDescription>();
-            internal static Dictionary<MACFunctions, MACFunctionDescription> MACFunctions =
+            internal static Dictionary<MACFunctions, MACFunctionDescription> MACFunctionDirectory =
 				new Dictionary<MACFunctions, MACFunctionDescription>();
-			internal static Dictionary<KeyDerivationFunctions, KDFDescription> KeyDerivationFunctions =
+			internal static Dictionary<KeyDerivationFunctions, KDFDescription> KDFDirectory =
 				new Dictionary<KeyDerivationFunctions, KDFDescription>();
-			internal static Dictionary<CSPRNumberGenerators, CSPRNGDescription> PRNGs =
+			internal static Dictionary<CSPRNumberGenerators, CSPRNGDescription> PRNGDirectory =
 				new Dictionary<CSPRNumberGenerators, CSPRNGDescription>();
 			
             // Query functions
@@ -557,7 +565,7 @@ namespace ObscurCore
 	public sealed class KDFDescription
 	{
 		/// <summary>
-		/// Name of the KDF scheme (must be a member of KeyDerivationFunctions).
+		/// Name of the KDF scheme (must be a member of KDFDirectory).
 		/// </summary>
         public string Name { get; internal set; }
 
@@ -582,7 +590,7 @@ namespace ObscurCore
 	public sealed class HashFunctionDescription
 	{	
         /// <summary>
-        /// Name of the hash function (must be a member of HashFunctions).
+        /// Name of the hash function (must be a member of HashFunctionDirectory).
         /// </summary>
 		public string Name { get; internal set; }
 		/// <summary>
@@ -594,7 +602,7 @@ namespace ObscurCore
 	public sealed class MACFunctionDescription
 	{
         /// <summary>
-        /// Name of the [H]MAC function (must be a member of MACFunctions).
+        /// Name of the [H]MAC function (must be a member of MACFunctionDirectory).
         /// </summary>
 		public string Name { get; internal set; }
 		/// <summary>

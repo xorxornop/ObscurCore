@@ -8,6 +8,7 @@ using ObscurCore.Cryptography;
 
 namespace ObscurCore.Tests.Cryptography.BlockCiphers
 {
+#if(INCLUDE_GOST28147)
     class GOST28147 : BlockCipherTestBase
     {
         public GOST28147 ()
@@ -25,4 +26,5 @@ namespace ObscurCore.Tests.Cryptography.BlockCiphers
             //RunEqualityTest(config);
         }
     }
+#endif
 }
