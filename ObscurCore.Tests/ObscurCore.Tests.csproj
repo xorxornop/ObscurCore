@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -30,10 +30,10 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
     <Reference Include="nunit.framework">
-      <Private>False</Private>
+      <HintPath>..\packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="System" />
     <Reference Include="ObscurCore.DTOSerialiser">
       <HintPath>..\ObscurCore.DTO\bin\Release\ObscurCore.DTOSerialiser.dll</HintPath>
     </Reference>
@@ -66,10 +66,7 @@
     <Compile Include="IOTestBase.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ItemGroup>
-    <Folder Include="Cryptography\" />
-    <Folder Include="Packaging\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\ObscurCore\ObscurCore.csproj">
       <Project>{E05A0E93-926A-409D-ABD3-B2A495D14533}</Project>
@@ -83,6 +80,7 @@
   <ItemGroup>
     <None Include="Cryptography\BlockCiphers\GOST28147.cs" />
     <None Include="Cryptography\BlockCiphers\Rijndael.cs" />
+    <None Include="packages.config" />
     <None Include="Packaging\Serialisation\Compression.cs" />
   </ItemGroup>
 </Project>

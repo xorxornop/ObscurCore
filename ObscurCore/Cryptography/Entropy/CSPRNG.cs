@@ -25,7 +25,7 @@ namespace ObscurCore.Cryptography.Entropy
 		public override int Next (int maxValue) {
 		    var dbl = NextDouble();
             var num = Math.Abs(dbl) * maxValue;
-		    num = Math.Round(num, MidpointRounding.AwayFromZero);
+		    num = Math.Round(num, MidpointRounding.ToEven);
 		    return (int) num;
 		}
 
@@ -35,6 +35,17 @@ namespace ObscurCore.Cryptography.Entropy
             var num = (Math.Abs(dbl) * maxValue) + minValue;
 		    num = Math.Round(num, MidpointRounding.ToEven);
 		    return (int) num;
+        }
+
+        public int NextUnbiasedInt32() {
+            var intBytes = new byte[4];
+            NextBytes(intBytes);
+
+			var result = 0;
+            for (var i = 0; i < 4; i++) {
+                result = (result << 8) + (intBytes[i] & 0xff);
+            }
+			return result;
         }
 		
 		public int NextInt() {
@@ -46,7 +57,7 @@ namespace ObscurCore.Cryptography.Entropy
 			return (int) (NextDouble() * Int32.MaxValue); // TODO: Compare the output of this method with that of the UInt32 one!
 		}
 		
-		public uint NextUInt32() {
+		public UInt32 NextUInt32() {
 			var ary = new byte[4];
 			NextBytes(ary);
 			// The first bit has just as much a chance as being a 0 as it does a 1, with a CSPRNG source - right? TODO: Better check the distribution!
@@ -62,6 +73,8 @@ namespace ObscurCore.Cryptography.Entropy
 			var ul = BitConverter.ToUInt64(bytes, 0) >> 11; // cleaner version
 			return ul / (double) (1UL << 53);
 		}
+
+	    public abstract override void NextBytes(byte[] buffer);
 	}
 }
 

@@ -17,8 +17,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
 			BigInteger n = parameters.N;
 			BigInteger d;
 			
-            // TODO: Review use of this unmodified, parameterless SecureRandom generator.
-			do { d = new BigInteger(n.BitLength, new SecureRandom()); }
+			do { d = new BigInteger(n.BitLength, StratCom.EntropySource); }
 			while (d.SignValue == 0 || (d.CompareTo(n) >= 0));
 			
 			ECPoint q = parameters.G.Multiply(d);

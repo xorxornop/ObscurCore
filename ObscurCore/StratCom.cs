@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication.Primitives;
 using ObscurCore.Cryptography.Entropy;
@@ -40,18 +41,19 @@ namespace ObscurCore
     {
 		internal readonly static DTOSerialiser Serialiser = new DTOSerialiser();
 
-        public static readonly SecureRandom EntropySource =
-            SecureRandom.GetInstance("SHA256PRNG");
+        public static readonly SecureRandom EntropySource = SecureRandom.GetInstance("SHA256PRNG");
 
+        private const int InitialSeedSize = 64; // bytes
         internal const int HeaderVersion = 1;
         internal static readonly byte[] HeaderTagBytes = Encoding.ASCII.GetBytes("OCPS-OHAI");
         internal static readonly byte[] TrailerTagBytes = Encoding.ASCII.GetBytes("OCPE-KBAI");
 
         static StratCom() {
-            EntropySource.SetSeed(DateTime.Now.Ticks);
+            EntropySource.SetSeed(SecureRandom.GetSeed(64));
+            EntropySource.SetSeed(Encoding.UTF8.GetBytes(Thread.CurrentThread.Name));
         }
 
-		/// <summary>
+        /// <summary>
 		/// Provides serialisation capabilities for any object that has a ProtoContract attribute (e.g. from ObscurCore.DTO namespace).
 		/// </summary>
 		/// <returns>The DTO object serialised to binary data wrapped in a MemoryStream.</returns>

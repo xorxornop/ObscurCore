@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 
 namespace ObscurCore.Tests
@@ -28,33 +29,39 @@ namespace ObscurCore.Tests
 
         private const int RandomStreamLength = 1024 * 1024; // 1 MB
 
-        private readonly static string _pathTestRoot = Directory.GetParent(Directory.GetParent(Environment.CurrentDirectory).FullName).FullName 
-			+ Path.DirectorySeparatorChar + "test-data-src";
+        public readonly static DirectoryInfo TestDataDirectory = new DirectoryInfo(Directory.GetParent(Directory.GetParent(Environment.CurrentDirectory)
+            .FullName).FullName + Path.DirectorySeparatorChar + "test-data-src");
+
+        public static readonly DirectoryInfo SmallTextFilesDirectory =
+            new DirectoryInfo(TestDataDirectory.FullName + Path.DirectorySeparatorChar + "small-text-files");
+
+        public static readonly DirectoryInfo LargeBinaryFilesDirectory =
+            new DirectoryInfo(TestDataDirectory.FullName + Path.DirectorySeparatorChar + "large-binary-files");
+
+        public static readonly string PayloadExtension = ".payload";
 
 		protected static readonly MemoryStream RandomStream = new MemoryStream();
+        protected static readonly MemoryStream SmallTextFile = new MemoryStream();
+		protected static readonly MemoryStream LargeBinaryFile = new MemoryStream();
 
 		public static readonly List<FileInfo> SmallTextFileList = new List<FileInfo>();
 		public static readonly List<FileInfo> LargeBinaryFileList = new List<FileInfo>();
 
-		protected static MemoryStream SmallTextFile = new MemoryStream();
-		protected static MemoryStream LargeBinaryFile = new MemoryStream();
 
 		static IOTestBase ()
 		{
-			var smallFiles = Directory.EnumerateFiles (_pathTestRoot + Path.DirectorySeparatorChar + "small-text-files");
-			foreach (var file in smallFiles) {
-				if (file.EndsWith (".payload"))
-					continue;
-				SmallTextFileList.Add (new FileInfo (file));
+            foreach (var file in SmallTextFilesDirectory.EnumerateFiles().Where(file 
+                => !file.Extension.Equals(PayloadExtension)))
+            {
+			    SmallTextFileList.Add (file);
 			}
 			var fs = SmallTextFileList [0].OpenRead ();
 			fs.CopyTo(SmallTextFile);
 
-			var largeFiles = Directory.EnumerateFiles (_pathTestRoot + Path.DirectorySeparatorChar + "large-binary-files");
-			foreach (var file in largeFiles) {
-				if (file.EndsWith (".payload"))
-					continue;
-				LargeBinaryFileList.Add (new FileInfo (file));
+			foreach (var file in LargeBinaryFilesDirectory.EnumerateFiles().Where(file 
+                => !file.Extension.Equals(PayloadExtension)))
+            {
+			    LargeBinaryFileList.Add (file);
 			}
 			fs = LargeBinaryFileList [0].OpenRead ();
 			fs.CopyTo(LargeBinaryFile);

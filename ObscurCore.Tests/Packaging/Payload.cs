@@ -19,7 +19,6 @@ using System.Linq;
 using System.IO;
 using NUnit.Framework;
 using ObscurCore.Cryptography;
-using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
 using ObscurCore.Extensions.DTO;
 using ObscurCore.Extensions.Enumerations;
@@ -29,9 +28,9 @@ namespace ObscurCore.Tests.Packaging
 {
 	public class Payload
 	{
-	    private const string demuxDir = "demuxed";
+	    private const string DemuxDir = "demuxed";
 
-        private readonly static List<FileInfo> _Files = IOTestBase.SmallTextFileList;
+        private readonly static List<FileInfo> Files = IOTestBase.SmallTextFileList;
 
 		public Payload ()
 		{
@@ -44,16 +43,16 @@ namespace ObscurCore.Tests.Packaging
 
 		[Test]
 		public void Simple () {
-			var items = GetItems (_Files.Count);
+			var items = GetItems (Files.Count);
 			var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Simple);
-			DoMux (payloadConfig, items, _Files);
+			DoMux (payloadConfig, items, Files, true);
 		}
 
 		[Test]
 		public void Frameshift () {
-			var items = GetItems (_Files.Count);
+			var items = GetItems (Files.Count);
 			var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Frameshift);
-			DoMux (payloadConfig, items, _Files, true);
+			DoMux (payloadConfig, items, Files, true);
 		}
 
 #if(INCLUDE_FABRIC)
@@ -81,8 +80,9 @@ namespace ObscurCore.Tests.Packaging
 			var items = new List<PayloadItem> ();
             var sRng = StratCom.EntropySource;
 
-		    for (int i = 0; i < howMany; i++) {
+		    for (var i = 0; i < howMany; i++) {
 		        var payloadItem = new PayloadItem () {
+                    RelativePath = Files[i].Name,
 				    Type = PayloadItemTypes.Binary,
 				    //Compression = new CompressionConfiguration () { AlgorithmName = CompressionAlgorithms.LZ4.ToString() },
 				    //Encryption = new BlockCipherConfiguration(SymmetricBlockCiphers.AES, BlockCipherModes.CTR, BlockCipherPaddingTypes.None),
@@ -104,15 +104,11 @@ namespace ObscurCore.Tests.Packaging
 	    protected void DoMux(PayloadLayoutConfiguration payloadConfig, List<PayloadItem> items, List<FileInfo> files,  bool outputPayload = false) {
 			
             var ms = new MemoryStream ();
-	        
 
-	        
-
-	        for (int index = 0; index < items.Count; index++) {
-	            var payloadItem = items[index];
-	            int index1 = index;
-	            payloadItem.SetStreamBinding(() => new FileStream(files[index1].FullName, FileMode.Open));
-	            payloadItem.ExternalLength = payloadItem.StreamBinding.Length;
+	        for (var index = 0; index < items.Count; index++) {
+	            var index1 = index;
+	            items[index].SetStreamBinding(() => new FileStream(files[index1].FullName, FileMode.Open));
+	            items[index].ExternalLength = items[index].StreamBinding.Length;
 	        }
 
 	        var transforms = GetTransforms(items, true);
@@ -122,7 +118,7 @@ namespace ObscurCore.Tests.Packaging
 			Assert.DoesNotThrow (mux.ExecuteAll);
 
             // Get internal lengths
-	        for (int i = 0; i < items.Count; i++) {
+	        for (var i = 0; i < items.Count; i++) {
 	            items[i].InternalLength = mux.GetItemIO(i);
 	        }
 
@@ -135,27 +131,20 @@ namespace ObscurCore.Tests.Packaging
             // Write out muxed payload - optional
 	        if (outputPayload) {
 
-			string path = _Files [0].Directory.FullName + 
-				Path.DirectorySeparatorChar + payloadConfig.SchemeName.ToLower () + ".payload";
-
-				using (var fs = File.Create(_Files[0].Directory.FullName + 
-				                   Path.DirectorySeparatorChar + payloadConfig.SchemeName.ToLower() + ".payload")) {
-
+			    var path = Files [0].Directory.FullName + 
+				    Path.DirectorySeparatorChar + payloadConfig.SchemeName.ToLower () + IOTestBase.PayloadExtension;
+				using (var fs = new FileStream(path, FileMode.Create)) {
                     ms.WriteTo(fs);
                 }
 	        }
 
             // DEMUX
 
-	        for (int index = 0; index < items.Count; index++) {
-	            var payloadItem = items[index];
-	            int index1 = index;
-
-				string demuxPath = files [index1].Directory.FullName + Path.DirectorySeparatorChar +
-					demuxDir;
-
-				if (!Directory.Exists (demuxDir)) Directory.CreateDirectory (demuxPath);
-	            payloadItem.SetStreamBinding(() => new FileStream(demuxPath + Path.DirectorySeparatorChar + files[index1].Name, FileMode.Create));
+            var demuxPath = files[0].Directory.FullName + Path.DirectorySeparatorChar + DemuxDir;
+	        foreach (var payloadItem in items) {
+	            if (!Directory.Exists (DemuxDir)) Directory.CreateDirectory (demuxPath);
+	            PayloadItem item = payloadItem;
+	            payloadItem.SetStreamBinding(() => new FileStream(demuxPath + Path.DirectorySeparatorChar + item.RelativePath, FileMode.Create));
 	        }
 
 	        transforms = GetTransforms(items, false);

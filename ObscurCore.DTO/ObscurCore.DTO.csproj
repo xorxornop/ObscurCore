@@ -37,7 +37,7 @@
     </CustomCommands>
   </PropertyGroup>
   <PropertyGroup>
-    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="protobuf-net">
@@ -63,7 +63,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(TargetDir)precompiler\precompile.exe" "$(TargetPath)" -o:"$(TargetDir)$(TargetName)Serialiser.dll" -t:$(ProjectName)Serialiser
+    <PostBuildEvent>"$(ProjectDir)precompiler\precompile.exe" "$(TargetPath)" -o:"$(TargetDir)$(TargetName)Serialiser.dll" -t:$(ProjectName)Serialiser
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

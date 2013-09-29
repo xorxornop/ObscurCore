@@ -65,7 +65,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Padding
 			}
 
 			Reset();
-			padding.Init(initRandom);
+			padding.Init(initRandom ?? StratCom.EntropySource);
 			cipher.Init(forEncryption, parameters);
 		}
 
