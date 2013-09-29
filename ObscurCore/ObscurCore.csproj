@@ -42,6 +42,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Athena.cs" />
     <Compile Include="Cryptography\Authentication\IDigest.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />
     <Compile Include="Cryptography\Authentication\IMacWithSalt.cs" />
@@ -169,6 +170,7 @@
     <Compile Include="Cryptography\SymmetricCryptoStream.cs" />
     <Compile Include="DecoratingStream.cs" />
     <Compile Include="EventArgs.cs" />
+    <None Include="Packaging\AsyncCryptoMux.cs" />
     <Compile Include="Packaging\ConfigurationObjects.cs" />
     <Compile Include="Packaging\Enums.cs" />
     <Compile Include="Packaging\FabricMux.cs" />
@@ -214,10 +216,6 @@
     <Compile Include="Cryptography\Support\X9IntegerConverter.cs" />
     <Compile Include="CyclicByteBuffer.cs" />
     <Compile Include="ExtensionMethods.cs" />
-    <None Include="Packaging\AsyncCryptoMux.cs" />
-    <Compile Include="Cryptography\Athena.cs">
-      <DependentUpon>SymmetricCipherConfiguration.cs</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
