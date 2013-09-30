@@ -32,11 +32,11 @@ namespace ObscurCore.Extensions
                 public static DecoratingStream BindTransformStream(this PayloadItem item, bool writing, Stream binding = null) {
                     DecoratingStream stream = null;
 
-                    if (item.Encryption.Key == null) {
+                    if (item.Encryption.Key == null || item.Encryption.Key.Length == 0) {
                         throw new ItemKeyMissingException(item);
                     }
 
-                    if (item.Encryption != null) stream = new SymmetricCryptoStream(binding, writing, item.Encryption, true);
+                    if (item.Encryption != null) stream = new SymmetricCryptoStream(binding, writing, item.Encryption, item.KeyDerivation, true);
                     //if (item.Compression != null) stream = new CompressoStream(stream ?? binding, writing, true, item.Compression);
 
                     return stream;

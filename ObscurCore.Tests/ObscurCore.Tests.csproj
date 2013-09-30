@@ -55,6 +55,7 @@
     <Compile Include="Cryptography\BlockCiphers\Serpent.cs" />
     <Compile Include="Cryptography\BlockCiphers\TripleDES.cs" />
     <Compile Include="Cryptography\BlockCiphers\Twofish.cs" />
+    <Compile Include="Cryptography\Entropy\CSPRNGTests.cs" />
     <Compile Include="Cryptography\KeyAgreements\UM1.cs" />
     <Compile Include="Cryptography\StreamCiphers\StreamCipherTests.cs" />
     <Compile Include="Packaging\Payload.cs" />

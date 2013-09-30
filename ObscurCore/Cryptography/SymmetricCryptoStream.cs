@@ -45,7 +45,7 @@ namespace ObscurCore.Cryptography
 		/// <param name="key">Derived cryptographic key for the internal cipher to operate with.</param>
 		/// <param name="leaveOpen">Set to <c>false</c> to also close the base stream when closing, or vice-versa.</param>
 		public SymmetricCryptoStream (Stream target, bool isEncrypting, ISymmetricCipherConfiguration config, 
-		                              bool leaveOpen = false) : base(isEncrypting, leaveOpen)
+		                              KeyDerivationConfiguration kdfConfig = null, bool leaveOpen = false) : base(isEncrypting, leaveOpen)
 		{
 			if (config.Key == null || config.Key.Length == 0) throw new ArgumentException("No key provided in field in config parameter object.");
             if(String.IsNullOrEmpty(config.CipherName)) throw new InvalidDataException("CipherName is null or empty.");
@@ -54,6 +54,14 @@ namespace ObscurCore.Cryptography
 			IBufferedCipher cipher;
 			ICipherParameters cipherParams = null;
 
+            byte[] workingKey = null;
+            if (kdfConfig != null) {
+                workingKey = Source.DeriveKeyWithKDF(kdfConfig.SchemeName.ToEnum<KeyDerivationFunctions>(), config.Key,
+                    kdfConfig.Salt, config.KeySize/8, kdfConfig.SchemeConfiguration);
+            } else {
+                workingKey = config.Key;
+            }
+
 			// Determine if stream or block cipher
 			if (Enum.GetNames(typeof(SymmetricBlockCiphers)).Contains(config.CipherName)) {
 				// Requested a block or AEAD cipher.
@@ -61,8 +69,8 @@ namespace ObscurCore.Cryptography
 
 			    var blockCipherEnum = config.CipherName.ToEnum<SymmetricBlockCiphers>();
 
-                if(!config.Key.Length.Equals(config.KeySize / 8))
-                    throw new InvalidDataException("Specified key size does not match the supplied key.");
+                if(!workingKey.Length.Equals(config.KeySize / 8))
+                    throw new InvalidDataException("Key is not of the declared length.");
 
                 if(!Athena.Cryptography.BlockCipherDirectory[blockCipherEnum].AllowableBlockSizes.Contains(config.BlockSize)) 
                     throw new NotSupportedException("Specified block size is unsupported.");
@@ -107,10 +115,11 @@ namespace ObscurCore.Cryptography
                         //throw new NotSupportedException("Nonce size does not match MAC size.");
                     // TODO: Determine if this check (disabled currently) is appropriate.
 
-				    cipherParams = Source.CreateAEADBlockCipherParameters(config);
+				    cipherParams = Source.CreateAEADBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCiphers>(),
+				        workingKey, config.IV, config.MACSize, config.AssociatedData);
 
 					// Overlay the cipher with the mode of operation
-					var aeadCipher = Source.CreateBlockCipherWithAEAD(config.ModeName.ToEnum<AEADBlockCipherModes>() , blockCipher);
+					var aeadCipher = Source.CreateBlockCipherWithAEAD(config.ModeName.ToEnum<AEADBlockCipherModes>(), blockCipher);
 
 					// Create the I/O-enabled transform object
 					if (!config.PaddingName.Equals(BlockCipherPaddings.None.ToString()) && !config.PaddingName.Equals(""))
@@ -121,8 +130,9 @@ namespace ObscurCore.Cryptography
 				}
 
 			} else if (Enum.GetNames(typeof(SymmetricStreamCiphers)).Contains(config.CipherName)) {
+                BufferRequirementOverride = config.IV != null && config.IV.Length > 0 ? (config.IV.Length) * 2 : (config.KeySize / 8) * 2;
 				// Requested a stream cipher.
-                cipherParams = Source.CreateStreamCipherParameters(config.CipherName.ToEnum<SymmetricStreamCiphers>(), config.Key, config.IV);
+                cipherParams = Source.CreateStreamCipherParameters(config.CipherName.ToEnum<SymmetricStreamCiphers>(), workingKey, config.IV);
 				// Instantiate the cipher
 				var streamCipher = Source.CreateStreamCipher(config.CipherName.ToEnum<SymmetricStreamCiphers>());
 				// Create the I/O-enabled transform object

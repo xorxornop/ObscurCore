@@ -47,35 +47,35 @@ namespace ObscurCore
     /// </summary>
     public static class Source
     {
-        private readonly static Dictionary<SymmetricBlockCiphers, Func<int, IBlockCipher>> EngineInstantiatorsBlock =
+        private readonly static IDictionary<SymmetricBlockCiphers, Func<int, IBlockCipher>> EngineInstantiatorsBlock =
             new Dictionary<SymmetricBlockCiphers, Func<int, IBlockCipher>>();
-        private readonly static Dictionary<SymmetricStreamCiphers, Func<IStreamCipher>> EngineInstantiatorsStream =
+        private readonly static IDictionary<SymmetricStreamCiphers, Func<IStreamCipher>> EngineInstantiatorsStream =
             new Dictionary<SymmetricStreamCiphers, Func<IStreamCipher>>();
 
-        private readonly static Dictionary<BlockCipherModes, Func<IBlockCipher, int, IBlockCipher>> ModeInstantiatorsBlock =
+        private readonly static IDictionary<BlockCipherModes, Func<IBlockCipher, int, IBlockCipher>> ModeInstantiatorsBlock =
             new Dictionary<BlockCipherModes, Func<IBlockCipher, int, IBlockCipher>>();
-        private readonly static Dictionary<AEADBlockCipherModes, Func<IBlockCipher, IAeadBlockCipher>> ModeInstantiatorsAead =
+        private readonly static IDictionary<AEADBlockCipherModes, Func<IBlockCipher, IAeadBlockCipher>> ModeInstantiatorsAead =
             new Dictionary<AEADBlockCipherModes, Func<IBlockCipher, IAeadBlockCipher>>();
 
-        private readonly static Dictionary<BlockCipherPaddings, Func<IBlockCipherPadding>> PaddingInstantiators =
+        private readonly static IDictionary<BlockCipherPaddings, Func<IBlockCipherPadding>> PaddingInstantiators =
             new Dictionary<BlockCipherPaddings, Func<IBlockCipherPadding>>();
 
-        private readonly static Dictionary<KeyDerivationFunctions, Func<int, byte[], IKDFModule>> KdfInstantiators =
+        private readonly static IDictionary<KeyDerivationFunctions, Func<int, byte[], IKDFModule>> KdfInstantiators =
 			new Dictionary<KeyDerivationFunctions, Func<int, byte[], IKDFModule>>();
 		
-		private readonly static Dictionary<KeyDerivationFunctions, Func<byte[], byte[], int, byte[], byte[]>> KdfStatics =
+		private readonly static IDictionary<KeyDerivationFunctions, Func<byte[], byte[], int, byte[], byte[]>> KdfStatics =
 			new Dictionary<KeyDerivationFunctions, Func<byte[], byte[], int, byte[], byte[]>>();
 
-        private readonly static Dictionary<CSPRNumberGenerators, Func<byte[], CSPRNG>> PrngInstantiators =
+        private readonly static IDictionary<CSPRNumberGenerators, Func<byte[], CSPRNG>> PrngInstantiators =
 			new Dictionary<CSPRNumberGenerators, Func<byte[], CSPRNG>>();
 
-        private readonly static Dictionary<HashFunctions, Func<IDigest>> DigestInstantiators =
+        private readonly static IDictionary<HashFunctions, Func<IDigest>> DigestInstantiators =
 			new Dictionary<HashFunctions, Func<IDigest>>();
 
-        private readonly static Dictionary<MACFunctions, Func<IMac>> MacInstantiators =
+        private readonly static IDictionary<MACFunctions, Func<IMac>> MacInstantiators =
 			new Dictionary<MACFunctions, Func<IMac>>();
 
-        private readonly static Dictionary<string, Func<ECDomainParameters>> EcParameters =
+        private readonly static IDictionary<string, Func<ECDomainParameters>> EcParameters =
 			new Dictionary<string, Func<ECDomainParameters>>();
 
         // Packaging related
@@ -260,6 +260,10 @@ namespace ObscurCore
         }
 
 
+        //public static byte[] CreateCipherKey(SymmetricBlockCiphers cipher) {
+            
+        //}
+
         /// <summary>
         /// Instantiates and returns a symmetric block cipher of the algorithm type that the instance this method was called from describes.
         /// </summary>
@@ -373,11 +377,6 @@ namespace ObscurCore
             return cipherParams;
         }
 
-        public static ICipherParameters CreateAEADBlockCipherParameters(ISymmetricCipherConfiguration config) {
-            return CreateAEADBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCiphers>(), config.Key,
-                config.IV, config.MACSize, config.AssociatedData);
-        }
-
         public static ICipherParameters CreateAEADBlockCipherParameters(SymmetricBlockCiphers cipher, byte[] key, byte[] iv, int macSizeBits, byte[] ad) {
             ICipherParameters cipherParams = null;
 
@@ -445,7 +444,7 @@ namespace ObscurCore
 		/// <param name="outputSize">Output key size in bits.</param>
 		/// <param name="config">Configuration of the KDF in byte-array encoded form.</param>
 		public static byte[] DeriveKeyWithKDF (KeyDerivationFunctions kdf, byte[] key, byte[] salt, int outputSize, byte[] config) {
-			return KdfStatics[kdf](key, salt, outputSize / 8, config);
+			return KdfStatics[kdf](key, salt, outputSize, config);
 		}
 		
 		public static IKDFModule CreateKDF(KeyDerivationFunctions kdf, int outputSize, byte[] config) {

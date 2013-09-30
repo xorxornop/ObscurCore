@@ -15,6 +15,7 @@
 
 using System.Security.Cryptography;
 using ObscurCore.Cryptography.KeyDerivation.Primitives;
+using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.KeyDerivation
 {	
@@ -34,7 +35,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		/// <returns>The derived key.</returns>
 		/// <param name="key">Pre-key material to derive working key from.</param>
 		/// <param name="salt">Salt to apply in the derivation process.</param>
-		/// <param name="outputSize">Size/length of the derived key in bytes.</param>
+		/// <param name="outputSize">Size/length of the derived key in bits.</param>
 		byte[] DeriveKey(byte[] key, byte[] salt, int outputSize);
 		
 		/// <summary>
@@ -52,9 +53,11 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		/// <returns>The derived key.</returns>
 		/// <param name="key">Pre-key material to derive working key from.</param>
 		/// <param name="salt">Salt to apply in the derivation process.</param>
-		/// <param name="outputSize">Size/length of the derived key in bytes.</param>
+		/// <param name="outputSize">Size/length of the derived key in bits.</param>
 		/// <param name="config">Configuration to use in the KDF instance.</param>
 		byte[] DeriveKey(byte[] key, byte[] salt, int outputSize, byte[] config);
+
+        byte[] DeriveKey(byte[] key, int outputSize, KeyDerivationConfiguration config);
 	}
 	
 	/// <summary>
@@ -86,16 +89,20 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		}
 		
 		public byte[] DeriveKey (byte[] key, byte[] salt, byte[] config) {
-			return ScryptModule.DeriveKeyWithConfig(key, salt, _outputSize, config);
+			return DeriveKeyWithConfig(key, salt, _outputSize, config);
 		}
 		
 		public byte[] DeriveKey (byte[] key, byte[] salt, int outputSize, byte[] config) {
-			return ScryptModule.DeriveKeyWithConfig(key, salt, outputSize, config);
+			return DeriveKeyWithConfig(key, salt, outputSize, config);
 		}	
+
+        public byte[] DeriveKey(byte[] key, int outputSize, KeyDerivationConfiguration config) {
+            return DeriveKeyWithConfig(key, config.Salt, outputSize, config.SchemeConfiguration);
+        }
 		#endregion		
 		
 		private static byte[] DeriveKey (byte[] key, byte[] salt, int outputSize, int iterationPower, int blocks, int parallelisation) {
-			var output = new byte[outputSize];
+			var output = new byte[outputSize / 8];
 			SCrypt.ComputeKey(key, salt, iterationPower, blocks, parallelisation, null, output);
 			return output;
 		}
@@ -103,7 +110,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, byte[] config) {
 			int iterationPower, blocks, parallelisation;
 			ScryptConfigurationUtility.Read (config, out iterationPower, out blocks, out parallelisation);
-			var output = new byte[outputSize];
+			var output = new byte[outputSize / 8];
 			SCrypt.ComputeKey(key, salt, iterationPower, blocks, parallelisation, null, output);
 			return output;
 		}
@@ -125,20 +132,27 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		public byte[] DeriveKey (byte[] key, byte[] salt) {
 			return DeriveKey(key, salt, _outputSize, _iterations);
 		}
+
 		public byte[] DeriveKey (byte[] key, byte[] salt, int outputSize) {
 			return DeriveKey(key, salt, outputSize, _iterations);
 		}
+
 		public byte[] DeriveKey (byte[] key, byte[] salt, byte[] config) {
 			return DeriveKeyWithConfig(key, salt, _outputSize, config);
 		}
+
 		public byte[] DeriveKey (byte[] key, byte[] salt, int outputSize, byte[] config) {
 			return DeriveKeyWithConfig(key, salt, outputSize, config);
 		}
+
+        public byte[] DeriveKey(byte[] key, int outputSize, KeyDerivationConfiguration config) {
+            return DeriveKeyWithConfig(key, config.Salt, outputSize, config.SchemeConfiguration);
+        }
 		#endregion
 		
 		private static byte[] DeriveKey (byte[] key, byte[] salt, int outputSize, int iterations) {
 			var output = new byte[outputSize];
-			Pbkdf2.ComputeKey(key, salt, iterations, Pbkdf2.CallbackFromHmac<HMACSHA256>(), outputSize, output);
+			Pbkdf2.ComputeKey(key, salt, iterations, Pbkdf2.CallbackFromHmac<HMACSHA256>(), outputSize / 8, output);
 			return output;
 		}
 		
@@ -146,7 +160,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 			int iterations;
 			PBKDF2ConfigurationUtility.Read(config, out iterations);
 			var output = new byte[outputSize];
-			Pbkdf2.ComputeKey(key, salt, iterations, Pbkdf2.CallbackFromHmac<HMACSHA256>(), outputSize, output);
+			Pbkdf2.ComputeKey(key, salt, iterations, Pbkdf2.CallbackFromHmac<HMACSHA256>(), outputSize / 8, output);
 			return output;
 		}
 	}

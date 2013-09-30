@@ -152,16 +152,10 @@
     <Compile Include="Cryptography\KeyAgreement\Utilities.cs" />
     <None Include="Cryptography\Entropy\Primitives\MersenneTwister.cs" />
     <Compile Include="Cryptography\KeyDerivation\KeyDerivationFunctions.cs" />
-    <Compile Include="Cryptography\KeyDerivation\Primitives\Bcrypt.cs" />
-    <Compile Include="Cryptography\KeyDerivation\Primitives\BlowfishCipher.Constants.cs" />
-    <Compile Include="Cryptography\KeyDerivation\Primitives\BlowfishCipher.cs" />
-    <Compile Include="Cryptography\KeyDerivation\Primitives\Crypter.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Helper.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Pbkdf2.cs" />
-    <Compile Include="Cryptography\KeyDerivation\Primitives\Pow2Base.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Salsa20Core.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Scrypt.cs" />
-    <Compile Include="Cryptography\KeyDerivation\Primitives\UnixBase64.cs" />
     <Compile Include="Cryptography\KeyDerivation\Utilities.cs" />
     <Compile Include="Cryptography\SymmetricCipherConfiguration.cs" />
     <Compile Include="Cryptography\SymmetricCryptoStream.cs" />

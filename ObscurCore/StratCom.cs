@@ -99,7 +99,7 @@ namespace ObscurCore
 				blakeMac.Init(manifestCipherConfig.Key, new byte[] {0xFF} ); // TODO: CHANGE THE SALT!!!
 				destinationAlias = new MacStream(destination, null, blakeMac);
 			}
-			using (var cs = new SymmetricCryptoStream(destinationAlias, true, manifestCipherConfig, true)) {
+			using (var cs = new SymmetricCryptoStream(destinationAlias, true, manifestCipherConfig, null, true)) {
 				Serialiser.SerializeWithLengthPrefix(cs, manifest, typeof(Manifest), PrefixStyle.Fixed32, 1);
 			}
 			// At the moment, IES is forced to use BLAKE2B only, but need to create a DTO object to detail MAC configurations
