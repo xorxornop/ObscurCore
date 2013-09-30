@@ -36,7 +36,7 @@ namespace ObscurCore.Extensions
                         throw new ItemKeyMissingException(item);
                     }
 
-                    if (item.Encryption != null) stream = new SymmetricCryptoStream(binding, writing, item.Encryption, item.KeyDerivation, true);
+                    if (item.Encryption != null) stream = new SymmetricCryptoStream(binding, writing, item.Encryption, null, true);
                     //if (item.Compression != null) stream = new CompressoStream(stream ?? binding, writing, true, item.Compression);
 
                     return stream;

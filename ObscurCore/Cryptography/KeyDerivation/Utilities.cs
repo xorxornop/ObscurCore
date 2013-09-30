@@ -22,7 +22,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 {
 	public static class ScryptConfigurationUtility
 	{	
-		public const int DefaultIterationPower = 14, DefaultBlocks = 8, DefaultParallelisation = 2;
+		public const int DefaultIterationPower = 16, DefaultBlocks = 8, DefaultParallelisation = 2;
 		internal const string DefaultAlgorithm = "HMACSHA256";
 		
 		/// <summary>

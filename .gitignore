@@ -110,3 +110,4 @@ ObscurCore.Tests/test-results
 *.userprefs
 ObscurCore.Tests/test-data-src/small-text-files/
 ObscurCore.Tests/test-data-src/large-binary-files/
+ObscurCore.Tests/test-data-dst/

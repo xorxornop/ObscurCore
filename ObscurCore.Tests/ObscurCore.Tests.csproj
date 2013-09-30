@@ -58,6 +58,7 @@
     <Compile Include="Cryptography\Entropy\CSPRNGTests.cs" />
     <Compile Include="Cryptography\KeyAgreements\UM1.cs" />
     <Compile Include="Cryptography\StreamCiphers\StreamCipherTests.cs" />
+    <Compile Include="Packaging\Packages.cs" />
     <Compile Include="Packaging\Payload.cs" />
     <Compile Include="Packaging\Serialisation\KeyConfirmation.cs" />
     <Compile Include="Packaging\Serialisation\Manifest.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="Packaging\Serialisation\SerialisationTestBase.cs" />
     <Compile Include="Packaging\Serialisation\SymmetricCipherConfiguration.cs" />
     <Compile Include="IOTestBase.cs" />
+    <Compile Include="Packaging\Utilities.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />

@@ -46,13 +46,13 @@ namespace ObscurCore.DTO
     public enum ManifestCryptographySchemes
     {
 		/// <summary>
-		/// UM1-based Integrated Encryption Scheme. U
+		/// UM1-based Integrated Encryption Scheme.
 		/// </summary>
 		/// <remarks>
 		/// Uses UM1 to generate a secret value, which is further derived with a KDF. 
-		/// This derived secret is used as a symmetric cipher key, and to generate a MAC for the data.
+		/// This derived secret is used as a symmetric cipher key, and optionally, to generate a MAC for the data.
 		/// </remarks>
-		UM1IES,
+		UM1Hybrid,
 
         /// <summary>
         /// Using a pre-agreed key. Simply uses a SymmetricCipherConfiguration object in serialised form for configuration, and as such, allows rich customisation.

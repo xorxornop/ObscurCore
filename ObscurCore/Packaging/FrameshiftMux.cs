@@ -37,7 +37,7 @@ namespace ObscurCore.Packaging
 		protected readonly int minPadding, maxPadding;
 	    protected readonly Random paddingSrc = StratCom.EntropySource;
 		
-		public FrameshiftMux (bool writing, Stream multiplexedStream, ICollection<IStreamBinding> streams, List<Func<Stream, DecoratingStream>> transforms, 
+		public FrameshiftMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, IList<Func<Stream, DecoratingStream>> transforms, 
 		                      IPayloadLayoutConfiguration config) : base(writing, multiplexedStream, streams, transforms, config)
 		{
 			FrameshiftConfigurationUtility.Read(config.SchemeConfiguration, out minPadding, out maxPadding);

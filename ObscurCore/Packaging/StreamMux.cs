@@ -39,8 +39,8 @@ namespace ObscurCore.Packaging
         /// <param name="streams">Streams.</param>
         /// <param name="transformFuncs">Transform funcs.</param>
         /// <param name="maxOpSize">Maximum size that any single operation will be. Used to size copy buffer.</param>
-        public StreamMux(bool writing, Stream multiplexedStream, ICollection<IStreamBinding> streams,
-                         List<Func<Stream, DecoratingStream>> transformFuncs, int maxOpSize = 16384) {
+        public StreamMux(bool writing, Stream multiplexedStream, IList<IStreamBinding> streams,
+                         IList<Func<Stream, DecoratingStream>> transformFuncs, int maxOpSize = 16384) {
             if (streams.Count == 0 || transformFuncs.Count == 0)
                 throw new ArgumentException("No streams and/or transforms supplied for multiplexing operations.");
             else if (streams.Count != transformFuncs.Count)

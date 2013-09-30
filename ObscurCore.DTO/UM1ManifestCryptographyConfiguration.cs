@@ -24,7 +24,7 @@ namespace ObscurCore.DTO
     // ***************************************************************************************************************************************************
 
     [ProtoContract]
-    public class UM1IESConfiguration : IManifestCryptographySchemeConfiguration
+    public class UM1ManifestCryptographyConfiguration : IManifestCryptographySchemeConfiguration
     {
         /// <summary>
         /// Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
@@ -51,10 +51,10 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((UM1IESConfiguration) obj);
+            return Equals((UM1ManifestCryptographyConfiguration) obj);
         }
 
-        public bool Equals(UM1IESConfiguration other) {
+        public bool Equals(UM1ManifestCryptographyConfiguration other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             if(!IsSuperficiallyValid()) 

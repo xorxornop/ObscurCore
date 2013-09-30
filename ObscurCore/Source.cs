@@ -80,9 +80,9 @@ namespace ObscurCore
 
         // Packaging related
 
-        private readonly static Dictionary<PayloadLayoutSchemes, Func<bool, Stream, List<IStreamBinding>, List<Func<Stream, DecoratingStream>>, 
+        private readonly static IDictionary<PayloadLayoutSchemes, Func<bool, Stream, IList<IStreamBinding>, IList<Func<Stream, DecoratingStream>>, 
 			IPayloadLayoutConfiguration, StreamMux>> PayloadLayoutModuleInstantiators = new Dictionary<PayloadLayoutSchemes, 
-		Func<bool, Stream, List<IStreamBinding>, List<Func<Stream, DecoratingStream>>, IPayloadLayoutConfiguration, StreamMux>>();
+		    Func<bool, Stream, IList<IStreamBinding>, IList<Func<Stream, DecoratingStream>>, IPayloadLayoutConfiguration, StreamMux>>();
 
         static Source() {
             // ######################################## ENGINES ########################################
@@ -542,8 +542,8 @@ namespace ObscurCore
 		/// <returns>
 		/// An module object deriving from IPayloadModule.
 		/// </returns>
-		public static StreamMux CreatePayloadMultiplexer (PayloadLayoutSchemes scheme, bool writing, Stream multiplexedStream, List<IStreamBinding> streams, 
-		                                            List<Func<Stream, DecoratingStream>> transforms, IPayloadLayoutConfiguration config)
+		public static StreamMux CreatePayloadMultiplexer (PayloadLayoutSchemes scheme, bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, 
+		                                            IList<Func<Stream, DecoratingStream>> transforms, IPayloadLayoutConfiguration config)
 		{
 			return PayloadLayoutModuleInstantiators[scheme](writing, multiplexedStream, streams, transforms, config);
 		}

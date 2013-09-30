@@ -32,7 +32,8 @@ namespace ObscurCore.Tests.Packaging
 	{
 	    private const string DemuxDir = "demuxed";
 
-        private readonly static List<FileInfo> Files = IOTestBase.SmallTextFileList;
+        private readonly static List<FileInfo> SourceFiles = IOTestBase.SmallTextFileList;
+	    private static readonly DirectoryInfo DestinationDirectory = IOTestBase.SmallTextFilesDestinationDirectory;
 
 		public Payload ()
 		{
@@ -45,22 +46,23 @@ namespace ObscurCore.Tests.Packaging
 
 		[Test]
 		public void Simple () {
-			var items = GetItems (Files.Count);
+			var items = Utilities.GetItemsSimpleWriting(SourceFiles);
 			var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Simple);
-			DoMux (payloadConfig, items, Files, true);
+			DoMux (payloadConfig, items, SourceFiles, true);
 		}
 
 		[Test]
 		public void Frameshift () {
-			var items = GetItems (Files.Count);
+			var items = Utilities.GetItemsSimpleWriting(SourceFiles);
 			var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Frameshift);
-			DoMux (payloadConfig, items, Files, true);
+			DoMux (payloadConfig, items, SourceFiles, true);
 		}
 
 #if(INCLUDE_FABRIC)
+        // TODO: Add a part to the test which does SequenceEqual on each file, comparing pre and post-mux states.
         [Test]
 		public void Fabric () {
-			var items = GetItems (Files.Count);
+			var items = Utilities.GetItemsSimpleWriting(SourceFiles);
             //var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Fabric);
 
 		    var payloadConfig = new PayloadLayoutConfiguration()
@@ -74,30 +76,9 @@ namespace ObscurCore.Tests.Packaging
 		            SecondaryPRNGConfiguration = SOSEMANUKGeneratorConfigurationUtility.WriteRandom()
 		        };
 
-			DoMux (payloadConfig, items, Files);
+			DoMux (payloadConfig, items, SourceFiles);
 		}
 #endif
-
-		protected List<PayloadItem> GetItems(int howMany) {
-			var items = new List<PayloadItem> ();
-            var sRng = StratCom.EntropySource;
-
-		    for (var i = 0; i < howMany; i++) {
-		        var payloadItem = new PayloadItem () {
-                    RelativePath = Files[i].Name,
-				    Type = PayloadItemTypes.Binary,
-				    //Compression = new CompressionConfiguration () { AlgorithmName = CompressionAlgorithms.LZ4.ToString() },
-				    //Encryption = new BlockCipherConfiguration(SymmetricBlockCiphers.AES, BlockCipherModes.CTR, BlockCipherPaddingTypes.None),
-                    Encryption = new StreamCipherConfiguration(SymmetricStreamCiphers.SOSEMANUK)
-			    };
-                payloadItem.Encryption.Key = new byte[payloadItem.Encryption.KeySize / 8];
-			    sRng.NextBytes(payloadItem.Encryption.Key);
-			    
-			    items.Add (payloadItem);
-		    }
-
-			return items;
-		}
 
 		protected List<Func<Stream, DecoratingStream>> GetTransforms(List<PayloadItem> items, bool writingPayload) {
             return items.Select(item => (Func<Stream, DecoratingStream>) (binding => item.BindTransformStream(writingPayload, binding))).ToList();
@@ -135,8 +116,8 @@ namespace ObscurCore.Tests.Packaging
             // Write out muxed payload - optional
 	        if (outputPayload) {
 
-			    var path = Files [0].Directory.FullName + 
-				    Path.DirectorySeparatorChar + payloadConfig.SchemeName.ToLower () + IOTestBase.PayloadExtension;
+			    var path = DestinationDirectory.FullName + Path.DirectorySeparatorChar + 
+                    payloadConfig.SchemeName.ToLower () + IOTestBase.RawPayloadExtension;
 				using (var fs = new FileStream(path, FileMode.Create)) {
                     ms.WriteTo(fs);
                 }
@@ -144,9 +125,10 @@ namespace ObscurCore.Tests.Packaging
 
             // DEMUX
 
-            var demuxPath = files[0].Directory.FullName + Path.DirectorySeparatorChar + DemuxDir;
+            var demuxPath = DestinationDirectory.FullName + Path.DirectorySeparatorChar + DemuxDir;
+
 	        foreach (var payloadItem in items) {
-	            if (!Directory.Exists (DemuxDir)) Directory.CreateDirectory (demuxPath);
+	            if (!Directory.Exists (demuxPath)) Directory.CreateDirectory (demuxPath);
 	            PayloadItem item = payloadItem;
 	            payloadItem.SetStreamBinding(() => new FileStream(demuxPath + Path.DirectorySeparatorChar + item.RelativePath, FileMode.Create));
 	        }

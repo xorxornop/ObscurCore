@@ -24,22 +24,33 @@ namespace ObscurCore.Tests
     public abstract class IOTestBase
     {
         public const int DefaultBufferSize = 4096;
-
         public virtual int GetBufferSize () { return DefaultBufferSize; }
 
+        public static readonly DirectoryInfo ProjectRoot = 
+            new DirectoryInfo(Environment.CurrentDirectory).Parent.Parent;
+
+        public readonly static DirectoryInfo TestDataSourceDirectory = 
+            new DirectoryInfo(ProjectRoot.FullName + Path.DirectorySeparatorChar + "test-data-src");
+        public static readonly DirectoryInfo SmallTextFilesSourceDirectory =
+            new DirectoryInfo(TestDataSourceDirectory.FullName + Path.DirectorySeparatorChar + "small-text-files");
+        public static readonly DirectoryInfo LargeBinaryFilesSourceDirectory =
+            new DirectoryInfo(TestDataSourceDirectory.FullName + Path.DirectorySeparatorChar + "large-binary-files");
+
+        public readonly static DirectoryInfo TestDataDestinationDirectory = 
+            new DirectoryInfo(ProjectRoot.FullName + Path.DirectorySeparatorChar + "test-data-dst");
+        public static readonly DirectoryInfo SmallTextFilesDestinationDirectory =
+            new DirectoryInfo(TestDataDestinationDirectory.FullName + Path.DirectorySeparatorChar + "small-text-files");
+        public static readonly DirectoryInfo LargeBinaryFilesDestinationDirectory =
+            new DirectoryInfo(TestDataDestinationDirectory.FullName + Path.DirectorySeparatorChar + "large-binary-files");
+
+        public static readonly DirectoryInfo PackageDestinationDirectory =
+            new DirectoryInfo(TestDataDestinationDirectory.FullName + Path.DirectorySeparatorChar + "package-output");
+
+
+        public static readonly string RawPayloadExtension = ".payload";
+        public static readonly string PackageExtension = ".ocpackage";
+
         private const int RandomStreamLength = 1024 * 1024; // 1 MB
-
-        public readonly static DirectoryInfo TestDataDirectory = new DirectoryInfo(Directory.GetParent(Directory.GetParent(Environment.CurrentDirectory)
-            .FullName).FullName + Path.DirectorySeparatorChar + "test-data-src");
-
-        public static readonly DirectoryInfo SmallTextFilesDirectory =
-            new DirectoryInfo(TestDataDirectory.FullName + Path.DirectorySeparatorChar + "small-text-files");
-
-        public static readonly DirectoryInfo LargeBinaryFilesDirectory =
-            new DirectoryInfo(TestDataDirectory.FullName + Path.DirectorySeparatorChar + "large-binary-files");
-
-        public static readonly string PayloadExtension = ".payload";
-
 		protected static readonly MemoryStream RandomStream = new MemoryStream();
         protected static readonly MemoryStream SmallTextFile = new MemoryStream();
 		protected static readonly MemoryStream LargeBinaryFile = new MemoryStream();
@@ -47,19 +58,22 @@ namespace ObscurCore.Tests
 		public static readonly List<FileInfo> SmallTextFileList = new List<FileInfo>();
 		public static readonly List<FileInfo> LargeBinaryFileList = new List<FileInfo>();
 
+        
+
+        
 
 		static IOTestBase ()
 		{
-            foreach (var file in SmallTextFilesDirectory.EnumerateFiles().Where(file 
-                => !file.Extension.Equals(PayloadExtension)))
+            foreach (var file in SmallTextFilesSourceDirectory.EnumerateFiles().Where(file 
+                => !file.Extension.Equals(RawPayloadExtension)))
             {
 			    SmallTextFileList.Add (file);
 			}
 			var fs = SmallTextFileList [0].OpenRead ();
 			fs.CopyTo(SmallTextFile);
 
-			foreach (var file in LargeBinaryFilesDirectory.EnumerateFiles().Where(file 
-                => !file.Extension.Equals(PayloadExtension)))
+			foreach (var file in LargeBinaryFilesSourceDirectory.EnumerateFiles().Where(file 
+                => !file.Extension.Equals(RawPayloadExtension)))
             {
 			    LargeBinaryFileList.Add (file);
 			}

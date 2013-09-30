@@ -31,7 +31,7 @@ namespace ObscurCore.Packaging
 	{
 		protected CSPRNG PrngStream;
 
-		public SimpleMux (bool writing, Stream multiplexedStream, ICollection<IStreamBinding> streams, List<Func<Stream, DecoratingStream>> transforms, 
+		public SimpleMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, IList<Func<Stream, DecoratingStream>> transforms, 
 		                  IPayloadLayoutConfiguration config, int maxOpSize = 16384) : base(writing, multiplexedStream, streams, transforms, maxOpSize)
 		{
 			PrngStream = Source.CreateCSPRNG(config.StreamPRNGName.ToEnum<CSPRNumberGenerators>(),

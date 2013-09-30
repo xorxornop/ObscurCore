@@ -45,22 +45,19 @@ namespace ObscurCore.Cryptography
 		/// <param name="key">Derived cryptographic key for the internal cipher to operate with.</param>
 		/// <param name="leaveOpen">Set to <c>false</c> to also close the base stream when closing, or vice-versa.</param>
 		public SymmetricCryptoStream (Stream target, bool isEncrypting, ISymmetricCipherConfiguration config, 
-		                              KeyDerivationConfiguration kdfConfig = null, bool leaveOpen = false) : base(isEncrypting, leaveOpen)
+		                              byte[] key = null, bool leaveOpen = false) : base(isEncrypting, leaveOpen)
 		{
-			if (config.Key == null || config.Key.Length == 0) throw new ArgumentException("No key provided in field in config parameter object.");
+			
             if(String.IsNullOrEmpty(config.CipherName)) throw new InvalidDataException("CipherName is null or empty.");
 
 			Encrypting = isEncrypting;
 			IBufferedCipher cipher;
 			ICipherParameters cipherParams = null;
 
-            byte[] workingKey = null;
-            if (kdfConfig != null) {
-                workingKey = Source.DeriveKeyWithKDF(kdfConfig.SchemeName.ToEnum<KeyDerivationFunctions>(), config.Key,
-                    kdfConfig.Salt, config.KeySize/8, kdfConfig.SchemeConfiguration);
-            } else {
-                workingKey = config.Key;
-            }
+            if ((config.Key == null || config.Key.Length == 0) && (key == null || key.Length == 0)) 
+                throw new ArgumentException("No key provided in field in configuration object or as parameter.");
+
+            byte[] workingKey = config.Key ?? key;
 
 			// Determine if stream or block cipher
 			if (Enum.GetNames(typeof(SymmetricBlockCiphers)).Contains(config.CipherName)) {

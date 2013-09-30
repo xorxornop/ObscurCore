@@ -17,6 +17,7 @@ using System;
 using System.Linq;
 using ObscurCore.DTO;
 using ObscurCore.Extensions.Enumerations;
+using ProtoBuf;
 
 namespace ObscurCore.Cryptography
 {

@@ -59,7 +59,7 @@
     <Compile Include="PayloadLayoutConfiguration.cs" />
     <Compile Include="SymmetricCipherConfiguration.cs" />
     <Compile Include="SymmetricManifestCryptographyConfiguration.cs" />
-    <Compile Include="UM1IESConfiguration.cs" />
+    <Compile Include="UM1ManifestCryptographyConfiguration.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

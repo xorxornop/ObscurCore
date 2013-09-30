@@ -38,7 +38,7 @@ namespace ObscurCore.Packaging
 	    protected readonly FabricStripeModes mode;
 		protected readonly int minStripe, maxStripe;
 
-		public FabricMux (bool writing, Stream multiplexedStream, List<IStreamBinding> streams, List<Func<Stream, DecoratingStream>> transforms, 
+		public FabricMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, IList<Func<Stream, DecoratingStream>> transforms, 
 			IPayloadLayoutConfiguration config) : base(writing, multiplexedStream, streams, transforms, config, MaximumStripeLength)
 		{
 			FabricConfigurationUtility.Read(config.SchemeConfiguration, out minStripe, out maxStripe);
