@@ -27,9 +27,17 @@ namespace ObscurCore.Cryptography
 		public PaddingException (string message) : base("The ciphertext padding is corrupt.\n" + message) { }
 	}
 	
+    
+
 	public class AuthenticationException : Exception
 	{
-		public AuthenticationException (string message) : base("WARNING: Possible security issue!\n" + message) { }
+	    private const string ExceptionAttention = "WARNING: Possible security issue!";
+
+	    public AuthenticationException (Exception innerException = null) 
+            : base(ExceptionAttention, innerException) { }
+
+		public AuthenticationException (string message, Exception innerException = null) 
+            : base(ExceptionAttention + "\n" + message, innerException) { }
 	}
 	
 	/*public class DataLengthException : Exception
@@ -123,4 +131,43 @@ namespace ObscurCore.Cryptography
 		{
 		}
 	}
+
+    public class KeySizeException : Exception
+    {
+        public KeySizeException(int size, string restriction)
+            : base(String.Format("The key size {0} is not supported in the {1}.", size, restriction))
+        {
+            SelectedSize = size;
+            CipherRestriction = restriction;
+        }
+
+        public int SelectedSize { get; private set; }
+        public string CipherRestriction { get; private set; }
+    }
+
+    public class BlockSizeException : Exception
+    {
+        public BlockSizeException(int size, string restriction)
+            : base(String.Format("The block size {0} is not supported in the {1}.", size, restriction))
+        {
+            SelectedSize = size;
+            CipherRestriction = restriction;
+        }
+
+        public int SelectedSize { get; private set; }
+        public string CipherRestriction { get; private set; }
+    }
+
+    public class MACSizeException : Exception
+    {
+        public MACSizeException(int size, string restriction)
+            : base(String.Format("The MAC size {0} is not supported in the {1}.", size, restriction))
+        {
+            SelectedSize = size;
+            CipherRestriction = restriction;
+        }
+
+        public int SelectedSize { get; private set; }
+        public string CipherRestriction { get; private set; }
+    }
 }

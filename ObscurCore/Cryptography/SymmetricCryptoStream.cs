@@ -20,7 +20,6 @@ using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Block.Modes;
 using ObscurCore.Cryptography.Ciphers.Block.Padding;
-using ObscurCore.Cryptography.Ciphers.Block.Primitives.Parameters;
 using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.Cryptography.IO;
 using ObscurCore.DTO;
@@ -47,96 +46,129 @@ namespace ObscurCore.Cryptography
 		public SymmetricCryptoStream (Stream target, bool isEncrypting, ISymmetricCipherConfiguration config, 
 		                              byte[] key = null, bool leaveOpen = false) : base(isEncrypting, leaveOpen)
 		{
-			
-            if(String.IsNullOrEmpty(config.CipherName)) throw new InvalidDataException("CipherName is null or empty.");
-
-			Encrypting = isEncrypting;
-			IBufferedCipher cipher;
-			ICipherParameters cipherParams = null;
-
             if ((config.Key == null || config.Key.Length == 0) && (key == null || key.Length == 0)) 
                 throw new ArgumentException("No key provided in field in configuration object or as parameter.");
 
+            Encrypting = isEncrypting;
+			IBufferedCipher cipher;
+			ICipherParameters cipherParams = null;
+
             byte[] workingKey = config.Key ?? key;
 
-			// Determine if stream or block cipher
-			if (Enum.GetNames(typeof(SymmetricBlockCiphers)).Contains(config.CipherName)) {
-				// Requested a block or AEAD cipher.
-                if(String.IsNullOrEmpty(config.ModeName)) throw new InvalidDataException("ModeName is null or empty (using block cipher).");
+		    switch (config.Type) {
+                case SymmetricCipherType.None:
+		            throw new ConfigurationException("Type: None/null value is never set in a valid cipher configuration.");
+		        case SymmetricCipherType.Block:
+                case SymmetricCipherType.AEAD:
 
-			    var blockCipherEnum = config.CipherName.ToEnum<SymmetricBlockCiphers>();
+                    var blockCipherEnum = SymmetricBlockCiphers.None;
+		            try {
+		                blockCipherEnum = config.CipherName.ToEnum<SymmetricBlockCiphers>();
+		            } catch (EnumerationValueUnknownException e) {
+		                throw new ConfigurationException(e);
+		            }
 
-                if(!workingKey.Length.Equals(config.KeySize / 8))
-                    throw new InvalidDataException("Key is not of the declared length.");
+                    if(!workingKey.Length.Equals(config.KeySize / 8))
+                        throw new InvalidDataException("Key is not of the declared length.");
+                    if(!Athena.Cryptography.BlockCipherDirectory[blockCipherEnum].AllowableBlockSizes.Contains(config.BlockSize)) 
+                        throw new NotSupportedException("Specified block size is unsupported.");
 
-                if(!Athena.Cryptography.BlockCipherDirectory[blockCipherEnum].AllowableBlockSizes.Contains(config.BlockSize)) 
-                    throw new NotSupportedException("Specified block size is unsupported.");
-                
-                BufferRequirementOverride = (config.BlockSize / 8) * 2;
+                    BufferRequirementOverride = (config.BlockSize / 8) * 2;
 
-				// Instantiate the cipher
-				var blockCipher = Source.CreateBlockCipher(config.CipherName.ToEnum<SymmetricBlockCiphers>(), config.BlockSize);
-				if (Enum.GetNames(typeof(BlockCipherModes)).Contains(config.ModeName)) {
-					// Requested a block cipher.
+                    var blockCipher = Source.CreateBlockCipher(blockCipherEnum, config.BlockSize);
 
-                    if(config.IV.Length != config.BlockSize / 8)
-                        throw new NotSupportedException("IV length does not match block length.");
+		            switch (config.Type) {
+                        case SymmetricCipherType.Block:
 
-                    cipherParams = Source.CreateBlockCipherParameters(config);
+		                    var blockModeEnum = BlockCipherModes.None;
+		                    try {
+		                        blockModeEnum = config.ModeName.ToEnum<BlockCipherModes>();
+		                    } catch (EnumerationValueUnknownException e) {
+		                        throw new ConfigurationException(e);
+		                    }
 
-                    // Overlay the cipher with the mode of operation
-                    blockCipher = Source.CreateBlockCipherWithMode(blockCipher, config.ModeName.ToEnum<BlockCipherModes>(),
-				        config.BlockSize);
+                            if(config.IV.Length != config.BlockSize / 8)
+                                throw new NotSupportedException("IV length does not match block length.");
 
+                            cipherParams = Source.CreateBlockCipherParameters(config);
+                            // Overlay the cipher with the mode of operation
+                            blockCipher = Source.CreateBlockCipherWithMode(blockCipher, blockModeEnum,
+				                config.BlockSize);
+
+                            var paddingEnum = BlockCipherPaddings.None;
+		                    try {
+		                        paddingEnum = config.PaddingName.ToEnum<BlockCipherPaddings>();
+		                    } catch (EnumerationValueUnknownException e) {
+		                        throw new ConfigurationException(e);
+		                    }
+
+		                    if (blockModeEnum == BlockCipherModes.CTS_CBC) {
+		                        if (paddingEnum == BlockCipherPaddings.None) {
+                                    cipher = new CtsBlockCipher(blockCipher);
+                                } else {
+                                    throw new ConfigurationException("CTS mode is inappropriate for use with padding.");
+                                }
+		                    } else if (paddingEnum == BlockCipherPaddings.None) {
+		                        if (Athena.Cryptography.BlockCipherModeDirectory[
+		                            config.ModeName.ToEnum<BlockCipherModes>()]
+		                            .PaddingRequirement == PaddingRequirements.Always) {
+		                            throw new NotSupportedException(
+		                                "Cipher configuration does not specify the use of padding, " +
+		                                    "which is required for the specified mode of operation.");
+		                        }
+		                        cipher = new BufferedBlockCipher(blockCipher);
+		                    } else {
+		                        var padding = Source.CreatePadding(paddingEnum);
+		                        cipher = new PaddedBufferedBlockCipher(blockCipher, padding);
+		                    }
+
+		                    break;
+		                case SymmetricCipherType.AEAD:
+
+                            var aeadModeEnum = AEADBlockCipherModes.None;
+		                    try {
+		                        aeadModeEnum = config.ModeName.ToEnum<AEADBlockCipherModes>();
+		                    } catch (EnumerationValueUnknownException e) {
+		                        throw new ConfigurationException(e);
+		                    }
+
+                            cipherParams = Source.CreateAEADBlockCipherParameters(blockCipherEnum,
+				                workingKey, config.IV, config.MACSize, config.AssociatedData);
+                            // Overlay the cipher with the mode of operation
+					        var aeadCipher = Source.CreateBlockCipherWithAEAD(aeadModeEnum, blockCipher);
+
+					        // Create the I/O-enabled transform object
+					        if (!config.PaddingName.Equals(BlockCipherPaddings.None.ToString()) && !config.PaddingName.Equals(""))
+						        throw new NotSupportedException("Padding specified for use with AEAD mode (not allowed/unnecessary).");
+					        cipher = new BufferedAeadBlockCipher(aeadCipher);
+
+		                    break;
+		                default:
+		                    throw new ArgumentOutOfRangeException();
+		            }
+		            break;
+		        case SymmetricCipherType.Stream:
+
+                    BufferRequirementOverride = config.IV != null && config.IV.Length > 0 ? (config.IV.Length) * 2 : (config.KeySize / 8) * 2;
+
+                    var streamCipherEnum = SymmetricStreamCiphers.None;
+		            try {
+		                streamCipherEnum = config.CipherName.ToEnum<SymmetricStreamCiphers>();
+		            } catch (EnumerationValueUnknownException e) {
+		                throw new ConfigurationException(e);
+		            }
+
+				    // Requested a stream cipher.
+                    cipherParams = Source.CreateStreamCipherParameters(streamCipherEnum, workingKey, config.IV);
+				    // Instantiate the cipher
+				    var streamCipher = Source.CreateStreamCipher(streamCipherEnum);
 				    // Create the I/O-enabled transform object
-					if (!String.IsNullOrEmpty(config.PaddingName) && !config.PaddingName.Equals(BlockCipherPaddings.None.ToString())) {
-						var padding = Source.CreatePadding(config.PaddingName.ToEnum<BlockCipherPaddings>());
-						cipher = new PaddedBufferedBlockCipher(blockCipher, padding);
-					} else if (config.ModeName.Equals(BlockCipherModes.CTS_CBC.ToString())) {
-						cipher = new CtsBlockCipher(blockCipher);
-					} else {
-						// No padding specified - is this OK in the context of the mode of operation?
-						if(Athena.Cryptography.BlockCipherModeDirectory[config.ModeName.ToEnum<BlockCipherModes>()]
-                            .PaddingRequirement == PaddingRequirements.Always)
-                        {
-							throw new NotSupportedException("Cipher configuration does not specify the use of padding, " + 
-                                "which is required for the specified mode of operation.");
-						}
-						cipher = new BufferedBlockCipher(blockCipher);
-					}
+				    cipher = new BufferedStreamCipher(streamCipher);
 
-				} else if (Enum.GetNames(typeof(AEADBlockCipherModes)).Contains(config.ModeName)) {
-					// Requested an AEAD cipher (block cipher inside).
-
-                    //if(config.MACSize / 8 != config.IV.Length)
-                        //throw new NotSupportedException("Nonce size does not match MAC size.");
-                    // TODO: Determine if this check (disabled currently) is appropriate.
-
-				    cipherParams = Source.CreateAEADBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCiphers>(),
-				        workingKey, config.IV, config.MACSize, config.AssociatedData);
-
-					// Overlay the cipher with the mode of operation
-					var aeadCipher = Source.CreateBlockCipherWithAEAD(config.ModeName.ToEnum<AEADBlockCipherModes>(), blockCipher);
-
-					// Create the I/O-enabled transform object
-					if (!config.PaddingName.Equals(BlockCipherPaddings.None.ToString()) && !config.PaddingName.Equals(""))
-						throw new NotSupportedException("Padding specified for use with AEAD mode (not allowed/unnecessary).");
-					cipher = new BufferedAeadBlockCipher(aeadCipher);
-				} else {
-					throw new ArgumentException("Unsupported/unknown block cipher mode.");
-				}
-
-			} else if (Enum.GetNames(typeof(SymmetricStreamCiphers)).Contains(config.CipherName)) {
-                BufferRequirementOverride = config.IV != null && config.IV.Length > 0 ? (config.IV.Length) * 2 : (config.KeySize / 8) * 2;
-				// Requested a stream cipher.
-                cipherParams = Source.CreateStreamCipherParameters(config.CipherName.ToEnum<SymmetricStreamCiphers>(), workingKey, config.IV);
-				// Instantiate the cipher
-				var streamCipher = Source.CreateStreamCipher(config.CipherName.ToEnum<SymmetricStreamCiphers>());
-				// Create the I/O-enabled transform object
-				cipher = new BufferedStreamCipher(streamCipher);
-			} else {
-				throw new ArgumentException("Unsupported/unknown cipher.");
-			}
+		            break;
+		        default:
+		            throw new ArgumentOutOfRangeException();
+		    }
 
 			// Initialise the cipher
 			cipher.Init(isEncrypting, cipherParams);
@@ -149,8 +181,14 @@ namespace ObscurCore.Cryptography
 		/// </summary>
 		/// <exception cref="PaddingException">Thrown when no padding, malformed padding, or misaligned padding is found.</exception>
 		/// <exception cref="IncompleteBlockException">Thrown when ciphertext is not a multiple of block size (unexpected length).</exception>
+		/// <exception cref="DataLengthException">Thrown when final bytes could not be written to the output.</exception>
+		/// <exception cref="AuthenticationException">Thrown when MAC/authentication check fails to match with expected value. AEAD-relevant.</exception>
 		public override void Close() {
-			var cipher = Encrypting ? ((ExtendedCipherStream) BoundStream).outCipher : ((ExtendedCipherStream) BoundStream).inCipher;
+		    const string unknownEx = "An unknown type of error occured while transforming the final block of ciphertext.";
+		    const string unexpectedLength = "The data in the ciphertext is not the expected length.";
+		    const string writingError = "Could not write transformed block bytes to output stream.";
+            
+            var cipher = Encrypting ? ((ExtendedCipherStream) BoundStream).outCipher : ((ExtendedCipherStream) BoundStream).inCipher;
 			// Catch all possible errors. Many unique types, caused by authentication failures, padding corruption, general corruption, etc.
 			try {
 				// Cause final transformation to take place if block/AEAD cipher, and then closing the stream.
@@ -161,21 +199,21 @@ namespace ObscurCore.Cryptography
 				} else if (cipher is PaddedBufferedBlockCipher) {
 					switch (dlEx.Message) {
 						case "last block incomplete in decryption":
-						throw new PaddingException("The data in the ciphertext is not the expected length.");
+						throw new PaddingException(unexpectedLength);
 						case "output buffer too short":
-						throw new EndOfStreamException("Could not write transformed block bytes to output stream."); // TODO: change this ex type
+						throw new DataLengthException(writingError);
 						default:
 						throw new PaddingException("The ciphertext padding is corrupt.");
 					}
 				} else if (cipher is BufferedBlockCipher) {
 					switch (dlEx.Message) {
 						case "data not block size aligned":
-						throw new IncompleteBlockException("The data in the ciphertext is not the expected length.");
+						throw new IncompleteBlockException(unexpectedLength);
 						case "output buffer too short":
 						case "output buffer too short for DoFinal()":
-						throw new EndOfStreamException("Could not write transformed block bytes to output stream."); // TODO: change this ex type
+						throw new DataLengthException(writingError);
 						default:
-						throw new DataLengthException("An unknown type of error occured while transforming the final block of ciphertext.", dlEx);
+						throw new DataLengthException(unknownEx, dlEx);
 					}
 				} else {
 					// No example here, but leaving it here anyway for possible future implementation.
@@ -194,10 +232,10 @@ namespace ObscurCore.Cryptography
 						case "pad block corrupted":
 						throw new PaddingException();
 						default:
-						throw new InvalidCipherTextException("An unknown type of error occured while transforming the final block of ciphertext.", ctEx);
+						throw new InvalidCipherTextException(unknownEx, ctEx);
 					}
 				} else if (cipher is BufferedBlockCipher) {
-					throw new InvalidCipherTextException("An unknown type of error occured while transforming the final block of ciphertext.", ctEx);
+					throw new InvalidCipherTextException(unknownEx, ctEx);
 				} else {
 					// No example here, but leaving it here anyway for possible future implementation.
 				}

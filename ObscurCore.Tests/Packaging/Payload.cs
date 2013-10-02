@@ -46,14 +46,14 @@ namespace ObscurCore.Tests.Packaging
 
 		[Test]
 		public void Simple () {
-			var items = Utilities.GetItemsSimpleWriting(SourceFiles);
+			var items = Utilities.GetItemsStreamExample(SourceFiles);
 			var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Simple);
 			DoMux (payloadConfig, items, SourceFiles, true);
 		}
 
 		[Test]
 		public void Frameshift () {
-			var items = Utilities.GetItemsSimpleWriting(SourceFiles);
+			var items = Utilities.GetItemsBlockExample(SourceFiles);
 			var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Frameshift);
 			DoMux (payloadConfig, items, SourceFiles, true);
 		}
@@ -62,7 +62,7 @@ namespace ObscurCore.Tests.Packaging
         // TODO: Add a part to the test which does SequenceEqual on each file, comparing pre and post-mux states.
         [Test]
 		public void Fabric () {
-			var items = Utilities.GetItemsSimpleWriting(SourceFiles);
+			var items = Utilities.GetItemsStreamExample(SourceFiles);
             //var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Fabric);
 
 		    var payloadConfig = new PayloadLayoutConfiguration()

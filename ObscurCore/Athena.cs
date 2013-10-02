@@ -271,7 +271,7 @@ namespace ObscurCore
                     PaddingRequirement = PaddingRequirements.None,
                     AllowableBlockSizes = new[] { -1 },
                     IsAEADMode = false,
-                    NonceReusePolicy = NonceReusePolicies.NotApplicable
+                    NonceReusePolicy = NonceReusePolicies.NotAllowed
                 });
                 BlockCipherModeDirectory.Add(BlockCipherModes.CTR, new SymmetricCipherModeDescription {
                     Name = BlockCipherModes.CTR.ToString(),
@@ -279,7 +279,7 @@ namespace ObscurCore
                     PaddingRequirement = PaddingRequirements.None,
                     AllowableBlockSizes = new[] { -1 },
                     IsAEADMode = false,
-                    NonceReusePolicy = NonceReusePolicies.NotApplicable
+                    NonceReusePolicy = NonceReusePolicies.NotAllowed
                 });
                 BlockCipherModeDirectory.Add(BlockCipherModes.CTS_CBC, new SymmetricCipherModeDescription {
                     Name = BlockCipherModes.CTS_CBC.ToString(),
@@ -295,7 +295,7 @@ namespace ObscurCore
                     PaddingRequirement = PaddingRequirements.None,
                     AllowableBlockSizes = new[] { -1 },
                     IsAEADMode = false,
-                    NonceReusePolicy = NonceReusePolicies.NotApplicable
+                    NonceReusePolicy = NonceReusePolicies.NotAllowed
                 });
                 // Add AEAD modes of operation
                 AEADBlockCipherModeDirectory.Add(AEADBlockCipherModes.EAX, new SymmetricCipherModeDescription {

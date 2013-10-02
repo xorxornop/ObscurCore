@@ -126,7 +126,8 @@
     <Compile Include="Cryptography\Ciphers\IBufferedCipher.cs" />
     <Compile Include="Cryptography\Ciphers\ICipherParameters.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\IStreamCipher.cs" />
-    <Compile Include="Cryptography\Ciphers\Stream\Primitives\HC128Engine.cs" />
+    <None Include="Cryptography\Ciphers\Stream\Primitives\HC128Engine.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Primitives\HC128EngineOptimised.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\HC256Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\ISAACEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\RabbitEngine.cs" />
@@ -159,9 +160,11 @@
     <Compile Include="Cryptography\KeyDerivation\Utilities.cs" />
     <Compile Include="Cryptography\SymmetricCipherConfiguration.cs" />
     <Compile Include="Cryptography\SymmetricCryptoStream.cs" />
+    <Compile Include="Cryptography\Templates.cs" />
     <Compile Include="DecoratingStream.cs" />
     <Compile Include="EventArgs.cs" />
     <None Include="Packaging\AsyncCryptoMux.cs" />
+    <Compile Include="Exceptions.cs" />
     <Compile Include="Packaging\ConfigurationObjects.cs" />
     <Compile Include="Packaging\Enums.cs" />
     <Compile Include="Packaging\FabricMux.cs" />

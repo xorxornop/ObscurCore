@@ -18,14 +18,7 @@ namespace ObscurCore.Tests.Packaging
         [Test]
         public void WriteSimpleSymmetricPackage() {
             
-            var mCipherPre = new StreamCipherConfiguration(SymmetricStreamCiphers.HC256);
-            var mCipher = new SymmetricCipherConfiguration
-                {
-                    Type = mCipherPre.Type,
-                    CipherName = mCipherPre.CipherName,
-                    IV = mCipherPre.IV,
-                    KeySize = mCipherPre.KeySize
-                };
+            var mCipher = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCiphers.HC256);
 
             var preKey = new byte[mCipher.KeySize / 8];
             StratCom.EntropySource.NextBytes(preKey);
@@ -42,7 +35,7 @@ namespace ObscurCore.Tests.Packaging
 			};
 		    StratCom.EntropySource.NextBytes(manifestCrypto.KeyDerivation.Salt);
 
-            var items = Utilities.GetItemsSimpleWriting(IOTestBase.SmallTextFileList);
+            var items = Utilities.GetItemsStreamExample(IOTestBase.SmallTextFileList);
             var manifest = new Manifest
                 {
                     PayloadItems = items,

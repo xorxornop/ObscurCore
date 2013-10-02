@@ -103,7 +103,7 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void CTR () {
             // Using default block & key size
-            var config = new BlockCipherConfiguration(_blockCipher, BlockCipherModes.CTR,
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CTR,
                                                       BlockCipherPaddings.None, _defaultBlockSize, _defaultKeySize);
             RunEqualityTest(config);
         }
@@ -111,7 +111,7 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void CFB () {
             // Using default block & key size
-            var config = new BlockCipherConfiguration(_blockCipher, BlockCipherModes.CFB,
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CFB,
                                                       BlockCipherPaddings.None, _defaultBlockSize, _defaultKeySize);
             RunEqualityTest(config);
         }
@@ -119,7 +119,7 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void OFB () {
             // Using default block & key size
-            var config = new BlockCipherConfiguration(_blockCipher, BlockCipherModes.OFB,
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.OFB,
                                                       BlockCipherPaddings.None, _defaultBlockSize, _defaultKeySize);
             RunEqualityTest(config);
         }
@@ -128,7 +128,7 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void CTS () {
             // Using default block & key size
-            var config = new BlockCipherConfiguration(_blockCipher, BlockCipherModes.CTS_CBC,
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CTS_CBC,
                                                       BlockCipherPaddings.None, _defaultBlockSize, _defaultKeySize);
             RunEqualityTest(config);
         }
@@ -137,7 +137,7 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void CBC_ISO10126D2 () {
             // Using default block & key size
-            var config = new BlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
                                                       BlockCipherPaddings.ISO10126D2, _defaultBlockSize, _defaultKeySize);
             RunEqualityTest(config);
         }
@@ -145,7 +145,7 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void CBC_ISO7816D4 () {
             // Using default block & key size
-            var config = new BlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
                                                       BlockCipherPaddings.ISO7816D4, _defaultBlockSize, _defaultKeySize);
             RunEqualityTest(config);
         }
@@ -153,7 +153,7 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void CBC_PKCS7 () {
             // Using default block & key size
-            var config = new BlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
                                                       BlockCipherPaddings.PKCS7, _defaultBlockSize, _defaultKeySize);
             RunEqualityTest(config);
         }
@@ -161,7 +161,7 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void CBC_TBC () {
             // Using default block & key size
-            var config = new BlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
                                                       BlockCipherPaddings.TBC, _defaultBlockSize, _defaultKeySize);
             RunEqualityTest(config);
         }
@@ -169,7 +169,7 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void CBC_X923 () {
             // Using default block & key size
-            var config = new BlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
                                                       BlockCipherPaddings.X923, _defaultBlockSize, _defaultKeySize);
             RunEqualityTest(config);
         }
@@ -179,7 +179,7 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void GCM () {
             // Using default block & key size
-            var config = new AEADCipherConfiguration(_blockCipher, AEADBlockCipherModes.GCM, BlockCipherPaddings.None, 
+            var config = SymmetricCipherConfigurationFactory.CreateAEADBlockCipherConfiguration(_blockCipher, AEADBlockCipherModes.GCM, BlockCipherPaddings.None, 
                 _defaultKeySize, _defaultBlockSize);
             RunEqualityTest(config);
         }
@@ -187,7 +187,7 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void EAX () {
             // Using default block & key size
-            var config = new AEADCipherConfiguration(_blockCipher, AEADBlockCipherModes.EAX, BlockCipherPaddings.None, 
+            var config = SymmetricCipherConfigurationFactory.CreateAEADBlockCipherConfiguration(_blockCipher, AEADBlockCipherModes.EAX, BlockCipherPaddings.None, 
                 _defaultKeySize, _defaultBlockSize);
             RunEqualityTest(config);
         }

@@ -15,6 +15,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.KeyAgreement;
@@ -137,6 +138,42 @@ namespace ObscurCore.Extensions
             {
                 public static bool IsBetween<T>(this T value, T low, T high) where T : IComparable<T> {
                     return value.CompareTo(low) >= 0 && value.CompareTo(high) <= 0;
+                }
+            }
+        }
+
+        namespace ByteArrays
+        {
+            public static class ByteArrayExtensionMethods
+            {
+                /// <summary>
+                /// Converts a byte array into a hex-encoded string.
+                /// </summary>
+                /// <returns>Hex-encoded string, lowercase.</returns>
+                public static string ToHexString (this byte[] bytes) {
+                    var hexBuilder = new StringBuilder(bytes.Length * 2);
+                    foreach (byte b in bytes)
+                        hexBuilder.AppendFormat("{0:x2}", b);
+                    return hexBuilder.ToString();
+                }
+
+                /// <summary>
+                /// Converts a hex-encoded string to a byte array
+                /// </summary>
+                /// <param name="hexSrc">Hex-encoded data</param>
+                /// <remarks>
+                /// Adapted from http://stackoverflow.com/questions/321370/convert-hex-string-to-byte-array
+                /// </remarks>
+                public static byte[] HexToBinary(string hexSrc) {
+                    if (hexSrc.Length % 2 == 1) throw new ArgumentException("The binary key cannot have an odd number of digits");
+
+                    var arr = new byte[hexSrc.Length >> 1];
+                    var h2i = new Func<char, int>(c => (int) c - ((int) c < 58 ? 48 : 87));
+                    for (var i = 0; i < (hexSrc.Length >> 1); ++i) {
+                        arr[i] = (byte)((h2i(hexSrc[i << 1]) << 4) + (h2i(hexSrc[(i << 1) + 1])));
+                    }
+
+                    return arr;
                 }
             }
         }
@@ -394,36 +431,26 @@ namespace ObscurCore.Extensions
                     if (!typeof (T).IsEnum) throw new InvalidOperationException("T must be an enumerated type.");
                     T outputType;
                     try {
-                        outputType = (T) System.Enum.Parse(typeof (T), value);
+                        outputType = (T) Enum.Parse(typeof (T), value);
                     } catch (ArgumentException) {
                         throw new ArgumentException("Enumeration member is unknown / invalid.");
                     }
                     return outputType;
                 }
 
-
                 /// <summary>
-                /// Reads an enumeration value encoded as a string.
+                /// Parses an enumeration value encoded as a string into its enumeration equivalent.
                 /// </summary>
                 /// <typeparam name='T'>
                 /// Must be an enumeration type.
                 /// </typeparam>
-                public static void ToEnum<T>(this string stringValue, out T value) where T : struct, IConvertible {
-                    if (!typeof (T).IsEnum) throw new InvalidOperationException("T must be an enumerated type.");
-                    try {
-                        value = (T) System.Enum.Parse(typeof (T), stringValue);
-                    } catch (ArgumentException) {
-                        throw new ArgumentException("Enumeration member is unknown / invalid.");
-                    }
-                }
-
                 public static T ToEnum<T>(this string stringValue, bool ignoreCase = false) where T : struct, IConvertible {
-                    if (!typeof (T).IsEnum) throw new InvalidOperationException("T must be an enumerated type.");
+                    if (!typeof (T).IsEnum) throw new InvalidOperationException("T must be an enumeration type.");
                     T value;
                     try {
-                        value = (T) System.Enum.Parse(typeof (T), stringValue, ignoreCase);
+                        value = (T) Enum.Parse(typeof (T), stringValue, ignoreCase);
                     } catch (ArgumentException) {
-                        throw new ArgumentException("Enumeration member is unknown / invalid.");
+                        throw new EnumerationValueUnknownException(stringValue, typeof (T));
                     }
                     return value;
                 }

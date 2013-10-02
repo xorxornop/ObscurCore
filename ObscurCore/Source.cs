@@ -274,9 +274,7 @@ namespace ObscurCore
         }
 
         public static IBlockCipher CreateBlockCipher (string cipherName, int? blockSize = null) {
-            SymmetricBlockCiphers cipher;
-            cipherName.ToEnum(out cipher);
-            return CreateBlockCipher(cipher, blockSize);
+            return CreateBlockCipher(cipherName.ToEnum<SymmetricBlockCiphers>(), blockSize);
         }
 
         /// <summary>
@@ -288,9 +286,7 @@ namespace ObscurCore
         }
 
         public static IStreamCipher CreateStreamCipher (string cipherName) {
-            SymmetricStreamCiphers cipher;
-            cipherName.ToEnum(out cipher);
-            return EngineInstantiatorsStream[cipher]();
+            return EngineInstantiatorsStream[cipherName.ToEnum<SymmetricStreamCiphers>()]();
         }
 
         /// <summary>
@@ -311,10 +307,7 @@ namespace ObscurCore
         }
 
         public static IBlockCipher CreateBlockCipherWithMode (IBlockCipher cipher, string modeName, int? size = null) {
-            BlockCipherModes mode;
-            modeName.ToEnum(out mode);
-
-            return CreateBlockCipherWithMode(cipher, mode, size);
+            return CreateBlockCipherWithMode(cipher, modeName.ToEnum<BlockCipherModes>(), size);
         }
 
         /// <summary>
@@ -330,11 +323,7 @@ namespace ObscurCore
         }
 
         public static IAeadBlockCipher CreateBlockCipherWithAEAD (string modeName, IBlockCipher cipher) {
-            //if (!IsAEADMode) throw new NotSupportedException("Cannot return an AEAD object for a non-AEAD mode of operation.");
-            // TODO: Check athena if mode is aead
-            AEADBlockCipherModes mode;
-            modeName.ToEnum(out mode);
-            return ModeInstantiatorsAead[mode](cipher);
+            return ModeInstantiatorsAead[modeName.ToEnum<AEADBlockCipherModes>()](cipher);
         }
 
         /// <summary>
@@ -348,9 +337,7 @@ namespace ObscurCore
         }
 
         public static IBlockCipherPadding CreatePadding (string paddingName) {
-            BlockCipherPaddings padding;
-            paddingName.ToEnum(out padding);
-            return CreatePadding(padding);
+            return CreatePadding(paddingName.ToEnum<BlockCipherPaddings>());
         }
 
 
@@ -452,9 +439,7 @@ namespace ObscurCore
 		}
 
         public static IKDFModule CreateKDF(string kdfName, int outputSize, byte[] config) {
-			KeyDerivationFunctions kdf;
-			kdfName.ToEnum(out kdf);
-            return CreateKDF(kdf, outputSize, config);
+            return CreateKDF(kdfName.ToEnum<KeyDerivationFunctions>(), outputSize, config);
         }
 
         /// <summary>
@@ -470,9 +455,7 @@ namespace ObscurCore
 		}
 
         public static CSPRNG CreateCSPRNG (string prngName, byte[] config) {
-            CSPRNumberGenerators prng;
-			prngName.ToEnum(out prng);
-            return CreateCSPRNG(prng, config);
+            return CreateCSPRNG(prngName.ToEnum<CSPRNumberGenerators>(), config);
         }
 
         /// <summary>
@@ -487,9 +470,7 @@ namespace ObscurCore
 		}
 
         public static IDigest CreateHash(string hashName) {
-            HashFunctions hash;
-			hashName.ToEnum(out hash);
-            return CreateHash(hash);
+            return CreateHash(hashName.ToEnum<HashFunctions>());
         }
 
         /// <summary>
@@ -514,9 +495,7 @@ namespace ObscurCore
 		}
 
         public static IMac CreateMac(string macName, byte[] key, byte[] salt = null) {
-            MACFunctions mac;
-            macName.ToEnum(out mac);
-            return CreateMac(mac, key, salt);
+            return CreateMac(macName.ToEnum<MACFunctions>(), key, salt);
         }
 
         public static ECDomainParameters GetECDomainParameters(string name) {

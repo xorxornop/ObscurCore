@@ -225,7 +225,7 @@ namespace ObscurCore
 
             PayloadLayoutSchemes payloadScheme;
             try {
-				manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutSchemes> (out payloadScheme);
+				payloadScheme = manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutSchemes> ();
 			} catch (Exception) {
             	throw new PackageConfigurationException("Package payload schema specified is an unknown type or missing.");
 			}

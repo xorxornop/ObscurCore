@@ -137,34 +137,16 @@ namespace ObscurCore.DTO
                 return hashCode;
             }
         }
-
-        /// <summary>
-        /// Outputs a short summary of relevant configuration facets.
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString () { return ToString(false); }
 		
         /// <summary>
-        /// Outputs a summary of the configuration, optionally including the actual values of IV/Salt/Nonce/AD.
+        /// Outputs a summary of the configuration.
         /// </summary>
-        /// <param name="includeValues">Whether to include values of relevant byte arrays as hex strings.</param>
-        /// <returns></returns>
-        public virtual string ToString (bool includeValues) {
-            if (includeValues) {
-                string hexIV = ByteArrayToHexString(IV);
-                return String.Format("{0} cipher\nName: {1}\nKey size (bits): {2}\nIV, hex: {3}",
-                                     Type.ToString(), CipherName, KeySize, hexIV ?? "");
-            }
+        public override string ToString () {
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}",
-                                 Type.ToString(), CipherName, KeySize);
+                                 Type, CipherName, KeySize);
         }
 		
-        protected static string ByteArrayToHexString (byte[] bytes) {
-            var hexBuilder = new StringBuilder(bytes.Length * 2);
-            foreach (byte b in bytes)
-                hexBuilder.AppendFormat("{0:x2}", b);
-            return hexBuilder.ToString();
-        }
+        
     }
 
     public interface ISymmetricCipherConfiguration
