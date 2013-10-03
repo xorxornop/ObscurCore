@@ -64,8 +64,9 @@ namespace ObscurCore.Tests.Cryptography
             var crypted = new MemoryStream();
 
             var sw = new Stopwatch();
-            sw.Start();
+            
             using (var cs = new SymmetricCryptoStream(crypted, true, config, null, true)) {
+                sw.Start();
                 input.CopyTo(cs, GetBufferSize());
             }
             sw.Stop();
@@ -75,8 +76,8 @@ namespace ObscurCore.Tests.Cryptography
             crypted.Seek(0, SeekOrigin.Begin);
 
             sw.Reset();
-            sw.Start();
             using (var cs = new SymmetricCryptoStream(crypted, false, config, null, true)) {
+                sw.Start();
                 cs.CopyTo(decrypted, GetBufferSize());
             }
             sw.Stop();

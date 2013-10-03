@@ -25,25 +25,25 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		private uint[] q = new uint[512];
 		private uint cnt = 0;
 
-		private static uint F1(uint x)
-		{
-			return RotateRight(x, 7) ^ RotateRight(x, 18) ^ (x >> 3);
-		}
+        //private static uint F1(uint x)
+        //{
+        //    return RotateRight(x, 7) ^ RotateRight(x, 18) ^ (x >> 3);
+        //}
 
-		private static uint F2(uint x)
-		{
-			return RotateRight(x, 17) ^ RotateRight(x, 19) ^ (x >> 10);
-		}
+        //private static uint F2(uint x)
+        //{
+        //    return RotateRight(x, 17) ^ RotateRight(x, 19) ^ (x >> 10);
+        //}
 
-		private uint G1(uint x, uint y, uint z)
-		{
-			return (RotateRight(x, 10) ^ RotateRight(z, 23)) + RotateRight(y, 8);
-		}
+        //private uint G1(uint x, uint y, uint z)
+        //{
+        //    return (RotateRight(x, 10) ^ RotateRight(z, 23)) + RotateRight(y, 8);
+        //}
 
-		private uint G2(uint x, uint y, uint z)
-		{
-			return (RotateLeft(x, 10) ^ RotateLeft(z, 23)) + RotateLeft(y, 8);
-		}
+        //private uint G2(uint x, uint y, uint z)
+        //{
+        //    return (RotateLeft(x, 10) ^ RotateLeft(z, 23)) + RotateLeft(y, 8);
+        //}
 
 		private static uint RotateLeft(uint	x, int bits)
 		{
@@ -55,30 +55,30 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return (x >> bits) | (x << -bits);
 		}
 
-		private uint H1(uint x)
-		{
-			return q[x & 0xFF] + q[((x >> 16) & 0xFF) + 256];
-		}
+        //private uint H1(uint x)
+        //{
+        //    return q[x & 0xFF] + q[((x >> 16) & 0xFF) + 256];
+        //}
 
-		private uint H2(uint x)
-		{
-			return p[x & 0xFF] + p[((x >> 16) & 0xFF) + 256];
-		}
+        //private uint H2(uint x)
+        //{
+        //    return p[x & 0xFF] + p[((x >> 16) & 0xFF) + 256];
+        //}
 
-		private static uint Mod1024(uint x)
-		{
-			return x & 0x3FF;
-		}
+        //private static uint Mod1024(uint x)
+        //{
+        //    return x & 0x3FF;
+        //}
 
-		private static uint Mod512(uint x)
-		{
-			return x & 0x1FF;
-		}
+        //private static uint Mod512(uint x)
+        //{
+        //    return x & 0x1FF;
+        //}
 
-		private static uint Dim(uint x, uint y)
-		{
-			return Mod512(x - y);
-		}
+        //private static uint Dim(uint x, uint y)
+        //{
+        //    return Mod512(x - y);
+        //}
 
 		private uint Step()
 		{

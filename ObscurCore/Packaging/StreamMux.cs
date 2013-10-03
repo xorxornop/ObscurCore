@@ -60,7 +60,7 @@ namespace ObscurCore.Packaging
                  * but not bigger than the item, or transform+copybuffer requirements. */
                 var relevantItemLength = Writing ? _items[i].ExternalLength : _items[i].InternalLength;
                 var decoratingStream = transformFuncs[i](Stream.Null); // TODO: Fix this nasty hack
-                var buffer = new CyclicMemoryStream((int) Math.Min(relevantItemLength, Math.Max(Math.Min
+                var buffer = new RingByteBufferStream((int) Math.Min(relevantItemLength, Math.Max(Math.Min
                     (decoratingStream.BufferSizeRequirement, relevantItemLength),
                     decoratingStream.BufferSizeRequirement + maxOpSize)));
                 _buffers.Add(buffer);
@@ -81,7 +81,7 @@ namespace ObscurCore.Packaging
 
         private readonly Stream _multiplexed;
         private readonly List<IStreamBinding> _items = new List<IStreamBinding>();
-        private readonly List<CyclicMemoryStream> _buffers = new List<CyclicMemoryStream>();
+        private readonly List<RingByteBufferStream> _buffers = new List<RingByteBufferStream>();
         private readonly List<DecoratingStream> _transforms = new List<DecoratingStream>();
         private readonly long[] _accumulatorExternal, _accumulatorInternal;
 
@@ -125,7 +125,7 @@ namespace ObscurCore.Packaging
         /// Gets the buffer.
         /// </summary>
         /// <value>The buffer.</value>
-        protected CyclicMemoryStream CurrentItemBuffer {
+        protected RingByteBufferStream CurrentItemBuffer {
             get { return _buffers[CurrentIndex]; }
         }
 

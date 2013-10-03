@@ -172,6 +172,7 @@
     <Compile Include="Packaging\SimpleMux.cs" />
     <Compile Include="Packaging\StreamMux.cs" />
     <Compile Include="Packaging\Utilities.cs" />
+    <Compile Include="RingByteBufferStream.cs" />
     <Compile Include="Source.cs" />
     <Compile Include="StratCom.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\Salsa20Generator.cs" />
@@ -208,7 +209,7 @@
     <Compile Include="Cryptography\Support\Pack.cs" />
     <Compile Include="Cryptography\Support\Strings.cs" />
     <Compile Include="Cryptography\Support\X9IntegerConverter.cs" />
-    <Compile Include="CyclicByteBuffer.cs" />
+    <Compile Include="RingByteBuffer.cs" />
     <Compile Include="ExtensionMethods.cs" />
   </ItemGroup>
   <ItemGroup />

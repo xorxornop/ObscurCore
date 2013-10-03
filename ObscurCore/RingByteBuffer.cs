@@ -25,7 +25,7 @@ namespace ObscurCore
 	/// Makes efficient use of memory.
 	/// Ensure initialised capacity can hold typical use case requirement with some overflow tolerance.	
 	/// </remarks>		
-	public sealed class CyclicByteBuffer
+	public sealed class RingByteBuffer
 	{
 		public int Capacity { get; private set; }
 		public int Length { get; private set; }
@@ -35,12 +35,12 @@ namespace ObscurCore
 		private readonly byte[] _buffer;
 		private int _head, _tail;
 
-		public CyclicByteBuffer (int capacity) {
+		public RingByteBuffer (int capacity) {
 			Capacity = capacity;
 			_buffer = new byte[Capacity];
 		}
 
-		public CyclicByteBuffer (int capacity, byte[] buffer) : this(capacity) {
+		public RingByteBuffer (int capacity, byte[] buffer) : this(capacity) {
 			Capacity = capacity;
 			_buffer = new byte[Capacity];
 			Buffer.BlockCopy(buffer, 0, _buffer, 0, buffer.Length);
@@ -78,6 +78,30 @@ namespace ObscurCore
 			if (_tail == Capacity) _tail = 0;
 			Length++;
 		}
+
+        /// <summary>
+        /// Reads a stream directly into the ringbuffer. 
+        /// Avoids the overhead of creating a byte array.
+        /// </summary>
+        /// <param name="source">Stream to take bytes from to write to the ringbuffer.</param>
+        /// <param name="count">Number of bytes to take/read.</param>
+        public void PutFrom(Stream source, int count) {
+            if (count + Length > Capacity) {
+				throw new InvalidOperationException("Buffer capacity insufficient for write operation. " + 
+				                                    "Write a smaller quantity relative to the capacity to avoid this.");
+			}
+
+            if (_tail + count >= Capacity) {
+				var chunkSize = Capacity - _tail;
+                source.Read(_buffer, _tail, chunkSize);
+				_tail = 0;
+				count -= chunkSize;
+				Length += chunkSize;
+			}
+            source.Read(_buffer, _tail, count);
+            _tail += count;
+			Length += count;
+        }
 
 		public void Take (byte[] buffer) {
 			Take(buffer, 0, buffer.Length);
@@ -121,6 +145,24 @@ namespace ObscurCore
 			return output;
 		}
 
+        public void TakeTo(Stream destination, int count) {
+            if (count > Length)
+				throw new ArgumentException("Buffer contents insufficient for read operation. " +
+				                                    "Request a smaller quantity relative to the capacity to avoid this.", "count");
+            if(count == 0) return;
+
+			if (_head + count >= Capacity) {
+				var chunkSize = Capacity - _head;
+                destination.Write(_buffer, _head, chunkSize);
+				_head = 0;
+				count -= chunkSize;
+				Length -= chunkSize;
+			}
+			destination.Write(_buffer, _head, count);
+			_head += count;
+			Length -= count;
+        }
+
 		/// <summary>
 		/// Advances the stream a specified number of bytes. 
 		/// Skipped data is non-recoverable; state is not remembered, as position cannot be reverted.
@@ -151,81 +193,5 @@ namespace ObscurCore
 		public byte[] ToArray () {
 			return Take(Length);
 		}
-	}
-
-	public sealed class CyclicMemoryStream : Stream
-	{
-		private readonly CyclicByteBuffer _ringBuffer;
-
-		public CyclicMemoryStream(int capacity) {
-			_ringBuffer = new CyclicByteBuffer(capacity);
-		}
-
-		public override bool CanRead {
-			get { return _ringBuffer.Length > 0; }
-		}
-
-		public override bool CanSeek {
-			get { return _ringBuffer.Length > 0; }
-		}
-
-		public override bool CanWrite {
-			get { return _ringBuffer.Length < _ringBuffer.Capacity; }
-		}
-
-        /// <summary>
-        /// Discards all current data in the buffer!
-        /// </summary>
-		public override void Flush () {
-		    // Do nothing
-		}
-
-		public override long Length {
-			get { return _ringBuffer.Length; }
-		}
-
-		public override long Position {
-			get { return 0; }
-			set {
-				throw new NotSupportedException();
-			}
-		}
-
-		public override int Read (byte[] buffer, int offset, int count) {
-		    count = Math.Min(count, _ringBuffer.Length);
-			_ringBuffer.Take(buffer, offset, count);
-			return count;
-		}
-
-		public int Read (byte[] buffer, int offset, int count, bool exact) {
-			if (exact && _ringBuffer.Length < count) count = _ringBuffer.Length;
-			_ringBuffer.Take(buffer, offset, count);
-			return count;
-		}
-
-		/// <summary>
-		/// Advances the stream a specified number of bytes. 
-		/// Skipped data is non-recoverable; state is not remembered, as position cannot be reverted.
-		/// </summary>
-		/// <param name="offset">Number of bytes to skip ahead.</param>
-		/// <param name="origin">Use only values of Begin or Current (same effect).</param>
-		public override long Seek(long offset, SeekOrigin origin) {
-			if(origin == SeekOrigin.End) throw new ArgumentException("Seek only applicable from current stream position (Begin/Current).");
-			return _ringBuffer.Skip((int)offset);
-		}
-
-		public override void SetLength (long value) {
-			throw new NotSupportedException("Capacity must be set on construction.");
-		}
-
-		public override void Write (byte[] buffer, int offset, int count) {
-			_ringBuffer.Put(buffer, offset, count);
-		}
-
-        protected override void Dispose(bool disposing)
-        {
-            _ringBuffer.Skip(_ringBuffer.Length);
-            base.Dispose(disposing);
-        }
 	}
 }
