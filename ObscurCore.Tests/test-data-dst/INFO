@@ -1,0 +1,21 @@
+***** INFO *****
+
+Test output data is written into directories in this (where this file is) directory.
+Paths given are relative to this directory.
+
+Output from tests using the small, text-format file collection are placed in:
+/small-text-files/
+
+Output from tests using the larger, binary-format file collection are placed in:
+/large-binary-files/
+
+An exception to the above general rule is for that of package output - all package output is placed in:
+/package-output/
+
+Package output files are named according to their manifest cryptography scheme.
+
+
+The source data for these tests is found in, relative to the test project root namespace:
+
+/test-data-src/small-text-files/
+/test-data-src/large-binary-files/

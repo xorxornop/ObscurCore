@@ -115,7 +115,8 @@ namespace ObscurCore.Tests.Packaging
 
             // Write out muxed payload - optional
 	        if (outputPayload) {
-
+				if (!DestinationDirectory.Exists)
+					DestinationDirectory.Create ();
 			    var path = DestinationDirectory.FullName + Path.DirectorySeparatorChar + 
                     payloadConfig.SchemeName.ToLower () + IOTestBase.RawPayloadExtension;
 				using (var fs = new FileStream(path, FileMode.Create)) {
@@ -126,9 +127,8 @@ namespace ObscurCore.Tests.Packaging
             // DEMUX
 
             var demuxPath = DestinationDirectory.FullName + Path.DirectorySeparatorChar + DemuxDir;
-
+			if (!Directory.Exists (demuxPath)) Directory.CreateDirectory (demuxPath);
 	        foreach (var payloadItem in items) {
-	            if (!Directory.Exists (demuxPath)) Directory.CreateDirectory (demuxPath);
 	            PayloadItem item = payloadItem;
 	            payloadItem.SetStreamBinding(() => new FileStream(demuxPath + Path.DirectorySeparatorChar + item.RelativePath, FileMode.Create));
 	        }

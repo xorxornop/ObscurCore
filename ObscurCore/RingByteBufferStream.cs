@@ -57,35 +57,34 @@ namespace ObscurCore
         }
 
         public override int Read (byte[] buffer, int offset, int count) {
-            if(_ringBuffer.Length == 0) throw new EndOfStreamException();
             count = Math.Min(count, _ringBuffer.Length);
             _ringBuffer.Take(buffer, offset, count);
             return count;
         }
 
         public int Read (byte[] buffer, int offset, int count, bool exact) {
-            if(_ringBuffer.Length == 0) throw new EndOfStreamException();
+            if(_ringBuffer.Length == 0 && exact && count > 0) throw new EndOfStreamException();
             if (exact && _ringBuffer.Length < count) count = _ringBuffer.Length;
             _ringBuffer.Take(buffer, offset, count);
             return count;
         }
 
         /// <summary>
-        /// 
+        /// Read from the ringbuffer, writing to a stream destination.
         /// </summary>
         /// <param name="destination">Destination to write bytes that are read.</param>
         /// <param name="count">Number of bytes to read/write.</param>
         /// <param name="exact">To read less bytes than specified is unacceptable.</param>
         /// <returns>Number of bytes written (read from the buffer).</returns>
         public int ReadTo (Stream destination, int count, bool exact) {
-            if(_ringBuffer.Length == 0) throw new EndOfStreamException();
+            if(_ringBuffer.Length == 0 && exact && count > 0) throw new EndOfStreamException();
             if(exact && _ringBuffer.Length < count) count = _ringBuffer.Length;
             _ringBuffer.TakeTo(destination, count);
             return count;
         }
 
         /// <summary>
-        /// Write to the ringbuffer using a stream source. 
+        /// Write to the ringbuffer, reading from a stream source. 
         /// Non-standard stream method for high performance.
         /// </summary>
         /// <param name="source">Source to take bytes from for writing.</param>

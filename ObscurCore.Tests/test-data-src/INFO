@@ -1,0 +1,19 @@
+***** INFO *****
+
+Test source data is read from two directories in this (where this file is) directory.
+
+Small, text-format files are placed in:
+/small-text-files/
+
+Larger, binary-format files are placed in:
+/large-binary-files/
+
+They are used for different types of tests, and are to be considered different collections.
+The output from these tests is found in, relative to the test project root namespace:
+
+/test-data-dst/small-text-files/
+/test-data-dst/large-binary-files/
+
+and
+
+/test-data-dst/package-output/

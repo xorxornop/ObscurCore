@@ -32,7 +32,7 @@
     <WarningLevel>4</WarningLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="AfterBuild" command="bash pc-dto-auto.sh ${TargetName} ObscurCore.DTOSerialiser" workingdir="${TargetDir}/precompiler/" />
+        <Command type="AfterBuild" command="mono precompile.exe ../bin/${ProjectConfigName}/${TargetName} -o:../bin/${ProjectConfigName}/${ProjectName}Serialiser.dll -t:${ProjectName}Serialiser" workingdir="${ProjectDir}/precompiler" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
