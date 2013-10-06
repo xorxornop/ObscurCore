@@ -21,59 +21,51 @@ namespace ObscurCore.DTO
 {
     /// <summary>
     /// Configuration of how payload items are physically laid out 
-    /// in sequences of bytes, relative to each other.
+    /// in sequences of bytes relative to each other.
     /// </summary>
     [ProtoContract]
-    public sealed class PayloadLayoutConfiguration : IPayloadLayoutConfiguration, IEquatable<PayloadLayoutConfiguration>
+    public sealed class PayloadLayoutConfiguration : IPayloadLayoutConfiguration, 
+        IDataTransferObject, IEquatable<PayloadLayoutConfiguration>
     {
-        [ProtoMember(1)]
+        /// <summary>
+        /// Name of the payload layout scheme.
+        /// </summary>
+        [ProtoMember(1, IsRequired = true)]
         public string SchemeName { get; set; }
 		
         /// <summary>
-        /// Configuration for the layout-scheme-specific payload I/O module.
+        /// Configuration for the scheme.
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        [ProtoMember(2)]
+        [ProtoMember(2, IsRequired = false)]
         public byte[] SchemeConfiguration { get; set; }
 		
         /// <summary>
-        /// Name of the PRNG used to select which item to read/write from/to the payload.
+        /// Name of the PRNG used for selecting the active stream, 
+        /// and other scheme-specific states.
         /// </summary>
         [ProtoMember(3)]
-        public string StreamPRNGName { get; set; }
+        public string PrimaryPRNGName { get; set; }
 		
         /// <summary>
-        /// Configuration for the stream-selection PRNG.
+        /// Configuration for the primary PRNG.
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
         [ProtoMember(4)]
-        public byte[] StreamPRNGConfiguration { get; set; }
+        public byte[] PrimaryPRNGConfiguration { get; set; }
 		
-        /// <summary>
-        /// Name of the secondary PRNG used for other tasks that the layout scheme may require. 
-        /// </summary>		
-        [ProtoMember(5)]
-        public string SecondaryPRNGName { get; set; }
+        ///// <summary>
+        ///// Name of the secondary PRNG used for other tasks that the layout scheme may require. 
+        ///// </summary>		
+        //[ProtoMember(5)]
+        //public string SecondaryPRNGName { get; set; }
 		
-        /// <summary>
-        /// Configuration for the secondary PRNG.
-        /// </summary>
-        /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        [ProtoMember(6)]
-        public byte[] SecondaryPRNGConfiguration { get; set; }
-
-        /// <summary>
-        /// Name of the tertiary PRNG used for other tasks that the layout scheme may require. 
-        /// </summary>		
-        [ProtoMember(7)]
-        public string TertiaryPRNGName { get; set; }
-		
-        /// <summary>
-        /// Configuration for the tertiary PRNG.
-        /// </summary>
-        /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        [ProtoMember(8)]
-        public byte[] TertiaryPRNGConfiguration { get; set; }
+        ///// <summary>
+        ///// Configuration for the secondary PRNG.
+        ///// </summary>
+        ///// <remarks>Format of the configuration is that of the consuming type.</remarks>
+        //[ProtoMember(6)]
+        //public byte[] SecondaryPRNGConfiguration { get; set; }
 
         public override bool Equals (object obj)
         {
@@ -95,15 +87,12 @@ namespace ObscurCore.DTO
             return string.Equals(SchemeName, other.SchemeName) &&
                    (SchemeConfiguration == null ? other.SchemeConfiguration == null : 
                    SchemeConfiguration.SequenceEqual(other.SchemeConfiguration)) && 
-                   string.Equals(StreamPRNGName, other.StreamPRNGName) &&
-                   (StreamPRNGConfiguration == null ? other.StreamPRNGConfiguration == null : 
-                   StreamPRNGConfiguration.SequenceEqual(other.StreamPRNGConfiguration)) && 
+                   string.Equals(PrimaryPRNGName, other.PrimaryPRNGName) &&
+                   (PrimaryPRNGConfiguration == null ? other.PrimaryPRNGConfiguration == null : 
+                   PrimaryPRNGConfiguration.SequenceEqual(other.PrimaryPRNGConfiguration))/* && 
                    string.Equals(SecondaryPRNGName, other.SecondaryPRNGName) && 
                    (SecondaryPRNGConfiguration == null ? other.SecondaryPRNGConfiguration == null : 
-                   SecondaryPRNGConfiguration.SequenceEqual(other.SecondaryPRNGConfiguration)) &&
-                   string.Equals(TertiaryPRNGName, other.TertiaryPRNGName) && 
-                   (TertiaryPRNGConfiguration == null ? other.TertiaryPRNGConfiguration == null : 
-                   TertiaryPRNGConfiguration.SequenceEqual(other.TertiaryPRNGConfiguration));
+                   SecondaryPRNGConfiguration.SequenceEqual(other.SecondaryPRNGConfiguration))*/;
         }
 
         /// <summary>
@@ -117,12 +106,12 @@ namespace ObscurCore.DTO
             unchecked {
                 int hashCode = SchemeName.GetHashCode(); // Must have scheme name
                 hashCode = (hashCode * 397) ^ (SchemeConfiguration != null ? SchemeConfiguration.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (StreamPRNGName != null ? StreamPRNGName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (StreamPRNGConfiguration != null ? StreamPRNGConfiguration.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PrimaryPRNGName != null ? PrimaryPRNGName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PrimaryPRNGConfiguration != null ? PrimaryPRNGConfiguration.GetHashCode() : 0);
+                /*
                 hashCode = (hashCode * 397) ^ (SecondaryPRNGName != null ? SecondaryPRNGName.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (SecondaryPRNGConfiguration != null ? SecondaryPRNGConfiguration.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (TertiaryPRNGName != null ? TertiaryPRNGName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (TertiaryPRNGConfiguration != null ? TertiaryPRNGConfiguration.GetHashCode() : 0);
+                */
                 return hashCode;
             }
         }
@@ -142,31 +131,28 @@ namespace ObscurCore.DTO
         /// Name of the PRNG used to select which item to read/write from/to the payload.
         /// </summary>
         /// <remarks>Convert this name to an enumeration when used internally.</remarks>
-        string StreamPRNGName { get; }
+        string PrimaryPRNGName { get; }
 
         /// <summary>
         /// Configuration for the stream-selection PRNG.
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        byte[] StreamPRNGConfiguration { get; }
+        byte[] PrimaryPRNGConfiguration { get; }
 
-        /// <summary>
-        /// Name of the PRNG used for other tasks that the layout scheme may require. 
-        /// </summary>
-        /// <remarks>
-        /// Convert this name to an enumeration when used internally.
-        /// <para>
-        /// These must take place in a deterministic, repeatable order, PRNG nonwithstanding - 
-        /// if there is multiple consumers of this one random number source, or multiple states such a 
-        /// consumer may be in, the order of invocation or consumption must be deterministic/repeatable.
-        /// </para>
-        /// </remarks>			
-        string SecondaryPRNGName { get; }
+        ///// <summary>
+        ///// Name of the PRNG used for other tasks that the layout scheme may require. 
+        ///// </summary>
+        ///// <remarks>
+        ///// Convert this name to an enumeration when used internally.
+        ///// </remarks>			
+        //string SecondaryPRNGName { get; }
 
-        /// <summary>
-        /// Configuration for the auxillary PRNG.
-        /// </summary>
-        /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        byte[] SecondaryPRNGConfiguration { get; }
+        ///// <summary>
+        ///// Configuration for the auxillary PRNG.
+        ///// </summary>
+        ///// <remarks>
+        ///// Format of the configuration is that of the consuming type.
+        ///// </remarks>
+        //byte[] SecondaryPRNGConfiguration { get; }
     }
 }

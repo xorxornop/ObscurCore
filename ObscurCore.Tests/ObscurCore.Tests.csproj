@@ -60,6 +60,7 @@
     <Compile Include="Cryptography\StreamCiphers\StreamCipherTests.cs" />
     <Compile Include="Packaging\Packages.cs" />
     <Compile Include="Packaging\Payload.cs" />
+    <Compile Include="Packaging\Serialisation\CSPRNG.cs" />
     <Compile Include="Packaging\Serialisation\KeyConfirmation.cs" />
     <Compile Include="Packaging\Serialisation\Manifest.cs" />
     <Compile Include="Packaging\Serialisation\ManifestHeader.cs" />

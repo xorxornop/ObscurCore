@@ -31,6 +31,7 @@ using ObscurCore.DTO;
 using ObscurCore.Extensions.DTO;
 using ObscurCore.Extensions.EllipticCurve;
 using ObscurCore.Extensions.Enumerations;
+using ObscurCore.Extensions.Generic;
 using ObscurCore.Packaging;
 using ProtoBuf;
 
@@ -49,7 +50,7 @@ namespace ObscurCore
         internal static readonly byte[] TrailerTagBytes = Encoding.ASCII.GetBytes("OCPE-KBAI");
 
         static StratCom() {
-            EntropySource.SetSeed(SecureRandom.GetSeed(64));
+            EntropySource.SetSeed(SecureRandom.GetSeed(InitialSeedSize));
             EntropySource.SetSeed(Encoding.UTF8.GetBytes(Thread.CurrentThread.Name));
         }
 
@@ -57,7 +58,7 @@ namespace ObscurCore
 		/// Provides serialisation capabilities for any object that has a ProtoContract attribute (e.g. from ObscurCore.DTO namespace).
 		/// </summary>
 		/// <returns>The DTO object serialised to binary data wrapped in a MemoryStream.</returns>
-		public static MemoryStream SerialiseDTO(object obj, bool lengthPrefix = true) {
+		public static MemoryStream SerialiseDTO(object obj, bool lengthPrefix = false) {
 		    var type = obj.GetType();
             if (!Serialiser.CanSerializeContractType(type)) {
                 throw new ArgumentException("Cannot serialise - requested object does not have a serialisation contract for its type.", "obj");
@@ -71,6 +72,23 @@ namespace ObscurCore
 		    return ms;
 		}
 
+        /// <summary>
+		/// Provides serialisation capabilities for any object that has a ProtoContract attribute (e.g. from ObscurCore.DTO namespace).
+		/// </summary>
+		/// <returns>The DTO object serialised to binary data wrapped in a MemoryStream.</returns>
+		public static T DeserialiseDTO<T>(byte[] objectBytes, bool lengthPrefix = false) {
+            if (!Serialiser.CanSerializeContractType(typeof(T))) {
+                throw new ArgumentException("Cannot deserialise - requested type does not have a serialisation contract.");
+            }
+            var ms = new MemoryStream(objectBytes);
+            var outputObj = default(T);
+            if (lengthPrefix) {
+                outputObj = (T) Serialiser.DeserializeWithLengthPrefix(ms, outputObj, typeof (T), PrefixStyle.Base128, 0);
+            } else {
+                outputObj = (T) Serialiser.Deserialize(ms, outputObj, typeof (T));
+            }
+            return outputObj;
+        }
 
 		private static void CheckPackageIOIsOK(Stream destination, Manifest manifest) {
 			// Can we actually perform a write to the output?
@@ -96,7 +114,7 @@ namespace ObscurCore
 			Dictionary<Guid, byte[]> payloadKeys, ECKeyConfiguration sender, ECKeyConfiguration recipient) {
 
 			// At the moment, we'll just force scrypt KDF and default parameters for it
-			var manifestCrypto = new UM1ManifestCryptographyConfiguration {
+			var mCrypto = new UM1ManifestCryptographyConfiguration {
 				SymmetricCipher = manifestCipherConfig,
 				KeyDerivation = new KeyDerivationConfiguration() {
 					SchemeName = KeyDerivationFunctions.Scrypt.ToString(),
@@ -110,21 +128,20 @@ namespace ObscurCore
 			
 			var initiator = new UM1ExchangeInitiator(remotePublicKey, localPrivateKey);
 			ECPublicKeyParameters ephemeral;
-			manifestCipherConfig.Key = Source.DeriveKeyWithKDF(manifestCrypto.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunctions>(),
-		        initiator.CalculateSharedSecret(out ephemeral), manifestCrypto.KeyDerivation.Salt,
-		        manifestCrypto.SymmetricCipher.KeySize,
-		        manifestCrypto.KeyDerivation.SchemeConfiguration);
+			manifestCipherConfig.Key = Source.DeriveKeyWithKDF(mCrypto.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunctions>(),
+		        initiator.CalculateSharedSecret(out ephemeral), mCrypto.KeyDerivation.Salt,
+		        mCrypto.SymmetricCipher.KeySize,
+		        mCrypto.KeyDerivation.SchemeConfiguration);
+
+		    var mCryptoBytes = mCrypto.SerialiseDTO();
 
 			// Store the ephemeral public key in the manifest cryptography configuration object (UM1IESConfiguration)
-			manifestCrypto.EphemeralKey.EncodedKey = ECKeyUtility.Write(ephemeral.Q);
-
-			var msManifestCrypto = new MemoryStream(); // Storage for manifest cryptography configuration in serialised form
-			Serialiser.Serialize(msManifestCrypto, manifestCrypto);
+			mCrypto.EphemeralKey.EncodedKey = ECKeyUtility.Write(ephemeral.Q);
 
 			var manifestHeader = new ManifestHeader() {
 				FormatVersion = HeaderVersion,
 				CryptographySchemeName = ManifestCryptographySchemes.UM1Hybrid.ToString(),
-				CryptographySchemeConfiguration = msManifestCrypto.ToArray()
+				CryptographySchemeConfiguration = mCrypto.SerialiseDTO()
 			};
 			
 			// Do the handoff to the [mostly] scheme-agnostic part of the writing op
@@ -142,8 +159,6 @@ namespace ObscurCore
 		public static void WritePackageSymmetric(Stream destination, Manifest manifest, 
             SymmetricManifestCryptographyConfiguration mCrypto, byte[] preMKey) 
         {
-			var msManifestCrypto = new MemoryStream(); // Storage for manifest cryptography configuration in serialised form
-
             // Derive the key which will be used for encrypting the package manifest
             var workingMKey = Source.DeriveKeyWithKDF(mCrypto.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunctions>(),
                     preMKey, mCrypto.KeyDerivation.Salt, mCrypto.SymmetricCipher.KeySize,
@@ -151,7 +166,9 @@ namespace ObscurCore
 
             // Clear the pre-key from memory
             Array.Clear(preMKey, 0, preMKey.Length);
-			Serialiser.Serialize(msManifestCrypto, mCrypto);
+
+		    var mCryptoBytes = mCrypto.SerialiseDTO();
+
             // Manifest cryptography configuration has been serialised into memory, 
             // so we can now populate the CipherConfiguration inside it to streamline things...
             mCrypto.SymmetricCipher.Key = new byte[workingMKey.Length];
@@ -164,7 +181,7 @@ namespace ObscurCore
 			var manifestHeader = new ManifestHeader() {
 				FormatVersion = HeaderVersion,
 				CryptographySchemeName = ManifestCryptographySchemes.UniversalSymmetric.ToString(),
-				CryptographySchemeConfiguration = msManifestCrypto.ToArray()
+				CryptographySchemeConfiguration = mCryptoBytes
 			};
 
 			// Do the handoff to the [mostly] scheme-agnostic part of the writing op

@@ -25,7 +25,8 @@ namespace ObscurCore.DTO
     /// Configuration for CryptoStream [en/de]crypting streams.
     /// </summary>
     [ProtoContract]
-    public class SymmetricCipherConfiguration : ISymmetricCipherConfiguration, IEquatable<SymmetricCipherConfiguration>
+    public class SymmetricCipherConfiguration : ISymmetricCipherConfiguration, 
+        IDataTransferObject, IEquatable<SymmetricCipherConfiguration>
     {
         #region Data relevant to all symmetric ciphers
         [ProtoMember(1, IsRequired = true), DefaultValue(SymmetricCipherType.None)]

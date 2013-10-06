@@ -32,7 +32,7 @@ namespace ObscurCore.Packaging
 							MaximumPaddingLength 		= 256,
 							DefaultFixedPaddingLength 	= 32;
 
-		protected readonly Random prngPadding;
+		//protected readonly Random prngPadding;
 	    protected readonly FrameshiftPaddingModes mode;
 		protected readonly int minPadding, maxPadding;
 	    protected readonly Random paddingSrc = StratCom.EntropySource;
@@ -49,10 +49,10 @@ namespace ObscurCore.Packaging
 
             mode = FrameshiftConfigurationUtility.CheckMode(minPadding, maxPadding);
 
-            if (mode == FrameshiftPaddingModes.VariableLength) {
+            /*if (mode == FrameshiftPaddingModes.VariableLength) {
                 prngPadding = Source.CreateCSPRNG(config.SecondaryPRNGName.ToEnum<CSPRNumberGenerators>(),
 		        config.SecondaryPRNGConfiguration);
-            }
+            }*/
 		}
 
 		protected override int EmitHeader () { return EmitPadding(); }
@@ -60,7 +60,7 @@ namespace ObscurCore.Packaging
 		protected override int EmitTrailer () { return EmitHeader(); }
 
         private int EmitPadding () {
-            var paddingLength = (mode == FrameshiftPaddingModes.VariableLength) ? prngPadding.Next(minPadding, maxPadding) : maxPadding;
+            var paddingLength = (mode == FrameshiftPaddingModes.VariableLength) ? SelectionSource.Next(minPadding, maxPadding) : maxPadding;
             var paddingBuffer = new byte[paddingLength];
             paddingSrc.NextBytes(paddingBuffer);
             CurrentDestination.Write(paddingBuffer, 0, paddingLength);
@@ -72,7 +72,7 @@ namespace ObscurCore.Packaging
 		protected override int ConsumeTrailer () { return ConsumePadding(); }
 		
 		private int ConsumePadding() {
-            var paddingLength = (mode == FrameshiftPaddingModes.VariableLength) ? prngPadding.Next(minPadding, maxPadding) : maxPadding;
+            var paddingLength = (mode == FrameshiftPaddingModes.VariableLength) ? SelectionSource.Next(minPadding, maxPadding) : maxPadding;
 			if (CurrentSource.CanSeek) CurrentSource.Seek(paddingLength, SeekOrigin.Current);
 			else CurrentSource.Read(new byte[paddingLength], 0, paddingLength);
 			return paddingLength;

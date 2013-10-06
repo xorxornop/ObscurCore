@@ -25,7 +25,8 @@ namespace ObscurCore.DTO
     /// Description of an item in the payload.
     /// </summary>
     [ProtoContract]
-    public sealed class PayloadItem : IStreamBinding, IEquatable<PayloadItem>, IDisposable
+    public sealed class PayloadItem : IStreamBinding, IDataTransferObject, IDisposable, 
+        IEquatable<PayloadItem>
     {
         public PayloadItem ()
         {
@@ -70,6 +71,7 @@ namespace ObscurCore.DTO
         [ProtoIgnore]
         public bool StreamHasBinding { get { return _stream != null; } }
 
+
         /// <summary>
         /// Item handling behaviour category. 
         /// Key actions should be handled differently from the others.
@@ -87,19 +89,19 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Length of the item inside of the payload, excluding any additional length imparted by the payload layout module.
         /// </summary>
-        [ProtoMember(3)]
+        [ProtoMember(3, IsRequired = true)]
         public long InternalLength { get; set; }
 
         /// <summary>
         /// Length of the item outside of of the payload (unmodified, unpackaged, as intended to be extracted to).
         /// </summary>
-        [ProtoMember(4)]
+        [ProtoMember(4, IsRequired = true)]
         public long ExternalLength { get; set; }
 
         /// <summary>
         /// Compression configuration for this payload item.
         /// </summary>
-        [ProtoMember(5, IsRequired = true)]
+        [ProtoMember(5, IsRequired = false)]
         public CompressionConfiguration Compression { get; set; }
 		
         /// <summary>
@@ -139,8 +141,8 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Type.Equals(other.Type) &&
-                   string.Equals(RelativePath, other.RelativePath,
-                                 Type == PayloadItemTypes.Binary ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) &&
+                   string.Equals(RelativePath, other.RelativePath, 
+                   Type == PayloadItemTypes.Binary ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) &&
                    InternalLength == other.InternalLength && ExternalLength == other.ExternalLength && Encryption.Equals(other.Encryption) && 
                    Compression.Equals(other.Compression) && 
                    (KeyVerification == null ? other.KeyVerification == null : KeyVerification.Equals(other.KeyVerification)) &&
@@ -158,10 +160,10 @@ namespace ObscurCore.DTO
             unchecked {
                 int hashCode = Type.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Type == PayloadItemTypes.Binary ? 
-                                                                                   StringComparer.OrdinalIgnoreCase.GetHashCode(RelativePath) : StringComparer.Ordinal.GetHashCode(RelativePath));
+                    StringComparer.OrdinalIgnoreCase.GetHashCode(RelativePath) : StringComparer.Ordinal.GetHashCode(RelativePath));
                 hashCode = (hashCode * 397) ^ InternalLength.GetHashCode();
                 hashCode = (hashCode * 397) ^ ExternalLength.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Encryption != null ? Encryption.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ Encryption.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Compression != null ? Compression.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (KeyVerification != null ? KeyVerification.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (KeyDerivation != null ? KeyDerivation.GetHashCode() : 0);

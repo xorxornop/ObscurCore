@@ -23,13 +23,14 @@ namespace ObscurCore.DTO
     /// Configuration for CompressoStream [de]compressing streams.
     /// </summary>
     [ProtoContract]
-    public class CompressionConfiguration : ICompressionConfiguration, IEquatable<CompressionConfiguration>
+    public class CompressionConfiguration : ICompressionConfiguration, IDataTransferObject, 
+        IEquatable<CompressionConfiguration>
     {
         /// <summary>
         /// The compression algorithm used.
         /// </summary>
         /// <remarks>Convert this name to an enumeration when used internally.</remarks>
-        [ProtoMember(1)]
+        [ProtoMember(1, IsRequired = true)]
         public string AlgorithmName { get; set; }
 		
         [ProtoMember(2)]

@@ -24,7 +24,8 @@ namespace ObscurCore.DTO
     /// of keying material at respondent's side without disclosing the key itself.
     /// </summary>
     [ProtoContract]
-    public class KeyConfirmationConfiguration : IKeyConfirmationConfiguration, IEquatable<KeyConfirmationConfiguration>
+    public class KeyConfirmationConfiguration : IKeyConfirmationConfiguration, 
+        IDataTransferObject, IEquatable<KeyConfirmationConfiguration>
     {
         /// <summary>
         /// Name of the scheme used to verify key validity for a particular item.
@@ -37,7 +38,7 @@ namespace ObscurCore.DTO
         /// Configuration for the key verification scheme.
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        [ProtoMember(2, IsRequired = true)]
+        [ProtoMember(2)]
         public byte[] SchemeConfiguration { get; set; }
 
         /// <summary>

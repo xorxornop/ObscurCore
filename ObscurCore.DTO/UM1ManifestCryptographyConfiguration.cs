@@ -13,6 +13,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System;
 using System.IO;
 using ProtoBuf;
 
@@ -24,7 +25,8 @@ namespace ObscurCore.DTO
     // ***************************************************************************************************************************************************
 
     [ProtoContract]
-    public class UM1ManifestCryptographyConfiguration : IManifestCryptographySchemeConfiguration
+    public class UM1ManifestCryptographyConfiguration : IManifestCryptographySchemeConfiguration, 
+        IDataTransferObject, IEquatable<UM1ManifestCryptographyConfiguration>
     {
         /// <summary>
         /// Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.

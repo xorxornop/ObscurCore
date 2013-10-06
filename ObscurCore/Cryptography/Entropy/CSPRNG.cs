@@ -20,7 +20,7 @@ namespace ObscurCore.Cryptography.Entropy
 	/// <summary>
 	/// Base class to derive pseudorandom number generators (PRNGs) from.
 	/// </summary>
-	public abstract class CSPRNG : System.Random
+	public abstract class CSPRNG : Random
 	{
         private readonly byte[] intBuf = new byte[4], dblBuf = new byte[8];
 

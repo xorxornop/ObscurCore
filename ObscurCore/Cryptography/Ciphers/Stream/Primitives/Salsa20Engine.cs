@@ -265,7 +265,19 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		*
 		* @return  value of x expressed as a byte[] array in little endian order
 		*/
-		private byte[] intToByteLittle(
+        //private byte[] intToByteLittle(
+        //    int		x,
+        //    byte[]	bs,
+        //    int		off)
+        //{
+        //    bs[off] = (byte)x;
+        //    bs[off + 1] = (byte)(x >> 8);
+        //    bs[off + 2] = (byte)(x >> 16);
+        //    bs[off + 3] = (byte)(x >> 24);
+        //    return bs;
+        //}
+
+        private static void intToByteLittle(
 			int		x,
 			byte[]	bs,
 			int		off)
@@ -274,8 +286,9 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			bs[off + 1] = (byte)(x >> 8);
 			bs[off + 2] = (byte)(x >> 16);
 			bs[off + 3] = (byte)(x >> 24);
-			return bs;
 		}
+
+
 
 		/**
 		* Rotate left
@@ -285,7 +298,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		*
 		* @return  rotated x
 		*/
-		private int rotl(
+		private static int rotl(
 			int	x,
 			int	y)
 		{
@@ -300,7 +313,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		*
 		* @return  x[offset]..x[offset+3] 'packed' into an int in little-endian order
 		*/
-		private int byteToIntLittle(
+		private static int byteToIntLittle(
 			byte[]	x,
 			int		offset)
 		{

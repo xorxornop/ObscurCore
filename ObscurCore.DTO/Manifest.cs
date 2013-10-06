@@ -23,7 +23,7 @@ namespace ObscurCore.DTO
     /// Manifest of package - payload configuration, contents, etc.
     /// </summary>
     [ProtoContract]
-    public sealed class Manifest : IManifest, IEquatable<Manifest>
+    public sealed class Manifest : IManifest, IDataTransferObject, IEquatable<Manifest>
     {
         /// <summary>
         /// Sequence of payload item descriptors. Order must be preserved for data integrity. 

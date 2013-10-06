@@ -29,13 +29,13 @@ namespace ObscurCore.Packaging
 	/// </summary>
 	public class SimpleMux : StreamMux
 	{
-		protected CSPRNG PrngStream;
+		protected CSPRNG SelectionSource;
 
 		public SimpleMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, IList<Func<Stream, DecoratingStream>> transforms, 
 		                  IPayloadLayoutConfiguration config, int maxOpSize = 16384) : base(writing, multiplexedStream, streams, transforms, maxOpSize)
 		{
-			PrngStream = Source.CreateCSPRNG(config.StreamPRNGName.ToEnum<CSPRNumberGenerators>(),
-		        config.StreamPRNGConfiguration);
+			SelectionSource = Source.CreateCSPRNG(config.PrimaryPRNGName.ToEnum<CSPRNumberGenerators>(),
+		        config.PrimaryPRNGConfiguration);
 
 		    NextSource();
 		}
@@ -46,7 +46,7 @@ namespace ObscurCore.Packaging
 		/// <remarks>May be overriden in a derived class to provide for advanced stream selection logic.</remarks>
 		/// <returns>The next stream index.</returns>
 		protected override sealed int NextSource() {
-		    CurrentIndex = PrngStream.Next(0, ItemCount - 1);
+		    CurrentIndex = SelectionSource.Next(0, ItemCount - 1);
             Debug.Print("NextSource() : " + CurrentIndex);
 			return CurrentIndex;
 		}

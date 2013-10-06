@@ -24,6 +24,7 @@ using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
 using ObscurCore.Extensions.DTO;
 using ObscurCore.Extensions.Enumerations;
+using ObscurCore.Extensions.Generic;
 using ObscurCore.Packaging;
 
 namespace ObscurCore.Tests.Packaging
@@ -70,10 +71,9 @@ namespace ObscurCore.Tests.Packaging
 		            SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
                     SchemeConfiguration = FabricConfigurationUtility.WriteFixedStriping(FabricMux.DefaultFixedStripeLength),
 		            //SchemeConfiguration = FabricConfigurationUtility.WriteVariableStriping(FabricMux.MinimumStripeLength, FabricMux.MaximumStripeLength),
-		            StreamPRNGName = "SOSEMANUK",
-		            StreamPRNGConfiguration = SOSEMANUKGeneratorConfigurationUtility.WriteRandom(),
-		            SecondaryPRNGName = "SOSEMANUK",
-		            SecondaryPRNGConfiguration = SOSEMANUKGeneratorConfigurationUtility.WriteRandom()
+		            PrimaryPRNGName = "SOSEMANUK",
+		            PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
+                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
 		        };
 
 			DoMux (payloadConfig, items, SourceFiles);

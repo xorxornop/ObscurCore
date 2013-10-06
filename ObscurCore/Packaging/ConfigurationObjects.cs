@@ -13,8 +13,9 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using ObscurCore.Cryptography.Entropy;
+using ObscurCore.Cryptography;
 using ObscurCore.DTO;
+using ObscurCore.Extensions.Generic;
 
 namespace ObscurCore.Packaging
 {	
@@ -28,8 +29,9 @@ namespace ObscurCore.Packaging
 		public static PayloadLayoutConfiguration CreateDefault(PayloadLayoutSchemes scheme) {
 			var config = new PayloadLayoutConfiguration {
                 SchemeName = scheme.ToString(),
-				StreamPRNGName = "SOSEMANUK",
-				StreamPRNGConfiguration = SOSEMANUKGeneratorConfigurationUtility.WriteRandom()
+				PrimaryPRNGName = "SOSEMANUK",
+				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
+                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
 			};
 			
 			switch (scheme) {
@@ -51,10 +53,11 @@ namespace ObscurCore.Packaging
 #endif
 			}
 
-			if(scheme != PayloadLayoutSchemes.Simple) {
+			/*if(scheme != PayloadLayoutSchemes.Simple) {
 				config.SecondaryPRNGName = "SOSEMANUK";
-				config.SecondaryPRNGConfiguration = SOSEMANUKGeneratorConfigurationUtility.WriteRandom ();
-			}
+			    config.SecondaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
+                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>();
+			}*/
 			
 			return config;
 		}

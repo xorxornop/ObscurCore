@@ -3,6 +3,7 @@ using NUnit.Framework;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
+using ObscurCore.Extensions.Generic;
 using ObscurCore.Packaging;
 
 namespace ObscurCore.Tests.Packaging.Serialisation
@@ -11,11 +12,8 @@ namespace ObscurCore.Tests.Packaging.Serialisation
     {
         [Test]
         public void Simple () {
-            var inputObj = new PayloadLayoutConfiguration() {
-                SchemeName = PayloadLayoutSchemes.Simple.ToString(),
-                StreamPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
-                StreamPRNGConfiguration = Salsa20GeneratorConfigurationUtility.WriteRandom()
-            };
+
+            var inputObj = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Simple);
 
             var stream = SerialiseToMemory(inputObj);
             stream.Seek(0, SeekOrigin.Begin);
@@ -31,10 +29,9 @@ namespace ObscurCore.Tests.Packaging.Serialisation
             var inputObj = new PayloadLayoutConfiguration() {
                 SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
                 SchemeConfiguration = FrameshiftConfigurationUtility.WriteFixedPadding(32),
-                StreamPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
-                StreamPRNGConfiguration = Salsa20GeneratorConfigurationUtility.WriteRandom(),
-                SecondaryPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
-                SecondaryPRNGConfiguration = Salsa20GeneratorConfigurationUtility.WriteRandom()
+                PrimaryPRNGName = CSPRNumberGenerators.SOSEMANUK.ToString(),
+                PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
+                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
             };
 
             var stream = SerialiseToMemory(inputObj);
@@ -51,10 +48,9 @@ namespace ObscurCore.Tests.Packaging.Serialisation
             var inputObj = new PayloadLayoutConfiguration() {
                 SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
                 SchemeConfiguration = FrameshiftConfigurationUtility.WriteVariablePadding(8, 128),
-                StreamPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
-                StreamPRNGConfiguration = Salsa20GeneratorConfigurationUtility.WriteRandom(),
-                SecondaryPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
-                SecondaryPRNGConfiguration = Salsa20GeneratorConfigurationUtility.WriteRandom()
+                PrimaryPRNGName = CSPRNumberGenerators.SOSEMANUK.ToString(),
+                PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
+                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
             };
 
             var stream = SerialiseToMemory(inputObj);
@@ -72,10 +68,9 @@ namespace ObscurCore.Tests.Packaging.Serialisation
             var inputObj = new PayloadLayoutConfiguration() {
                 SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
                 SchemeConfiguration = FabricConfigurationUtility.WriteFixedStriping(256),
-                StreamPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
-                StreamPRNGConfiguration = Salsa20GeneratorConfigurationUtility.WriteRandom(),
-                SecondaryPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
-                SecondaryPRNGConfiguration = Salsa20GeneratorConfigurationUtility.WriteRandom()
+                PrimaryPRNGName = CSPRNumberGenerators.SOSEMANUK.ToString(),
+                PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
+                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
             };
 
             var stream = SerialiseToMemory(inputObj);
@@ -92,10 +87,9 @@ namespace ObscurCore.Tests.Packaging.Serialisation
             var inputObj = new PayloadLayoutConfiguration() {                                        
                 SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
                 SchemeConfiguration = FabricConfigurationUtility.WriteVariableStriping(64, 2048),
-                StreamPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
-                StreamPRNGConfiguration = Salsa20GeneratorConfigurationUtility.WriteRandom(),
-                SecondaryPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
-                SecondaryPRNGConfiguration = Salsa20GeneratorConfigurationUtility.WriteRandom()
+                PrimaryPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
+                PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
+                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
             };
 
             var stream = SerialiseToMemory(inputObj);

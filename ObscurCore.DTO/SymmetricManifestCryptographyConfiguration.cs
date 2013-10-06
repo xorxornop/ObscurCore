@@ -13,6 +13,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System;
 using System.IO;
 using ProtoBuf;
 
@@ -27,7 +28,8 @@ namespace ObscurCore.DTO
     /// Configuration of a symmetric cryptosystem to secure a package manifest.
     /// </summary>
     [ProtoContract]
-    public class SymmetricManifestCryptographyConfiguration : IManifestCryptographySchemeConfiguration
+    public class SymmetricManifestCryptographyConfiguration : IManifestCryptographySchemeConfiguration, 
+        IDataTransferObject, IEquatable<SymmetricManifestCryptographyConfiguration>
     {
         /// <summary>
         /// Encryption configuration for the manifest.

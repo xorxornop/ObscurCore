@@ -9,13 +9,4 @@
         SymmetricCipherConfiguration SymmetricCipher { get; set; }
         //string GetContextInvariantIdentifier ();
     }
-
-    /// <summary>
-    /// Defines common functions and properties for asymmetric cryptographic schemes.
-    /// </summary>
-    public interface IAsymmetricCryptographyScheme
-    {
-        string GetContextInvariantIdentifier ();
-    }
-
 }

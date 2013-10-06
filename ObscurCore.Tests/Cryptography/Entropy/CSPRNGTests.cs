@@ -1,14 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
+﻿//
+//  Copyright 2013  Matthew Ducker
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//        http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
+using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Entropy.Primitives;
-using ObscurCore.DTO;
 
 namespace ObscurCore.Tests.Cryptography.Entropy
 {
@@ -19,8 +30,8 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         [Test]
         public void SOSEMANUK_Int32 () {
-            var generator = Source.CreateCSPRNG(CSPRNumberGenerators.SOSEMANUK, 
-                SOSEMANUKGeneratorConfigurationUtility.WriteRandom());
+            var generator = new SOSEMANUKGenerator(Source.CreateStreamCipherCSPRNGConfiguration(
+                    SymmetricStreamCiphers.SOSEMANUK));
             TimeSpan time;
             double average;
 
@@ -36,8 +47,8 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         [Test]
         public void SOSEMANUK_UInt32 () {
-            var generator = Source.CreateCSPRNG(CSPRNumberGenerators.SOSEMANUK, 
-                SOSEMANUKGeneratorConfigurationUtility.WriteRandom());
+            var generator = new SOSEMANUKGenerator(Source.CreateStreamCipherCSPRNGConfiguration(
+                    SymmetricStreamCiphers.SOSEMANUK));
             TimeSpan time;
             double average;
 
@@ -53,8 +64,8 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         [Test]
         public void Salsa20_Int32 () {
-            var generator = Source.CreateCSPRNG(CSPRNumberGenerators.Salsa20, 
-                Salsa20GeneratorConfigurationUtility.WriteRandom());
+            var generator = new Salsa20Generator(Source.CreateStreamCipherCSPRNGConfiguration(
+                    SymmetricStreamCiphers.Salsa20));
             TimeSpan time;
             double average;
 
@@ -70,8 +81,8 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         [Test]
         public void Salsa20_UInt32 () {
-            var generator = Source.CreateCSPRNG(CSPRNumberGenerators.Salsa20, 
-                Salsa20GeneratorConfigurationUtility.WriteRandom());
+            var generator = new Salsa20Generator(Source.CreateStreamCipherCSPRNGConfiguration(
+                    SymmetricStreamCiphers.Salsa20));
             TimeSpan time;
             double average;
 

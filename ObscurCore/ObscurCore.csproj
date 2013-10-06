@@ -141,6 +141,7 @@
     <Compile Include="Cryptography\Entropy\Primitives\ReversedWindowGenerator.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\ThreadedSeedGenerator.cs" />
     <Compile Include="Cryptography\Entropy\SecureRandom.cs" />
+    <Compile Include="Cryptography\Entropy\StreamCSPRNG.cs" />
     <Compile Include="Cryptography\Enums.cs" />
     <Compile Include="Cryptography\Exceptions.cs" />
     <Compile Include="Cryptography\IO\CipherStream.cs" />
@@ -178,7 +179,6 @@
     <Compile Include="Cryptography\Entropy\Primitives\Salsa20Generator.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\SOSEMANUKGenerator.cs" />
     <Compile Include="Cryptography\Entropy\CSPRNG.cs" />
-    <Compile Include="Cryptography\Entropy\Utilities.cs" />
     <Compile Include="Cryptography\Support\Arrays.cs" />
     <Compile Include="Cryptography\Support\AsymmetricCipherKeyPair.cs" />
     <Compile Include="Cryptography\Support\AsymmetricKeyParameter.cs" />

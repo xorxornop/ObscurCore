@@ -34,7 +34,7 @@ namespace ObscurCore.Packaging
 							MaximumStripeLength         = 65536,
 							DefaultFixedStripeLength    = 4096;
 
-		protected readonly CSPRNG PrngStripe;
+		//protected readonly CSPRNG PrngStripe;
 	    protected readonly FabricStripeModes mode;
 		protected readonly int minStripe, maxStripe;
 
@@ -49,10 +49,10 @@ namespace ObscurCore.Packaging
 
             mode = FabricConfigurationUtility.CheckMode(minStripe, maxStripe);
 
-            if(mode == FabricStripeModes.VariableLength) {
+            /*if(mode == FabricStripeModes.VariableLength) {
                 PrngStripe = Source.CreateCSPRNG(config.SecondaryPRNGName.ToEnum<CSPRNumberGenerators>(),
                     config.SecondaryPRNGConfiguration);
-            }
+            }*/
 		}
 		
 		/// <summary>
@@ -61,7 +61,7 @@ namespace ObscurCore.Packaging
 		/// </summary>
 		/// <returns>The operation length.</returns>
 		protected override long NextOperationLength() {
-		    var opLen = mode == FabricStripeModes.VariableLength ? PrngStripe.Next(minStripe, maxStripe) : maxStripe;
+		    var opLen = mode == FabricStripeModes.VariableLength ? SelectionSource.Next(minStripe, maxStripe) : maxStripe;
             Debug.Print("NextOperationLength() : " + opLen);
 		    return opLen;
 		}

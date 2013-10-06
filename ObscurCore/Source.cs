@@ -153,8 +153,8 @@ namespace ObscurCore
 
             // ######################################## PRNG ########################################
 
-            PrngInstantiators.Add(CSPRNumberGenerators.Salsa20, Salsa20Generator.CreateFromConfiguration);
-			PrngInstantiators.Add(CSPRNumberGenerators.SOSEMANUK, SOSEMANUKGenerator.CreateFromConfiguration);
+            PrngInstantiators.Add(CSPRNumberGenerators.Salsa20, config => new Salsa20Generator(config));
+			PrngInstantiators.Add(CSPRNumberGenerators.SOSEMANUK, config => new SOSEMANUKGenerator(config));
 
             // ######################################## HASHING ########################################
 
@@ -456,6 +456,18 @@ namespace ObscurCore
 
         public static CSPRNG CreateCSPRNG (string prngName, byte[] config) {
             return CreateCSPRNG(prngName.ToEnum<CSPRNumberGenerators>(), config);
+        }
+
+
+        public static StreamCipherCSPRNGConfiguration CreateStreamCipherCSPRNGConfiguration(
+            SymmetricStreamCiphers cipher) {
+
+            var prng = cipher.ToString().ToEnum<CSPRNumberGenerators>();
+            if (!PrngInstantiators.ContainsKey(prng)) {
+                throw new NotSupportedException(
+                    "Stream cipher specified is not implemented/supported for use as a PRNG.");
+            }
+            return StreamCSPRNG.CreateRandomConfiguration(cipher);
         }
 
         /// <summary>

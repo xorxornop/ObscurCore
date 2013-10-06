@@ -20,9 +20,9 @@ using ProtoBuf;
 namespace ObscurCore.DTO
 {
     [ProtoContract]
-    public class ManifestHeader : IEquatable<ManifestHeader>
+    public class ManifestHeader : IDataTransferObject, IEquatable<ManifestHeader>
     {
-        [ProtoMember(1)]
+        [ProtoMember(1, IsRequired = true)]
         public int FormatVersion { get; set; }
 
         /// <summary>

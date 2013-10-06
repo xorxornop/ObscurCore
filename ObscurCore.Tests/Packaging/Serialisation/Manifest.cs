@@ -8,11 +8,16 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 	{
 		[Test]
 		public void Test() {
-			var output = new MemoryStream ();
 
 			var manifest = new Manifest ();
 
-			serialiser.SerializeWithLengthPrefix (output, "", typeof(string), ProtoBuf.PrefixStyle.Base128, 0);
+			var stream = SerialiseToMemory(manifest);
+            stream.Seek(0, SeekOrigin.Begin);
+            var outputObj = DeserialiseFromMemory<KeyConfirmationConfiguration>(stream);
+
+            bool equal = manifest.Equals(outputObj);
+
+            Assert.IsTrue(equal);
 
 		}
 	}

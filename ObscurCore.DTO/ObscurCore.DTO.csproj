@@ -50,6 +50,7 @@
     <Compile Include="CompressionConfiguration.cs" />
     <Compile Include="ECKeyConfiguration.cs" />
     <Compile Include="Enums.cs" />
+    <Compile Include="IDataTransferObject.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="KeyConfirmationConfiguration.cs" />
     <Compile Include="KeyDerivationConfiguration.cs" />
@@ -57,6 +58,7 @@
     <Compile Include="ManifestHeader.cs" />
     <Compile Include="PayloadItem.cs" />
     <Compile Include="PayloadLayoutConfiguration.cs" />
+    <Compile Include="StreamCipherCSPRNGConfiguration.cs" />
     <Compile Include="SymmetricCipherConfiguration.cs" />
     <Compile Include="SymmetricManifestCryptographyConfiguration.cs" />
     <Compile Include="UM1ManifestCryptographyConfiguration.cs" />

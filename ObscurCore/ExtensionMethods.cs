@@ -139,6 +139,10 @@ namespace ObscurCore.Extensions
                 public static bool IsBetween<T>(this T value, T low, T high) where T : IComparable<T> {
                     return value.CompareTo(low) >= 0 && value.CompareTo(high) <= 0;
                 }
+
+                public static byte[] SerialiseDTO<T>(this T obj, bool prefixLength = false) where T : IDataTransferObject {
+                    return StratCom.SerialiseDTO(obj, prefixLength).ToArray();
+                }
             }
         }
 

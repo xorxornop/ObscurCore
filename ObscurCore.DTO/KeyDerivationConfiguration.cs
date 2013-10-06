@@ -23,7 +23,7 @@ namespace ObscurCore.DTO
     /// Key Derivation scheme configuration for deriving valid, secure working key material.
     /// </summary>
     [ProtoContract]
-    public class KeyDerivationConfiguration : IEquatable<KeyDerivationConfiguration>
+    public class KeyDerivationConfiguration : IDataTransferObject, IEquatable<KeyDerivationConfiguration>
     {
         /// <summary>
         /// Key Derivation Function (KDF) being used to derive valid, secure working key material.
