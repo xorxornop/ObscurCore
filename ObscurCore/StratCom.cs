@@ -257,6 +257,78 @@ namespace ObscurCore
             destination.Close();
         }
 
+		/// <summary>
+		/// Reads a package payload.
+		/// </summary>
+		/// <param name="source">Stream to read the package from.</param>
+		/// <param name="manifest">Manifest.</param>
+		/// <param name="readOffset">How many bytes have already been read from the stream. Set to null to use Stream.Position .</param>
+		/// <param name="payloadKeysSymmetric">Potential symmetric keys for payload items.</param>
+		private static void ReadPackagePayload(Stream source, Manifest manifest, int? readOffset = null, 
+		                                       IList<byte[]> payloadKeysSymmetric = null) {
+
+			if (readOffset == null)
+				readOffset = (int) source.Position;
+			// Seek to current offset (end of manifest) plus the payload [frameshift] offset, where applicable
+			if (source.Position != readOffset)
+				source.Seek ((long)readOffset + manifest.PayloadOffset, SeekOrigin.Begin);
+
+			// Check that all payload items have decryption keys - if they do not, derive them
+			foreach(var item in manifest.PayloadItems) {
+				if(item.KeyVerification != null) {
+					// We will derive the key from one supplied as a potential
+					var itemKeyVerification = ConfirmSymmetricKey (item.KeyVerification, payloadKeysSymmetric);
+					if (itemKeyVerification == null || itemKeyVerification.Length == 0) {
+						//throw new ArgumentException(
+							//"None of the keys supplied for decryption of payload items were verified as being correct.",
+							//"payloadKeysSymmetric");
+						throw new ItemKeyMissingException (item);
+					}
+				} else {
+					if(item.Encryption.Key != null) {
+						throw new ItemKeyMissingException (item);
+					}
+				}
+			}
+
+			// Create and bind transform functions (compression, encryption, etc) defined by items' configurations to those items
+			var transformFunctions = manifest.PayloadItems.Select(item => (Func<Stream, DecoratingStream>) 
+				(binding => item.BindTransformStream(true, binding))).ToList();
+
+			// Read the payload
+
+			PayloadLayoutSchemes payloadScheme;
+			try {
+				payloadScheme = manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutSchemes> ();
+			} catch (Exception) {
+				throw new PackageConfigurationException("Package payload schema specified is an unknown type or missing.");
+			}
+			var mux = Source.CreatePayloadMultiplexer(payloadScheme, true, source, manifest.PayloadItems.ToList<IStreamBinding>(), 
+			                                          transformFunctions, manifest.PayloadConfiguration);
+
+			// Demux the payload
+			try {
+				mux.ExecuteAll ();
+			} catch (Exception ex) {
+				// Catch different kinds of exception in future
+				throw ex;
+			}
+
+			// Read the trailer
+
+			var trailerTag = new byte[TrailerTagBytes.Length];
+			source.Read (trailerTag, 0, trailerTag.Length);
+
+			if(!trailerTag.SequenceEqual(TrailerTagBytes)) {
+				throw new InvalidDataException("Package is malformed. Trailer tag is either absent or malformed." 
+				                               + "It would appear, however, that the package has unpacked successfully despite this.");
+			}
+
+
+
+
+		}
+
 
         /// <summary>
         /// Read a package manifest (only) from a stream.  
@@ -309,8 +381,10 @@ namespace ObscurCore
                         }
                         preMKey = manifestKeysSymmetric[0];
                     }
+
                     break;
-                case ManifestCryptographySchemes.UM1Hybrid: {
+
+                case ManifestCryptographySchemes.UM1Hybrid:
                     // Identify matching public-private key pairs based on curve provider and curve name
                     var ephemeralKey = ((UM1ManifestCryptographyConfiguration) mCryptoConfig).EphemeralKey;
                     ECKeyConfiguration preKeyLocal = null;
@@ -335,15 +409,16 @@ namespace ObscurCore
                             goto confirmed;
                         }
                         throw new ArgumentException("No provided EC keys were able to be confirmed as able to decrypt the manifest.");
-                    }
+                    } else {
+						// No key confirmation available
+						if (manifestKeysECSender.Count > 1 || manifestKeysECRecipient.Count > 1) {
+							throw new ArgumentException("Multiple EC keys have been provided where the package provides no key confirmation.");
+						}
+						preMKey = secretFunc(manifestKeysECSender[0], manifestKeysECRecipient[0], ephemeralKey);
+					}
 
-                    if (manifestKeysECSender.Count > 1 || manifestKeysECRecipient.Count > 1) {
-                        throw new ArgumentException("Multiple EC keys have been provided where the package provides no key confirmation.");
-                    }
-
-                    preMKey = secretFunc(manifestKeysECSender[0], manifestKeysECRecipient[0], ephemeralKey);
-                }
                     break;
+
                 default:
                     throw new NotSupportedException("Manifest cryptography scheme " + mCryptoScheme + " is not supported.");
             }
@@ -366,7 +441,14 @@ namespace ObscurCore
             return manifest;
         }
 
-
+		/// <summary>
+		/// Reads a package manifest header (only) from a stream.
+		/// </summary>
+		/// <param name="source">Stream to read the header from.</param>
+		/// <param name="mCryptoConfig">Manifest cryptography configuration deserialised from the header.</param>
+		/// <param name="mCryptoScheme">Manifest cryptography scheme parsed from the header.</param>
+		/// <param name="readOffset">Output of number of bytes read from the source stream at method completion.</param>
+		/// <returns>Package manifest header object.</returns>
         private static ManifestHeader ReadPackageManifestHeader(Stream source, out IManifestCryptographySchemeConfiguration mCryptoConfig,
             out ManifestCryptographySchemes mCryptoScheme, out int readOffset) {
 
