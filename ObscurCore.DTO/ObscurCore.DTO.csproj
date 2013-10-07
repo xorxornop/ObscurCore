@@ -51,7 +51,8 @@
     <Compile Include="ECKeyConfiguration.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="IDataTransferObject.cs" />
-    <Compile Include="Interfaces.cs" />
+    <Compile Include="IManifestCryptographySchemeConfiguration.cs" />
+    <Compile Include="KDFConfigurations.cs" />
     <Compile Include="KeyConfirmationConfiguration.cs" />
     <Compile Include="KeyDerivationConfiguration.cs" />
     <Compile Include="Manifest.cs" />

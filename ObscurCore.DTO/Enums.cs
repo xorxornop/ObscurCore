@@ -43,8 +43,15 @@ namespace ObscurCore.DTO
 		Advance
 	}
 
+    /// <summary>
+    /// Types of cryptography used for encrypting Manifests.
+    /// </summary>
     public enum ManifestCryptographySchemes
     {
+         /// <summary>
+        /// Using a pre-agreed key. Simply uses a SymmetricCipherConfiguration object in serialised form for configuration, and as such, allows rich customisation.
+        /// </summary>
+        UniversalSymmetric, 
 		/// <summary>
 		/// UM1-based Integrated Encryption Scheme.
 		/// </summary>
@@ -52,12 +59,7 @@ namespace ObscurCore.DTO
 		/// Uses UM1 to generate a secret value, which is further derived with a KDF. 
 		/// This derived secret is used as a symmetric cipher key, and optionally, to generate a MAC for the data.
 		/// </remarks>
-		UM1Hybrid,
-
-        /// <summary>
-        /// Using a pre-agreed key. Simply uses a SymmetricCipherConfiguration object in serialised form for configuration, and as such, allows rich customisation.
-        /// </summary>
-        UniversalSymmetric
+		UM1Hybrid
     }
 	#endregion
 

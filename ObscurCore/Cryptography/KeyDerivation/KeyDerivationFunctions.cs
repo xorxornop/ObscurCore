@@ -115,7 +115,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 			return output;
 		}
 	}
-	
+
 	/// <summary>
 	/// Derives cryptographic keys using the PBKDF2 function.
 	/// </summary>

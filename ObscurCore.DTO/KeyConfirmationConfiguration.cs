@@ -30,7 +30,7 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Name of the scheme used to verify key validity for a particular item.
         /// </summary>
-        /// <remarks>Convert this name to an enumeration when used ly.</remarks>
+        /// <remarks>Convert this name to an enumeration when used internally.</remarks>
         [ProtoMember(1, IsRequired = true)]
         public string SchemeName { get; set; }
 

@@ -31,19 +31,25 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
         /// </summary>
-        [ProtoMember(1)]
+        [ProtoMember(1, IsRequired = true)]
         public ECKeyConfiguration EphemeralKey { get; set; }
 		
         /// <summary>
         /// Configuration for the symmetric cipher to use with the key derived from the shared secret.
         /// </summary>
-        [ProtoMember(2)]
+        [ProtoMember(2, IsRequired = true)]
         public SymmetricCipherConfiguration SymmetricCipher { get; set; }
 		
         /// <summary>
+        /// Key confirmation configuration for the manifest.
+        /// </summary>
+        [ProtoMember(3, IsRequired = false)]
+        public KeyConfirmationConfiguration KeyVerification { get; set; }
+
+        /// <summary>
         /// Configuration for the scheme used to derive a key from the shared secret.
         /// </summary>
-        [ProtoMember(3)]
+        [ProtoMember(4, IsRequired = true)]
         public KeyDerivationConfiguration KeyDerivation { get; set; }
 
         public byte[] AdditionalData { get; set; }
@@ -62,7 +68,8 @@ namespace ObscurCore.DTO
             if(!IsSuperficiallyValid()) 
                 throw new InvalidDataException("Not a valid key agreement configuration.");
             return EphemeralKey.Equals(other.EphemeralKey) && SymmetricCipher.Equals(other.SymmetricCipher) 
-                   && KeyDerivation.Equals(other.KeyDerivation);
+                && (KeyVerification == null ? other.KeyVerification == null : KeyVerification.Equals(other.KeyVerification)) 
+                && KeyDerivation.Equals(other.KeyDerivation);
         }
 
         public override int GetHashCode () {
@@ -70,7 +77,8 @@ namespace ObscurCore.DTO
                 throw new InvalidDataException("Not a valid key agreement configuration.");
             unchecked {
                 int hashCode = EphemeralKey.GetHashCode(); // Must not be null! 
-                hashCode = (hashCode * 397) ^ SymmetricCipher.GetHashCode(); // Must not be null! 
+                hashCode = (hashCode * 397) ^ SymmetricCipher.GetHashCode(); // Must not be null!
+                hashCode = (hashCode * 397) ^ (KeyVerification != null ? KeyVerification.GetHashCode() : 0); 
                 hashCode = (hashCode * 397) ^ KeyDerivation.GetHashCode(); // Must not be null! 
                 return hashCode;
             }

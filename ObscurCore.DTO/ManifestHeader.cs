@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ProtoBuf;
 
@@ -22,6 +23,10 @@ namespace ObscurCore.DTO
     [ProtoContract]
     public class ManifestHeader : IDataTransferObject, IEquatable<ManifestHeader>
     {
+        /// <summary>
+        /// Format version of the following Manifest object. 
+        /// Used to denote breaking changes that may cause incompatibility.
+        /// </summary>
         [ProtoMember(1, IsRequired = true)]
         public int FormatVersion { get; set; }
 
@@ -40,14 +45,6 @@ namespace ObscurCore.DTO
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
         [ProtoMember(4, IsRequired = false)]
         public byte[] CryptographySchemeConfiguration { get; set; }
-
-        /// <summary>
-        /// Whether to cache the key used for the manifest for the duration that the package is being operated on. 
-        /// Only use this if the same key is to be used in payload items - as is, or further derived.
-        /// </summary>
-        /// <remarks>This prevents unnecessary computational resource being used, as key derivation and/or agreement is expensive.</remarks>
-        [ProtoMember(5)]
-        public bool CacheKeyForContext { get; set; }
 
         public override bool Equals (object obj)
         {
