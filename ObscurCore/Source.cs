@@ -158,14 +158,25 @@ namespace ObscurCore
 
             // ######################################## HASHING ########################################
 
-            DigestInstantiators.Add(HashFunctions.BLAKE2B256, () => new BLAKE2BDigest(256, true, false));
-			DigestInstantiators.Add(HashFunctions.BLAKE2B384, () => new BLAKE2BDigest(384, true, false));
-			DigestInstantiators.Add(HashFunctions.BLAKE2B512, () => new BLAKE2BDigest(512, true, false));
+            DigestInstantiators.Add(HashFunctions.BLAKE2B256, () => new BLAKE2BDigest(256, true));
+			DigestInstantiators.Add(HashFunctions.BLAKE2B384, () => new BLAKE2BDigest(384, true));
+			DigestInstantiators.Add(HashFunctions.BLAKE2B512, () => new BLAKE2BDigest(512, true));
 
 			DigestInstantiators.Add(HashFunctions.Keccak224, () => new KeccakManaged(224, true));
 			DigestInstantiators.Add(HashFunctions.Keccak256, () => new KeccakManaged(256, true));
 			DigestInstantiators.Add(HashFunctions.Keccak384, () => new KeccakManaged(384, true));
 			DigestInstantiators.Add(HashFunctions.Keccak512, () => new KeccakManaged(512, true));
+
+            DigestInstantiators.Add(HashFunctions.SHA256, () => new Sha256Digest());
+            DigestInstantiators.Add(HashFunctions.SHA512, () => new Sha512Digest());
+
+            DigestInstantiators.Add(HashFunctions.RIPEMD160, () => new RipeMD160Digest());
+
+            DigestInstantiators.Add(HashFunctions.Tiger, () => new TigerDigest());
+
+            DigestInstantiators.Add(HashFunctions.Whirlpool, () => new WhirlpoolDigest());
+
+
 
             // ######################################## MAC ########################################
 

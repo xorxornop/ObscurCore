@@ -44,6 +44,16 @@ namespace ObscurCore
         internal static readonly byte[] TrailerTagBytes = Encoding.ASCII.GetBytes("OCpkg-KBAI");
 
 
+        private static void CheckPackageIOIsOK(Stream destination, Manifest manifest) {
+			// Can we actually perform a write to the output?
+			if (!destination.CanWrite) throw new IOException("Cannot write to destination/output stream!");
+			if (manifest.PayloadItems.Any(item => !item.StreamHasBinding)) {
+				throw new InvalidOperationException("Internal state of package writer inconsistent. " +
+				                                    "Stream binding and manifest counts match, but binding identifiers do not in at least one instance.");
+			}
+		}
+
+
         #region Writing
 
         /// <summary>
@@ -210,6 +220,26 @@ namespace ObscurCore
 
 
         #region Reading
+
+
+        public static void SanitiseItemPaths(IEnumerable<PayloadItem> items, bool throwEx) {
+            var relUp = ".." + Path.DirectorySeparatorChar;
+
+            if (items.Where(item => item.Type != PayloadItemTypes.KeyAction)
+                .Any(payloadItem => payloadItem.RelativePath.Contains(relUp)))
+            {
+                if (throwEx) {
+                    throw new InvalidDataException("A payload item specifies a relative path outside that of the package root. " 
+                    + " This is a potentially dangerous condition.");
+                }
+                
+            }
+        }
+
+        public static void ReadPackageToFiles() {
+            
+        }
+
         
         /// <summary>
 		/// Reads a package payload.
@@ -250,7 +280,6 @@ namespace ObscurCore
 				(binding => item.BindTransformStream(true, binding))).ToList();
 
 			// Read the payload
-
 			PayloadLayoutSchemes payloadScheme;
 			try {
 				payloadScheme = manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutSchemes> ();
@@ -484,4 +513,27 @@ namespace ObscurCore
         #endregion
 
     }
+
+    /// <summary>
+	/// Represents the error that occurs when, during package I/O, 
+	/// cryptographic key material associated with a payload item cannot be found. 
+	/// </summary>
+	public class ItemKeyMissingException : Exception
+	{
+		public ItemKeyMissingException (PayloadItem item) : base 
+			(String.Format("A cryptographic key for item GUID {0} and relative path \"{1}\" could not be found.", 
+			                item.Identifier.ToString(), item.RelativePath))
+		{}
+	}
+
+	/// <summary>
+	/// Represents the error that occurs when, during package I/O, 
+	/// a configuration error causes an abort of the package I/O operation.
+	/// </summary>
+	public class PackageConfigurationException : Exception
+	{
+		public PackageConfigurationException (string message) : base(message)
+		{
+		}
+	}
 }

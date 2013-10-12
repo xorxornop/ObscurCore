@@ -267,13 +267,7 @@ namespace ObscurCore.Cryptography
 		/// </summary>
 		BLAKE2B512,
 
-		GOST3411,
-
-		RIPEMD128,
-
 		RIPEMD160,
-
-		RIPEMD256,
 
 		SHA256,
 
@@ -302,6 +296,7 @@ namespace ObscurCore.Cryptography
 		Keccak512,
 
 		Tiger,
+
 
 		Whirlpool
 	}

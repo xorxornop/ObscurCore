@@ -29,7 +29,10 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		{
 		}
 
-		internal BLAKE2BDigest(int size, bool bits, bool init) {
+		protected BLAKE2BDigest(int size, bool bits, bool init) {
+            
+            if (bits) size /= 8;
+
 			var config = new Blake2BConfig () {
 				Key = null,
 				Salt = null,
@@ -37,7 +40,6 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 				OutputSizeInBytes = size,
 			};
 
-			if (bits) size /= 8;
 			outputSize = size;
 			if (!init) return;
 			hasher = new Blake2BHasher (config);

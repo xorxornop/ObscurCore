@@ -23,6 +23,7 @@
     <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -30,6 +31,7 @@
     <DefineConstants>TRACE;INCLUDE_IDEA;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -112,6 +114,8 @@
     <Compile Include="Cryptography\Ciphers\Block\Primitives\NoekeonEngine.cs" />
     <Compile Include="Cryptography\Ciphers\ParametersWithSBox.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\RC6Engine.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519UM1Exchange.cs" />
     <Compile Include="StratComPackages.cs" />
     <None Include="Cryptography\Ciphers\Block\Primitives\RijndaelEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\SerpentEngine.cs" />
@@ -145,9 +149,9 @@
     <Compile Include="Cryptography\Entropy\StreamCSPRNG.cs" />
     <Compile Include="Cryptography\Enums.cs" />
     <Compile Include="Cryptography\Exceptions.cs" />
-    <Compile Include="Cryptography\IO\CipherStream.cs" />
-    <Compile Include="Cryptography\IO\DigestStream.cs" />
-    <Compile Include="Cryptography\IO\MacStream.cs" />
+    <Compile Include="Cryptography\CipherStream.cs" />
+    <Compile Include="Cryptography\DigestStream.cs" />
+    <Compile Include="Cryptography\MacStream.cs" />
     <Compile Include="Cryptography\KeyAgreement\IBasicAgreement.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\ECDHBasicAgreement.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\ECDHCBasicAgreement.cs" />
@@ -213,7 +217,9 @@
     <Compile Include="RingByteBuffer.cs" />
     <Compile Include="ExtensionMethods.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Cryptography\IO\" />
+  </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />
   </ItemGroup>

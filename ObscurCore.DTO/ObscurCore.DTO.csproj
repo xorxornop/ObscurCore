@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompressionConfiguration.cs" />
+    <Compile Include="Curve25519UM1ManifestCryptographyConfiguration.cs" />
     <Compile Include="ECKeyConfiguration.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="IDataTransferObject.cs" />

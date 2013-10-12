@@ -1,20 +1,6 @@
-//
-//  Copyright 2013  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-
-using System;
+﻿using System;
 using System.IO;
+using System.Linq;
 using ProtoBuf;
 
 namespace ObscurCore.DTO
@@ -24,15 +10,19 @@ namespace ObscurCore.DTO
     // *             They may however incorporate objects in the Manifest superstructure, such as a SymmetricCipherConfiguration or similar.             *
     // ***************************************************************************************************************************************************
 
+    /// <summary>
+    /// Configuration for a key exchange performed with Ephemeral-Static 
+    /// Unified-Model-type-protocol Curve25519 implementation.
+    /// </summary>
     [ProtoContract]
-    public class UM1ManifestCryptographyConfiguration : IManifestCryptographySchemeConfiguration, 
-        IDataTransferObject, IEquatable<UM1ManifestCryptographyConfiguration>
+    public class Curve25519UM1ManifestCryptographyConfiguration : IManifestCryptographySchemeConfiguration, 
+        IDataTransferObject, IEquatable<Curve25519UM1ManifestCryptographyConfiguration>
     {
         /// <summary>
-        /// Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
+        /// Ephemeral key to be used in key exchange calculations to produce a shared secret.
         /// </summary>
         [ProtoMember(1, IsRequired = true)]
-        public ECKeyConfiguration EphemeralKey { get; set; }
+        public byte[] EphemeralKey { get; set; }
 		
         /// <summary>
         /// Configuration for the symmetric cipher to use with the key derived from the shared secret.
@@ -57,15 +47,15 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((UM1ManifestCryptographyConfiguration) obj);
+            return Equals((Curve25519UM1ManifestCryptographyConfiguration) obj);
         }
 
-        public bool Equals(UM1ManifestCryptographyConfiguration other) {
+        public bool Equals(Curve25519UM1ManifestCryptographyConfiguration other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             if(!IsSuperficiallyValid()) 
                 throw new InvalidDataException("Not a valid key agreement configuration.");
-            return EphemeralKey.Equals(other.EphemeralKey) && SymmetricCipher.Equals(other.SymmetricCipher) 
+            return EphemeralKey.SequenceEqual(other.EphemeralKey) && SymmetricCipher.Equals(other.SymmetricCipher) 
                 && (KeyVerification == null ? other.KeyVerification == null : KeyVerification.Equals(other.KeyVerification)) 
                 && KeyDerivation.Equals(other.KeyDerivation);
         }

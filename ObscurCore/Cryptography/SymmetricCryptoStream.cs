@@ -21,7 +21,6 @@ using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Block.Modes;
 using ObscurCore.Cryptography.Ciphers.Block.Padding;
 using ObscurCore.Cryptography.Ciphers.Stream;
-using ObscurCore.Cryptography.IO;
 using ObscurCore.DTO;
 using ObscurCore.Extensions.Enumerations;
 
