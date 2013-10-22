@@ -41,7 +41,7 @@ namespace ObscurCore
         internal const int HeaderVersion = 1; // Version of DTO objects that code includes support for
 
         internal static readonly byte[] HeaderTagBytes = Encoding.ASCII.GetBytes("OCpkg-OHAI");
-        internal static readonly byte[] TrailerTagBytes = Encoding.ASCII.GetBytes("OCpkg-KBAI");
+        internal static readonly byte[] TrailerTagBytes = Encoding.ASCII.GetBytes("KBAI-OCpkg");
 
 
         private static void CheckPackageIOIsOK(Stream destination, Manifest manifest) {
@@ -222,17 +222,11 @@ namespace ObscurCore
         #region Reading
 
 
-        public static void SanitiseItemPaths(IEnumerable<PayloadItem> items, bool throwEx) {
+        public static void SanitiseItemPaths(IEnumerable<PayloadItem> items) {
             var relUp = ".." + Path.DirectorySeparatorChar;
-
-            if (items.Where(item => item.Type != PayloadItemTypes.KeyAction)
-                .Any(payloadItem => payloadItem.RelativePath.Contains(relUp)))
-            {
-                if (throwEx) {
-                    throw new InvalidDataException("A payload item specifies a relative path outside that of the package root. " 
+            if (items.Where(item => item.Type != PayloadItemTypes.KeyAction).Any(item => item.RelativePath.Contains(relUp))) {
+                throw new InvalidDataException("A payload item specifies a relative path outside that of the package root. " 
                     + " This is a potentially dangerous condition.");
-                }
-                
             }
         }
 
@@ -246,9 +240,10 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="source">Stream to read the package from.</param>
 		/// <param name="manifest">Manifest.</param>
-		/// <param name="readOffset">How many bytes have already been read from the stream. Set to null to use Stream.Position .</param>
+		/// <param name="readOffset">How many bytes have already been read from the stream. 
+		/// Set to null to use Stream.Position</param>
 		/// <param name="payloadKeysSymmetric">Potential symmetric keys for payload items.</param>
-		private static void ReadPackagePayload(Stream source, Manifest manifest, int? readOffset = null, 
+		private static void ReadPackagePayload(Stream source, IManifest manifest, int? readOffset = null, 
 		                                       IList<byte[]> payloadKeysSymmetric = null)
         {
 			if (readOffset == null)
@@ -298,10 +293,8 @@ namespace ObscurCore
 			}
 
 			// Read the trailer
-
 			var trailerTag = new byte[TrailerTagBytes.Length];
 			source.Read (trailerTag, 0, trailerTag.Length);
-
 			if(!trailerTag.SequenceEqual(TrailerTagBytes)) {
 				throw new InvalidDataException("Package is malformed. Trailer tag is either absent or malformed." 
 				                               + "It would appear, however, that the package has unpacked successfully despite this.");
@@ -321,19 +314,18 @@ namespace ObscurCore
         private static Manifest ReadPackageManifest(Stream source, IList<byte[]> manifestKeysSymmetric, 
             IList<ECKeyConfiguration> manifestKeysECSender, IList<ECKeyConfiguration> manifestKeysECRecipient, out int readOffset) {
 
-            readOffset = 0;
-            /* Used to keep track of where we are so that, during multiple-stage package reads, we avoid errors.
+            /* 
+             * readOffset is used to keep track of where we are so that, during multiple-stage package reads, we avoid errors.
              * This is useful, for example, if we wish to decrypt/unpack only *some* items in a package, rather than *all* of them.
              * Since we do not know the contents of a package prior to decrypting its Manifest, we must therefore do it in 2 stages.
              */
 
             IManifestCryptographySchemeConfiguration mCryptoConfig;
             ManifestCryptographySchemes mCryptoScheme;
-
             var mHeader = ReadPackageManifestHeader(source, out mCryptoConfig, out mCryptoScheme, out readOffset);
 
+            // Determine the pre-key for the package manifest decryption (different schemes use different approaches)
             byte[] preMKey = null;
-
             switch (mCryptoScheme) {
                 case ManifestCryptographySchemes.UniversalSymmetric:
                     if (manifestKeysSymmetric.Count == 0) {
@@ -347,7 +339,7 @@ namespace ObscurCore
                                 manifestKeysSymmetric);
                             if (preMKey == null || preMKey.Length == 0) {
                                 throw new ArgumentException(
-                                    "None of the keys supplied for decryption of symmetric-cryptography-encrypted manifest was verified as being correct.",
+                                    "None of the symmetric keys provided to decrypt the manifest were confirmed as being able to do so.",
                                         "manifestKeysSymmetric");
                             }
                         } catch (Exception e) {
@@ -355,7 +347,7 @@ namespace ObscurCore
                         }
                     } else {
                         if (manifestKeysSymmetric.Count > 1) {
-                            throw new ArgumentException("Multiple viable symmetric keys have been provided where the package provides no key confirmation.", 
+                            throw new ArgumentException("Multiple symmetric keys have been provided where the package provides no key confirmation capability.", 
                                 "manifestKeysSymmetric");
                         }
                         preMKey = manifestKeysSymmetric[0];
@@ -367,20 +359,19 @@ namespace ObscurCore
                     // Identify matching public-private key pairs based on curve provider and curve name
                     var ephemeralKey = ((UM1ManifestCryptographyConfiguration) mCryptoConfig).EphemeralKey;
 
-                    var secretFunc = new Func<ECKeyConfiguration, ECKeyConfiguration, byte[]> 
-                        ((pubKey, privKey) => {
+                    var secretFunc = new Func<ECKeyConfiguration, ECKeyConfiguration, byte[]>((pubKey, privKey) =>
+                        {
                             var responder = new UM1ExchangeResponder(pubKey.DecodeToPublicKey(),
                                 privKey.DecodeToPrivateKey());
                             return responder.CalculateSharedSecret(ephemeralKey.DecodeToPublicKey());
                             // Run ss through key confirmation scheme and then SequenceEqual compare to hash
-                    });
+                        });
                 
                     if (mCryptoConfig.KeyVerification != null) {
-
+                        // We can determine which, if any, of the provided keys are capable of decrypting the manifest
                         var viableSenderKeys =
                         manifestKeysECSender.Where(key => key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
                             key.CurveName.Equals(ephemeralKey.CurveName)).ToList();
-
                         var viableRecipientKeys =
                         manifestKeysECRecipient.Where(key => key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
                             key.CurveName.Equals(ephemeralKey.CurveName)).ToList();
@@ -391,8 +382,10 @@ namespace ObscurCore
                             {
                                 foreach (var rKey in viableRecipientKeys) {
                                     var ss = secretFunc(sKey, rKey);
-                                    // TODO: Run ss through key confirmation scheme and then SequenceEqual compare to hash
-                                    // preMKey =
+                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyVerification, ss);
+                                    if (validationOut == null) continue;
+                                    preMKey = validationOut;
+                                    state.Stop();
                                 }
                             });
                         } else {
@@ -400,20 +393,22 @@ namespace ObscurCore
                             {
                                 foreach (var sKey in viableSenderKeys) {
                                     var ss = secretFunc(sKey, rKey);
-                                    // TODO: Run ss through key confirmation scheme and then SequenceEqual compare to hash
-                                    // preMKey =
+                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyVerification, ss);
+                                    if (validationOut == null) continue;
+                                    preMKey = validationOut;
+                                    state.Stop();
                                 }
                             });
                         }
 
                         if (preMKey == null) {
-                            throw new ArgumentException("No provided EC keys were able to be confirmed as able to decrypt the manifest.");
+                            throw new ArgumentException("None of the EC keys provided to decrypt the manifest were confirmed as being able to do so.");
                         }
                         
                     } else {
-						// No key confirmation available
+						// No key confirmation capability available
 						if (manifestKeysECSender.Count > 1 || manifestKeysECRecipient.Count > 1) {
-							throw new ArgumentException("Multiple EC keys have been provided where the package provides no key confirmation.");
+							throw new ArgumentException("Multiple EC keys have been provided where the package provides no key confirmation capability.");
 						}
 						preMKey = secretFunc(manifestKeysECSender[0], manifestKeysECRecipient[0]);
 					}
@@ -421,7 +416,7 @@ namespace ObscurCore
                     break;
 
                 default:
-                    throw new NotSupportedException("Manifest cryptography scheme " + mCryptoScheme + " is not supported.");
+                    throw new NotSupportedException("Manifest cryptography scheme " + mCryptoScheme + " is unsupported/unknown.");
             }
 
             // Derive the working manifest key
@@ -435,9 +430,9 @@ namespace ObscurCore
 
             using (var cs = new SymmetricCryptoStream(source, true, mCipherConfig, workingMKey, true)) {
                 manifest = (Manifest) Serialiser.DeserializeWithLengthPrefix(cs, null, typeof (Manifest), PrefixStyle.Fixed32, 0);
+                readOffset += (int) cs.BytesOut;
             }
 
-            readOffset = (int) source.Position;
             return manifest;
         }
 
@@ -450,20 +445,20 @@ namespace ObscurCore
 		/// <param name="readOffset">Output of number of bytes read from the source stream at method completion.</param>
 		/// <returns>Package manifest header object.</returns>
         private static ManifestHeader ReadPackageManifestHeader(Stream source, out IManifestCryptographySchemeConfiguration mCryptoConfig,
-            out ManifestCryptographySchemes mCryptoScheme, out int readOffset) {
-
+            out ManifestCryptographySchemes mCryptoScheme, out int readOffset)
+        {
             var readHeaderTag = new byte[HeaderTagBytes.Length];
             source.Read(readHeaderTag, 0, readHeaderTag.Length);
-
             if (!readHeaderTag.SequenceEqual(HeaderTagBytes)) {
-                throw new InvalidDataException("Package is malformed. Header tag is either absent or malformed.");
+                throw new InvalidDataException("Package is malformed. Expected header tag is either absent or malformed.");
             }
 
             var mHeader = (ManifestHeader) Serialiser.DeserializeWithLengthPrefix(source, null, typeof (ManifestHeader),
                 PrefixStyle.Base128, 0);
 
             if (mHeader.FormatVersion > HeaderVersion) {
-                throw new NotSupportedException("Version of this package is unsupported. Cannot proceed.");
+                throw new NotSupportedException("Package version " + mHeader.FormatVersion + " as specified by the manifest header is unsupported/unknown.\n" +
+                    "The local version of ObscurCore supports up to version " + HeaderVersion + ".");
                 // In later versions, can redirect to diff. behaviour (and DTO objects) for diff. versions.
             }
 
@@ -484,30 +479,51 @@ namespace ObscurCore
             return mHeader;
         }
 
-
+        /// <summary>
+        /// Determines which (if any) key is valid from a set of potential keys, given a confirmation scheme.
+        /// </summary>
+        /// <param name="keyConfirmation">Key confirmation configuration.</param>
+        /// <param name="potentialKeys">Set of potential keys.</param>
+        /// <returns>Valid key, or null if none are validated as being correct.</returns>
         private static byte[] ConfirmSymmetricKey(IKeyConfirmationConfiguration keyConfirmation,
-                                                  IList<byte[]> potentialKeys)
+                                                  IEnumerable<byte[]> potentialKeys)
         {
-            Func<byte[], byte[], byte[]> validator = null; // Used as an adaptor between different validation methods
-            // Signature is: key, salt, returns validation output byte[]
-
-            // TODO: Write adaptor methods for confirmation methods
-
             byte[] validatedKey = null;
-
-
             Parallel.ForEach(potentialKeys, (bytes, state) =>
                 {
-                    var validationOut = validator(bytes, keyConfirmation.Salt);
+                    var validationOut = ConfirmSymmetricKey(keyConfirmation, bytes);
                     if (validationOut.SequenceEqual(keyConfirmation.Hash)) {
                         validatedKey = validationOut;
-                        // Terminate all other validation loop instances
+                        // Terminate all other validation function instances - we have found the key
                         state.Stop();
                     }
                 });
 
-            return (from potentialKey in potentialKeys let checkhash = validator(potentialKey, keyConfirmation.Salt) 
-                    where checkhash.SequenceEqual(keyConfirmation.Hash) select potentialKey).FirstOrDefault();
+            return validatedKey;
+
+            //return (from potentialKey in potentialKeys.AsParallel() let checkhash = validator(potentialKey, keyConfirmation.Salt) 
+            //        where checkhash.SequenceEqual(keyConfirmation.Hash) select potentialKey).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Determines if a provided key is validated successfully with a given key confirmation scheme.
+        /// </summary>
+        /// <param name="keyConfirmation">Key confirmation configuration.</param>
+        /// <param name="potentialKey">Potential key to be validated.</param>
+        /// <returns>Valid key, or null if not validated as being correct.</returns>
+        private static byte[] ConfirmSymmetricKey(IKeyConfirmationConfiguration keyConfirmation, byte[] potentialKey) {
+            Func<byte[], byte[], byte[]> validator = null; // Used as an adaptor between different validation methods
+            // Signature is: key, salt, returns validation output byte[]
+
+            if (Enum.GetNames(typeof (KeyDerivationFunctions)).Contains(keyConfirmation.SchemeName)) {
+                validator =
+                    (key, salt) => Source.DeriveKeyWithKDF(keyConfirmation.SchemeName.ToEnum<KeyDerivationFunctions>(),
+                        key, salt, keyConfirmation.Hash.Length, keyConfirmation.SchemeConfiguration);
+            } else {
+                throw new NotSupportedException("Package manifest key confirmation scheme is unsupported/unknown.");
+            }
+
+            return validator(potentialKey, keyConfirmation.Salt);
         }
 
         #endregion
@@ -526,7 +542,14 @@ namespace ObscurCore
 		{}
 	}
 
-	/// <summary>
+    public class KeyConfirmationException : Exception
+    {
+        public KeyConfirmationException() {}
+        public KeyConfirmationException(string message) : base(message) {}
+        public KeyConfirmationException(string message, Exception inner) : base(message, inner) {}
+    }
+
+    /// <summary>
 	/// Represents the error that occurs when, during package I/O, 
 	/// a configuration error causes an abort of the package I/O operation.
 	/// </summary>

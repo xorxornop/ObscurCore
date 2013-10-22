@@ -361,10 +361,9 @@ namespace ObscurCore.Cryptography
 		/// </summary>
 		ECDHC,
 		/// <summary>
-		/// One-Pass Unified Model based Integrated Encryption Scheme. 
-		/// UM1 agreement combined with symmetric cipher and MAC function.
+		/// One-Pass Unified Model (Ephemeral-Static ECDHC)
 		/// </summary>
-		UM1IES
+		UM1
 	}
 	
 	// Implement FH-ECMQV at a later stage
