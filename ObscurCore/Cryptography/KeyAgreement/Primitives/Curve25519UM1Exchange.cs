@@ -2,7 +2,7 @@
 
 namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 {
-    public class Curve25519UM1Exchange
+    public static class Curve25519UM1Exchange
     {
         /// <summary>
         /// Calculate the shared secret in participant U's role.
@@ -11,7 +11,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <param name="privKeySender"></param>
         /// <param name="Q_ephemeral_V">Ephemeral public key to send to the responder (V, receiver).</param>
         /// <returns></returns>
-        public byte[] Initiate(byte[] pubKeyRecipient, byte[] privKeySender, out byte[] Q_ephemeral_V) {
+        public static byte[] Initiate(byte[] pubKeyRecipient, byte[] privKeySender, out byte[] Q_ephemeral_V) {
             var privKeyEntropy = new byte[32];
             StratCom.EntropySource.NextBytes(privKeyEntropy);
             var ephPriv = Curve25519.CreatePrivateKey(privKeyEntropy);
@@ -37,7 +37,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <param name="privKeyRecipient"></param>
         /// <param name="Q_ephemeral_U">Ephemeral public key supplied by the initiator (U, sender).</param>
         /// <returns></returns>
-        public byte[] Respond(byte[] pubKeySender, byte[] privKeyRecipient, byte[] Q_ephemeral_U) {
+        public static byte[] Respond(byte[] pubKeySender, byte[] privKeyRecipient, byte[] Q_ephemeral_U) {
             // Calculate shared static secret 'Zs'
             var Zs = Curve25519.CalculateSharedSecret(privKeyRecipient, pubKeySender);
 

@@ -20,7 +20,6 @@ using System.IO;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
-using ObscurCore.Extensions.Enumerations;
 
 namespace ObscurCore.Packaging
 {

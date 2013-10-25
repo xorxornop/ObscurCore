@@ -24,6 +24,59 @@ using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve;
 using ObscurCore.DTO;
 
+namespace ObscurCore
+{
+    /// <summary>
+    /// Extension methods that should always be available (without namespace includes)
+    /// </summary>
+    public static class BasicExtensions
+    {
+        public static bool IsBetween<T>(this T value, T low, T high) where T : IComparable<T>
+        {
+            return value.CompareTo(low) >= 0 && value.CompareTo(high) <= 0;
+        }
+
+        public static byte[] SerialiseDTO<T>(this T obj, bool prefixLength = false) where T : IDataTransferObject
+        {
+            return StratCom.SerialiseDTO(obj, prefixLength).ToArray();
+        }
+
+        public static T FromString<T>(this T type, string value) where T : struct, IConvertible
+        {
+            if (!typeof(T).IsEnum) throw new InvalidOperationException("T must be an enumerated type.");
+            T outputType;
+            try
+            {
+                outputType = (T)Enum.Parse(typeof(T), value);
+            } catch (ArgumentException)
+            {
+                throw new ArgumentException("Enumeration member is unknown / invalid.");
+            }
+            return outputType;
+        }
+
+        /// <summary>
+        /// Parses an enumeration value encoded as a string into its enumeration equivalent.
+        /// </summary>
+        /// <typeparam name='T'>
+        /// Must be an enumeration type.
+        /// </typeparam>
+        public static T ToEnum<T>(this string stringValue, bool ignoreCase = false) where T : struct, IConvertible
+        {
+            if (!typeof(T).IsEnum) throw new InvalidOperationException("T must be an enumeration type.");
+            T value;
+            try
+            {
+                value = (T)Enum.Parse(typeof(T), stringValue, ignoreCase);
+            } catch (ArgumentException)
+            {
+                throw new EnumerationValueUnknownException(stringValue, typeof(T));
+            }
+            return value;
+        }
+    }
+}
+
 namespace ObscurCore.Extensions
 {
     namespace DTO
@@ -132,20 +185,6 @@ namespace ObscurCore.Extensions
             }
         }
 
-        namespace Generic
-        {
-            public static class GenericExtensionMethods
-            {
-                public static bool IsBetween<T>(this T value, T low, T high) where T : IComparable<T> {
-                    return value.CompareTo(low) >= 0 && value.CompareTo(high) <= 0;
-                }
-
-                public static byte[] SerialiseDTO<T>(this T obj, bool prefixLength = false) where T : IDataTransferObject {
-                    return StratCom.SerialiseDTO(obj, prefixLength).ToArray();
-                }
-            }
-        }
-
         namespace ByteArrays
         {
             public static class ByteArrayExtensionMethods
@@ -178,40 +217,6 @@ namespace ObscurCore.Extensions
                     }
 
                     return arr;
-                }
-            }
-        }
-
-        namespace Enumerations
-        {
-            public static class EnumExtensions
-            {
-                public static T FromString<T>(this T type, string value) where T : struct, IConvertible {
-                    if (!typeof (T).IsEnum) throw new InvalidOperationException("T must be an enumerated type.");
-                    T outputType;
-                    try {
-                        outputType = (T) Enum.Parse(typeof (T), value);
-                    } catch (ArgumentException) {
-                        throw new ArgumentException("Enumeration member is unknown / invalid.");
-                    }
-                    return outputType;
-                }
-
-                /// <summary>
-                /// Parses an enumeration value encoded as a string into its enumeration equivalent.
-                /// </summary>
-                /// <typeparam name='T'>
-                /// Must be an enumeration type.
-                /// </typeparam>
-                public static T ToEnum<T>(this string stringValue, bool ignoreCase = false) where T : struct, IConvertible {
-                    if (!typeof (T).IsEnum) throw new InvalidOperationException("T must be an enumeration type.");
-                    T value;
-                    try {
-                        value = (T) Enum.Parse(typeof (T), stringValue, ignoreCase);
-                    } catch (ArgumentException) {
-                        throw new EnumerationValueUnknownException(stringValue, typeof (T));
-                    }
-                    return value;
                 }
             }
         }

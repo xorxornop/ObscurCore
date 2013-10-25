@@ -56,14 +56,14 @@
     <Compile Include="Cryptography\BlockCiphers\TripleDES.cs" />
     <Compile Include="Cryptography\BlockCiphers\Twofish.cs" />
     <Compile Include="Cryptography\Entropy\CSPRNGTests.cs" />
+    <Compile Include="Cryptography\KeyAgreements\Curve25519UM1.cs" />
     <Compile Include="Cryptography\KeyAgreements\UM1.cs" />
     <Compile Include="Cryptography\StreamCiphers\StreamCipherTests.cs" />
     <Compile Include="Packaging\Packages.cs" />
     <Compile Include="Packaging\Payload.cs" />
     <Compile Include="Packaging\Serialisation\CSPRNG.cs" />
     <Compile Include="Packaging\Serialisation\KeyConfirmation.cs" />
-    <Compile Include="Packaging\Serialisation\Manifest.cs" />
-    <Compile Include="Packaging\Serialisation\ManifestHeader.cs" />
+    <None Include="Packaging\Serialisation\Manifest.cs" />
     <Compile Include="Packaging\Serialisation\PayloadLayout.cs" />
     <Compile Include="Packaging\Serialisation\SerialisationTestBase.cs" />
     <Compile Include="Packaging\Serialisation\SymmetricCipherConfiguration.cs" />

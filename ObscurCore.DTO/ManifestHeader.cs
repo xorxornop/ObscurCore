@@ -31,16 +31,20 @@ namespace ObscurCore.DTO
         public int FormatVersion { get; set; }
 
         /// <summary>
-        /// Compression configuration for the manifest.
+        /// Configuration of the compression scheme 
+        /// used to reduce the size of the Manifest.
         /// </summary>
         [ProtoMember(2, IsRequired = false)]
         public CompressionConfiguration Compression { get; set; }
 
+        /// <summary>
+        /// Name of the cryptographic scheme used to secure the Manifest.
+        /// </summary>
         [ProtoMember(3, IsRequired = true)]
         public string CryptographySchemeName { get; set; }
 		
         /// <summary>
-        /// Configuration for the cryptography-scheme-specific payload I/O module.
+        /// Configuration of the cryptographic scheme used to secure the Manifest.
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
         [ProtoMember(4, IsRequired = false)]

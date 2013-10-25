@@ -27,8 +27,6 @@ using ObscurCore.Cryptography.Support;
 using ObscurCore.DTO;
 using ObscurCore.Extensions.DTO;
 using ObscurCore.Extensions.EllipticCurve;
-using ObscurCore.Extensions.Enumerations;
-using ObscurCore.Extensions.Generic;
 using ObscurCore.Packaging;
 using ProtoBuf;
 
@@ -62,13 +60,12 @@ namespace ObscurCore
         /// <param name="destination">Destination stream.</param>
         /// <param name="manifest">Manifest object describing the package contents and configuration.</param>
         /// <param name="manifestCipherConfig">Symmetric encryption cipher configuration.</param>
-        /// <param name="payloadKeys">Cryptographic keys for any items that do not have their EphemeralKey field filled with a key.</param>
         /// <param name="sender">Elliptic curve cryptographic key for the sender (local user).</param>
         /// <param name="recipient">Elliptic curve cryptographic key for the recipient (remote user).</param>
+        /// <param name="payloadKeys">Cryptographic keys for any items that do not have their Key field filled.</param>
         public static void WritePackageUM1(Stream destination, Manifest manifest,
-                                           SymmetricCipherConfiguration manifestCipherConfig,
-                                           Dictionary<Guid, byte[]> payloadKeys, ECKeyConfiguration sender,
-                                           ECKeyConfiguration recipient) {
+                                           SymmetricCipherConfiguration manifestCipherConfig, ECKeyConfiguration sender,
+                                           ECKeyConfiguration recipient, Dictionary<Guid, byte[]> payloadKeys = null) {
 
             // At the moment, we'll just force scrypt KDF and default parameters for it
             var mCrypto = new UM1ManifestCryptographyConfiguration
@@ -83,6 +80,7 @@ namespace ObscurCore
                                     ScryptConfigurationUtility.DefaultParallelisation)
                         }
                 };
+            EntropySource.NextBytes(mCrypto.KeyDerivation.Salt);
 
             var localPrivateKey = sender.DecodeToPrivateKey();
             var remotePublicKey = recipient.DecodeToPublicKey();
@@ -95,8 +93,6 @@ namespace ObscurCore
                     mCrypto.SymmetricCipher.KeySize,
                     mCrypto.KeyDerivation.SchemeConfiguration);
 
-            var mCryptoBytes = mCrypto.SerialiseDTO();
-
             // Store the ephemeral public key in the manifest cryptography configuration object
             mCrypto.EphemeralKey.EncodedKey = ECKeyUtility.Write(ephemeral.Q);
 
@@ -104,10 +100,72 @@ namespace ObscurCore
                 {
                     FormatVersion = HeaderVersion,
                     CryptographySchemeName = ManifestCryptographySchemes.UM1Hybrid.ToString(),
-                    CryptographySchemeConfiguration = mCryptoBytes
+                    CryptographySchemeConfiguration = mCrypto.SerialiseDTO()
                 };
 
             // Do the handoff to the [mostly] scheme-agnostic part of the writing op
+            WritePackage(destination, mHeader, manifest, manifestCipherConfig, false);
+        }
+
+        /// <summary>
+        /// Writes a package utillising Curve25519-based UM1 (one-pass elliptic curve) manifest cryptography.
+        /// </summary>
+        /// <param name="destination">Destination stream.</param>
+        /// <param name="manifest">Manifest object describing the package contents and configuration.</param>
+        /// <param name="manifestCipherConfig">Symmetric encryption cipher configuration.</param>
+        /// <param name="sender">Elliptic curve cryptographic key for the sender (local user).</param>
+        /// <param name="recipient">Elliptic curve cryptographic key for the recipient (remote user).</param>
+        /// <param name="payloadKeys">Cryptographic keys for any items that do not have their Key field filled.</param>
+        public static void WritePackageCurve25519UM1(Stream destination, Manifest manifest,
+                                                     SymmetricCipherConfiguration manifestCipherConfig,
+                                                     byte[] sender, byte[] recipient,
+                                                     Dictionary<Guid, byte[]> payloadKeys = null)
+        {
+            if (sender.Length != 32) {
+                throw new ArgumentException(
+                    "Sender's Curve25519 elliptic curve private key is not 32 bytes in length.", "sender");
+            }
+            if (recipient.Length != 32) {
+                throw new ArgumentException(
+                    "Recipient's Curve25519 elliptic curve public key is not 32 bytes in length.", "recipient");
+            }
+
+            // At the moment, we'll just force scrypt KDF and default parameters for it
+            var mCrypto = new UM1ManifestCryptographyConfiguration
+                {
+                    SymmetricCipher = manifestCipherConfig,
+                    KeyDerivation = new KeyDerivationConfiguration()
+                        {
+                            SchemeName = KeyDerivationFunctions.Scrypt.ToString(),
+                            SchemeConfiguration =
+                                ScryptConfigurationUtility.Write(ScryptConfigurationUtility.DefaultIterationPower,
+                                    ScryptConfigurationUtility.DefaultBlocks,
+                                    ScryptConfigurationUtility.DefaultParallelisation)
+                        }
+                };
+            EntropySource.NextBytes(mCrypto.KeyDerivation.Salt);
+
+            byte[] ephemeral;
+            mCrypto.SymmetricCipher.Key =
+                Source.DeriveKeyWithKDF(mCrypto.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunctions>(),
+                    Curve25519UM1Exchange.Initiate(recipient, sender, out ephemeral), mCrypto.KeyDerivation.Salt,
+                    mCrypto.SymmetricCipher.KeySize,
+                    mCrypto.KeyDerivation.SchemeConfiguration);
+
+            // Clear the manifest source/pre-keys from memory
+            Array.Clear(sender, 0, sender.Length);
+            Array.Clear(recipient, 0, recipient.Length);
+
+            // Store the ephemeral public key in the manifest cryptography configuration object
+            mCrypto.EphemeralKey.EncodedKey = ephemeral;
+
+            var mHeader = new ManifestHeader()
+                {
+                    FormatVersion = HeaderVersion,
+                    CryptographySchemeName = ManifestCryptographySchemes.Curve25519UM1Hybrid.ToString(),
+                    CryptographySchemeConfiguration = mCrypto.SerialiseDTO()
+                };
+
             WritePackage(destination, mHeader, manifest, manifestCipherConfig, false);
         }
 
@@ -117,10 +175,29 @@ namespace ObscurCore
         /// </summary>
         /// <param name="destination">Destination stream.</param>
         /// <param name="manifest">Manifest object describing the package contents and configuration.</param>
-        /// <param name="mCrypto">Symmetric encryption cipher configuration.</param>
-        /// <param name="preMKey">Cryptographic key for the manifest encryption operation.</param>
+        /// <param name="manifestCipherConfig">Symmetric encryption cipher configuration.</param>
+        /// <param name="preMKey">Cryptographic key for the manifest encryption operation (after further derivation).</param>
+        /// <param name="payloadKeys">Cryptographic keys for any items that do not have their Key field filled.</param>
         public static void WritePackageSymmetric(Stream destination, Manifest manifest,
-                                                 SymmetricManifestCryptographyConfiguration mCrypto, byte[] preMKey) {
+                                                 SymmetricCipherConfiguration manifestCipherConfig, byte[] preMKey,
+                                                 Dictionary<Guid, byte[]> payloadKeys = null)
+        {
+            // At the moment, we'll just force scrypt KDF and default parameters for it
+            var mCrypto = new SymmetricManifestCryptographyConfiguration()
+                {
+                    SymmetricCipher = manifestCipherConfig,
+                    KeyDerivation = new KeyDerivationConfiguration()
+                        {
+                            SchemeName = KeyDerivationFunctions.Scrypt.ToString(),
+                            SchemeConfiguration =
+                                ScryptConfigurationUtility.Write(ScryptConfigurationUtility.DefaultIterationPower,
+                                    ScryptConfigurationUtility.DefaultBlocks,
+                                    ScryptConfigurationUtility.DefaultParallelisation),
+                        }
+                };
+            mCrypto.KeyDerivation.Salt = new byte[preMKey.Length];
+            EntropySource.NextBytes(mCrypto.KeyDerivation.Salt);
+            
             // Derive the key which will be used for encrypting the package manifest
             var workingMKey = Source.DeriveKeyWithKDF(mCrypto.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunctions>(),
                 preMKey, mCrypto.KeyDerivation.Salt, mCrypto.SymmetricCipher.KeySize,
@@ -144,14 +221,13 @@ namespace ObscurCore
                     CryptographySchemeConfiguration = mCryptoBytes
                 };
 
-            // Do the handoff to the [mostly] scheme-agnostic part of the writing op
             WritePackage(destination, mHeader, manifest, mCrypto.SymmetricCipher, false);
         }
 
 
         private static void WritePackage(Stream destination, ManifestHeader mHeader, IManifest manifest,
-                                         ISymmetricCipherConfiguration mCipherConfig, bool ies) {
-
+                                         ISymmetricCipherConfiguration mCipherConfig, bool ies) 
+        {
             // Write the header tag
             destination.Write(HeaderTagBytes, 0, HeaderTagBytes.Length);
             // Serialise and write ManifestHeader to destination stream (this part is written as plaintext, otherwise INCEPTION!)
@@ -213,7 +289,7 @@ namespace ObscurCore
             // Write the trailer
             destination.Write(TrailerTagBytes, 0, TrailerTagBytes.Length);
             // All done! HAPPY DAYS.
-            destination.Close();
+            //destination.Close();
         }
 
         #endregion
@@ -243,7 +319,7 @@ namespace ObscurCore
 		/// <param name="readOffset">How many bytes have already been read from the stream. 
 		/// Set to null to use Stream.Position</param>
 		/// <param name="payloadKeysSymmetric">Potential symmetric keys for payload items.</param>
-		private static void ReadPackagePayload(Stream source, IManifest manifest, int? readOffset = null, 
+		public static void ReadPackagePayload(Stream source, IManifest manifest, int? readOffset = null, 
 		                                       IList<byte[]> payloadKeysSymmetric = null)
         {
 			if (readOffset == null)
@@ -305,14 +381,22 @@ namespace ObscurCore
         /// <summary>
         /// Read a package manifest (only) from a stream.  
         /// </summary>
+        /// <remarks>
+        /// Call method, supplying (all of) only the keys associated with the sender and the context. 
+        /// This both maximises the chance that 1) the package will be successfully decrypted if multiple 
+        /// keys are in use by both parties, and 2) minimise the time spent validating potential key pairs.
+        /// </remarks>
         /// <param name="source">Stream to read the package from.</param>
         /// <param name="manifestKeysSymmetric">Symmetric key(s) to decrypt the manifest with.</param>
         /// <param name="manifestKeysECSender">EC public key(s) to decrypt the manifest with.</param>
         /// <param name="manifestKeysECRecipient">EC private key(s) to decrypt the manifest with.</param>
+        /// <param name="manifestKeysCurve25519Sender">Curve25519 EC public key(s) to decrypt the manifest with.</param>
+        /// <param name="manifestKeysCurve25519Recipient">Curve25519 EC private key(s) to decrypt the manifest with.</param>
         /// <param name="readOffset">Output of number of bytes read from the source stream at method completion.</param>
         /// <returns>Package manifest object.</returns>
-        private static Manifest ReadPackageManifest(Stream source, IList<byte[]> manifestKeysSymmetric, 
-            IList<ECKeyConfiguration> manifestKeysECSender, IList<ECKeyConfiguration> manifestKeysECRecipient, out int readOffset) {
+        public static Manifest ReadPackageManifest(Stream source, IList<byte[]> manifestKeysSymmetric, 
+            IList<ECKeyConfiguration> manifestKeysECSender, IList<ECKeyConfiguration> manifestKeysECRecipient, 
+            IList<byte[]> manifestKeysCurve25519Sender, IList<byte[]> manifestKeysCurve25519Recipient, out int readOffset) {
 
             /* 
              * readOffset is used to keep track of where we are so that, during multiple-stage package reads, we avoid errors.
@@ -337,13 +421,8 @@ namespace ObscurCore
                             preMKey = ConfirmSymmetricKey(
                                 ((SymmetricManifestCryptographyConfiguration) mCryptoConfig).KeyVerification,
                                 manifestKeysSymmetric);
-                            if (preMKey == null || preMKey.Length == 0) {
-                                throw new ArgumentException(
-                                    "None of the symmetric keys provided to decrypt the manifest were confirmed as being able to do so.",
-                                        "manifestKeysSymmetric");
-                            }
                         } catch (Exception e) {
-                            Console.WriteLine(e);
+                            throw new KeyConfirmationException("Key confirmation failed in an unexpected way.", e);
                         }
                     } else {
                         if (manifestKeysSymmetric.Count > 1) {
@@ -352,36 +431,35 @@ namespace ObscurCore
                         }
                         preMKey = manifestKeysSymmetric[0];
                     }
-
                     break;
 
                 case ManifestCryptographySchemes.UM1Hybrid:
                     // Identify matching public-private key pairs based on curve provider and curve name
-                    var ephemeralKey = ((UM1ManifestCryptographyConfiguration) mCryptoConfig).EphemeralKey;
+                    var um1_ephemeralKey = ((UM1ManifestCryptographyConfiguration) mCryptoConfig).EphemeralKey;
 
-                    var secretFunc = new Func<ECKeyConfiguration, ECKeyConfiguration, byte[]>((pubKey, privKey) =>
+                    var um1SecretFunc = new Func<ECKeyConfiguration, ECKeyConfiguration, byte[]>((pubKey, privKey) =>
                         {
                             var responder = new UM1ExchangeResponder(pubKey.DecodeToPublicKey(),
                                 privKey.DecodeToPrivateKey());
-                            return responder.CalculateSharedSecret(ephemeralKey.DecodeToPublicKey());
+                            return responder.CalculateSharedSecret(um1_ephemeralKey.DecodeToPublicKey());
                             // Run ss through key confirmation scheme and then SequenceEqual compare to hash
                         });
                 
                     if (mCryptoConfig.KeyVerification != null) {
                         // We can determine which, if any, of the provided keys are capable of decrypting the manifest
                         var viableSenderKeys =
-                        manifestKeysECSender.Where(key => key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
-                            key.CurveName.Equals(ephemeralKey.CurveName)).ToList();
+                        manifestKeysECSender.Where(key => key.CurveProviderName.Equals(um1_ephemeralKey.CurveProviderName) &&
+                            key.CurveName.Equals(um1_ephemeralKey.CurveName)).ToList();
                         var viableRecipientKeys =
-                        manifestKeysECRecipient.Where(key => key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
-                            key.CurveName.Equals(ephemeralKey.CurveName)).ToList();
+                        manifestKeysECRecipient.Where(key => key.CurveProviderName.Equals(um1_ephemeralKey.CurveProviderName) &&
+                            key.CurveName.Equals(um1_ephemeralKey.CurveName)).ToList();
 
                         // See which mode (by-sender / by-recipient) is better to run in parallel
                         if (viableSenderKeys.Count > viableRecipientKeys.Count) {
                             Parallel.ForEach(viableSenderKeys, (sKey, state) =>
                             {
                                 foreach (var rKey in viableRecipientKeys) {
-                                    var ss = secretFunc(sKey, rKey);
+                                    var ss = um1SecretFunc(sKey, rKey);
                                     var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyVerification, ss);
                                     if (validationOut == null) continue;
                                     preMKey = validationOut;
@@ -392,7 +470,7 @@ namespace ObscurCore
                             Parallel.ForEach(viableRecipientKeys, (rKey, state) =>
                             {
                                 foreach (var sKey in viableSenderKeys) {
-                                    var ss = secretFunc(sKey, rKey);
+                                    var ss = um1SecretFunc(sKey, rKey);
                                     var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyVerification, ss);
                                     if (validationOut == null) continue;
                                     preMKey = validationOut;
@@ -400,23 +478,60 @@ namespace ObscurCore
                                 }
                             });
                         }
-
-                        if (preMKey == null) {
-                            throw new ArgumentException("None of the EC keys provided to decrypt the manifest were confirmed as being able to do so.");
-                        }
-                        
                     } else {
 						// No key confirmation capability available
 						if (manifestKeysECSender.Count > 1 || manifestKeysECRecipient.Count > 1) {
-							throw new ArgumentException("Multiple EC keys have been provided where the package provides no key confirmation capability.");
+							throw new KeyConfirmationException("Multiple EC keys have been provided where the package provides no key confirmation capability.");
 						}
-						preMKey = secretFunc(manifestKeysECSender[0], manifestKeysECRecipient[0]);
+						preMKey = um1SecretFunc(manifestKeysECSender[0], manifestKeysECRecipient[0]);
 					}
+                    break;
 
+                case ManifestCryptographySchemes.Curve25519UM1Hybrid:
+
+                    var c25519um1_ephemeralKey = ((Curve25519UM1ManifestCryptographyConfiguration) mCryptoConfig).EphemeralKey;
+
+                    if (mCryptoConfig.KeyVerification != null) {
+                        // See which mode (by-sender / by-recipient) is better to run in parallel
+                        if (manifestKeysCurve25519Sender.Count > manifestKeysCurve25519Recipient.Count) {
+                            Parallel.ForEach(manifestKeysCurve25519Sender, (sKey, state) =>
+                            {
+                                foreach (var rKey in manifestKeysCurve25519Recipient) {
+                                    var ss = Curve25519UM1Exchange.Respond(sKey, rKey, c25519um1_ephemeralKey);
+                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyVerification, ss);
+                                    if (validationOut == null) continue;
+                                    preMKey = validationOut;
+                                    state.Stop();
+                                }
+                            });
+                        } else {
+                            Parallel.ForEach(manifestKeysCurve25519Recipient, (rKey, state) =>
+                            {
+                                foreach (var sKey in manifestKeysCurve25519Sender) {
+                                    var ss = Curve25519UM1Exchange.Respond(sKey, rKey, c25519um1_ephemeralKey);
+                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyVerification, ss);
+                                    if (validationOut == null) continue;
+                                    preMKey = validationOut;
+                                    state.Stop();
+                                }
+                            });
+                        }
+                    } else {
+						// No key confirmation capability available
+						if (manifestKeysECSender.Count > 1 || manifestKeysECRecipient.Count > 1) {
+							throw new KeyConfirmationException("Multiple Curve25519 keys have been provided where the package provides no key confirmation capability.");
+						}
+						preMKey = Curve25519UM1Exchange.Respond(manifestKeysCurve25519Sender[0], manifestKeysCurve25519Recipient[0], c25519um1_ephemeralKey);
+					}
                     break;
 
                 default:
-                    throw new NotSupportedException("Manifest cryptography scheme " + mCryptoScheme + " is unsupported/unknown.");
+                    throw new NotSupportedException(String.Format("Manifest cryptography scheme {0} is unsupported/unknown.", mCryptoScheme));
+            }
+
+            if (preMKey == null || preMKey.Length == 0) {
+                throw new KeyConfirmationException(String.Format(
+                    "None of the keys provided to decrypt the manifest (cryptographic scheme: {0}) were confirmed as being able to do so.", mCryptoScheme));
             }
 
             // Derive the working manifest key
@@ -424,11 +539,9 @@ namespace ObscurCore
                     preMKey, mCryptoConfig.KeyDerivation.Salt, mCryptoConfig.SymmetricCipher.KeySize,
                     mCryptoConfig.KeyDerivation.SchemeConfiguration);
 
-            var mCipherConfig = DeserialiseDTO<SymmetricCipherConfiguration>(mHeader.CryptographySchemeConfiguration);
-
             Manifest manifest = null;
 
-            using (var cs = new SymmetricCryptoStream(source, true, mCipherConfig, workingMKey, true)) {
+            using (var cs = new SymmetricCryptoStream(source, true, mCryptoConfig.SymmetricCipher, workingMKey, true)) {
                 manifest = (Manifest) Serialiser.DeserializeWithLengthPrefix(cs, null, typeof (Manifest), PrefixStyle.Fixed32, 0);
                 readOffset += (int) cs.BytesOut;
             }
@@ -444,7 +557,7 @@ namespace ObscurCore
 		/// <param name="mCryptoScheme">Manifest cryptography scheme parsed from the header.</param>
 		/// <param name="readOffset">Output of number of bytes read from the source stream at method completion.</param>
 		/// <returns>Package manifest header object.</returns>
-        private static ManifestHeader ReadPackageManifestHeader(Stream source, out IManifestCryptographySchemeConfiguration mCryptoConfig,
+        public static ManifestHeader ReadPackageManifestHeader(Stream source, out IManifestCryptographySchemeConfiguration mCryptoConfig,
             out ManifestCryptographySchemes mCryptoScheme, out int readOffset)
         {
             var readHeaderTag = new byte[HeaderTagBytes.Length];
@@ -469,6 +582,9 @@ namespace ObscurCore
                     break;
                 case ManifestCryptographySchemes.UM1Hybrid:
                     mCryptoConfig = DeserialiseDTO<UM1ManifestCryptographyConfiguration>(mHeader.CryptographySchemeConfiguration);
+                    break;
+                case ManifestCryptographySchemes.Curve25519UM1Hybrid:
+                    mCryptoConfig = DeserialiseDTO<Curve25519UM1ManifestCryptographyConfiguration>(mHeader.CryptographySchemeConfiguration);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -500,9 +616,6 @@ namespace ObscurCore
                 });
 
             return validatedKey;
-
-            //return (from potentialKey in potentialKeys.AsParallel() let checkhash = validator(potentialKey, keyConfirmation.Salt) 
-            //        where checkhash.SequenceEqual(keyConfirmation.Hash) select potentialKey).FirstOrDefault();
         }
 
         /// <summary>

@@ -15,11 +15,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using ObscurCore.Cryptography;
-using ObscurCore.DTO;
-using ObscurCore.Extensions.Enumerations;
 using ObscurCore.Packaging;
 
 namespace ObscurCore

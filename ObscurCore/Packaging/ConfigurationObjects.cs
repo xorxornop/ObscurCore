@@ -15,7 +15,6 @@
 
 using ObscurCore.Cryptography;
 using ObscurCore.DTO;
-using ObscurCore.Extensions.Generic;
 
 namespace ObscurCore.Packaging
 {	

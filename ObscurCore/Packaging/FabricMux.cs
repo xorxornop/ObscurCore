@@ -17,9 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using ObscurCore.Cryptography;
-using ObscurCore.Cryptography.Entropy;
-using ObscurCore.Extensions.Enumerations;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Packaging

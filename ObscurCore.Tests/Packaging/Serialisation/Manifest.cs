@@ -1,6 +1,9 @@
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using ObscurCore.DTO;
+using ObscurCore.Cryptography;
+using ObscurCore.Packaging;
 
 namespace ObscurCore.Tests.Packaging.Serialisation
 {
@@ -9,11 +12,20 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 		[Test]
 		public void Test() {
 
-			var manifest = new Manifest ();
+			var manifest = new Manifest
+			    {
+                    PayloadItems = new List<PayloadItem>(),
+                    
+			        PayloadOffset = 69,
+			        PayloadConfiguration = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Fabric)
+			    };
 
-			var stream = SerialiseToMemory(manifest);
+            manifest.PayloadItems.Add(new PayloadItem() { Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration
+                                (SymmetricBlockCiphers.AES, BlockCipherModes.CTR, BlockCipherPaddings.None) });
+
+		    var stream = StratCom.SerialiseDTO(manifest);
             stream.Seek(0, SeekOrigin.Begin);
-            var outputObj = DeserialiseFromMemory<KeyConfirmationConfiguration>(stream);
+		    var outputObj = StratCom.DeserialiseDTO<Manifest>(stream.ToArray());
 
             bool equal = manifest.Equals(outputObj);
 

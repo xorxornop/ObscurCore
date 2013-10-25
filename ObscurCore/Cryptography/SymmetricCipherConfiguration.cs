@@ -17,7 +17,6 @@ using System;
 using System.Linq;
 using ObscurCore.DTO;
 using ObscurCore.Extensions.ByteArrays;
-using ObscurCore.Extensions.Enumerations;
 
 namespace ObscurCore.Cryptography
 {

@@ -16,9 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ObscurCore.Cryptography;
 using ObscurCore.DTO;
-using ObscurCore.Extensions.Enumerations;
 
 namespace ObscurCore.Packaging
 {

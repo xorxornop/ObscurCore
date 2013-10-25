@@ -20,11 +20,8 @@ using System.Linq;
 using System.IO;
 using NUnit.Framework;
 using ObscurCore.Cryptography;
-using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
 using ObscurCore.Extensions.DTO;
-using ObscurCore.Extensions.Enumerations;
-using ObscurCore.Extensions.Generic;
 using ObscurCore.Packaging;
 
 namespace ObscurCore.Tests.Packaging
@@ -35,10 +32,6 @@ namespace ObscurCore.Tests.Packaging
 
         private readonly static List<FileInfo> SourceFiles = IOTestBase.SmallTextFileList;
 	    private static readonly DirectoryInfo DestinationDirectory = IOTestBase.SmallTextFilesDestinationDirectory;
-
-		public Payload ()
-		{
-		}
 
 		[TestFixtureSetUp]
 		public void InitFixture () {

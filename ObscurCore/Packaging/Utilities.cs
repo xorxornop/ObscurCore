@@ -15,7 +15,6 @@
 
 using System;
 using System.IO;
-using ObscurCore.Extensions.Generic;
 using ObscurCore.Extensions.Streams;
 
 namespace ObscurCore.Packaging

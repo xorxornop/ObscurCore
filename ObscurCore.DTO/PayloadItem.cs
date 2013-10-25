@@ -98,11 +98,11 @@ namespace ObscurCore.DTO
         [ProtoMember(4, IsRequired = true)]
         public long ExternalLength { get; set; }
 
-        /// <summary>
-        /// Compression configuration for this payload item.
-        /// </summary>
-        [ProtoMember(5, IsRequired = false)]
-        public CompressionConfiguration Compression { get; set; }
+        ///// <summary>
+        ///// Compression configuration for this payload item.
+        ///// </summary>
+        //[ProtoMember(5, IsRequired = false)]
+        //public CompressionConfiguration Compression { get; set; }
 		
         /// <summary>
         /// Encryption configuration for this payload item.
@@ -144,7 +144,7 @@ namespace ObscurCore.DTO
                    string.Equals(RelativePath, other.RelativePath, 
                    Type == PayloadItemTypes.Binary ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) &&
                    InternalLength == other.InternalLength && ExternalLength == other.ExternalLength && Encryption.Equals(other.Encryption) && 
-                   Compression.Equals(other.Compression) && 
+                   /*Compression.Equals(other.Compression) && */
                    (KeyVerification == null ? other.KeyVerification == null : KeyVerification.Equals(other.KeyVerification)) &&
                    KeyDerivation == null ? other.KeyDerivation == null : KeyDerivation.Equals((other.KeyDerivation));
         }
@@ -164,7 +164,7 @@ namespace ObscurCore.DTO
                 hashCode = (hashCode * 397) ^ InternalLength.GetHashCode();
                 hashCode = (hashCode * 397) ^ ExternalLength.GetHashCode();
                 hashCode = (hashCode * 397) ^ Encryption.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Compression != null ? Compression.GetHashCode() : 0);
+                /*hashCode = (hashCode * 397) ^ (Compression != null ? Compression.GetHashCode() : 0);*/
                 hashCode = (hashCode * 397) ^ (KeyVerification != null ? KeyVerification.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (KeyDerivation != null ? KeyDerivation.GetHashCode() : 0);
                 return hashCode;

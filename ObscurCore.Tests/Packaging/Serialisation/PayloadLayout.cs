@@ -1,9 +1,7 @@
 ﻿using System.IO;
 using NUnit.Framework;
 using ObscurCore.Cryptography;
-using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
-using ObscurCore.Extensions.Generic;
 using ObscurCore.Packaging;
 
 namespace ObscurCore.Tests.Packaging.Serialisation

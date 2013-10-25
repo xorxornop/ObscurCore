@@ -49,17 +49,28 @@ namespace ObscurCore.DTO
     public enum ManifestCryptographySchemes
     {
          /// <summary>
-        /// Using a pre-agreed key. Simply uses a SymmetricCipherConfiguration object in serialised form for configuration, and as such, allows rich customisation.
+        /// Using a pre-agreed key. Simply uses a SymmetricCipherConfiguration object in serialised form for 
+        /// configuration, and as such, allows rich customisation.
         /// </summary>
         UniversalSymmetric, 
+
 		/// <summary>
-		/// UM1-based Integrated Encryption Scheme.
+		/// UM1-based hybrid (PKC-derived-key symmetric encryption) scheme.
 		/// </summary>
 		/// <remarks>
 		/// Uses UM1 to generate a secret value, which is further derived with a KDF. 
 		/// This derived secret is used as a symmetric cipher key, and optionally, to generate a MAC for the data.
 		/// </remarks>
-		UM1Hybrid
+		UM1Hybrid,
+
+        /// <summary>
+        /// UM1-based hybrid (PKC-derived-key symmetric encryption) scheme that specifically uses Curve25519 EC scheme.
+        /// </summary>
+        /// <remarks>
+		/// Uses Curve25519UM1 to generate a secret value, which is further derived with a KDF. 
+		/// This derived secret is used as a symmetric cipher key, and optionally, to generate a MAC for the data.
+		/// </remarks>
+        Curve25519UM1Hybrid
     }
 	#endregion
 
