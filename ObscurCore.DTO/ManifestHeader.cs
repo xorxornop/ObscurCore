@@ -30,12 +30,12 @@ namespace ObscurCore.DTO
         [ProtoMember(1, IsRequired = true)]
         public int FormatVersion { get; set; }
 
-        /// <summary>
-        /// Configuration of the compression scheme 
-        /// used to reduce the size of the Manifest.
-        /// </summary>
-        [ProtoMember(2, IsRequired = false)]
-        public CompressionConfiguration Compression { get; set; }
+        // /// <summary>
+        // /// Configuration of the compression scheme 
+        // /// used to reduce the size of the Manifest.
+        // /// </summary>
+        //[ProtoMember(2, IsRequired = false)]
+        //public CompressionConfiguration Compression { get; set; }
 
         /// <summary>
         /// Name of the cryptographic scheme used to secure the Manifest.
@@ -68,8 +68,10 @@ namespace ObscurCore.DTO
         public bool Equals (ManifestHeader other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return FormatVersion == other.FormatVersion && Compression.Equals(other.Compression) && string.Equals(CryptographySchemeName, other.CryptographySchemeName) &&
-                   (CryptographySchemeConfiguration == null ? other.CryptographySchemeConfiguration == null : CryptographySchemeConfiguration.SequenceEqual(other.CryptographySchemeConfiguration));
+            return FormatVersion == other.FormatVersion && /*Compression.Equals(other.Compression) &&*/ 
+				string.Equals(CryptographySchemeName, other.CryptographySchemeName) &&
+                   (CryptographySchemeConfiguration == null ? other.CryptographySchemeConfiguration == null 
+					 : CryptographySchemeConfiguration.SequenceEqual(other.CryptographySchemeConfiguration));
         }
 		
         /// <summary>
@@ -81,7 +83,8 @@ namespace ObscurCore.DTO
         /// <filterpriority>2</filterpriority>
         public override int GetHashCode () {
             unchecked {
-                return (CryptographySchemeName.GetHashCode() * 397) ^ (CryptographySchemeConfiguration != null ? CryptographySchemeConfiguration.GetHashCode() : 0);
+                return (CryptographySchemeName.GetHashCode() * 397) ^ 
+					(CryptographySchemeConfiguration != null ? CryptographySchemeConfiguration.GetHashCode() : 0);
             }
         }
     }

@@ -190,6 +190,21 @@ namespace ObscurCore
 			return skipped;
 		}
 
+		/// <summary>
+		/// Set every byte in the internal array (buffer) to zero. 
+		/// Can be used as a security feature, or convenience method for resetting state.
+		/// </summary>
+		public void Erase() {
+			Array.Clear (_buffer, 0, _buffer.Length);
+			_head = 0;
+			_tail = 0;
+			Length = 0;
+		}
+
+		public void Reset() {
+			Erase ();
+		}
+
 		public byte[] ToArray () {
 			return Take(Length);
 		}

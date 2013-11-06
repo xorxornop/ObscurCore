@@ -72,7 +72,7 @@ namespace ObscurCore.Tests.Packaging
                 var readManifest = StratCom.ReadPackageManifest(ms, symKey, null, null, null, null, out offset);
 
             }
-
+			// TODO: Finish this
             
         }
     }

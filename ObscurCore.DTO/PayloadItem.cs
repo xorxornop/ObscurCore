@@ -93,14 +93,14 @@ namespace ObscurCore.DTO
         public long InternalLength { get; set; }
 
         /// <summary>
-        /// Length of the item outside of of the payload (unmodified, unpackaged, as intended to be extracted to).
+        /// Length of the item outside of the payload (unmodified - as it was before inclusion).
         /// </summary>
         [ProtoMember(4, IsRequired = true)]
         public long ExternalLength { get; set; }
 
-        ///// <summary>
-        ///// Compression configuration for this payload item.
-        ///// </summary>
+        // /// <summary>
+        // /// Compression configuration for this payload item.
+        // /// </summary>
         //[ProtoMember(5, IsRequired = false)]
         //public CompressionConfiguration Compression { get; set; }
 		
@@ -111,10 +111,12 @@ namespace ObscurCore.DTO
         public SymmetricCipherConfiguration Encryption { get; set; }
 		
         /// <summary>
-        /// Key confirmation configuration for this payload item.
+        /// Key confirmation configuration for this payload item. 
+		/// Used to validate the existence and validity of keying material 
+		/// at the respondent's side without disclosing the key itself.
         /// </summary>
         [ProtoMember(7, IsRequired = false)]
-        public KeyConfirmationConfiguration KeyVerification { get; set; }
+		public VerificationFunctionConfiguration KeyConfirmation { get; set; }
 
         /// <summary>
         /// Key derivation configuration for this payload item.
@@ -145,7 +147,7 @@ namespace ObscurCore.DTO
                    Type == PayloadItemTypes.Binary ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) &&
                    InternalLength == other.InternalLength && ExternalLength == other.ExternalLength && Encryption.Equals(other.Encryption) && 
                    /*Compression.Equals(other.Compression) && */
-                   (KeyVerification == null ? other.KeyVerification == null : KeyVerification.Equals(other.KeyVerification)) &&
+                   (KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) &&
                    KeyDerivation == null ? other.KeyDerivation == null : KeyDerivation.Equals((other.KeyDerivation));
         }
 
@@ -165,7 +167,7 @@ namespace ObscurCore.DTO
                 hashCode = (hashCode * 397) ^ ExternalLength.GetHashCode();
                 hashCode = (hashCode * 397) ^ Encryption.GetHashCode();
                 /*hashCode = (hashCode * 397) ^ (Compression != null ? Compression.GetHashCode() : 0);*/
-                hashCode = (hashCode * 397) ^ (KeyVerification != null ? KeyVerification.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (KeyConfirmation != null ? KeyConfirmation.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (KeyDerivation != null ? KeyDerivation.GetHashCode() : 0);
                 return hashCode;
             }

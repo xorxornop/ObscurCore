@@ -484,7 +484,7 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="config">Configuration of the PRNG in byte-array encoded form.</param>
 		/// <returns>
-		/// An PRNG object deriving from Random.
+		/// An digest object deriving from IDigest.
 		/// </returns>
 		public static IDigest CreateHash (HashFunctions hash) {
 			return DigestInstantiators[hash]();

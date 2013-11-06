@@ -13,6 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <ProductVersion>12.0.0</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
+    <UseMSBuildEngine>False</UseMSBuildEngine>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,6 +23,11 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="BeforeExecute" />
+      </CustomCommands>
+    </CustomCommands>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,7 +38,7 @@
     <WarningLevel>4</WarningLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="AfterBuild" command="mono precompile.exe ../bin/${ProjectConfigName}/${TargetName} -o:../bin/${ProjectConfigName}/${ProjectName}Serialiser.dll -t:${ProjectName}Serialiser" workingdir="${ProjectDir}/precompiler" />
+        <Command type="AfterBuild" name="Precompile" command="mono precompile.exe ../bin/${ProjectConfigName}/${TargetName} -o:../bin/${ProjectConfigName}/${ProjectName}Serialiser.dll -t:${ProjectName}Serialiser" workingdir="${ProjectDir}/precompiler" pauseExternalConsole="True" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
@@ -54,7 +60,6 @@
     <Compile Include="IDataTransferObject.cs" />
     <Compile Include="IManifestCryptographySchemeConfiguration.cs" />
     <Compile Include="KDFConfigurations.cs" />
-    <Compile Include="KeyConfirmationConfiguration.cs" />
     <Compile Include="KeyDerivationConfiguration.cs" />
     <Compile Include="Manifest.cs" />
     <Compile Include="ManifestHeader.cs" />
@@ -64,6 +69,7 @@
     <Compile Include="SymmetricCipherConfiguration.cs" />
     <Compile Include="SymmetricManifestCryptographyConfiguration.cs" />
     <Compile Include="UM1ManifestCryptographyConfiguration.cs" />
+    <Compile Include="VerificationFunctionConfiguration.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

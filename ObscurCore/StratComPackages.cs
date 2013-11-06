@@ -330,9 +330,9 @@ namespace ObscurCore
 
 			// Check that all payload items have decryption keys - if they do not, derive them
 			foreach(var item in manifest.PayloadItems) {
-				if(item.KeyVerification != null) {
+				if(item.KeyConfirmation != null) {
 					// We will derive the key from one supplied as a potential
-					var itemKeyVerification = ConfirmSymmetricKey (item.KeyVerification, payloadKeysSymmetric);
+					var itemKeyVerification = ConfirmSymmetricKey (item.KeyConfirmation, payloadKeysSymmetric);
 					if (itemKeyVerification == null || itemKeyVerification.Length == 0) {
 						//throw new ArgumentException(
 							//"None of the keys supplied for decryption of payload items were verified as being correct.",
@@ -416,10 +416,10 @@ namespace ObscurCore
                         throw new ArgumentException("No keys supplied for decryption of symmetric-cryptography-encrypted manifest.", 
                             "manifestKeysSymmetric");
                     }
-                    if (mCryptoConfig.KeyVerification != null) {
+                    if (mCryptoConfig.KeyConfirmation != null) {
                         try {
                             preMKey = ConfirmSymmetricKey(
-                                ((SymmetricManifestCryptographyConfiguration) mCryptoConfig).KeyVerification,
+                                ((SymmetricManifestCryptographyConfiguration) mCryptoConfig).KeyConfirmation,
                                 manifestKeysSymmetric);
                         } catch (Exception e) {
                             throw new KeyConfirmationException("Key confirmation failed in an unexpected way.", e);
@@ -445,7 +445,7 @@ namespace ObscurCore
                             // Run ss through key confirmation scheme and then SequenceEqual compare to hash
                         });
                 
-                    if (mCryptoConfig.KeyVerification != null) {
+                    if (mCryptoConfig.KeyConfirmation != null) {
                         // We can determine which, if any, of the provided keys are capable of decrypting the manifest
                         var viableSenderKeys =
                         manifestKeysECSender.Where(key => key.CurveProviderName.Equals(um1_ephemeralKey.CurveProviderName) &&
@@ -460,7 +460,7 @@ namespace ObscurCore
                             {
                                 foreach (var rKey in viableRecipientKeys) {
                                     var ss = um1SecretFunc(sKey, rKey);
-                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyVerification, ss);
+                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, ss);
                                     if (validationOut == null) continue;
                                     preMKey = validationOut;
                                     state.Stop();
@@ -471,7 +471,7 @@ namespace ObscurCore
                             {
                                 foreach (var sKey in viableSenderKeys) {
                                     var ss = um1SecretFunc(sKey, rKey);
-                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyVerification, ss);
+                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, ss);
                                     if (validationOut == null) continue;
                                     preMKey = validationOut;
                                     state.Stop();
@@ -491,14 +491,14 @@ namespace ObscurCore
 
                     var c25519um1_ephemeralKey = ((Curve25519UM1ManifestCryptographyConfiguration) mCryptoConfig).EphemeralKey;
 
-                    if (mCryptoConfig.KeyVerification != null) {
+                    if (mCryptoConfig.KeyConfirmation != null) {
                         // See which mode (by-sender / by-recipient) is better to run in parallel
                         if (manifestKeysCurve25519Sender.Count > manifestKeysCurve25519Recipient.Count) {
                             Parallel.ForEach(manifestKeysCurve25519Sender, (sKey, state) =>
                             {
                                 foreach (var rKey in manifestKeysCurve25519Recipient) {
                                     var ss = Curve25519UM1Exchange.Respond(sKey, rKey, c25519um1_ephemeralKey);
-                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyVerification, ss);
+                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, ss);
                                     if (validationOut == null) continue;
                                     preMKey = validationOut;
                                     state.Stop();
@@ -509,7 +509,7 @@ namespace ObscurCore
                             {
                                 foreach (var sKey in manifestKeysCurve25519Sender) {
                                     var ss = Curve25519UM1Exchange.Respond(sKey, rKey, c25519um1_ephemeralKey);
-                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyVerification, ss);
+                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, ss);
                                     if (validationOut == null) continue;
                                     preMKey = validationOut;
                                     state.Stop();
@@ -601,14 +601,14 @@ namespace ObscurCore
         /// <param name="keyConfirmation">Key confirmation configuration.</param>
         /// <param name="potentialKeys">Set of potential keys.</param>
         /// <returns>Valid key, or null if none are validated as being correct.</returns>
-        private static byte[] ConfirmSymmetricKey(IKeyConfirmationConfiguration keyConfirmation,
+        private static byte[] ConfirmSymmetricKey(IVerificationFunctionConfiguration keyConfirmation,
                                                   IEnumerable<byte[]> potentialKeys)
         {
             byte[] validatedKey = null;
             Parallel.ForEach(potentialKeys, (bytes, state) =>
                 {
                     var validationOut = ConfirmSymmetricKey(keyConfirmation, bytes);
-                    if (validationOut.SequenceEqual(keyConfirmation.Hash)) {
+                    if (validationOut.SequenceEqual(keyConfirmation.VerifiedOutput)) {
                         validatedKey = validationOut;
                         // Terminate all other validation function instances - we have found the key
                         state.Stop();
@@ -624,14 +624,15 @@ namespace ObscurCore
         /// <param name="keyConfirmation">Key confirmation configuration.</param>
         /// <param name="potentialKey">Potential key to be validated.</param>
         /// <returns>Valid key, or null if not validated as being correct.</returns>
-        private static byte[] ConfirmSymmetricKey(IKeyConfirmationConfiguration keyConfirmation, byte[] potentialKey) {
+		private static byte[] ConfirmSymmetricKey(IVerificationFunctionConfiguration keyConfirmation, byte[] potentialKey) {
             Func<byte[], byte[], byte[]> validator = null; // Used as an adaptor between different validation methods
             // Signature is: key, salt, returns validation output byte[]
 
-            if (Enum.GetNames(typeof (KeyDerivationFunctions)).Contains(keyConfirmation.SchemeName)) {
-                validator =
-                    (key, salt) => Source.DeriveKeyWithKDF(keyConfirmation.SchemeName.ToEnum<KeyDerivationFunctions>(),
-                        key, salt, keyConfirmation.Hash.Length, keyConfirmation.SchemeConfiguration);
+			if (Enum.GetNames (typeof(KeyDerivationFunctions)).Contains (keyConfirmation.FunctionName)) {
+				validator = (key, salt) => Source.DeriveKeyWithKDF (keyConfirmation.FunctionName.ToEnum<KeyDerivationFunctions> (), 
+					key, salt, keyConfirmation.VerifiedOutput.Length, keyConfirmation.FunctionConfiguration);
+			} else if(Enum.GetNames (typeof(KeyDerivationFunctions)).Contains (keyConfirmation.FunctionName)) {
+
             } else {
                 throw new NotSupportedException("Package manifest key confirmation scheme is unsupported/unknown.");
             }

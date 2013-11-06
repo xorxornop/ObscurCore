@@ -1,0 +1,93 @@
+//
+//  Copyright 2013  Matthew Ducker
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//        http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
+using System;
+using System.IO;
+using ObscurCore.Cryptography.Authentication;
+
+namespace ObscurCore.Cryptography
+{
+	public sealed class HashStream : DecoratingStream
+	{
+		/// <summary>
+		/// The output/digest of the internal hash function. Null if function is not finished.
+		/// </summary>
+		/// <value><c>true</c> if this instance hash; otherwise, <c>false</c>.</value>
+		public byte[] Hash { get { return _outputRef; } }
+
+		private IDigest _digest;
+		private byte[] _outputRef = null;
+		private bool _disposed;
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.HashStream"/> class.
+		/// </summary>
+		/// <param name="binding">Binding.</param>
+		/// <param name="writing">If set to <c>true</c> writing.</param>
+		/// <param name="function">Function.</param>
+		/// <param name="output">Byte array where the finished hash will be output to. Does not need to be initialised.</param>
+		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
+		/// <remarks>
+		/// 'ref' parameter descriptor for output is functionally superfluous, but serves rather to communicate the intended use.
+		/// </remarks>
+		public HashStream (Stream binding, bool writing, HashFunctions function, ref byte[] output, bool closeOnDispose = true) 
+			: base(binding, writing, closeOnDispose, false)
+		{
+			_digest = Source.CreateHash (function);
+			_outputRef = output;
+		}
+
+
+		public override void Write (byte[] buffer, int offset, int count) {
+			if (count > 0) {
+				_digest.BlockUpdate(buffer, offset, count);
+			}
+			base.Write(buffer, offset, count);
+		}
+
+		public override void WriteByte (byte b) {
+			_digest.Update(b);
+			base.WriteByte (b);
+		} 
+
+		public override int ReadByte () {
+			int readByte = base.ReadByte();
+			if (readByte >= 0) {
+				_digest.Update((byte)readByte);
+			}
+			return readByte;
+		}
+
+		public override int Read (byte[] buffer, int offset, int count) {
+			var readBytes = base.Read(buffer, offset, count);
+			if (readBytes > 0) {
+				_digest.BlockUpdate(buffer, offset, readBytes);
+			}
+			return readBytes;
+		}
+
+		protected override void Finish () {
+			_outputRef = new byte[_digest.GetDigestSize()];
+			_digest.DoFinal (_outputRef, 0);
+			base.Finish ();
+		}
+
+		protected override void Reset (bool finish = false) {
+			base.Reset (finish);
+			_digest.Reset ();
+		}
+	}
+}
+

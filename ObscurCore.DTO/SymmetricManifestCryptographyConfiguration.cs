@@ -37,15 +37,16 @@ namespace ObscurCore.DTO
         [ProtoMember(1, IsRequired = true)]
         public SymmetricCipherConfiguration SymmetricCipher { get; set; }
 
-        /// <summary>
-        /// Key confirmation configuration for the manifest.
-        /// </summary>
+		/// <summary>
+		/// Key confirmation configuration used to validate the existence and validity 
+		/// of keying material at respondent's side without disclosing the key itself.
+		/// </summary>
         [ProtoMember(2, IsRequired = true)]
-        public KeyConfirmationConfiguration KeyVerification { get; set; }
+        public VerificationFunctionConfiguration KeyConfirmation { get; set; }
 
-        /// <summary>
-        /// Key derivation configuration for the manifest.
-        /// </summary>
+		/// <summary>
+		/// Configuration for the scheme used to derive a key from the shared secret.
+		/// </summary>
         [ProtoMember(3, IsRequired = true)]
         public KeyDerivationConfiguration KeyDerivation { get; set; }
 
@@ -59,7 +60,7 @@ namespace ObscurCore.DTO
         public bool Equals (SymmetricManifestCryptographyConfiguration other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return SymmetricCipher.Equals(other.SymmetricCipher) && KeyVerification.Equals(other.KeyVerification) && KeyDerivation.Equals(other.KeyDerivation);
+            return SymmetricCipher.Equals(other.SymmetricCipher) && KeyConfirmation.Equals(other.KeyConfirmation) && KeyDerivation.Equals(other.KeyDerivation);
         }
 
         public override int GetHashCode () {
@@ -67,12 +68,12 @@ namespace ObscurCore.DTO
                 throw new InvalidDataException("Not a valid manifest cryptography configuration.");
             unchecked {
                 int hashCode = SymmetricCipher.GetHashCode();
-                hashCode = (hashCode * 397) ^ KeyVerification.GetHashCode();
+                hashCode = (hashCode * 397) ^ KeyConfirmation.GetHashCode();
                 hashCode = (hashCode * 397) ^ KeyDerivation.GetHashCode();
                 return hashCode;
             }
         }
 
-        public bool IsSuperficiallyValid() { return (SymmetricCipher == null || KeyVerification == null || KeyDerivation == null); }
+        public bool IsSuperficiallyValid() { return (SymmetricCipher == null || KeyConfirmation == null || KeyDerivation == null); }
     }
 }

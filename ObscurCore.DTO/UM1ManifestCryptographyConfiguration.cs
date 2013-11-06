@@ -41,10 +41,12 @@ namespace ObscurCore.DTO
         public SymmetricCipherConfiguration SymmetricCipher { get; set; }
 		
         /// <summary>
-        /// Key confirmation configuration for the manifest.
+        /// Key confirmation configuration for the manifest. 
+		/// Used to validate the existence and validity of keying material 
+		/// at the respondent's side without disclosing the key itself.
         /// </summary>
         [ProtoMember(3, IsRequired = false)]
-        public KeyConfirmationConfiguration KeyVerification { get; set; }
+		public VerificationFunctionConfiguration KeyConfirmation { get; set; }
 
         /// <summary>
         /// Configuration for the scheme used to derive a key from the shared secret.
@@ -66,7 +68,7 @@ namespace ObscurCore.DTO
             if(!IsSuperficiallyValid()) 
                 throw new InvalidDataException("Not a valid key agreement configuration.");
             return EphemeralKey.Equals(other.EphemeralKey) && SymmetricCipher.Equals(other.SymmetricCipher) 
-                && (KeyVerification == null ? other.KeyVerification == null : KeyVerification.Equals(other.KeyVerification)) 
+                && (KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) 
                 && KeyDerivation.Equals(other.KeyDerivation);
         }
 
@@ -76,7 +78,7 @@ namespace ObscurCore.DTO
             unchecked {
                 int hashCode = EphemeralKey.GetHashCode(); // Must not be null! 
                 hashCode = (hashCode * 397) ^ SymmetricCipher.GetHashCode(); // Must not be null!
-                hashCode = (hashCode * 397) ^ (KeyVerification != null ? KeyVerification.GetHashCode() : 0); 
+                hashCode = (hashCode * 397) ^ (KeyConfirmation != null ? KeyConfirmation.GetHashCode() : 0); 
                 hashCode = (hashCode * 397) ^ KeyDerivation.GetHashCode(); // Must not be null! 
                 return hashCode;
             }

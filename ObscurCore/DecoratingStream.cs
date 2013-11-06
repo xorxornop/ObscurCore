@@ -20,31 +20,27 @@ namespace ObscurCore
 {
 	public abstract class DecoratingStream : Stream
 	{
-		protected Stream BoundStream;
-
-		private bool _disposed;
-		protected readonly bool CloseOnDispose;
-
-        protected const string      NotEffluxError =    "Stream is configured for write-direction/efflux processing, and so may only be written to.",
-		                            NotInfluxError =    "Stream is configured for read-direction/influx processing, and so may only be read from.";
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="ObscurCore.DecoratingStream"/> class without a stream binding at construction time. 
-		/// </summary>
-		/// <param name="writing">If set to <c>true</c>, stream is used for writing-only, as opposed to reading-only.</param>
-		/// <param name="closeOnDispose">If set to <c>true</c>, when stream is closed, bound stream will also be closed.</param>
-		protected DecoratingStream (bool writing, bool closeOnDispose) {
-			Writing = writing;
-			CloseOnDispose = closeOnDispose;
-		}
-
-		protected DecoratingStream (Stream binding, bool writing, bool closeOnDispose) : this(writing, closeOnDispose) {
-			BoundStream = binding;
-		}
-
 		public bool Writing { get; protected set; }
 		public long BytesIn { get; protected set; }
 		public long BytesOut { get; protected set; }
+
+		protected Stream Binding { get; private set; }
+
+		/// <summary>
+		/// How much data a buffer supplying or recieving data from this stream instance must store to avoid I/O errors.
+		/// </summary>
+		public int BufferSizeRequirement
+		{
+			get { return GetMaxBufferReq(0); }
+			protected set { BufferRequirementOverride = value; }
+		}
+
+
+		protected bool Disposed;
+
+		protected readonly bool DirectionalityEnforced;
+		protected bool Finished;
+		protected readonly bool CloseOnDispose;
 
 		/// <summary>
 		/// Set this field in the constructor of a derived class to indicate how much data the base stream 
@@ -57,124 +53,169 @@ namespace ObscurCore
 		/// </summary>
 		private const int DefaultBufferReq = 8192; // 8 KB
 
-		/// <summary>
-		/// How much data a buffer supplying or recieving data from this stream instance must store to avoid I/O errors.
-		/// </summary>
-		public int BufferSizeRequirement
-		{
-			get { return GetMaxBufferReq(0); }
-			protected set { BufferRequirementOverride = value; }
+        protected string 	NotEffluxError =    "Stream is configured for write-direction/efflux processing, and so may only be written to.",
+		                 	NotInfluxError =    "Stream is configured for read-direction/influx processing, and so may only be read from.";
+
+
+		protected DecoratingStream (bool writing, bool closeOnDispose, bool enforce = true) {
+			Writing = writing;
+			CloseOnDispose = closeOnDispose;
+			DirectionalityEnforced = enforce;
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ObscurCore.DecoratingStream"/> class without a stream binding at construction time. 
+		/// </summary>
+		/// <param name="writing">If set to <c>true</c>, stream is used for writing-only, as opposed to reading-only.</param>
+		/// <param name="closeOnDispose">If set to <c>true</c>, when stream is closed, bound stream will also be closed.</param>
+		protected DecoratingStream (Stream binding, bool writing, bool closeOnDispose, bool enforce = true) 
+			: this(writing, closeOnDispose, enforce)
+		{
+			Binding = binding;
+		}
+
+
 		private int GetMaxBufferReq(int maxFound) {
-			var dc = BoundStream as DecoratingStream;
+			var dc = Binding as DecoratingStream;
 			var highest = Math.Max(maxFound, BufferRequirementOverride ?? DefaultBufferReq);
 			return dc != null ? Math.Max(dc.GetMaxBufferReq(highest), highest) : highest;
 		}
 
 		public override void Write (byte[] buffer, int offset, int count) {
-			if (!Writing) throw new InvalidOperationException(NotEffluxError);
-			BoundStream.Write(buffer, offset, count);
+			CheckIfAllowed (true);
+			Binding.Write(buffer, offset, count);
 			BytesIn += count;
 			BytesOut += count;
 		}
 
 		public override void WriteByte (byte b) {
-			if (!Writing) throw new InvalidOperationException(NotEffluxError);
-			BoundStream.WriteByte(b);
+			CheckIfAllowed (true);
+			Binding.WriteByte(b);
 			BytesIn++;
 			BytesOut++;
 		}
 
 		public override int ReadByte () {
+			CheckIfAllowed (false);
 			if (Writing) throw new InvalidOperationException(NotEffluxError);
 			BytesIn++;
 			BytesOut++;
-			return BoundStream.ReadByte();
+			return Binding.ReadByte();
 		}
 
 		public override int Read (byte[] buffer, int offset, int count) {
+			CheckIfAllowed (false);
 			if (Writing) throw new InvalidOperationException(NotInfluxError);
-			var readBytes = BoundStream.Read(buffer, offset, count);
+			var readBytes = Binding.Read(buffer, offset, count);
 			BytesIn += count;
 			BytesOut += count;
 			return readBytes;
 		}
 
 		public override bool CanRead {
-			get {
-				if (_disposed) throw new ObjectDisposedException("DecoratingStream");
-				return !Writing && BoundStream.CanRead;
-			}
+			get { return DirectionalityEnforced ? !Writing && Binding.CanRead : Binding.CanRead; }
 		}
 
 		public override bool CanWrite {
-			get {
-				if (_disposed) throw new ObjectDisposedException("DecoratingStream");
-				return Writing && BoundStream.CanWrite;
-			}
+			get { return DirectionalityEnforced ? Writing && Binding.CanWrite : Binding.CanWrite; }
 		}
 
 		public override bool CanSeek {
-			get {
-				if (_disposed) throw new ObjectDisposedException("DecoratingStream");
-				else return false;
+			get { return Binding.CanSeek; }
+		}
+
+		public override long Length {
+			get { return Binding.Length; }
+		}
+
+		public override long Position {
+			get { return Binding.Position; }
+			set {
+				if(!CanSeek) {
+					throw new NotSupportedException ();
+				}
+				Binding.Position = value;
 			}
 		}
 
-		public sealed override long Length {
-			get { throw new NotSupportedException(); }
+		public override long Seek (long offset, SeekOrigin origin) {
+			return Binding.Seek (offset, origin);
 		}
 
-		public sealed override long Position {
-			get { throw new NotSupportedException(); }
-			set { throw new NotSupportedException(); }
-		}
-
-		public sealed override long Seek (long offset, SeekOrigin origin) {
-			throw new NotSupportedException();
-		}
-
-		public sealed override void SetLength (long length) {
-			BoundStream.SetLength(length);
+		public override void SetLength (long length) {
+			Binding.SetLength(length);
 		}
 
 		public override void Flush () {
-			if (_disposed) throw new ObjectDisposedException("DecoratingStream");
-			BoundStream.Flush();
+			Binding.Flush();
 		}
 
-		/*public void Dispose () {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }*/
 
-		protected override void Dispose (bool disposing) {
-			try {
-				if (_disposed) return;
-				if (disposing) {
-					if (BoundStream != null && CloseOnDispose) BoundStream.Close();
-				}
-				//_stream = null; // Unsure if actually necessary if using the _disposed field? Disabled for now.
-				_disposed = true;
-			}
-			finally {
-				base.Dispose(disposing);
-			}
+		/// <summary>
+		/// Finish the decoration operation, whatever that constitutes in a derived implementation. 
+		/// Could be done before a close or reset.
+		/// </summary>
+		protected virtual void Finish() {
+			if (Finished)
+				return;
+			// Nothing here
+			Finished = true;
 		}
 
         /// <summary>
         /// Changes the stream that is written to or read from from this decorating stream.
         /// Writing/Reading mode is not reassignable without object reconstruction.
         /// </summary>
-        /// <param name="newBinding"></param>
-        /// <param name="reset"></param>
-        public void ReassignStreamBinding(Stream newBinding, bool reset) {
+        /// <param name="newBinding">The stream that the decorator will be bound to after method completion.</param>
+        /// <param name="reset">Whether to reset the rest of the decorator state in addition to the stream binding.</param>
+		/// <param name="finish">Whether to finalise the existing decoration operation before resetting. Only applicable if resetting.</param>
+        public void SetStreamBinding(Stream newBinding, bool reset = true, bool finish = false) {
             if(newBinding == null || newBinding == Stream.Null) throw new ArgumentNullException("newBinding", "Stream is null, cannot reassign.");
-            if (reset) {
-                BytesIn = 0;
-                BytesOut = 0;
-            }
+            if (reset) Reset (finish);
         }
+
+		protected virtual void Reset(bool finish = false) {
+			if (finish) Finish ();
+			BytesIn = 0;
+			BytesOut = 0;
+			Finished = false;
+		}
+
+		protected void CheckIfDisposed() {
+			if (Disposed) throw new ObjectDisposedException(GetType().Name);
+		}
+
+		protected void CheckIfAllowed(bool writing) {
+			if (!DirectionalityEnforced) return;
+			if (Writing && !writing) throw new InvalidOperationException(NotInfluxError);
+			else if (!Writing && writing) throw new InvalidOperationException(NotEffluxError);
+		}
+
+		public override void Close () {
+			this.Dispose (true);
+			GC.SuppressFinalize (this);
+		}
+
+		protected override void Dispose (bool disposing) {
+			try {
+				if (!Disposed) {
+					if (disposing) {
+						// dispose managed resources
+						Finish ();
+						if(this.Binding != null && CloseOnDispose) {
+							this.Binding.Close ();
+						}
+						this.Binding = null;
+					}
+				}
+				Disposed = true;
+			}
+			finally {
+				if(this.Binding != null) {
+					this.Binding = null;
+					base.Dispose(disposing);
+				}
+			}
+		}
 	}
 }

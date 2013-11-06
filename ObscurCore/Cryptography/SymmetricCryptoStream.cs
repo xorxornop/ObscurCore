@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using ObscurCore.Cryptography.Ciphers;
@@ -33,7 +34,23 @@ namespace ObscurCore.Cryptography
 		/// <summary>
 		/// What mode is active - encryption or decryption?
 		/// </summary>
-		public bool Encrypting { get; private set; }
+		public bool Encrypting {
+			get { return base.Writing; }
+		}
+
+		private IBufferedCipher _cipher;
+		private readonly RingByteBuffer _procBuffer;
+		private readonly byte[] _outBuffer, _inBuffer;
+		private bool _inStreamEnded;
+		private bool _disposed;
+
+		private const int StreamStride = 64;
+		private const int ProcessingIOStride = 4096;
+
+		private const string UnknownFinaliseError = "An unknown type of error occured while transforming the final block of ciphertext.";
+		private const string UnexpectedLengthError = "The data in the ciphertext is not the expected length.";
+		private const string WritingError = "Could not write transformed block bytes to output stream.";
+
 
 		/// <summary>Initialises the stream and its associated cipher for operation automatically from provided configuration object.</summary>
 		/// <param name="target">Stream to be written/read to/from.</param>
@@ -42,13 +59,11 @@ namespace ObscurCore.Cryptography
 		/// <param name="key">Derived cryptographic key for the internal cipher to operate with.</param>
 		/// <param name="leaveOpen">Set to <c>false</c> to also close the base stream when closing, or vice-versa.</param>
 		public SymmetricCryptoStream (Stream target, bool isEncrypting, ISymmetricCipherConfiguration config, 
-		                              byte[] key = null, bool leaveOpen = false) : base(isEncrypting, leaveOpen)
+		                              byte[] key = null, bool leaveOpen = false) : base(target, isEncrypting, !leaveOpen, true)
 		{
             if ((config.Key == null || config.Key.Length == 0) && (key == null || key.Length == 0)) 
                 throw new ArgumentException("No key provided in field in configuration object or as parameter.");
 
-            Encrypting = isEncrypting;
-			IBufferedCipher cipher;
 			ICipherParameters cipherParams = null;
 
             byte[] workingKey = config.Key ?? key;
@@ -71,7 +86,7 @@ namespace ObscurCore.Cryptography
                     if(!Athena.Cryptography.BlockCipherDirectory[blockCipherEnum].AllowableBlockSizes.Contains(config.BlockSize)) 
                         throw new NotSupportedException("Specified block size is unsupported.");
 
-                    BufferRequirementOverride = (config.BlockSize / 8) * 2;
+                    base.BufferRequirementOverride = (config.BlockSize / 8) * 2;
 
                     var blockCipher = Source.CreateBlockCipher(blockCipherEnum, config.BlockSize);
 
@@ -102,7 +117,7 @@ namespace ObscurCore.Cryptography
 
 		                    if (blockModeEnum == BlockCipherModes.CTS_CBC) {
 		                        if (paddingEnum == BlockCipherPaddings.None) {
-                                    cipher = new CtsBlockCipher(blockCipher);
+                                    _cipher = new CtsBlockCipher(blockCipher);
                                 } else {
                                     throw new ConfigurationException("CTS mode is inappropriate for use with padding.");
                                 }
@@ -114,10 +129,10 @@ namespace ObscurCore.Cryptography
 		                                "Cipher configuration does not specify the use of padding, " +
 		                                    "which is required for the specified mode of operation.");
 		                        }
-		                        cipher = new BufferedBlockCipher(blockCipher);
+		                        _cipher = new BufferedBlockCipher(blockCipher);
 		                    } else {
 		                        var padding = Source.CreatePadding(paddingEnum);
-		                        cipher = new PaddedBufferedBlockCipher(blockCipher, padding);
+		                        _cipher = new PaddedBufferedBlockCipher(blockCipher, padding);
 		                    }
 
 		                    break;
@@ -138,16 +153,14 @@ namespace ObscurCore.Cryptography
 					        // Create the I/O-enabled transform object
 					        if (!config.PaddingName.Equals(BlockCipherPaddings.None.ToString()) && !config.PaddingName.Equals(""))
 						        throw new NotSupportedException("Padding specified for use with AEAD mode (not allowed/unnecessary).");
-					        cipher = new BufferedAeadBlockCipher(aeadCipher);
+					        _cipher = new BufferedAeadBlockCipher(aeadCipher);
 
 		                    break;
-		                default:
-		                    throw new ArgumentOutOfRangeException();
 		            }
 		            break;
 		        case SymmetricCipherType.Stream:
 
-                    BufferRequirementOverride = config.IV != null && config.IV.Length > 0 ? (config.IV.Length) * 2 : (config.KeySize / 8) * 2;
+                    base.BufferRequirementOverride = config.IV != null && config.IV.Length > 0 ? (config.IV.Length) * 2 : (config.KeySize / 8) * 2;
 
                     var streamCipherEnum = SymmetricStreamCiphers.None;
 		            try {
@@ -161,7 +174,7 @@ namespace ObscurCore.Cryptography
 				    // Instantiate the cipher
 				    var streamCipher = Source.CreateStreamCipher(streamCipherEnum);
 				    // Create the I/O-enabled transform object
-				    cipher = new BufferedStreamCipher(streamCipher);
+				    _cipher = new BufferedStreamCipher(streamCipher);
 
 		            break;
 		        default:
@@ -169,120 +182,254 @@ namespace ObscurCore.Cryptography
 		    }
 
 			// Initialise the cipher
-			cipher.Init(isEncrypting, cipherParams);
-			BoundStream = new ExtendedCipherStream(target, isEncrypting, cipher, leaveOpen);
+			_cipher.Init(isEncrypting, cipherParams);
+			// Initialise the buffers
+			var cBlockSize = _cipher.GetBlockSize();
+			var opSize = (cBlockSize == 0) ? StreamStride : cBlockSize;
+			_inBuffer = new byte[opSize];
+			_outBuffer = new byte[opSize];
+			_procBuffer = new RingByteBuffer (config.Type != SymmetricCipherType.Stream 
+			                                  ? (cBlockSize * cBlockSize) << 2 : ProcessingIOStride);
+
+			// Customise the decorator-stream exception messages, since we enforce processing direction in this implementation
+			NotEffluxError = "Stream is configured for encryption, and so may only be written to.";
+			NotInfluxError = "Stream is configured for decryption, and so may only be read from.";
+		}
+
+		public override bool CanSeek {
+			get { return false; }
+		}
+
+		public override long Seek (long offset, SeekOrigin origin) {
+			throw new NotSupportedException ();
+		}
+
+		public override void Write (byte[] buffer, int offset, int count) {
+			CheckIfAllowed (true);
+
+			while (count > 0) {
+				// Process and put the resulting bytes in procbuffer
+				var opSize = Math.Min (count, _outBuffer.Length);
+				var processed = _cipher.ProcessBytes(buffer, offset, opSize, _outBuffer, 0);
+				BytesIn += opSize;
+				_procBuffer.Put (_outBuffer, 0, processed);
+				offset += opSize;
+				count -= opSize;
+
+				// Prevent procbuffer overflow where applicable
+				if(_procBuffer.Spare < count) {
+					var overflowOut = _procBuffer.Length;
+					// Write out the processed bytes to stream
+					_procBuffer.TakeTo (Binding, overflowOut);
+					BytesOut += overflowOut;
+				}
+			}
+
+			// Write out the processed bytes to stream
+			var writeOut = _procBuffer.Length;
+			_procBuffer.TakeTo (Binding, writeOut);
+			BytesOut += writeOut;
+		}
+
+		public override void WriteByte (byte b) {
+			CheckIfAllowed (true);
+
+			if(_procBuffer.Length == 0) {
+				var bytes = _cipher.ProcessByte (b);
+				_procBuffer.Put (bytes, 0, bytes.Length);
+				BytesIn++;
+			}
+			if(_procBuffer.Length > 0) {
+				_procBuffer.TakeTo (Binding, 1);
+				BytesOut++;
+			}
+		}
+
+		public override int ReadByte () {
+			CheckIfAllowed (false);
+			if (_inStreamEnded)
+				return -1;
+
+			if(_procBuffer.Length < 1) {
+				var bytesRead = FillAndProcessBuffer ();
+				_procBuffer.Put (_outBuffer, 0, bytesRead);
+			}
+
+			if(_procBuffer.Length > 1) {
+				var outByte = _procBuffer.Take ();
+				BytesOut++;
+				return outByte;
+			} else {
+				return -1;
+			}
+		}
+
+		public override int Read (byte[] buffer, int offset, int count) {
+			CheckIfAllowed (false);
+
+			var copiedOut = 0;
+			while (_procBuffer.Length < count && !_inStreamEnded) {
+				// Read and process a block/stride
+				var bytesProcessed = FillAndProcessBuffer ();
+				// Put the processed bytes in the procbuffer
+				_procBuffer.Put (_outBuffer, 0, bytesProcessed);
+				// Prevent procbuffer overflow where applicable
+				if(_procBuffer.Spare < count) {
+					var overflowOut = _procBuffer.Length;
+					_procBuffer.Take (buffer, offset, overflowOut);
+					offset += overflowOut;
+					count -= overflowOut;
+					copiedOut += overflowOut;
+
+					BytesOut += overflowOut;
+				}
+			}
+			var copyOut = Math.Min (count, _procBuffer.Length);
+			_procBuffer.Take (buffer, offset, copyOut);
+			copiedOut += copyOut;
+
+			BytesOut += copyOut;
+
+			return copiedOut;
 		}
 
 		/// <summary>
-		/// Closing the stream will cause the internal cipher to perform transformation of the final block automagically. Best practice is use of a 'using' block. 
-		/// Closure may also cause the base stream to close.
+		/// Fills the read buffer with a single block/stride of input. Increments 'BytesIn' property.
 		/// </summary>
+		/// <returns>The read buffer.</returns>
+		private int FillAndProcessBuffer() {
+			var bytesRead = 0;
+			do {
+				var iterRead = Binding.Read(_inBuffer, bytesRead, _inBuffer.Length - bytesRead);
+				if (iterRead < 1) {
+					_inStreamEnded = true;
+					break;
+				}
+				bytesRead += iterRead;
+			} while (bytesRead < _inBuffer.Length);
+
+			BytesIn += bytesRead;
+
+			if (_inStreamEnded) {
+				return FinishReading (_inBuffer, 0, bytesRead, _outBuffer, 0);
+			} else {
+				return _cipher.ProcessBytes (_inBuffer, 0, bytesRead, _outBuffer, 0);
+			}
+		}
+
+		/// <summary>
+		/// Finishes the writing/encryption operation, processing the final block/stride.
+		/// </summary>
+		/// <returns>Size of final block written.</returns>
+		/// <exception cref="DataLengthException">Thrown when final bytes could not be written to the output.</exception>
+		private void FinishWriting() {
+			byte[] finalBytes = null;
+			try {
+				finalBytes = _cipher.DoFinal ();
+			} catch (DataLengthException dlEx) {
+				if(String.Equals(dlEx.Message, "output buffer too short")) {
+					throw new DataLengthException(WritingError);
+				}
+			} catch (Exception ex) {
+				throw new Exception(UnknownFinaliseError, ex);
+			}
+			// Write out the final block
+			Binding.Write (finalBytes, 0, finalBytes.Length);
+			BytesOut += finalBytes.Length;
+		}
+
+		/// <summary>
+		/// Finishes the decryption/reading operation, processing the final block/stride. 
+		/// Majority of integrity checking happens here.
+		/// </summary>
+		/// <returns>The number of bytes in the final block/stride.</returns>
 		/// <exception cref="PaddingException">Thrown when no padding, malformed padding, or misaligned padding is found.</exception>
 		/// <exception cref="IncompleteBlockException">Thrown when ciphertext is not a multiple of block size (unexpected length).</exception>
-		/// <exception cref="DataLengthException">Thrown when final bytes could not be written to the output.</exception>
 		/// <exception cref="AuthenticationException">Thrown when MAC/authentication check fails to match with expected value. AEAD-relevant.</exception>
-		public override void Close() {
-		    const string unknownEx = "An unknown type of error occured while transforming the final block of ciphertext.";
-		    const string unexpectedLength = "The data in the ciphertext is not the expected length.";
-		    const string writingError = "Could not write transformed block bytes to output stream.";
-            
-            var cipher = Encrypting ? ((ExtendedCipherStream) BoundStream).outCipher : ((ExtendedCipherStream) BoundStream).inCipher;
-			// Catch all possible errors. Many unique types, caused by authentication failures, padding corruption, general corruption, etc.
+		/// <exception cref=""></exception>
+		private int FinishReading(byte[] input, int inOff, int length, byte[] output, int outOff) {
+			var finalBytes = 0;
 			try {
-				// Cause final transformation to take place if block/AEAD cipher, and then closing the stream.
-				BoundStream.Close();
+				finalBytes = _cipher.DoFinal(input, inOff, length, output, outOff);
 			} catch (DataLengthException dlEx) {
-				if (cipher is IAeadBlockCipher) {
+				if (_cipher is IAeadBlockCipher) {
 					// No example here, but leaving it here anyway for possible future implemention.
-				} else if (cipher is PaddedBufferedBlockCipher) {
+				} else if (_cipher is PaddedBufferedBlockCipher) {
 					switch (dlEx.Message) {
 						case "last block incomplete in decryption":
-						throw new PaddingException(unexpectedLength);
-						case "output buffer too short":
-						throw new DataLengthException(writingError);
+						throw new PaddingException(UnexpectedLengthError);
 						default:
 						throw new PaddingException("The ciphertext padding is corrupt.");
 					}
-				} else if (cipher is BufferedBlockCipher) {
+				} else if (_cipher is BufferedBlockCipher) {
 					switch (dlEx.Message) {
 						case "data not block size aligned":
-						throw new IncompleteBlockException(unexpectedLength);
-						case "output buffer too short":
-						case "output buffer too short for DoFinal()":
-						throw new DataLengthException(writingError);
+						throw new IncompleteBlockException(UnexpectedLengthError);
 						default:
-						throw new DataLengthException(unknownEx, dlEx);
+						throw new DataLengthException(UnknownFinaliseError, dlEx);
 					}
 				} else {
 					// No example here, but leaving it here anyway for possible future implementation.
 				}
 			} catch (InvalidCipherTextException ctEx) {
-				if (cipher is IAeadBlockCipher) {
-					switch (ctEx.Message) { // Heuristically unreachable - verify the operation of this section.
+				if (_cipher is IAeadBlockCipher) {
+					switch (ctEx.Message) {
 						case "data too short":
 						throw new IncompleteBlockException();
 						case "mac check in GCM failed":
 						case "mac check in EAX failed":
 						throw new AuthenticationException("The calculated MAC for the ciphertext is different to the supplied MAC.");
 					}
-				} else if(cipher is PaddedBufferedBlockCipher) {
+				} else if(_cipher is PaddedBufferedBlockCipher) {
 					switch (ctEx.Message) {
 						case "pad block corrupted":
 						throw new PaddingException();
 						default:
-						throw new InvalidCipherTextException(unknownEx, ctEx);
+						throw new InvalidCipherTextException(UnknownFinaliseError, ctEx);
 					}
-				} else if (cipher is BufferedBlockCipher) {
-					throw new InvalidCipherTextException(unknownEx, ctEx);
+				} else if (_cipher is BufferedBlockCipher) {
+					throw new InvalidCipherTextException(UnknownFinaliseError, ctEx);
 				} else {
 					// No example here, but leaving it here anyway for possible future implementation.
 				}
 			}
+
+			base.Finish ();
+			return finalBytes;
 		}
 
 		/// <summary>
-		/// This does NOT cause the last block to be transformed. The stream must be closed for this to happen. Not recommended for use!
+		/// Finish the decoration operation, whatever that constitutes in a derived implementation. 
+		/// Could be done before a close or reset.
 		/// </summary>
-		public override void Flush() {
-			BoundStream.Flush();
+		protected override void Finish () {
+			if (Finished)
+				return;
+			if (Encrypting)
+				FinishWriting ();
+
+			base.Finish ();
 		}
 
-		#region Derived ExtendedCipherStream for leave-open
-		/// <summary>
-		/// Internal ObscurCore component for adding leave-open functionality to the base CipherStream, essential to the functioning of the Core pipeline.
-		/// </summary>
-		private sealed class ExtendedCipherStream : CipherStream
-		{
-			private readonly bool _leaveOpen;
-			private readonly bool _encrypting;
+		protected override void Reset (bool finish = false) {
+			Array.Clear (_inBuffer, 0, _inBuffer.Length);
+			Array.Clear (_outBuffer, 0, _outBuffer.Length);
+			_procBuffer.Erase ();
+			_cipher.Reset ();
+			base.Reset (finish);
+		}
 
-            public ExtendedCipherStream (Stream stream, bool encrypting, IBufferedCipher cipher, bool leaveOpen)
-				: base(stream, encrypting ? null : cipher, encrypting ? cipher : null) {
-				_leaveOpen = leaveOpen;
-				_encrypting = encrypting;
-			}
-
-			public override bool CanRead {
-				get { return stream.CanRead && inCipher != null; }
-			}
-
-			public override bool CanWrite {
-				get { return stream.CanWrite && outCipher != null; }
-			}
-
-			public override void Close () {
-                if (_encrypting) {
-                    var data = outCipher.DoFinal();
-				    stream.Write(data, 0, data.Length);
-				    try {
-					    stream.Flush ();
-				    } catch (Exception e) {
-					    throw new IOException("Error on flushing internal bound stream.", e);
-				    }
-                }
-				if (!_leaveOpen) stream.Close();
+		protected override void Dispose (bool disposing) {
+			if (!_disposed) {
+				if (disposing) {
+					// dispose managed resources
+					Finish ();
+					_cipher.Reset();
+					this._cipher = null;
+					base.Dispose (disposing);
+					_disposed = true;
+				}
 			}
 		}
-		#endregion
 	}
 }

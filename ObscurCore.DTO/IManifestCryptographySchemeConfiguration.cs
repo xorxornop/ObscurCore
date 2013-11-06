@@ -20,8 +20,20 @@ namespace ObscurCore.DTO
     /// </summary>
     public interface IManifestCryptographySchemeConfiguration
     {
-        KeyDerivationConfiguration KeyDerivation { get; }
+		/// <summary>
+		/// Configuration for the symmetric cipher to use with the key derived from the shared secret.
+		/// </summary>
         SymmetricCipherConfiguration SymmetricCipher { get; }
-        KeyConfirmationConfiguration KeyVerification { get; }
+
+		/// <summary>
+		/// Key confirmation configuration used to validate the existence and validity 
+		/// of keying material at respondent's side without disclosing the key itself.
+		/// </summary>
+        VerificationFunctionConfiguration KeyConfirmation { get; }
+
+		/// <summary>
+		/// Configuration for the scheme used to derive a key from the shared secret.
+		/// </summary>
+		KeyDerivationConfiguration KeyDerivation { get; }
     }
 }

@@ -64,7 +64,7 @@ namespace ObscurCore.Packaging
                     (decoratingStream.BufferSizeRequirement, relevantItemLength),
                     decoratingStream.BufferSizeRequirement + maxOpSize)));
                 _buffers.Add(buffer);
-                decoratingStream.ReassignStreamBinding(buffer, false); // TODO: Fix this nasty hack
+                decoratingStream.SetStreamBinding(buffer, false); // TODO: Fix this nasty hack
 
                 this._transforms.Add(transformFuncs[i](buffer));
             }

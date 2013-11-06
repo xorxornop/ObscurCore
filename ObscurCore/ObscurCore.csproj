@@ -149,8 +149,6 @@
     <Compile Include="Cryptography\Entropy\StreamCSPRNG.cs" />
     <Compile Include="Cryptography\Enums.cs" />
     <Compile Include="Cryptography\Exceptions.cs" />
-    <Compile Include="Cryptography\CipherStream.cs" />
-    <Compile Include="Cryptography\DigestStream.cs" />
     <Compile Include="Cryptography\MacStream.cs" />
     <Compile Include="Cryptography\KeyAgreement\IBasicAgreement.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\ECDHBasicAgreement.cs" />
@@ -216,9 +214,7 @@
     <Compile Include="Cryptography\Support\X9IntegerConverter.cs" />
     <Compile Include="RingByteBuffer.cs" />
     <Compile Include="ExtensionMethods.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Cryptography\IO\" />
+    <Compile Include="Cryptography\HashStream.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />
