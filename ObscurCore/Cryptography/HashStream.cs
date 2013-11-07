@@ -79,6 +79,8 @@ namespace ObscurCore.Cryptography
 		}
 
 		protected override void Finish () {
+			if (Finished)
+				return;
 			_outputRef = new byte[_digest.GetDigestSize()];
 			_digest.DoFinal (_outputRef, 0);
 			base.Finish ();
@@ -87,6 +89,18 @@ namespace ObscurCore.Cryptography
 		protected override void Reset (bool finish = false) {
 			base.Reset (finish);
 			_digest.Reset ();
+		}
+
+		protected override void Dispose (bool disposing) {
+			if (!_disposed) {
+				if (disposing) {
+					// dispose managed resources
+					Finish ();
+					this._digest = null;
+					base.Dispose (disposing);
+					_disposed = true;
+				}
+			}
 		}
 	}
 }

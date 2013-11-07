@@ -40,7 +40,8 @@ namespace ObscurCore.Cryptography
 
 		private IBufferedCipher _cipher;
 		private readonly RingByteBuffer _procBuffer;
-		private readonly byte[] _outBuffer, _inBuffer;
+		private readonly byte[] _inBuffer;
+		private byte[] _outBuffer; // non-readonly allows for on-the-fly reassignment for CTS compat. during finalisation.
 		private bool _inStreamEnded;
 		private bool _disposed;
 
@@ -50,7 +51,7 @@ namespace ObscurCore.Cryptography
 		private const string UnknownFinaliseError = "An unknown type of error occured while transforming the final block of ciphertext.";
 		private const string UnexpectedLengthError = "The data in the ciphertext is not the expected length.";
 		private const string WritingError = "Could not write transformed block bytes to output stream.";
-
+		private const string ShortCTSError = "Insufficient input length. CTS mode block ciphers require at least one block.";
 
 		/// <summary>Initialises the stream and its associated cipher for operation automatically from provided configuration object.</summary>
 		/// <param name="target">Stream to be written/read to/from.</param>
@@ -184,12 +185,15 @@ namespace ObscurCore.Cryptography
 			// Initialise the cipher
 			_cipher.Init(isEncrypting, cipherParams);
 			// Initialise the buffers
-			var cBlockSize = _cipher.GetBlockSize();
-			var opSize = (cBlockSize == 0) ? StreamStride : cBlockSize;
+			var opSize = _cipher.GetBlockSize(); 
+			if (opSize == 0)
+				opSize = StreamStride;
+			else if (_cipher is CtsBlockCipher)
+				opSize *= 2;
 			_inBuffer = new byte[opSize];
 			_outBuffer = new byte[opSize];
-			_procBuffer = new RingByteBuffer (config.Type != SymmetricCipherType.Stream 
-			                                  ? (cBlockSize * cBlockSize) << 2 : ProcessingIOStride);
+			_procBuffer = new RingByteBuffer (opSize << 7);
+			// Shift left 7 upscales : 8 (64 bits) to 1024 [1kB], 16 (128) to 2048 [2kB], 32 (256) to 4096 [4kB]
 
 			// Customise the decorator-stream exception messages, since we enforce processing direction in this implementation
 			NotEffluxError = "Stream is configured for encryption, and so may only be written to.";
@@ -311,7 +315,7 @@ namespace ObscurCore.Cryptography
 			BytesIn += bytesRead;
 
 			if (_inStreamEnded) {
-				return FinishReading (_inBuffer, 0, bytesRead, _outBuffer, 0);
+				return FinishReading (bytesRead);
 			} else {
 				return _cipher.ProcessBytes (_inBuffer, 0, bytesRead, _outBuffer, 0);
 			}
@@ -329,6 +333,10 @@ namespace ObscurCore.Cryptography
 			} catch (DataLengthException dlEx) {
 				if(String.Equals(dlEx.Message, "output buffer too short")) {
 					throw new DataLengthException(WritingError);
+				} else if(String.Equals(dlEx.Message, "need at least one block of input for CTS")) {
+					throw new DataLengthException(ShortCTSError);
+				} else {
+					throw new DataLengthException (UnknownFinaliseError, dlEx);
 				}
 			} catch (Exception ex) {
 				throw new Exception(UnknownFinaliseError, ex);
@@ -347,26 +355,29 @@ namespace ObscurCore.Cryptography
 		/// <exception cref="IncompleteBlockException">Thrown when ciphertext is not a multiple of block size (unexpected length).</exception>
 		/// <exception cref="AuthenticationException">Thrown when MAC/authentication check fails to match with expected value. AEAD-relevant.</exception>
 		/// <exception cref=""></exception>
-		private int FinishReading(byte[] input, int inOff, int length, byte[] output, int outOff) {
+		private int FinishReading(int length) {
 			var finalBytes = 0;
 			try {
-				finalBytes = _cipher.DoFinal(input, inOff, length, output, outOff);
+				if(_cipher is CtsBlockCipher) _outBuffer = new byte[_outBuffer.Length * 2];
+				finalBytes = _cipher.DoFinal(_inBuffer, 0, length, _outBuffer, 0);
 			} catch (DataLengthException dlEx) {
 				if (_cipher is IAeadBlockCipher) {
 					// No example here, but leaving it here anyway for possible future implemention.
 				} else if (_cipher is PaddedBufferedBlockCipher) {
 					switch (dlEx.Message) {
-						case "last block incomplete in decryption":
-						throw new PaddingException(UnexpectedLengthError);
-						default:
-						throw new PaddingException("The ciphertext padding is corrupt.");
+					case "last block incomplete in decryption":
+						throw new PaddingException (UnexpectedLengthError);
+					default:
+						throw new PaddingException ("The ciphertext padding is corrupt.");
 					}
+				//} else if (_cipher is CtsBlockCipher) {
+
 				} else if (_cipher is BufferedBlockCipher) {
 					switch (dlEx.Message) {
-						case "data not block size aligned":
-						throw new IncompleteBlockException(UnexpectedLengthError);
-						default:
-						throw new DataLengthException(UnknownFinaliseError, dlEx);
+					case "data not block size aligned":
+						throw new IncompleteBlockException (UnexpectedLengthError);
+					default:
+						throw new DataLengthException (UnknownFinaliseError, dlEx);
 					}
 				} else {
 					// No example here, but leaving it here anyway for possible future implementation.
@@ -374,18 +385,18 @@ namespace ObscurCore.Cryptography
 			} catch (InvalidCipherTextException ctEx) {
 				if (_cipher is IAeadBlockCipher) {
 					switch (ctEx.Message) {
-						case "data too short":
-						throw new IncompleteBlockException();
-						case "mac check in GCM failed":
-						case "mac check in EAX failed":
-						throw new AuthenticationException("The calculated MAC for the ciphertext is different to the supplied MAC.");
+					case "data too short":
+						throw new IncompleteBlockException ();
+					case "mac check in GCM failed":
+					case "mac check in EAX failed":
+						throw new AuthenticationException ("The calculated MAC for the ciphertext is different to the supplied MAC.");
 					}
 				} else if(_cipher is PaddedBufferedBlockCipher) {
 					switch (ctEx.Message) {
-						case "pad block corrupted":
-						throw new PaddingException();
-						default:
-						throw new InvalidCipherTextException(UnknownFinaliseError, ctEx);
+					case "pad block corrupted":
+						throw new PaddingException ();
+					default:
+						throw new InvalidCipherTextException (UnknownFinaliseError, ctEx);
 					}
 				} else if (_cipher is BufferedBlockCipher) {
 					throw new InvalidCipherTextException(UnknownFinaliseError, ctEx);

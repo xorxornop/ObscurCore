@@ -58,15 +58,14 @@ namespace ObscurCore.Tests
 		public static readonly List<FileInfo> SmallTextFileList = new List<FileInfo>();
 		public static readonly List<FileInfo> LargeBinaryFileList = new List<FileInfo>();
 
-        
-
-        
 
 		static IOTestBase ()
 		{
             foreach (var file in SmallTextFilesSourceDirectory.EnumerateFiles().Where(file 
                 => !file.Extension.Equals(RawPayloadExtension)))
             {
+				if (file.Name.EndsWith (".DS_Store"))
+					continue;
 			    SmallTextFileList.Add (file);
 			}
 			var fs = SmallTextFileList [0].OpenRead ();
@@ -75,6 +74,8 @@ namespace ObscurCore.Tests
 			foreach (var file in LargeBinaryFilesSourceDirectory.EnumerateFiles().Where(file 
                 => !file.Extension.Equals(RawPayloadExtension)))
             {
+				if (file.Name.EndsWith (".DS_Store"))
+					continue;
 			    LargeBinaryFileList.Add (file);
 			}
 			fs = LargeBinaryFileList [0].OpenRead ();

@@ -193,6 +193,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             int length = bufOff - blockSize;
             byte[] block = new byte[blockSize];
 
+			IBlockCipher c = ((CbcBlockCipher)cipher).GetUnderlyingCipher();
+
             if (forEncryption)
             {
                 cipher.ProcessBlock(buf, 0, block, 0);
@@ -212,10 +214,6 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
                     buf[i] ^= block[i - blockSize];
                 }
 
-				IBlockCipher c = (cipher is CbcBlockCipher)
-					?	((CbcBlockCipher)cipher).GetUnderlyingCipher()
-					:	cipher;
-
 				c.ProcessBlock(buf, blockSize, output, outOff);
 
 				Array.Copy(block, 0, output, outOff + blockSize, length);
@@ -223,10 +221,6 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             else
             {
                 byte[] lastBlock = new byte[blockSize];
-
-				IBlockCipher c = (cipher is CbcBlockCipher)
-					?	((CbcBlockCipher)cipher).GetUnderlyingCipher()
-					:	cipher;
 
 				c.ProcessBlock(buf, 0, block, 0);
 

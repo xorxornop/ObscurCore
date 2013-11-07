@@ -1,135 +1,106 @@
+//
+//  Copyright 2013  Matthew Ducker
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//        http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
+using System;
 using System.IO;
 using ObscurCore.Cryptography.Authentication;
 
 namespace ObscurCore.Cryptography
 {
-	public class MacStream
-		: Stream
+	public sealed class MacStream : DecoratingStream
 	{
-		protected readonly Stream stream;
-		protected readonly IMac inMac;
-		protected readonly IMac outMac;
+		/// <summary>
+		/// The output/digest of the internal hash function. Null if function is not finished.
+		/// </summary>
+		/// <value><c>true</c> if this instance hash; otherwise, <c>false</c>.</value>
+		public byte[] MAC { get { return _outputRef; } }
 
-		public MacStream(
-			Stream	stream,
-			IMac	readMac,
-			IMac	writeMac)
+		private IMac _mac;
+		private byte[] _outputRef = null;
+		private bool _disposed;
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.HashStream"/> class.
+		/// </summary>
+		/// <param name="binding">Binding.</param>
+		/// <param name="writing">If set to <c>true</c> writing.</param>
+		/// <param name="function">Function.</param>
+		/// <param name="output">Byte array where the finished hash will be output to. Does not need to be initialised.</param>
+		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
+		/// <remarks>
+		/// 'ref' parameter descriptor for output is functionally superfluous, but serves rather to communicate the intended use.
+		/// </remarks>
+		public MacStream (Stream binding, bool writing, MACFunctions function, byte[] key, byte[] salt,
+			ref byte[] output, bool closeOnDispose = true) : base(binding, writing, closeOnDispose, false)
 		{
-			this.stream = stream;
-			this.inMac = readMac;
-			this.outMac = writeMac;
+			_mac = Source.CreateMac (function, key, salt);
+			_outputRef = output;
 		}
 
-		public virtual IMac ReadMac()
-		{
-			return inMac;
+
+		public override void Write (byte[] buffer, int offset, int count) {
+			if (count > 0) {
+				_mac.BlockUpdate(buffer, offset, count);
+			}
+			base.Write(buffer, offset, count);
 		}
 
-		public virtual IMac WriteMac()
-		{
-			return outMac;
+		public override void WriteByte (byte b) {
+			_mac.Update(b);
+			base.WriteByte (b);
+		} 
+
+		public override int ReadByte () {
+			int readByte = base.ReadByte();
+			if (readByte >= 0) {
+				_mac.Update((byte)readByte);
+			}
+			return readByte;
 		}
 
-		public override int Read(
-			byte[]	buffer,
-			int		offset,
-			int		count)
-		{
-			int n = stream.Read(buffer, offset, count);
-			if (inMac != null)
-			{
-				if (n > 0)
-				{
-					inMac.BlockUpdate(buffer, offset, n);
+		public override int Read (byte[] buffer, int offset, int count) {
+			var readBytes = base.Read(buffer, offset, count);
+			if (readBytes > 0) {
+				_mac.BlockUpdate(buffer, offset, readBytes);
+			}
+			return readBytes;
+		}
+
+		protected override void Finish () {
+			if (Finished)
+				return;
+			_outputRef = new byte[_mac.GetMacSize()];
+			_mac.DoFinal (_outputRef, 0);
+			base.Finish ();
+		}
+
+		protected override void Reset (bool finish = false) {
+			base.Reset (finish);
+			_mac.Reset ();
+		}
+
+		protected override void Dispose (bool disposing) {
+			if (!_disposed) {
+				if (disposing) {
+					// dispose managed resources
+					Finish ();
+					this._mac = null;
+					base.Dispose (disposing);
+					_disposed = true;
 				}
 			}
-			return n;
-		}
-
-		public override int ReadByte()
-		{
-			int b = stream.ReadByte();
-			if (inMac != null)
-			{
-				if (b >= 0)
-				{
-					inMac.Update((byte)b);
-				}
-			}
-			return b;
-		}
-
-		public override void Write(
-			byte[]	buffer,
-			int		offset,
-			int		count)
-		{
-			if (outMac != null)
-			{
-				if (count > 0)
-				{
-					outMac.BlockUpdate(buffer, offset, count);
-				}
-			}
-			stream.Write(buffer, offset, count);
-		}
-
-		public override void WriteByte(byte b)
-		{
-			if (outMac != null)
-			{
-				outMac.Update(b);
-			}
-			stream.WriteByte(b);
-		}
-
-		public override bool CanRead
-		{
-			get { return stream.CanRead; }
-		}
-
-		public override bool CanWrite
-		{
-			get { return stream.CanWrite; }
-		}
-
-		public override bool CanSeek
-		{
-			get { return stream.CanSeek; }
-		}
-
-		public override long Length
-		{
-			get { return stream.Length; }
-		}
-
-		public override long Position
-		{
-			get { return stream.Position; }
-			set { stream.Position = value; }
-		}
-
-		public override void Close()
-		{
-			stream.Close();
-		}
-
-		public override void Flush()
-		{
-			stream.Flush();
-		}
-
-		public override long Seek(
-			long		offset,
-			SeekOrigin	origin)
-		{
-			return stream.Seek(offset,origin);
-		}
-
-		public override void SetLength(
-			long length)
-		{
-			stream.SetLength(length);
 		}
 	}
 }
