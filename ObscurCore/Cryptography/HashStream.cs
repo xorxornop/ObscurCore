@@ -45,7 +45,7 @@ namespace ObscurCore.Cryptography
 		public HashStream (Stream binding, bool writing, HashFunctions function, ref byte[] output, bool closeOnDispose = true) 
 			: base(binding, writing, closeOnDispose, false)
 		{
-			_digest = Source.CreateHash (function);
+			_digest = Source.CreateHashPrimitive (function);
 			_outputRef = output;
 		}
 

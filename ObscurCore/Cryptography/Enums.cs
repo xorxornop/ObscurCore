@@ -269,10 +269,25 @@ namespace ObscurCore.Cryptography
 
 		RIPEMD160,
 
+		/// <summary>
+		/// Very well known hash function/digest, but getting a little "long in the tooth" (old). 
+		/// Output size is 96 bits (20 bytes).
+		/// </summary>
+		SHA1,
+
+		/// <summary>
+		/// 256-bit version of the SHA-2 hash family.
+		/// </summary>
 		SHA256,
 
+		/// <summary>
+		/// 384-bit version of the SHA-2 hash family.
+		/// </summary>
 		SHA384,
 
+		/// <summary>
+		/// 512-bit version of the SHA-2 hash family.
+		/// </summary>
 		SHA512,
 
         /// <summary>
@@ -295,9 +310,14 @@ namespace ObscurCore.Cryptography
 		/// </summary>
 		Keccak512,
 
+		/// <summary>
+		/// Output size of 192 bits.
+		/// </summary>
 		Tiger,
 
-
+		/// <summary>
+		/// Strong function with a 512 bit output. Recommended by the NESSIE project.
+		/// </summary>
 		Whirlpool
 	}
 
@@ -340,33 +360,23 @@ namespace ObscurCore.Cryptography
 		/// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction. 
 		/// Supports additional salt parameter.
 		/// </summary>
-		Keccak512
+		Keccak512,
+
+		/// <summary>
+		/// Also called OMAC1. 
+		/// As the name suggests, uses a (configurable) symmetric block cipher as the core of the primitive.
+		/// </summary>
+		CMAC,
+
+		/// <summary>
+		/// Hash-based MAC. 
+		/// As the name suggests, uses a (configurable) hash function as the core of the primitive.
+		/// </summary>
+		HMAC
 	}
 	
 	// No MD4/MD5 support is being included because they are so badly compromised.
 	// Inability of use may hopefully deter one from thinking that they are suitable for use - which, for almost all cases, they are not.
-	
-	/// <summary>
-	/// Key-agreement/exchange schemes used to securely exchange/establish keys.
-	/// </summary>
-	public enum AgreementSchemes
-	{
-		None,
-		/// <summary>
-		/// Elliptic-Curve Diffie-Hellman.
-		/// </summary>
-		ECDH,
-		/// <summary>
-		/// Elliptic-Curve Diffie-Hellman with Cofactor multiplication.
-		/// </summary>
-		ECDHC,
-		/// <summary>
-		/// One-Pass Unified Model (Ephemeral-Static ECDHC)
-		/// </summary>
-		UM1
-	}
-	
-	// Implement FH-ECMQV at a later stage
 	
 	/// <summary>
 	/// Named Brainpool Elliptic-Curve curves over GF(p) .

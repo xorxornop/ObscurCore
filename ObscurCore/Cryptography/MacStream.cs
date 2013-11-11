@@ -42,10 +42,10 @@ namespace ObscurCore.Cryptography
 		/// <remarks>
 		/// 'ref' parameter descriptor for output is functionally superfluous, but serves rather to communicate the intended use.
 		/// </remarks>
-		public MacStream (Stream binding, bool writing, MACFunctions function, byte[] key, byte[] salt,
-			ref byte[] output, bool closeOnDispose = true) : base(binding, writing, closeOnDispose, false)
+		public MacStream (Stream binding, bool writing, MACFunctions function, ref byte[] output, byte[] key, byte[] salt = null,
+			byte[] config = null, bool closeOnDispose = true) : base(binding, writing, closeOnDispose, false)
 		{
-			_mac = Source.CreateMac (function, key, salt);
+			_mac = Source.CreateMACPrimitive (function, key, salt, config);
 			_outputRef = output;
 		}
 

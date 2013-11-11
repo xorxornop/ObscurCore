@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Authentication.Primitives;
@@ -165,6 +166,7 @@ namespace ObscurCore
 			DigestInstantiators.Add(HashFunctions.Keccak384, () => new KeccakManaged(384, true));
 			DigestInstantiators.Add(HashFunctions.Keccak512, () => new KeccakManaged(512, true));
 
+			DigestInstantiators.Add(HashFunctions.SHA1, () => new Sha1Digest());
             DigestInstantiators.Add(HashFunctions.SHA256, () => new Sha256Digest());
             DigestInstantiators.Add(HashFunctions.SHA512, () => new Sha512Digest());
 
@@ -173,8 +175,6 @@ namespace ObscurCore
             DigestInstantiators.Add(HashFunctions.Tiger, () => new TigerDigest());
 
             DigestInstantiators.Add(HashFunctions.Whirlpool, () => new WhirlpoolDigest());
-
-
 
             // ######################################## MAC ########################################
 
@@ -191,7 +191,8 @@ namespace ObscurCore
                 ECDomainParameters>((p, A, B, x, y, q) =>
                 {
                     var curve = new FpCurve(new BigInteger(p, 16), new BigInteger(A, 16), new BigInteger(B, 16));
-			        return new ECDomainParameters(curve, curve.CreatePoint(new BigInteger(x, 16), new BigInteger(y, 16), false), new BigInteger(q, 16));
+			        return new ECDomainParameters(curve, curve.CreatePoint(new BigInteger(x, 16), 
+				    	new BigInteger(y, 16), false), new BigInteger(q, 16));
                 });
 
             EcParameters.Add(BrainpoolECFpCurves.BrainpoolP160r1.ToString(), () => domainFunc(
@@ -269,10 +270,6 @@ namespace ObscurCore
         }
 
 
-        //public static byte[] CreateCipherKey(SymmetricBlockCiphers cipher) {
-            
-        //}
-
         /// <summary>
         /// Instantiates and returns a symmetric block cipher of the algorithm type that the instance this method was called from describes.
         /// </summary>
@@ -307,7 +304,7 @@ namespace ObscurCore
         /// <returns>
         /// An IBlockCipher cipher object implementing the relevant mode of operation on top of the supplied symmetric block cipher.
         /// </returns>
-        public static IBlockCipher CreateBlockCipherWithMode (IBlockCipher cipher, BlockCipherModes mode, int? size = null) {
+        public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, BlockCipherModes mode, int? size = null) {
             var cipherMode = ModeInstantiatorsBlock[mode](cipher, size ??
                 (cipher != null ? Athena.Cryptography.BlockCipherDirectory[cipher.AlgorithmName.ToEnum<SymmetricBlockCiphers>(true)]
                     .DefaultBlockSize : cipher.GetBlockSize()));
@@ -315,8 +312,8 @@ namespace ObscurCore
             return cipherMode;
         }
 
-        public static IBlockCipher CreateBlockCipherWithMode (IBlockCipher cipher, string modeName, int? size = null) {
-            return CreateBlockCipherWithMode(cipher, modeName.ToEnum<BlockCipherModes>(), size);
+        public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, string modeName, int? size = null) {
+            return OverlayBlockCipherWithMode(cipher, modeName.ToEnum<BlockCipherModes>(), size);
         }
 
         /// <summary>
@@ -327,11 +324,11 @@ namespace ObscurCore
         /// <returns>
         /// An IAeadBlockCipher cipher object implementing the relevant mode of operation on top of the supplied symmetric block cipher.
         /// </returns>
-        public static IAeadBlockCipher CreateBlockCipherWithAEAD (AEADBlockCipherModes mode, IBlockCipher cipher) {
+        public static IAeadBlockCipher OverlayBlockCipherWithAEAD (AEADBlockCipherModes mode, IBlockCipher cipher) {
             return ModeInstantiatorsAead[mode](cipher);
         }
 
-        public static IAeadBlockCipher CreateBlockCipherWithAEAD (string modeName, IBlockCipher cipher) {
+        public static IAeadBlockCipher OverlayBlockCipherWithAEAD (string modeName, IBlockCipher cipher) {
             return ModeInstantiatorsAead[modeName.ToEnum<AEADBlockCipherModes>()](cipher);
         }
 
@@ -348,6 +345,63 @@ namespace ObscurCore
         public static IBlockCipherPadding CreatePadding (string paddingName) {
             return CreatePadding(paddingName.ToEnum<BlockCipherPaddings>());
         }
+
+		/// <summary>
+		/// Instantiates and returns a hash/digest primitive.
+		/// </summary>
+		/// <param name="config">Configuration of the PRNG in byte-array encoded form.</param>
+		/// <returns>
+		/// An digest object deriving from IDigest.
+		/// </returns>
+		public static IDigest CreateHashPrimitive (HashFunctions hash) {
+			return DigestInstantiators[hash]();
+		}
+
+		public static IDigest CreateHashPrimitive(string hashName) {
+			return CreateHashPrimitive(hashName.ToEnum<HashFunctions>());
+		}
+
+		/// <summary>
+		/// Instantiates and initialises a Message Authentication Code (MAC) primitive.
+		/// </summary>
+		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
+		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
+		/// <returns>
+		/// An MAC object deriving from IMac.
+		/// </returns>
+		public static IMac CreateMACPrimitive (MACFunctions mac, byte[] key, byte[] salt = null, byte[] config = null) {
+
+			IMac macObj;
+			if (mac == MACFunctions.HMAC) {
+				var hashFEnum = Encoding.UTF8.GetString (config).ToEnum<HashFunctions> ();
+				macObj = new HMac (DigestInstantiators [hashFEnum]());
+				var keyParam = new KeyParameter (key);
+				macObj.Init (keyParam);
+			} else if (mac == MACFunctions.CMAC) {
+				var cipherPEnum = Encoding.UTF8.GetString (config).ToEnum<SymmetricBlockCiphers> ();
+				var defaultBlockSize = Athena.Cryptography.BlockCipherDirectory [cipherPEnum].DefaultBlockSize;
+				if(defaultBlockSize != 64 && defaultBlockSize != 128) {
+					throw new NotSupportedException ("CMAC/OMAC1 only supports ciphers with 64 / 128 bit block sizes.");
+				}
+				macObj = new CMac (CreateBlockCipher (cipherPEnum, null));
+				var keyParam = CreateKeyParameter (cipherPEnum, key);
+				macObj.Init (keyParam);
+			} else {
+				macObj = MacInstantiators[mac]();
+				if (Athena.Cryptography.MACFunctionDirectory[mac].SaltSupported) {
+					((IMacWithSalt) macObj).Init(key, salt);
+				} else {
+					macObj.Init(new KeyParameter(key));
+					if(salt != null && salt.Length > 0) macObj.BlockUpdate(salt, 0, salt.Length);
+				}
+			}
+
+			return macObj;
+		}
+
+		public static IMac CreateMACPrimitive(string macName, byte[] key, byte[] salt = null, byte[] config = null) {
+			return CreateMACPrimitive(macName.ToEnum<MACFunctions>(), key, salt, config);
+		}
 
 
         public static ICipherParameters CreateBlockCipherParameters(ISymmetricCipherConfiguration config) {
@@ -373,7 +427,9 @@ namespace ObscurCore
             return cipherParams;
         }
 
-        public static ICipherParameters CreateAEADBlockCipherParameters(SymmetricBlockCiphers cipher, byte[] key, byte[] iv, int macSizeBits, byte[] ad) {
+        public static ICipherParameters CreateAEADBlockCipherParameters(SymmetricBlockCiphers cipher, byte[] key, byte[] iv, 
+		                                                                int macSizeBits, byte[] ad)
+		{
             ICipherParameters cipherParams = null;
 
             //if (iv == null || !Athena.Cryptography.BlockCiphers[cipher].AllowableIVSizes.Contains(iv.Length * 8))
@@ -477,46 +533,6 @@ namespace ObscurCore
                     "Stream cipher specified is not implemented/supported for use as a PRNG.");
             }
             return StreamCSPRNG.CreateRandomConfiguration(cipher);
-        }
-
-        /// <summary>
-		/// Instantiates and returns a hash/digest primitive.
-		/// </summary>
-		/// <param name="config">Configuration of the PRNG in byte-array encoded form.</param>
-		/// <returns>
-		/// An digest object deriving from IDigest.
-		/// </returns>
-		public static IDigest CreateHash (HashFunctions hash) {
-			return DigestInstantiators[hash]();
-		}
-
-        public static IDigest CreateHash(string hashName) {
-            return CreateHash(hashName.ToEnum<HashFunctions>());
-        }
-
-        /// <summary>
-		/// Instantiates and initialises a Message Authentication Code (MAC) primitive.
-		/// </summary>
-		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
-		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
-		/// <returns>
-		/// An MAC object deriving from IMac.
-		/// </returns>
-        public static IMac CreateMac (MACFunctions mac, byte[] key, byte[] salt = null) {
-			var macObj = MacInstantiators[mac]();
-
-			if (Athena.Cryptography.MACFunctionDirectory[mac].SaltSupported) {
-			    ((IMacWithSalt) macObj).Init(key, salt);
-			} else {
-			    macObj.Init(new KeyParameter(key));
-                if(salt != null && salt.Length > 0) macObj.BlockUpdate(salt, 0, salt.Length);
-			}
-
-			return macObj;
-		}
-
-        public static IMac CreateMac(string macName, byte[] key, byte[] salt = null) {
-            return CreateMac(macName.ToEnum<MACFunctions>(), key, salt);
         }
 
         public static ECDomainParameters GetECDomainParameters(string name) {

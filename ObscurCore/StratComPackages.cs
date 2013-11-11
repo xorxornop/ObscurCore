@@ -104,7 +104,7 @@ namespace ObscurCore
                 };
 
             // Do the handoff to the [mostly] scheme-agnostic part of the writing op
-            WritePackage(destination, mHeader, manifest, manifestCipherConfig, false);
+            WritePackage(destination, mHeader, manifest, manifestCipherConfig);
         }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace ObscurCore
                     CryptographySchemeConfiguration = mCrypto.SerialiseDTO()
                 };
 
-            WritePackage(destination, mHeader, manifest, manifestCipherConfig, false);
+            WritePackage(destination, mHeader, manifest, manifestCipherConfig);
         }
 
         /// <summary>
@@ -221,12 +221,12 @@ namespace ObscurCore
                     CryptographySchemeConfiguration = mCryptoBytes
                 };
 
-            WritePackage(destination, mHeader, manifest, mCrypto.SymmetricCipher, false);
+            WritePackage(destination, mHeader, manifest, mCrypto.SymmetricCipher);
         }
 
 
         private static void WritePackage(Stream destination, ManifestHeader mHeader, IManifest manifest,
-                                         ISymmetricCipherConfiguration mCipherConfig, bool ies) 
+                                         ISymmetricCipherConfiguration mCipherConfig) 
         {
             // Write the header tag
             destination.Write(HeaderTagBytes, 0, HeaderTagBytes.Length);
@@ -235,26 +235,10 @@ namespace ObscurCore
 
             /* Write the manifest in encrypted form */
 
-            var destinationAlias = destination;
-            //if(ies) {
-            //    // Get ready objects needed to compute manifest MAC
-            //    var blakeMac = new Blake2BMac(512, true, true);
-            //    blakeMac.Init(mCipherConfig.Key, new byte[] {0xFF} );
-            //    destinationAlias = new MacStream(destination, null, blakeMac);
-            //}
-            using (var cs = new SymmetricCryptoStream(destinationAlias, true, mCipherConfig, null, true)) {
+            using (var cs = new SymmetricCryptoStream(destination, true, mCipherConfig, null, true)) {
                 Serialiser.SerializeWithLengthPrefix(cs, manifest, typeof (Manifest), PrefixStyle.Fixed32, 0);
             }
-            //// At the moment, IES is forced to use BLAKE2B only, but need to create a DTO object to detail MAC configurations
-            //if(ies) {
-            //    // Write manifest MAC & optional tag
-            //    var mac = ((MacStream)destinationAlias).WriteMac() as Blake2BMac;
 
-            //    var output = new byte[mac.GetMacSize()];
-            //    mac.DoFinal(output, 0);
-            //    // Write the MAC
-            //    destination.Write(output, 0, output.Length);
-            //}
             // Clear manifest key from memory
             Array.Clear(mCipherConfig.Key, 0, mCipherConfig.Key.Length);
 
@@ -278,7 +262,7 @@ namespace ObscurCore
                 payloadScheme = manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutSchemes>();
             } catch (Exception) {
                 throw new PackageConfigurationException(
-                    "Package payload schema specified is an unknown type or missing.");
+                    "Package payload schema specified is unsupported/unknown or missing.");
             }
             var mux = Source.CreatePayloadMultiplexer(payloadScheme, true, destination,
                 manifest.PayloadItems.ToList<IStreamBinding>(),
@@ -297,7 +281,6 @@ namespace ObscurCore
 
         #region Reading
 
-
         public static void SanitiseItemPaths(IEnumerable<PayloadItem> items) {
             var relUp = ".." + Path.DirectorySeparatorChar;
             if (items.Where(item => item.Type != PayloadItemTypes.KeyAction).Any(item => item.RelativePath.Contains(relUp))) {
@@ -306,10 +289,9 @@ namespace ObscurCore
             }
         }
 
-        public static void ReadPackageToFiles() {
-            
-        }
-
+//        public static void ReadPackageToFiles() {
+//            
+//        }
         
         /// <summary>
 		/// Reads a package payload.
@@ -355,7 +337,8 @@ namespace ObscurCore
 			try {
 				payloadScheme = manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutSchemes> ();
 			} catch (Exception) {
-				throw new PackageConfigurationException("Package payload schema specified is an unknown type or missing.");
+				throw new PackageConfigurationException(String.Format("Package payload \"{0}\" schema specified is unsupported/unknown or missing.",
+				                                                      manifest.PayloadConfiguration.SchemeName));
 			}
 			var mux = Source.CreatePayloadMultiplexer(payloadScheme, true, source, manifest.PayloadItems.ToList<IStreamBinding>(), 
 			                                          transformFunctions, manifest.PayloadConfiguration);
@@ -460,7 +443,7 @@ namespace ObscurCore
                             {
                                 foreach (var rKey in viableRecipientKeys) {
                                     var ss = um1SecretFunc(sKey, rKey);
-                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, ss);
+									var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, new [] {ss});
                                     if (validationOut == null) continue;
                                     preMKey = validationOut;
                                     state.Stop();
@@ -471,7 +454,7 @@ namespace ObscurCore
                             {
                                 foreach (var sKey in viableSenderKeys) {
                                     var ss = um1SecretFunc(sKey, rKey);
-                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, ss);
+									var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, new [] {ss});
                                     if (validationOut == null) continue;
                                     preMKey = validationOut;
                                     state.Stop();
@@ -498,7 +481,7 @@ namespace ObscurCore
                             {
                                 foreach (var rKey in manifestKeysCurve25519Recipient) {
                                     var ss = Curve25519UM1Exchange.Respond(sKey, rKey, c25519um1_ephemeralKey);
-                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, ss);
+									var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, new [] {ss});
                                     if (validationOut == null) continue;
                                     preMKey = validationOut;
                                     state.Stop();
@@ -509,7 +492,7 @@ namespace ObscurCore
                             {
                                 foreach (var sKey in manifestKeysCurve25519Sender) {
                                     var ss = Curve25519UM1Exchange.Respond(sKey, rKey, c25519um1_ephemeralKey);
-                                    var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, ss);
+									var validationOut = ConfirmSymmetricKey(mCryptoConfig.KeyConfirmation, new [] {ss});
                                     if (validationOut == null) continue;
                                     preMKey = validationOut;
                                     state.Stop();
@@ -518,7 +501,7 @@ namespace ObscurCore
                         }
                     } else {
 						// No key confirmation capability available
-						if (manifestKeysECSender.Count > 1 || manifestKeysECRecipient.Count > 1) {
+						if (manifestKeysCurve25519Sender.Count > 1 || manifestKeysCurve25519Recipient.Count > 1) {
 							throw new KeyConfirmationException("Multiple Curve25519 keys have been provided where the package provides no key confirmation capability.");
 						}
 						preMKey = Curve25519UM1Exchange.Respond(manifestKeysCurve25519Sender[0], manifestKeysCurve25519Recipient[0], c25519um1_ephemeralKey);
@@ -526,7 +509,7 @@ namespace ObscurCore
                     break;
 
                 default:
-                    throw new NotSupportedException(String.Format("Manifest cryptography scheme {0} is unsupported/unknown.", mCryptoScheme));
+                    throw new NotSupportedException(String.Format("Manifest cryptography scheme \"{0}\" is unsupported/unknown.", mCryptoScheme));
             }
 
             if (preMKey == null || preMKey.Length == 0) {
@@ -570,8 +553,8 @@ namespace ObscurCore
                 PrefixStyle.Base128, 0);
 
             if (mHeader.FormatVersion > HeaderVersion) {
-                throw new NotSupportedException("Package version " + mHeader.FormatVersion + " as specified by the manifest header is unsupported/unknown.\n" +
-                    "The local version of ObscurCore supports up to version " + HeaderVersion + ".");
+				throw new NotSupportedException(String.Format("Package version {0} as specified by the manifest header is unsupported/unknown.\n" +
+					"The local version of ObscurCore supports up to version {1}.", mHeader.FormatVersion, HeaderVersion));
                 // In later versions, can redirect to diff. behaviour (and DTO objects) for diff. versions.
             }
 
@@ -587,7 +570,9 @@ namespace ObscurCore
                     mCryptoConfig = DeserialiseDTO<Curve25519UM1ManifestCryptographyConfiguration>(mHeader.CryptographySchemeConfiguration);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+					throw new NotSupportedException(String.Format(
+						"Package manifest cryptography scheme \"{0}\" as specified by the manifest header is unsupported/unknown.", 
+				        	mHeader.CryptographySchemeName));
             }
 
             readOffset = (int) source.Position;
@@ -604,10 +589,36 @@ namespace ObscurCore
         private static byte[] ConfirmSymmetricKey(IVerificationFunctionConfiguration keyConfirmation,
                                                   IEnumerable<byte[]> potentialKeys)
         {
+			Func<byte[], byte[]> validator = null; // Used as an adaptor between different validation methods
+
+			if (Enum.GetNames (typeof(KeyDerivationFunctions)).Contains (keyConfirmation.FunctionName)) {
+				validator = (input) => Source.DeriveKeyWithKDF (keyConfirmation.FunctionName.ToEnum<KeyDerivationFunctions> (), 
+					input, keyConfirmation.Salt, keyConfirmation.VerifiedOutput.Length, keyConfirmation.FunctionConfiguration);
+			} else if (Enum.GetNames (typeof(MACFunctions)).Contains (keyConfirmation.FunctionName)) {
+				validator = (input) => {
+					var macF = Source.CreateMACPrimitive (keyConfirmation.FunctionName, keyConfirmation.Key, 
+					                                      keyConfirmation.Salt, keyConfirmation.FunctionConfiguration);
+					macF.BlockUpdate (input, 0, input.Length);
+					var output = new byte[macF.GetMacSize ()];
+					macF.DoFinal (output, 0);
+					return output;
+				};
+			} else if (Enum.GetNames (typeof(HashFunctions)).Contains (keyConfirmation.FunctionName)) {
+				validator = (input) => {
+					var hashF = Source.CreateHashPrimitive (keyConfirmation.FunctionName);
+					hashF.BlockUpdate (input, 0, input.Length);
+					var output = new byte[hashF.GetDigestSize ()];
+					hashF.DoFinal (output, 0);
+					return output;
+				};
+			} else {
+				throw new NotSupportedException("Package manifest key confirmation scheme is unsupported/unknown.");
+			}
+
             byte[] validatedKey = null;
             Parallel.ForEach(potentialKeys, (bytes, state) =>
                 {
-                    var validationOut = ConfirmSymmetricKey(keyConfirmation, bytes);
+                    var validationOut = validator(bytes);
                     if (validationOut.SequenceEqual(keyConfirmation.VerifiedOutput)) {
                         validatedKey = validationOut;
                         // Terminate all other validation function instances - we have found the key
@@ -616,28 +627,6 @@ namespace ObscurCore
                 });
 
             return validatedKey;
-        }
-
-        /// <summary>
-        /// Determines if a provided key is validated successfully with a given key confirmation scheme.
-        /// </summary>
-        /// <param name="keyConfirmation">Key confirmation configuration.</param>
-        /// <param name="potentialKey">Potential key to be validated.</param>
-        /// <returns>Valid key, or null if not validated as being correct.</returns>
-		private static byte[] ConfirmSymmetricKey(IVerificationFunctionConfiguration keyConfirmation, byte[] potentialKey) {
-            Func<byte[], byte[], byte[]> validator = null; // Used as an adaptor between different validation methods
-            // Signature is: key, salt, returns validation output byte[]
-
-			if (Enum.GetNames (typeof(KeyDerivationFunctions)).Contains (keyConfirmation.FunctionName)) {
-				validator = (key, salt) => Source.DeriveKeyWithKDF (keyConfirmation.FunctionName.ToEnum<KeyDerivationFunctions> (), 
-					key, salt, keyConfirmation.VerifiedOutput.Length, keyConfirmation.FunctionConfiguration);
-			} else if(Enum.GetNames (typeof(KeyDerivationFunctions)).Contains (keyConfirmation.FunctionName)) {
-
-            } else {
-                throw new NotSupportedException("Package manifest key confirmation scheme is unsupported/unknown.");
-            }
-
-            return validator(potentialKey, keyConfirmation.Salt);
         }
 
         #endregion

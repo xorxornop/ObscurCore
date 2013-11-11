@@ -357,6 +357,68 @@ namespace ObscurCore
                     DisplayName = "ANSI X.923"
                 });
 
+				// Add MAC functions
+
+				MACFunctionDirectory.Add(MACFunctions.BLAKE2B256, new MACFunctionDescription {
+					Name = MACFunctions.BLAKE2B256.ToString(),
+					DisplayName = "BLAKE-2B-256",
+					OutputSize = 256,
+					SaltSupported = true
+				});
+
+				MACFunctionDirectory.Add(MACFunctions.BLAKE2B384, new MACFunctionDescription {
+					Name = MACFunctions.BLAKE2B384.ToString(),
+					DisplayName = "BLAKE-2B-384",
+					OutputSize = 384,
+					SaltSupported = true
+				});
+
+				MACFunctionDirectory.Add(MACFunctions.BLAKE2B512, new MACFunctionDescription {
+					Name = MACFunctions.BLAKE2B512.ToString(),
+					DisplayName = "BLAKE-2B-512",
+					OutputSize = 512,
+					SaltSupported = true
+				});
+
+				MACFunctionDirectory.Add(MACFunctions.Keccak224, new MACFunctionDescription {
+					Name = MACFunctions.Keccak224.ToString(),
+					DisplayName = "Keccak-224 / SHA3-224",
+					OutputSize = 224,
+					SaltSupported = true
+				});
+
+				MACFunctionDirectory.Add(MACFunctions.Keccak256, new MACFunctionDescription {
+					Name = MACFunctions.Keccak256.ToString(),
+					DisplayName = "Keccak-256 / SHA3-256",
+					OutputSize = 256,
+					SaltSupported = true
+				});
+
+				MACFunctionDirectory.Add(MACFunctions.Keccak384, new MACFunctionDescription {
+					Name = MACFunctions.Keccak384.ToString(),
+					DisplayName = "Keccak-384 / SHA3-384",
+					OutputSize = 384,
+					SaltSupported = true
+				});
+
+				MACFunctionDirectory.Add(MACFunctions.Keccak512, new MACFunctionDescription {
+					Name = MACFunctions.Keccak512.ToString(),
+					DisplayName = "Keccak-512 / SHA3-512",
+					OutputSize = 512,
+					SaltSupported = true
+				});
+
+				MACFunctionDirectory.Add(MACFunctions.CMAC, new MACFunctionDescription {
+					Name = MACFunctions.CMAC.ToString(),
+					DisplayName = "CMAC / OMAC1",
+					OutputSize = 512,
+					SaltSupported = true
+				});
+
+
+
+
+
                 // Add key derivation schemes
 
 				KDFDirectory.Add(KeyDerivationFunctions.PBKDF2, new KDFDescription {
@@ -415,31 +477,6 @@ namespace ObscurCore
                 return Enum.GetNames(typeof (BlockCipherPaddings)).Contains(name);
             }
         }
-
-		public static class Packaging
-		{
-			static Packaging () {
-				// Add all symmetric block ciphers
-				PayloadModules.Add (PayloadLayoutSchemes.Simple.ToString (), new PayloadModuleDescription {
-					Name = PayloadLayoutSchemes.Simple.ToString(),
-					DisplayName = PayloadLayoutSchemes.Simple.ToString()
-				});
-				PayloadModules.Add (PayloadLayoutSchemes.Frameshift.ToString (), new PayloadModuleDescription {
-					Name = PayloadLayoutSchemes.Frameshift.ToString(),
-					DisplayName = PayloadLayoutSchemes.Frameshift.ToString()
-				});
-#if(INCLUDE_FABRIC)
-                PayloadModules.Add (PayloadLayoutSchemes.Fabric.ToString (), new PayloadModuleDescription {
-					Name = PayloadLayoutSchemes.Fabric.ToString(),
-					DisplayName = PayloadLayoutSchemes.Fabric.ToString()
-				});
-#endif
-			}
-			
-			// Data storage.
-			public static Dictionary<string, PayloadModuleDescription> PayloadModules =
-				new Dictionary<string, PayloadModuleDescription>();
-		}
     }
 
     public sealed class SymmetricCipherDescription
@@ -608,26 +645,13 @@ namespace ObscurCore
 		public string DisplayName { get; internal set; }
 
 		/// <summary>
+		/// Size of the MAC produced in bits.
+		/// </summary>
+		public int? OutputSize { get; internal set; }
+
+		/// <summary>
 		/// Whether the MAC operation may include special salting operation.
 		/// </summary>
 		public bool SaltSupported { get; internal set; }
-	}
-
-    // Packaging related
-
-	public sealed class PayloadModuleDescription
-	{
-		/// <summary>
-		/// Name of the payload layout scheme (must be a member of PayloadLayoutSchemes).
-		/// </summary>
-		public string Name { get; internal set; }
-		/// <summary>
-		/// Name to show a user or for a detailed specification.
-		/// </summary>
-		public string DisplayName { get; internal set; }
-
-		public override string ToString () {
-			return string.Format ("Payload Layout Scheme & Stream Multiplexer: {0}", DisplayName);
-		}
-	}
+	}	
 }
