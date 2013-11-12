@@ -366,6 +366,8 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
 		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
+		/// <param name="config">Configuration for the function, where applicable. For example,
+		/// CMAC and HMAC use cipher and hash function names, repectively, encoded as UTF-8.</param>
 		/// <returns>
 		/// An MAC object deriving from IMac.
 		/// </returns>
@@ -373,27 +375,22 @@ namespace ObscurCore
 
 			IMac macObj;
 			if (mac == MACFunctions.HMAC) {
-				var hashFEnum = Encoding.UTF8.GetString (config).ToEnum<HashFunctions> ();
-				macObj = new HMac (DigestInstantiators [hashFEnum]());
-				var keyParam = new KeyParameter (key);
-				macObj.Init (keyParam);
+				if (config == null)
+					throw new ArgumentException ("No hash function specified (encoded as UTF-8 bytes).", "config");
+				return macObj = CreateHMACPrimitive(Encoding.UTF8.GetString(config).ToEnum<HashFunctions>(), key, salt);
 			} else if (mac == MACFunctions.CMAC) {
-				var cipherPEnum = Encoding.UTF8.GetString (config).ToEnum<SymmetricBlockCiphers> ();
-				var defaultBlockSize = Athena.Cryptography.BlockCipherDirectory [cipherPEnum].DefaultBlockSize;
-				if(defaultBlockSize != 64 && defaultBlockSize != 128) {
-					throw new NotSupportedException ("CMAC/OMAC1 only supports ciphers with 64 / 128 bit block sizes.");
-				}
-				macObj = new CMac (CreateBlockCipher (cipherPEnum, null));
-				var keyParam = CreateKeyParameter (cipherPEnum, key);
-				macObj.Init (keyParam);
+				if (config == null)
+					throw new ArgumentException ("No block cipher specified (encoded as UTF-8 bytes).", "config");
+				macObj = CreateCMACPrimitive(Encoding.UTF8.GetString(config).ToEnum<SymmetricBlockCiphers>(), key, salt);
 			} else {
 				macObj = MacInstantiators[mac]();
-				if (Athena.Cryptography.MACFunctionDirectory[mac].SaltSupported) {
-					((IMacWithSalt) macObj).Init(key, salt);
-				} else {
-					macObj.Init(new KeyParameter(key));
-					if(salt != null && salt.Length > 0) macObj.BlockUpdate(salt, 0, salt.Length);
+				if (Athena.Cryptography.MACFunctionDirectory [mac].SaltSupported && salt != null) {
+					// Primitive has its own special salting procedure
+					((IMacWithSalt)macObj).Init (key, salt);
+					return macObj;
 				}
+				macObj.Init (new KeyParameter (key));
+				if(salt != null && salt.Length > 0) macObj.BlockUpdate(salt, 0, salt.Length);
 			}
 
 			return macObj;
@@ -401,6 +398,34 @@ namespace ObscurCore
 
 		public static IMac CreateMACPrimitive(string macName, byte[] key, byte[] salt = null, byte[] config = null) {
 			return CreateMACPrimitive(macName.ToEnum<MACFunctions>(), key, salt, config);
+		}
+
+		/// <summary>
+		/// Creates a CMAC primitive using a symmetric block cipher primitive configured with default block size. 
+		/// Default block sizes (and so, output sizes) can be found by querying Athena.
+		/// </summary>
+		/// <returns>Pre-initialised CMAC primitive.</returns>
+		/// <param name="cipher">Cipher.</param>
+		public static IMac CreateCMACPrimitive(SymmetricBlockCiphers cipherEnum, byte[] key, byte[] salt = null) {
+			var defaultBlockSize = Athena.Cryptography.BlockCipherDirectory[cipherEnum].DefaultBlockSize;
+			if(defaultBlockSize != 64 && defaultBlockSize != 128) {
+				throw new NotSupportedException ("CMAC/OMAC1 only supports ciphers with 64 / 128 bit block sizes.");
+			}
+			var macObj = new CMac (CreateBlockCipher (cipherEnum, null));
+			var keyParam = CreateKeyParameter (cipherEnum, key);
+			macObj.Init (keyParam);
+			if(salt != null && salt.Length > 0) macObj.BlockUpdate(salt, 0, salt.Length);
+
+			return macObj;
+		}
+
+		public static IMac CreateHMACPrimitive(HashFunctions hashEnum, byte[] key, byte[] salt = null) {
+			var macObj = new HMac (DigestInstantiators [hashEnum]());
+			var keyParam = new KeyParameter (key);
+			macObj.Init (keyParam);
+			if(salt != null && salt.Length > 0) macObj.BlockUpdate(salt, 0, salt.Length);
+
+			return macObj;
 		}
 
 

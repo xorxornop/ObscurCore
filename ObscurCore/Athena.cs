@@ -357,6 +357,79 @@ namespace ObscurCore
                     DisplayName = "ANSI X.923"
                 });
 
+				// Add hash functions
+
+				HashFunctionDirectory.Add(HashFunctions.BLAKE2B256, new HashFunctionDescription {
+					Name = HashFunctions.BLAKE2B256.ToString(),
+					DisplayName = "BLAKE-2B-256",
+					OutputSize = 256
+				});
+				HashFunctionDirectory.Add(HashFunctions.BLAKE2B384, new HashFunctionDescription {
+					Name = HashFunctions.BLAKE2B384.ToString(),
+					DisplayName = "BLAKE-2B-384",
+					OutputSize = 384
+				});
+				HashFunctionDirectory.Add(HashFunctions.BLAKE2B512, new HashFunctionDescription {
+					Name = HashFunctions.BLAKE2B512.ToString(),
+					DisplayName = "BLAKE-2B-512",
+					OutputSize = 512
+				});
+				HashFunctionDirectory.Add(HashFunctions.Keccak224, new HashFunctionDescription {
+					Name = HashFunctions.Keccak224.ToString(),
+					DisplayName = "Keccak-224 / SHA-3-224",
+					OutputSize = 224
+				});
+				HashFunctionDirectory.Add(HashFunctions.Keccak256, new HashFunctionDescription {
+					Name = HashFunctions.Keccak256.ToString(),
+					DisplayName = "Keccak-256 / SHA-3-256",
+					OutputSize = 256
+				});
+				HashFunctionDirectory.Add(HashFunctions.Keccak384, new HashFunctionDescription {
+					Name = HashFunctions.Keccak384.ToString(),
+					DisplayName = "Keccak-384 / SHA-3-384",
+					OutputSize = 384
+				});
+				HashFunctionDirectory.Add(HashFunctions.Keccak512, new HashFunctionDescription {
+					Name = HashFunctions.Keccak512.ToString(),
+					DisplayName = "Keccak-512 / SHA-3-512",
+					OutputSize = 512
+				});
+				HashFunctionDirectory.Add(HashFunctions.RIPEMD160, new HashFunctionDescription {
+					Name = HashFunctions.RIPEMD160.ToString(),
+					DisplayName = "RIPEMD-160",
+					OutputSize = 160
+				});
+				HashFunctionDirectory.Add(HashFunctions.SHA1, new HashFunctionDescription {
+					Name = HashFunctions.SHA1.ToString(),
+					DisplayName = "SHA-1",
+					OutputSize = 96
+				});
+				HashFunctionDirectory.Add(HashFunctions.SHA256, new HashFunctionDescription {
+					Name = HashFunctions.SHA256.ToString(),
+					DisplayName = "SHA-2-256",
+					OutputSize = 256
+				});
+				HashFunctionDirectory.Add(HashFunctions.SHA384, new HashFunctionDescription {
+					Name = HashFunctions.SHA384.ToString(),
+					DisplayName = "SHA-2-384",
+					OutputSize = 384
+				});
+				HashFunctionDirectory.Add(HashFunctions.SHA512, new HashFunctionDescription {
+					Name = HashFunctions.SHA512.ToString(),
+					DisplayName = "SHA-2-512",
+					OutputSize = 512
+				});
+				HashFunctionDirectory.Add(HashFunctions.Tiger, new HashFunctionDescription {
+					Name = HashFunctions.Tiger.ToString(),
+					DisplayName = "Tiger",
+					OutputSize = 192
+				});
+				HashFunctionDirectory.Add(HashFunctions.Whirlpool, new HashFunctionDescription {
+					Name = HashFunctions.Whirlpool.ToString(),
+					DisplayName = "Whirlpool",
+					OutputSize = 512
+				});
+
 				// Add MAC functions
 
 				MACFunctionDirectory.Add(MACFunctions.BLAKE2B256, new MACFunctionDescription {
@@ -365,59 +438,54 @@ namespace ObscurCore
 					OutputSize = 256,
 					SaltSupported = true
 				});
-
 				MACFunctionDirectory.Add(MACFunctions.BLAKE2B384, new MACFunctionDescription {
 					Name = MACFunctions.BLAKE2B384.ToString(),
 					DisplayName = "BLAKE-2B-384",
 					OutputSize = 384,
 					SaltSupported = true
 				});
-
 				MACFunctionDirectory.Add(MACFunctions.BLAKE2B512, new MACFunctionDescription {
 					Name = MACFunctions.BLAKE2B512.ToString(),
 					DisplayName = "BLAKE-2B-512",
 					OutputSize = 512,
 					SaltSupported = true
 				});
-
 				MACFunctionDirectory.Add(MACFunctions.Keccak224, new MACFunctionDescription {
 					Name = MACFunctions.Keccak224.ToString(),
-					DisplayName = "Keccak-224 / SHA3-224",
+					DisplayName = "Keccak-224 / SHA-3-224",
 					OutputSize = 224,
 					SaltSupported = true
 				});
-
 				MACFunctionDirectory.Add(MACFunctions.Keccak256, new MACFunctionDescription {
 					Name = MACFunctions.Keccak256.ToString(),
-					DisplayName = "Keccak-256 / SHA3-256",
+					DisplayName = "Keccak-256 / SHA-3-256",
 					OutputSize = 256,
 					SaltSupported = true
 				});
-
 				MACFunctionDirectory.Add(MACFunctions.Keccak384, new MACFunctionDescription {
 					Name = MACFunctions.Keccak384.ToString(),
-					DisplayName = "Keccak-384 / SHA3-384",
+					DisplayName = "Keccak-384 / SHA-3-384",
 					OutputSize = 384,
 					SaltSupported = true
 				});
-
 				MACFunctionDirectory.Add(MACFunctions.Keccak512, new MACFunctionDescription {
 					Name = MACFunctions.Keccak512.ToString(),
-					DisplayName = "Keccak-512 / SHA3-512",
+					DisplayName = "Keccak-512 / SHA-3-512",
 					OutputSize = 512,
 					SaltSupported = true
 				});
-
 				MACFunctionDirectory.Add(MACFunctions.CMAC, new MACFunctionDescription {
 					Name = MACFunctions.CMAC.ToString(),
-					DisplayName = "CMAC / OMAC1",
-					OutputSize = 512,
-					SaltSupported = true
+					DisplayName = "CMAC / OMAC1 construction",
+					OutputSize = null,
+					SaltSupported = false
 				});
-
-
-
-
+				MACFunctionDirectory.Add(MACFunctions.HMAC, new MACFunctionDescription {
+					Name = MACFunctions.HMAC.ToString(),
+					DisplayName = "HMAC construction",
+					OutputSize = null,
+					SaltSupported = false
+				});
 
                 // Add key derivation schemes
 
@@ -631,12 +699,17 @@ namespace ObscurCore
 		/// Name to show a user or for a detailed specification.
 		/// </summary>
 		public string DisplayName { get; internal set; }
+
+		/// <summary>
+		/// Size of the hash/digest produced in bits.
+		/// </summary>
+		public int OutputSize { get; internal set; }
 	}
 
 	public sealed class MACFunctionDescription
 	{
         /// <summary>
-        /// Name of the [H]MAC function (must be a member of MACFunctionDirectory).
+        /// Name of the MAC function (must be a member of MACFunctionDirectory).
         /// </summary>
 		public string Name { get; internal set; }
 		/// <summary>
@@ -645,7 +718,7 @@ namespace ObscurCore
 		public string DisplayName { get; internal set; }
 
 		/// <summary>
-		/// Size of the MAC produced in bits.
+		/// Size of the MAC produced in bits. Null if output size depends on configuration.
 		/// </summary>
 		public int? OutputSize { get; internal set; }
 

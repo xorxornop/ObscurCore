@@ -267,6 +267,31 @@ namespace ObscurCore.Cryptography
 		/// </summary>
 		BLAKE2B512,
 
+        /// <summary>
+        /// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
+        /// </summary>
+		Keccak224,
+
+		/// <summary>
+		/// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
+		/// </summary>
+		Keccak256,
+
+		/// <summary>
+		/// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
+		/// </summary>
+		Keccak384,
+
+		/// <summary>
+		/// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
+		/// </summary>
+		Keccak512,
+
+		/// <summary>
+		/// RACE Integrity Primitives Evaluation Message Digest. Output sice of 160 bits. Popular cipher 
+		/// published in 1996. Designed in the open academic community, as opposed to the NSA-designed 
+		/// SHA-1 of the similar time period.
+		/// </summary>
 		RIPEMD160,
 
 		/// <summary>
@@ -289,26 +314,6 @@ namespace ObscurCore.Cryptography
 		/// 512-bit version of the SHA-2 hash family.
 		/// </summary>
 		SHA512,
-
-        /// <summary>
-        /// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
-        /// </summary>
-		Keccak224,
-
-		/// <summary>
-		/// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
-		/// </summary>
-		Keccak256,
-
-		/// <summary>
-		/// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
-		/// </summary>
-		Keccak384,
-
-		/// <summary>
-		/// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
-		/// </summary>
-		Keccak512,
 
 		/// <summary>
 		/// Output size of 192 bits.
