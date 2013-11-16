@@ -23,7 +23,7 @@ using ObscurCore.DTO;
 
 namespace ObscurCore.Tests.Cryptography
 {
-    public abstract class CryptoTestBase : IOTestBase
+    public abstract class CipherTestBase : IOTestBase
     {
         protected byte[] Key { get; private set; }
 
@@ -87,7 +87,7 @@ namespace ObscurCore.Tests.Cryptography
         }
     }
 
-    public abstract class BlockCipherTestBase : CryptoTestBase
+    public abstract class BlockCipherTestBase : CipherTestBase
     {
         protected SymmetricBlockCiphers _blockCipher;
         protected int _defaultBlockSize, _defaultKeySize;

@@ -43,7 +43,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cryptography\CryptoTestBase.cs" />
+    <Compile Include="Cryptography\CipherTestBase.cs" />
     <Compile Include="Cryptography\BlockCiphers\AES.cs" />
     <Compile Include="Cryptography\BlockCiphers\Blowfish.cs" />
     <Compile Include="Cryptography\BlockCiphers\CAST5.cs" />
@@ -55,9 +55,15 @@
     <Compile Include="Cryptography\BlockCiphers\Serpent.cs" />
     <Compile Include="Cryptography\BlockCiphers\TripleDES.cs" />
     <Compile Include="Cryptography\BlockCiphers\Twofish.cs" />
+    <Compile Include="Cryptography\Digests\DigestTests.cs" />
+    <Compile Include="Cryptography\DigestTestBase.cs" />
     <Compile Include="Cryptography\Entropy\CSPRNGTests.cs" />
     <Compile Include="Cryptography\KeyAgreements\Curve25519UM1.cs" />
     <Compile Include="Cryptography\KeyAgreements\UM1.cs" />
+    <Compile Include="Cryptography\MACs\CMACTests.cs" />
+    <Compile Include="Cryptography\MACs\HMACTests.cs" />
+    <Compile Include="Cryptography\MACs\MACTests.cs" />
+    <Compile Include="Cryptography\MACTestBase.cs" />
     <Compile Include="Cryptography\StreamCiphers\StreamCipherTests.cs" />
     <Compile Include="Packaging\Packages.cs" />
     <Compile Include="Packaging\Payload.cs" />

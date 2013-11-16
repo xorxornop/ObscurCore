@@ -306,11 +306,6 @@ namespace ObscurCore.Cryptography
 		SHA256,
 
 		/// <summary>
-		/// 384-bit version of the SHA-2 hash family.
-		/// </summary>
-		SHA384,
-
-		/// <summary>
 		/// 512-bit version of the SHA-2 hash family.
 		/// </summary>
 		SHA512,

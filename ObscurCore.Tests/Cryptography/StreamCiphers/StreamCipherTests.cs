@@ -3,7 +3,7 @@ using NUnit.Framework;
 
 namespace ObscurCore.Tests.Cryptography.StreamCiphers
 {
-    class StreamCipherTests : CryptoTestBase
+    class StreamCipherTests : CipherTestBase
     {
 		public StreamCipherTests ()
 		{

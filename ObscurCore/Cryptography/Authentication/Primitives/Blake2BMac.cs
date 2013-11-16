@@ -50,7 +50,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		/// <summary>
 		/// Initialise the MAC primitive with a key and/or salt and/or a tag.
 		/// </summary>
-		/// <param name="parameters">Parameter object that may comprise a key and/or salt. Key maximum 128 bytes, salt 16.</param>
+		/// <param name="parameters">Parameter object that may comprise a key and/or salt. Key maximum 64 bytes, salt 16.</param>
 		/// <param name="tag">Tag/personalisation to include in the IV for the MAC. 16 bytes maximum.</param>
 		public void Init(ICipherParameters parameters, byte[] tag) {
 			byte[] key = null, salt = null;
@@ -65,8 +65,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			byte[] keyBytes = null, saltBytes = null, tagBytes = null;
 
 			if(key != null) {
-				if(key.Length > 128) throw new ArgumentOutOfRangeException("key", "Key is longer than 128 bytes.");
-				keyBytes = new byte[128];
+				if(key.Length > 64) throw new ArgumentOutOfRangeException("key", "Key is longer than 64 bytes.");
+				keyBytes = new byte[key.Length];
 				Array.Copy(key, keyBytes, key.Length);
 			}
 

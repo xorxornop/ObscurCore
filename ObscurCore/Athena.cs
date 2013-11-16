@@ -409,11 +409,6 @@ namespace ObscurCore
 					DisplayName = "SHA-2-256",
 					OutputSize = 256
 				});
-				HashFunctionDirectory.Add(HashFunctions.SHA384, new HashFunctionDescription {
-					Name = HashFunctions.SHA384.ToString(),
-					DisplayName = "SHA-2-384",
-					OutputSize = 384
-				});
 				HashFunctionDirectory.Add(HashFunctions.SHA512, new HashFunctionDescription {
 					Name = HashFunctions.SHA512.ToString(),
 					DisplayName = "SHA-2-512",

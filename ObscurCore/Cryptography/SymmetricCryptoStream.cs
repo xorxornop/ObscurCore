@@ -192,8 +192,8 @@ namespace ObscurCore.Cryptography
 				opSize *= 2;
 			_inBuffer = new byte[opSize];
 			_outBuffer = new byte[opSize];
-			_procBuffer = new RingByteBuffer (opSize << 7);
-			// Shift left 7 upscales : 8 (64 bits) to 1024 [1kB], 16 (128) to 2048 [2kB], 32 (256) to 4096 [4kB]
+			_procBuffer = new RingByteBuffer (opSize << 8);
+			// Shift left 8 upscales : 8 (64 bits) to 2048 [2kB], 16 (128) to 4096 [4kB], 32 (256) to 8192 [8kB]
 
 			// Customise the decorator-stream exception messages, since we enforce processing direction in this implementation
 			NotEffluxError = "Stream is configured for encryption, and so may only be written to.";
@@ -362,7 +362,7 @@ namespace ObscurCore.Cryptography
 				finalBytes = _cipher.DoFinal(_inBuffer, 0, length, _outBuffer, 0);
 			} catch (DataLengthException dlEx) {
 				if (_cipher is IAeadBlockCipher) {
-					// No example here, but leaving it here anyway for possible future implemention.
+					// No example here, but leaving it here anyway for possible future implementation.
 				} else if (_cipher is PaddedBufferedBlockCipher) {
 					switch (dlEx.Message) {
 					case "last block incomplete in decryption":
