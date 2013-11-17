@@ -25,10 +25,10 @@ namespace ObscurCore.Tests.Cryptography
         }
 
         protected void RunMACTest (MACFunctions function, byte[] config = null, byte[] overrideKey = null, byte[] overrideSalt = null) {
-            byte[] outputMAC = null;
+            byte[] outputMAC;
             var sw = new Stopwatch();
             using (var outputMS = new MemoryStream()) {
-                using (var macS = new MacStream(outputMS, true, function, ref outputMAC, overrideKey ?? Key, overrideSalt ?? Salt, config, false)) {
+                using (var macS = new MacStream(outputMS, true, function, out outputMAC, overrideKey ?? Key, overrideSalt ?? Salt, config, false)) {
                     sw.Start();
                     LargeBinaryFile.CopyTo(macS);
                     sw.Stop();

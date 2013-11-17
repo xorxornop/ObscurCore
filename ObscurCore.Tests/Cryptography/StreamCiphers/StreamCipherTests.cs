@@ -22,11 +22,13 @@ namespace ObscurCore.Tests.Cryptography.StreamCiphers
             RunEqualityTest(config);
         }
 
+#if(INCLUDE_ISAAC)
         [Test]
         public void ISAAC () {
             var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCiphers.ISAAC);
             RunEqualityTest(config);
         }
+#endif
 
         [Test]
         public void Rabbit () {

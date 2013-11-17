@@ -4,6 +4,7 @@ using ObscurCore.DTO;
 
 namespace ObscurCore.Tests.Cryptography.BlockCiphers
 {
+#if INCLUDE_IDEA
     class IDEA : BlockCipherTestBase
     {
         public IDEA ()
@@ -21,4 +22,5 @@ namespace ObscurCore.Tests.Cryptography.BlockCiphers
             //RunEqualityTest(config);
         }
     }
+#endif
 }

@@ -55,12 +55,12 @@ namespace ObscurCore.Tests.Cryptography.MACs
         public void RIPEMD160 () {
             RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.RIPEMD160.ToString()));
         }
-
+#if INCLUDE_SHA1
         [Test]
         public void SHA1 () {
             RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.SHA1.ToString()));
         }
-
+#endif
         [Test]
         public void SHA256 () {
             RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.SHA256.ToString()));

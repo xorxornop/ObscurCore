@@ -16,6 +16,7 @@
 using System;
 using System.IO;
 using ObscurCore.Cryptography.Authentication;
+using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography
 {
@@ -28,7 +29,7 @@ namespace ObscurCore.Cryptography
 		public byte[] MAC { get { return _outputRef; } }
 
 		private IMac _mac;
-		private byte[] _outputRef = null;
+	    private readonly byte[] _outputRef;
 		private bool _disposed;
 
 		/// <summary>
@@ -36,18 +37,26 @@ namespace ObscurCore.Cryptography
 		/// </summary>
 		/// <param name="binding">Binding.</param>
 		/// <param name="writing">If set to <c>true</c> writing.</param>
-		/// <param name="function">Function.</param>
+		/// <param name="function">MAC function to instantiate.</param>
+		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
+		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
 		/// <param name="output">Byte array where the finished hash will be output to. Does not need to be initialised.</param>
 		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
-		/// <remarks>
-		/// 'ref' parameter descriptor for output is functionally superfluous, but serves rather to communicate the intended use.
-		/// </remarks>
-		public MacStream (Stream binding, bool writing, MACFunctions function, ref byte[] output, byte[] key, byte[] salt = null,
+		public MacStream (Stream binding, bool writing, MACFunctions function, out byte[] output, byte[] key, byte[] salt = null,
 			byte[] config = null, bool closeOnDispose = true) : base(binding, writing, closeOnDispose, false)
 		{
 			_mac = Source.CreateMACPrimitive (function, key, salt, config);
-			_outputRef = output;
+            _outputRef = new byte[_mac.GetMacSize()];
+		    output = _outputRef;
 		}
+
+        public MacStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, out byte[] output, byte[] key, 
+            bool closeOnDispose = true) : base(binding, writing, closeOnDispose, false) 
+        {
+            _mac = Source.CreateMACPrimitive (config.FunctionName.ToEnum<MACFunctions>(), key, config.Salt, config.FunctionConfiguration);
+            _outputRef = new byte[_mac.GetMacSize()];
+            output = _outputRef;
+        }
 
 
 		public override void Write (byte[] buffer, int offset, int count) {
@@ -81,7 +90,7 @@ namespace ObscurCore.Cryptography
 		protected override void Finish () {
 			if (Finished)
 				return;
-			_outputRef = new byte[_mac.GetMacSize()];
+			//_outputRef = new byte[_mac.GetMacSize()];
 			_mac.DoFinal (_outputRef, 0);
 			base.Finish ();
 		}
@@ -90,6 +99,11 @@ namespace ObscurCore.Cryptography
 			base.Reset (finish);
 			_mac.Reset ();
 		}
+
+        public override void Close()
+        {
+            Finish();
+        }
 
 		protected override void Dispose (bool disposing) {
 			if (!_disposed) {

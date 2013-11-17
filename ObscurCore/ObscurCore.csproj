@@ -20,7 +20,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_FABRIC</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -28,7 +28,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;INCLUDE_IDEA;INCLUDE_FABRIC</DefineConstants>
+    <DefineConstants>TRACE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -48,7 +48,7 @@
     <Compile Include="Cryptography\Authentication\IDigest.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />
     <Compile Include="Cryptography\Authentication\IMacWithSalt.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\BLAKE2BDigest.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\Blake2BDigest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Blake2BMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BConfig.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BCore.cs" />

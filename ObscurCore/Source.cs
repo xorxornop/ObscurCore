@@ -107,7 +107,9 @@ namespace ObscurCore
             // Stream engines
             EngineInstantiatorsStream.Add(SymmetricStreamCiphers.HC128, () => new HC128Engine());
             EngineInstantiatorsStream.Add(SymmetricStreamCiphers.HC256, () => new HC256Engine());
+#if INCLUDE_ISAAC
             EngineInstantiatorsStream.Add(SymmetricStreamCiphers.ISAAC, () => new IsaacEngine());
+#endif
             EngineInstantiatorsStream.Add(SymmetricStreamCiphers.Rabbit, () => new RabbitEngine());
 #if INCLUDE_RC4
             _engineInstantiatorsStream.Add(SymmetricStreamCiphers.RC4, () => new RC4Engine());
@@ -157,16 +159,18 @@ namespace ObscurCore
 
             // ######################################## HASHING ########################################
 
-            DigestInstantiators.Add(HashFunctions.BLAKE2B256, () => new BLAKE2BDigest(256, true));
-			DigestInstantiators.Add(HashFunctions.BLAKE2B384, () => new BLAKE2BDigest(384, true));
-			DigestInstantiators.Add(HashFunctions.BLAKE2B512, () => new BLAKE2BDigest(512, true));
+            DigestInstantiators.Add(HashFunctions.BLAKE2B256, () => new Blake2BDigest(256, true));
+			DigestInstantiators.Add(HashFunctions.BLAKE2B384, () => new Blake2BDigest(384, true));
+			DigestInstantiators.Add(HashFunctions.BLAKE2B512, () => new Blake2BDigest(512, true));
 
 			DigestInstantiators.Add(HashFunctions.Keccak224, () => new KeccakManaged(224, true));
 			DigestInstantiators.Add(HashFunctions.Keccak256, () => new KeccakManaged(256, true));
 			DigestInstantiators.Add(HashFunctions.Keccak384, () => new KeccakManaged(384, true));
 			DigestInstantiators.Add(HashFunctions.Keccak512, () => new KeccakManaged(512, true));
 
-			DigestInstantiators.Add(HashFunctions.SHA1, () => new Sha1Digest());
+#if INCLUDE_SHA1
+            DigestInstantiators.Add(HashFunctions.SHA1, () => new Sha1Digest());
+#endif
             DigestInstantiators.Add(HashFunctions.SHA256, () => new Sha256Digest());
             DigestInstantiators.Add(HashFunctions.SHA512, () => new Sha512Digest());
 
@@ -344,6 +348,14 @@ namespace ObscurCore
 
         // Block cipher parameters
 
+        public static ICipherParameters CreateKeyParameter(SymmetricBlockCiphers cipherEnum, byte[] key) {
+            if (!Athena.Cryptography.BlockCipherDirectory[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
+                throw new InvalidDataException("Key size is unsupported/incompatible.");
+            
+            var cipherParams = new KeyParameter(key);
+            return cipherParams;
+        }
+
         public static ICipherParameters CreateBlockCipherParameters(ISymmetricCipherConfiguration config) {
             return CreateBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCiphers>(), config.Key, config.IV);
         }
@@ -400,12 +412,23 @@ namespace ObscurCore
             return EngineInstantiatorsStream[cipherName.ToEnum<SymmetricStreamCiphers>()]();
         }
 
+        // Stream cipher parameters
+
+        public static ICipherParameters CreateKeyParameter(SymmetricStreamCiphers cipherEnum, byte[] key) {
+            if (!Athena.Cryptography.StreamCipherDirectory[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
+                throw new InvalidDataException("Key size is unsupported/incompatible.");
+
+            var cipherParams = new KeyParameter(key);
+            return cipherParams;
+        }
+
         public static ICipherParameters CreateStreamCipherParameters(SymmetricStreamCiphers cipherEnum, byte[] key, byte[] iv) {
 #if(INCLUDE_RC4)
             if (cipher == SymmetricStreamCiphers.RC4) return CreateKeyParameter(key);
 #endif
+#if(INCLUDE_ISAAC)
             if (cipherEnum == SymmetricStreamCiphers.ISAAC) return CreateKeyParameter(cipherEnum, key);
-
+#endif
             if (iv == null || iv.Length == 0) throw new InvalidDataException("IV is null or zero-length.");
             if (!Athena.Cryptography.StreamCipherDirectory[cipherEnum].AllowableIVSizes.Contains(iv.Length * 8)) {
                 throw new InvalidDataException("IV size is unsupported/incompatible.");
@@ -539,21 +562,9 @@ namespace ObscurCore
 
         
 
-        public static ICipherParameters CreateKeyParameter(SymmetricBlockCiphers cipherEnum, byte[] key) {
-            if (!Athena.Cryptography.BlockCipherDirectory[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
-                throw new InvalidDataException("Key size is unsupported/incompatible.");
-            
-            var cipherParams = new KeyParameter(key);
-            return cipherParams;
-        }
+        
 
-        public static ICipherParameters CreateKeyParameter(SymmetricStreamCiphers cipherEnum, byte[] key) {
-            if (!Athena.Cryptography.StreamCipherDirectory[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
-                throw new InvalidDataException("Key size is unsupported/incompatible.");
-
-            var cipherParams = new KeyParameter(key);
-            return cipherParams;
-        }
+        
 
 
         

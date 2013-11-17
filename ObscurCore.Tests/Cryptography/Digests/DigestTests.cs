@@ -44,12 +44,12 @@ namespace ObscurCore.Tests.Cryptography.Digests
         public void RIPEMD160 () {
             RunDigestTest(HashFunctions.RIPEMD160);
         }
-
+#if INCLUDE_SHA1
         [Test]
         public void SHA1 () {
             RunDigestTest(HashFunctions.SHA1);
         }
-
+#endif
         [Test]
         public void SHA256 () {
             RunDigestTest(HashFunctions.SHA256);

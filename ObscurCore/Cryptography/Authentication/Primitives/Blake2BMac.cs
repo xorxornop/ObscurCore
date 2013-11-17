@@ -19,7 +19,7 @@ using ObscurCore.Cryptography.Ciphers;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
-	public class Blake2BMac : BLAKE2BDigest, IMac, IMacWithSalt
+	public class Blake2BMac : Blake2BDigest, IMac, IMacWithSalt
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.MACs.Blake2BMac"/> class.

@@ -364,6 +364,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives.SHA3
                 throw new ArgumentOutOfRangeException("outOff", "Offset out of range.");
             byte[] hash = HashFinal();
             Buffer.BlockCopy(hash, 0, output, outOff, hash.Length);
+            Reset();
+
             return GetDigestSize();
         }
     }

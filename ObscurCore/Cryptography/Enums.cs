@@ -108,26 +108,24 @@ namespace ObscurCore.Cryptography
 		/// Same as HC-128, but 256-bit key.
 		/// </summary><seealso cref="HC128"/>
 		HC256,
-
+#if INCLUDE_ISAAC
         /// <summary>
         /// Fast, classic pseudorandom number generator and stream cipher designed by Robert J. Jenkins Jr. in 1996. 
         /// Used in UNIX for "shred" utility for securely overwriting data.
         /// </summary>
         ISAAC,
-
+#endif
         /// <summary>
         /// 128-bit key high performance software-optimised stream cipher. 
         /// eSTREAM Phase 3 candidate. Patented, but free for non-commercial use.
         /// </summary>
         Rabbit,
-
-#if(INCLUDE_RC4)
+#if INCLUDE_RC4
 		/// <summary>
         /// 40-to-2048-bit adjustible-length key stream cipher, used most famously in SSL and WEP encryption.
 		/// </summary>
 		RC4,
 #endif
-
 		/// <summary>
 		/// 256-bit key stream cipher. eSTREAM Phase 3 candidate. Unpatented, free for any use.
 		/// </summary>
@@ -139,7 +137,7 @@ namespace ObscurCore.Cryptography
         /// </summary>
         SOSEMANUK,
 
-#if(INCLUDE_VMPC)
+#if INCLUDE_VMPC
 		/// <summary>
 		/// Variably Modified Permutation Composition. Very simple implementation, high performance stream cipher.
 		/// </summary><seealso cref="VMPC_KSA3"/>
@@ -293,13 +291,13 @@ namespace ObscurCore.Cryptography
 		/// SHA-1 of the similar time period.
 		/// </summary>
 		RIPEMD160,
-
+#if INCLUDE_SHA1
 		/// <summary>
 		/// Very well known hash function/digest, but getting a little "long in the tooth" (old). 
 		/// Output size is 96 bits (20 bytes).
 		/// </summary>
 		SHA1,
-
+#endif
 		/// <summary>
 		/// 256-bit version of the SHA-2 hash family.
 		/// </summary>

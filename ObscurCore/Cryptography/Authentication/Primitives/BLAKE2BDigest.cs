@@ -13,23 +13,21 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-
-
 using System;
 using ObscurCore.Cryptography.Authentication.Primitives.BLAKE2B;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
-	public class BLAKE2BDigest : IDigest
+	public class Blake2BDigest : IDigest
 	{
 		protected Blake2BHasher hasher;
 		protected int outputSize;
 
-		public BLAKE2BDigest (int size, bool bits) : this(size, bits, true)
+		public Blake2BDigest (int size, bool bits) : this(size, bits, true)
 		{
 		}
 
-		protected BLAKE2BDigest(int size, bool bits, bool init) {
+		protected Blake2BDigest(int size, bool bits, bool init) {
             
             if (bits) size /= 8;
 
@@ -71,6 +69,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		{
 			var outputBytes = hasher.Finish ();
 			Array.Copy (outputBytes, 0, output, outOff, outputBytes.Length);
+            Reset();
 			return outputBytes.Length;
 		}
 
