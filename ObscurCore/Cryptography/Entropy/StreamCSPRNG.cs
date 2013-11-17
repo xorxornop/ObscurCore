@@ -37,7 +37,7 @@ namespace ObscurCore.Cryptography.Entropy
                 {
                     CipherName = cipher.ToString(),
                     Key = new byte[Athena.Cryptography.StreamCipherDirectory[cipher].DefaultKeySize / 8],
-                    IV = new byte[Athena.Cryptography.StreamCipherDirectory[cipher].DefaultIVSize / 8]
+                    Nonce = new byte[Athena.Cryptography.StreamCipherDirectory[cipher].DefaultIVSize / 8]
                 };
             return config;
         }

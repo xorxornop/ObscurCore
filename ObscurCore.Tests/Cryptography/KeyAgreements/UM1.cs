@@ -23,7 +23,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		
 		[TestFixtureSetUp]
 		public void Init () {		
-			var curves = Enum.GetNames (typeof(BrainpoolECFpCurves));
+			var curves = Enum.GetNames (typeof(ECFpCurves));
 			for (var i = 1; i < curves.Length; i++) {
 			    var domain = Source.GetECDomainParameters(curves[i]);
 				var kpInitiator = ECAgreementUtility.GenerateKeyPair (domain);
@@ -41,7 +41,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_160r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecBrainpoolKPs[BrainpoolECFpCurves.BrainpoolP160r1.ToString()];
+			var context = _ecBrainpoolKPs[ECFpCurves.BrainpoolP160r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -50,7 +50,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_192r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecBrainpoolKPs[BrainpoolECFpCurves.BrainpoolP192r1.ToString()];
+			var context = _ecBrainpoolKPs[ECFpCurves.BrainpoolP192r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -59,7 +59,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_224r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecBrainpoolKPs[BrainpoolECFpCurves.BrainpoolP224r1.ToString()];
+			var context = _ecBrainpoolKPs[ECFpCurves.BrainpoolP224r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -68,7 +68,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_256r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecBrainpoolKPs[BrainpoolECFpCurves.BrainpoolP256r1.ToString()];
+			var context = _ecBrainpoolKPs[ECFpCurves.BrainpoolP256r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -77,7 +77,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_320r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecBrainpoolKPs[BrainpoolECFpCurves.BrainpoolP320r1.ToString()];
+			var context = _ecBrainpoolKPs[ECFpCurves.BrainpoolP320r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -86,7 +86,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_384r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecBrainpoolKPs[BrainpoolECFpCurves.BrainpoolP384r1.ToString()];
+			var context = _ecBrainpoolKPs[ECFpCurves.BrainpoolP384r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -95,7 +95,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_512r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecBrainpoolKPs[BrainpoolECFpCurves.BrainpoolP512r1.ToString()];
+			var context = _ecBrainpoolKPs[ECFpCurves.BrainpoolP512r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));

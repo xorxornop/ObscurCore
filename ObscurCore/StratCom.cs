@@ -15,16 +15,14 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using ObscurCore.Cryptography.Entropy;
-using ObscurCore.DTO;
 using ProtoBuf;
 
 namespace ObscurCore
 {
-    public static partial class StratCom
+    public static class StratCom
     {
         private const int InitialSeedSize = 64; // bytes
         public static readonly SecureRandom EntropySource = SecureRandom.GetInstance("SHA256PRNG");

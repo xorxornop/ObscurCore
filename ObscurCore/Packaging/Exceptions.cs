@@ -13,12 +13,18 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore.DTO
+using System;
+
+namespace ObscurCore.Packaging
 {
     /// <summary>
-    /// Denotes that the object is an ObscurCore data transfer object (DTO).
-    /// </summary>
-    public interface IDataTransferObject
-    {
-    }
+	/// Represents the error that occurs when, during package I/O, 
+	/// a configuration error causes an abort of the package I/O operation.
+	/// </summary>
+	public class PackageConfigurationException : Exception
+	{
+		public PackageConfigurationException (string message) : base(message)
+		{
+		}
+	}
 }

@@ -13,6 +13,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System;
 using System.Security.Cryptography;
 using ObscurCore.Cryptography.KeyDerivation.Primitives;
 using ObscurCore.DTO;
@@ -108,10 +109,9 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		}
 		
 		public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, byte[] config) {
-			int iterationPower, blocks, parallelisation;
-			ScryptConfigurationUtility.Read (config, out iterationPower, out blocks, out parallelisation);
+		    var scConfig = StratCom.DeserialiseDTO<ScryptConfiguration>(config);
 			var output = new byte[outputSize / 8];
-			SCrypt.ComputeKey(key, salt, iterationPower, blocks, parallelisation, null, output);
+			SCrypt.ComputeKey(key, salt, scConfig.IterationPower, scConfig.Blocks, scConfig.Parallelism, null, output);
 			return output;
 		}
 	}
@@ -157,10 +157,10 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		}
 		
 		public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, byte[] config) {
-			int iterations;
-			PBKDF2ConfigurationUtility.Read(config, out iterations);
+			var pbkdf2Config = StratCom.DeserialiseDTO<PBKDF2Configuration>(config);
+            if(!pbkdf2Config.AlgorithmName.Equals("HMACSHA256")) throw new ArgumentException();
 			var output = new byte[outputSize];
-			Pbkdf2.ComputeKey(key, salt, iterations, Pbkdf2.CallbackFromHmac<HMACSHA256>(), outputSize / 8, output);
+			Pbkdf2.ComputeKey(key, salt, pbkdf2Config.Iterations, Pbkdf2.CallbackFromHmac<HMACSHA256>(), outputSize / 8, output);
 			return output;
 		}
 	}

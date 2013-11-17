@@ -27,6 +27,17 @@ namespace ObscurCore.DTO
 		Stream
 	}
 
+    [ProtoContract]
+	public enum VerificationFunctionType
+	{
+		None,
+		Digest,
+		MAC,
+		KDF
+	}
+
+
+
 	public enum KeyActions
 	{
 		Associate,

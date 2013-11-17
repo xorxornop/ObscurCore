@@ -13,13 +13,13 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
 
         public SOSEMANUKGenerator(StreamCipherCSPRNGConfiguration config) : base(config) {
             var cp = Source.CreateStreamCipherParameters(SymmetricStreamCiphers.SOSEMANUK, Config.Key,
-                Config.IV);
+                Config.Nonce);
             _engine.Init(true, cp);
         }
 
         public SOSEMANUKGenerator(byte[] config) : base(config) {
             var cp = Source.CreateStreamCipherParameters(SymmetricStreamCiphers.SOSEMANUK, Config.Key,
-                Config.IV);
+                Config.Nonce);
             _engine.Init(true, cp);
         }
 

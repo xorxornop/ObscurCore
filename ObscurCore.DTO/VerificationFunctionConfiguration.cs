@@ -29,25 +29,24 @@ namespace ObscurCore.DTO
 		IEquatable<VerificationFunctionConfiguration>
 	{
 		/// <summary>
+		/// Category/type of the function primitive, e.g. Digest, MAC, or KDF.
+		/// </summary>
+		[ProtoMember(1, IsRequired = true)]
+		public string FunctionType { get; set; }
+        
+        /// <summary>
 		/// Name of the function used to verify some data (e.g. a key, a payload item, etc.). 
 		/// This may be a key derivation function, HMAC function, hash function, etc.
 		/// </summary>
-		[ProtoMember(1, IsRequired = true)]
+		[ProtoMember(2, IsRequired = true)]
 		public string FunctionName { get; set; }
 
 		/// <summary>
 		/// Configuration for the verification function, where applicable.
 		/// </summary>
 		/// <remarks>Format of the configuration is that of the consuming type.</remarks>
-		[ProtoMember(2, IsRequired = false)]
-		public byte[] FunctionConfiguration { get; set; }
-
-		/// <summary>
-		/// Key for the verification function, where applicable 
-		/// (e.g. hash functions do not use one, but HMAC does).
-		/// </summary>
 		[ProtoMember(3, IsRequired = false)]
-		public byte[] Key { get; set; }
+		public byte[] FunctionConfiguration { get; set; }
 
 		/// <summary>
 		/// Salt for the verification function, where applicable.
@@ -88,7 +87,6 @@ namespace ObscurCore.DTO
 			if (ReferenceEquals(this, other)) return true;
 			return string.Equals(FunctionName, other.FunctionName) &&
 				FunctionConfiguration !=  null ? FunctionConfiguration.SequenceEqual(other.FunctionConfiguration) : true && 
-				Key != null ? Key.SequenceEqual(other.Key) : true &&
 				Salt != null ? Salt.SequenceEqual(other.Salt) : true && 
 				VerifiedOutput.SequenceEqual(other.VerifiedOutput);
 		}
@@ -104,7 +102,6 @@ namespace ObscurCore.DTO
 			unchecked {
 				int hashCode = FunctionName.GetHashCode();
 				hashCode = (hashCode * 397) ^ (FunctionConfiguration != null ? FunctionConfiguration.GetHashCode() : 0); // can be null
-				hashCode = (hashCode * 397) ^ (Key != null ? Key.GetHashCode() : 0); // can be null
 				hashCode = (hashCode * 397) ^ (Salt != null ? Salt.GetHashCode() : 0); // can be null
 				hashCode = (hashCode * 397) ^ (AdditionalData != null ? AdditionalData.GetHashCode() : 0); // can be null
 				hashCode = (hashCode * 397) ^ VerifiedOutput.GetHashCode();
@@ -115,6 +112,11 @@ namespace ObscurCore.DTO
 
 	public interface IVerificationFunctionConfiguration
 	{
+        /// <summary>
+		/// Category/type of the function primitive, e.g. Digest, MAC, or KDF.
+		/// </summary>
+		string FunctionType { get; }
+        
 		/// <summary>
 		/// Name of the function used to verify some data (e.g. a key, a payload item, etc.). 
 		/// This may be a key derivation function, HMAC function, hash function, etc.
@@ -128,15 +130,14 @@ namespace ObscurCore.DTO
 		byte[] FunctionConfiguration { get; }
 
 		/// <summary>
-		/// Key for the verification function, where applicable 
-		/// (e.g. hash functions do not use one, but HMAC does).
-		/// </summary>
-		byte[] Key { get; }
-
-		/// <summary>
 		/// Salt for the verification function, where applicable.
 		/// </summary>
 		byte[] Salt { get; }
+
+        /// <summary>
+		/// Additional data for the verification function, where applicable.
+		/// </summary>
+		byte[] AdditionalData { get; set; }
 
 		/// <summary>
 		/// Output of the confirmation/verification scheme given correct input data. 

@@ -29,9 +29,17 @@ namespace ObscurCore.DTO
         IDataTransferObject, IEquatable<SymmetricCipherConfiguration>
     {
         #region Data relevant to all symmetric ciphers
+
+        /// <summary>
+        /// Category/type of the cipher primitive, e.g. block, AEAD, or stream. 
+        /// AEAD must be specified if using a block cipher in a AEAD mode of operation.
+        /// </summary>
         [ProtoMember(1, IsRequired = true), DefaultValue(SymmetricCipherType.None)]
         public SymmetricCipherType Type { get; set; }
 
+        /// <summary>
+        /// Name of the cipher primitive, e.g. AES.
+        /// </summary>
         [ProtoMember(2, IsRequired = true)]
         public string CipherName { get; set; }
 		
@@ -152,8 +160,15 @@ namespace ObscurCore.DTO
 
     public interface ISymmetricCipherConfiguration
     {
+        /// <summary>
+        /// Category/type of the cipher primitive, e.g. block, AEAD, or stream. 
+        /// AEAD must be specified if using a block cipher in a AEAD mode of operation.
+        /// </summary>
         SymmetricCipherType Type { get; }
 
+        /// <summary>
+        /// Name of the cipher primitive, e.g. AES.
+        /// </summary>
         string CipherName { get; }
 
         /// <summary>

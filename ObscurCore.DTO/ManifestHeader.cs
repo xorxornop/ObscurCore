@@ -21,7 +21,7 @@ using ProtoBuf;
 namespace ObscurCore.DTO
 {
     [ProtoContract]
-    public class ManifestHeader : IDataTransferObject, IEquatable<ManifestHeader>
+    public class ManifestHeader : IDataTransferObject, IEquatable<ManifestHeader>, IManifestHeader
     {
         /// <summary>
         /// Format version of the following Manifest object. 
@@ -87,5 +87,28 @@ namespace ObscurCore.DTO
 					(CryptographySchemeConfiguration != null ? CryptographySchemeConfiguration.GetHashCode() : 0);
             }
         }
+    }
+
+    public interface IManifestHeader
+    {
+        /// <summary>
+        /// Format version of the following Manifest object. 
+        /// Used to denote breaking changes that may cause incompatibility.
+        /// </summary>
+        [ProtoMember(1, IsRequired = true)]
+        int FormatVersion { get; set; }
+
+        /// <summary>
+        /// Name of the cryptographic scheme used to secure the Manifest.
+        /// </summary>
+        [ProtoMember(3, IsRequired = true)]
+        string CryptographySchemeName { get; set; }
+
+        /// <summary>
+        /// Configuration of the cryptographic scheme used to secure the Manifest.
+        /// </summary>
+        /// <remarks>Format of the configuration is that of the consuming type.</remarks>
+        [ProtoMember(4, IsRequired = false)]
+        byte[] CryptographySchemeConfiguration { get; set; }
     }
 }

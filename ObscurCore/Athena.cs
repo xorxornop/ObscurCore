@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using ObscurCore.Cryptography;
 using ObscurCore.Packaging;
 
@@ -539,6 +540,14 @@ namespace ObscurCore
             public static bool IsSymmetricPaddingSupported(string name) {
                 return Enum.GetNames(typeof (BlockCipherPaddings)).Contains(name);
             }
+        }
+
+        public static class Packaging
+        {
+            internal const int HeaderVersion = 1; // Version of DTO objects that code includes support for
+
+            internal static readonly byte[] HeaderTagBytes = Encoding.ASCII.GetBytes("OCpkg-OHAI");
+            internal static readonly byte[] TrailerTagBytes = Encoding.ASCII.GetBytes("KBAI-OCpkg");
         }
     }
 

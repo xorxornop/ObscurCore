@@ -28,7 +28,7 @@ namespace ObscurCore.DTO
         IDataTransferObject, IEquatable<PayloadLayoutConfiguration>
     {
         /// <summary>
-        /// Name of the payload layout scheme.
+        /// Name of the payload layout scheme, e.g. Frameshift.
         /// </summary>
         [ProtoMember(1, IsRequired = true)]
         public string SchemeName { get; set; }
@@ -44,14 +44,14 @@ namespace ObscurCore.DTO
         /// Name of the PRNG used for selecting the active stream, 
         /// and other scheme-specific states.
         /// </summary>
-        [ProtoMember(3)]
+        [ProtoMember(3, IsRequired = false)]
         public string PrimaryPRNGName { get; set; }
 		
         /// <summary>
         /// Configuration for the primary PRNG.
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        [ProtoMember(4)]
+        [ProtoMember(4, IsRequired = false)]
         public byte[] PrimaryPRNGConfiguration { get; set; }
 		
         ///// <summary>
@@ -119,6 +119,9 @@ namespace ObscurCore.DTO
 
     public interface IPayloadLayoutConfiguration
     {
+        /// <summary>
+        /// Name of the payload layout scheme, e.g. Frameshift.
+        /// </summary>
         string SchemeName { get; }
 
         /// <summary>

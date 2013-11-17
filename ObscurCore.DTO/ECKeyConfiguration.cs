@@ -26,7 +26,7 @@ namespace ObscurCore.DTO
     // ***************************************************************************************************************************************************
 
     [ProtoContract]
-    public class ECKeyConfiguration : IDataTransferObject, IEquatable<ECKeyConfiguration>
+    public class ECKeyConfiguration : IDataTransferObject, IEquatable<ECKeyConfiguration>, IECKeyConfiguration
     {
         /// <summary>
         /// Name of the curve provider. Used to look up relevant domain parameters to interpret the encoded key.
@@ -77,5 +77,23 @@ namespace ObscurCore.DTO
         public bool IsSuperficiallyValid() {
             return String.IsNullOrEmpty(CurveProviderName) || String.IsNullOrEmpty(CurveName) || EncodedKey == null;
         }
+    }
+
+    public interface IECKeyConfiguration
+    {
+        /// <summary>
+        /// Name of the curve provider. Used to look up relevant domain parameters to interpret the encoded key.
+        /// </summary>
+        string CurveProviderName { get; set; }
+
+        /// <summary>
+        /// Name of the elliptic curve in the provider's selection.
+        /// </summary>
+        string CurveName { get; set; }
+
+        /// <summary>
+        /// Byte-array-encoded form of the key.
+        /// </summary>
+        byte[] EncodedKey { get; set; }
     }
 }

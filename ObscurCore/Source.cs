@@ -187,6 +187,8 @@ namespace ObscurCore
 			MacInstantiators.Add(MACFunctions.Keccak384, () => new KeccakMac(384, true));
 			MacInstantiators.Add(MACFunctions.Keccak512, () => new KeccakMac(512, true));
 
+            // ######################################## EC ########################################
+
             var domainFunc = new Func<string, string, string, string, string, string, 
                 ECDomainParameters>((p, A, B, x, y, q) =>
                 {
@@ -195,7 +197,7 @@ namespace ObscurCore
 				    	new BigInteger(y, 16), false), new BigInteger(q, 16));
                 });
 
-            EcParameters.Add(BrainpoolECFpCurves.BrainpoolP160r1.ToString(), () => domainFunc(
+            EcParameters.Add(ECFpCurves.BrainpoolP160r1.ToString(), () => domainFunc(
 				"E95E4A5F737059DC60DFC7AD95B3D8139515620F",
 				"340E7BE2A280EB74E2BE61BADA745D97E8F7C300",
 				"1E589A8595423412134FAA2DBDEC95C8D8675E58",
@@ -204,7 +206,7 @@ namespace ObscurCore
 				"E95E4A5F737059DC60DF5991D45029409E60FC09"
 				));
 			
-			EcParameters.Add(BrainpoolECFpCurves.BrainpoolP192r1.ToString(), () => domainFunc(
+			EcParameters.Add(ECFpCurves.BrainpoolP192r1.ToString(), () => domainFunc(
 				"C302F41D932A36CDA7A3463093D18DB78FCE476DE1A86297",
 				"6A91174076B1E0E19C39C031FE8685C1CAE040E5C69A28EF",
 				"469A28EF7C28CCA3DC721D044F4496BCCA7EF4146FBF25C9",
@@ -213,7 +215,7 @@ namespace ObscurCore
 				"C302F41D932A36CDA7A3462F9E9E916B5BE8F1029AC4ACC1"
 				));
 			
-			EcParameters.Add(BrainpoolECFpCurves.BrainpoolP224r1.ToString(), () => domainFunc(
+			EcParameters.Add(ECFpCurves.BrainpoolP224r1.ToString(), () => domainFunc(
 				"D7C134AA264366862A18302575D1D787B09F075797DA89F57EC8C0FF",
 				"68A5E62CA9CE6C1C299803A6C1530B514E182AD8B0042A59CAD29F43",
 				"2580F63CCFE44138870713B1A92369E33E2135D266DBB372386C400B",
@@ -222,7 +224,7 @@ namespace ObscurCore
 				"D7C134AA264366862A18302575D0FB98D116BC4B6DDEBCA3A5A7939F"
 				));
 			
-			EcParameters.Add(BrainpoolECFpCurves.BrainpoolP256r1.ToString(), () => domainFunc(
+			EcParameters.Add(ECFpCurves.BrainpoolP256r1.ToString(), () => domainFunc(
 				"A9FB57DBA1EEA9BC3E660A909D838D726E3BF623D52620282013481D1F6E5377",
 				"7D5A0975FC2C3057EEF67530417AFFE7FB8055C126DC5C6CE94A4B44F330B5D9",
 				"26DC5C6CE94A4B44F330B5D9BBD77CBF958416295CF7E1CE6BCCDC18FF8C07B6",
@@ -231,7 +233,7 @@ namespace ObscurCore
 				"A9FB57DBA1EEA9BC3E660A909D838D718C397AA3B561A6F7901E0E82974856A7"
 				));
 			
-			EcParameters.Add(BrainpoolECFpCurves.BrainpoolP320r1.ToString(), () => domainFunc(
+			EcParameters.Add(ECFpCurves.BrainpoolP320r1.ToString(), () => domainFunc(
 				"D35E472036BC4FB7E13C785ED201E065F98FCFA6F6F40DEF4F92B9EC7893EC28FCD412B1F1B32E27",
 				"3EE30B568FBAB0F883CCEBD46D3F3BB8A2A73513F5EB79DA66190EB085FFA9F492F375A97D860EB4",
 				"520883949DFDBC42D3AD198640688A6FE13F41349554B49ACC31DCCD884539816F5EB4AC8FB1F1A6",
@@ -240,7 +242,7 @@ namespace ObscurCore
 				"D35E472036BC4FB7E13C785ED201E065F98FCFA5B68F12A32D482EC7EE8658E98691555B44C59311"
 				));
 			
-			EcParameters.Add(BrainpoolECFpCurves.BrainpoolP384r1.ToString(), () => domainFunc(
+			EcParameters.Add(ECFpCurves.BrainpoolP384r1.ToString(), () => domainFunc(
 				"8CB91E82A3386D280F5D6F7E50E641DF152F7109ED5456B412B1DA197FB71123ACD3A729901D1A71874700133107EC53",
 				"7BC382C63D8C150C3C72080ACE05AFA0C2BEA28E4FB22787139165EFBA91F90F8AA5814A503AD4EB04A8C7DD22CE2826",
 				"4A8C7DD22CE28268B39B55416F0447C2FB77DE107DCD2A62E880EA53EEB62D57CB4390295DBC9943AB78696FA504C11",
@@ -249,7 +251,7 @@ namespace ObscurCore
 				"8CB91E82A3386D280F5D6F7E50E641DF152F7109ED5456B31F166E6CAC0425A7CF3AB6AF6B7FC3103B883202E9046565"
 				));
 			
-			EcParameters.Add(BrainpoolECFpCurves.BrainpoolP512r1.ToString(), () => domainFunc(
+			EcParameters.Add(ECFpCurves.BrainpoolP512r1.ToString(), () => domainFunc(
 				"AADD9DB8DBE9C48B3FD4E6AE33C9FC07CB308DB3B3C9D20ED6639CCA703308717D4D9B009BC66842AECDA12AE6A380E62881FF2F2D82C68528AA6056583A48F3",
 				"7830A3318B603B89E2327145AC234CC594CBDD8D3DF91610A83441CAEA9863BC2DED5D5AA8253AA10A2EF1C98B9AC8B57F1117A72BF2C7B9E7C1AC4D77FC94CA",
 				"3DF91610A83441CAEA9863BC2DED5D5AA8253AA10A2EF1C98B9AC8B57F1117A72BF2C7B9E7C1AC4D77FC94CADC083E67984050B75EBAE5DD2809BD638016F723",
@@ -258,6 +260,7 @@ namespace ObscurCore
 				"AADD9DB8DBE9C48B3FD4E6AE33C9FC07CB308DB3B3C9D20ED6639CCA70330870553E5C414CA92619418661197FAC10471DB1D381085DDADDB58796829CA90069"
 				));
 
+            // ######################################## PACKAGING ########################################
 
             PayloadLayoutModuleInstantiators.Add(PayloadLayoutSchemes.Simple, (writing, multiplexedStream, streams, transforms, config) => 
 			                         new SimpleMux(writing, multiplexedStream, streams, transforms, config));
@@ -267,16 +270,18 @@ namespace ObscurCore
             PayloadLayoutModuleInstantiators.Add(PayloadLayoutSchemes.Fabric, (writing, multiplexedStream, streams, transforms, config) => 
 			                                     new FabricMux(writing, multiplexedStream, streams, transforms, config));
 #endif
+            // ######################################## INIT END ########################################
         }
 
+        // Block ciphers
 
         /// <summary>
-        /// Instantiates and returns a symmetric block cipher of the algorithm type that the instance this method was called from describes.
+        /// Instantiates and returns an implementation of the requested symmetric block cipher.
         /// </summary>
         /// <returns>An IBlockCipher cipher object implementing the relevant cipher algorithm.</returns>
-        public static IBlockCipher CreateBlockCipher (SymmetricBlockCiphers cipher, int? blockSize = null) {
-            if (blockSize == null) blockSize = Athena.Cryptography.BlockCipherDirectory[cipher].DefaultBlockSize;
-            return EngineInstantiatorsBlock[cipher](blockSize.Value);
+        public static IBlockCipher CreateBlockCipher (SymmetricBlockCiphers cipherEnum, int? blockSize = null) {
+            if (blockSize == null) blockSize = Athena.Cryptography.BlockCipherDirectory[cipherEnum].DefaultBlockSize;
+            return EngineInstantiatorsBlock[cipherEnum](blockSize.Value);
         }
 
         public static IBlockCipher CreateBlockCipher (string cipherName, int? blockSize = null) {
@@ -284,31 +289,20 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Instantiates and returns a symmetric stream cipher of the algorithm type that the instance this method was called from describes.
-        /// </summary>
-        /// <returns>An IStreamCipher cipher object implementing the relevant cipher algorithm.</returns>
-        public static IStreamCipher CreateStreamCipher (SymmetricStreamCiphers cipher) {
-            return EngineInstantiatorsStream[cipher]();
-        }
-
-        public static IStreamCipher CreateStreamCipher (string cipherName) {
-            return EngineInstantiatorsStream[cipherName.ToEnum<SymmetricStreamCiphers>()]();
-        }
-
-        /// <summary>
-        /// Implements a mode of operation on top of an existing block cipher object.
+        /// Implements a mode of operation on top of an existing block cipher. 
+        /// Attention: CTS (CTS_CBC) mode invocations require further manipulation prior to use.
         /// </summary>
         /// <param name="cipher">The block cipher to implement this mode of operation on top of.</param>
-        /// <param name="mode">The mode of operation to implement.</param>
+        /// <param name="modeEnum">The mode of operation to implement.</param>
         /// <param name="size">Where applicable, the size parameter required for some modes of operation.</param>
         /// <returns>
-        /// An IBlockCipher cipher object implementing the relevant mode of operation on top of the supplied symmetric block cipher.
+        /// IBlockCipher object implementing the relevant mode of operation, 
+        /// overlaying the supplied symmetric block cipher.
         /// </returns>
-        public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, BlockCipherModes mode, int? size = null) {
-            var cipherMode = ModeInstantiatorsBlock[mode](cipher, size ??
+        public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, BlockCipherModes modeEnum, int? size = null) {
+            var cipherMode = ModeInstantiatorsBlock[modeEnum](cipher, size ??
                 (cipher != null ? Athena.Cryptography.BlockCipherDirectory[cipher.AlgorithmName.ToEnum<SymmetricBlockCiphers>(true)]
                     .DefaultBlockSize : cipher.GetBlockSize()));
-            //return mode != BlockCipherModes.CTS_CBC ? cipherMode : new CtsBlockCipher(cipher) as IBlockCipher;
             return cipherMode;
         }
 
@@ -317,44 +311,121 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Implements an Authenticated Encryption/Decryption mode of operation on top of an existing block cipher object.
-        /// </summary>
-        /// <param name="mode">The mode of operation to implement.</param>
-        /// <param name="cipher">The block cipher to implement this mode of operation on top of.</param>
-        /// <returns>
-        /// An IAeadBlockCipher cipher object implementing the relevant mode of operation on top of the supplied symmetric block cipher.
-        /// </returns>
-        public static IAeadBlockCipher OverlayBlockCipherWithAEAD (AEADBlockCipherModes mode, IBlockCipher cipher) {
-            return ModeInstantiatorsAead[mode](cipher);
-        }
-
-        public static IAeadBlockCipher OverlayBlockCipherWithAEAD (string modeName, IBlockCipher cipher) {
-            return ModeInstantiatorsAead[modeName.ToEnum<AEADBlockCipherModes>()](cipher);
-        }
-
-        /// <summary>
-        /// Instantiates and returns a IBlockCipherPadding object implementing the relevant padding mode for interaction with a block cipher.
+        /// Instantiates and returns an implementation of the requested padding mode. 
+        /// Must be combined with a block cipher for operation.
         /// </summary>
         /// <returns>
-        /// An IBlockCipherPadding cipher object implementing the relevant padding scheme for use with symmetric block ciphers.
+        /// An IBlockCipherPadding cipher object implementing the relevant padding scheme.
         /// </returns>
-        public static IBlockCipherPadding CreatePadding (BlockCipherPaddings padding) {
-            return PaddingInstantiators[padding]();
+        public static IBlockCipherPadding CreatePadding (BlockCipherPaddings paddingEnum) {
+            return PaddingInstantiators[paddingEnum]();
         }
 
         public static IBlockCipherPadding CreatePadding (string paddingName) {
             return CreatePadding(paddingName.ToEnum<BlockCipherPaddings>());
         }
 
+        /// <summary>
+        /// Implements an Authenticated Encryption/Decryption (AEAD) mode of operation on top of an existing block cipher. 
+        /// </summary>
+        /// <param name="cipher">The block cipher to implement this mode of operation on top of.</param>
+        /// <param name="modeEnum">The mode of operation to implement.</param>
+        /// <returns>
+        /// IAeadBlockCipher object implementing the relevant mode of operation, 
+        /// overlaying the supplied symmetric block cipher.
+        /// </returns>
+        public static IAeadBlockCipher OverlayBlockCipherWithAEADMode (IBlockCipher cipher, AEADBlockCipherModes modeEnum) {
+            return ModeInstantiatorsAead[modeEnum](cipher);
+        }
+
+        public static IAeadBlockCipher OverlayBlockCipherWithAEADMode (IBlockCipher cipher, string modeName) {
+            return ModeInstantiatorsAead[modeName.ToEnum<AEADBlockCipherModes>()](cipher);
+        }
+
+        // Block cipher parameters
+
+        public static ICipherParameters CreateBlockCipherParameters(ISymmetricCipherConfiguration config) {
+            return CreateBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCiphers>(), config.Key, config.IV);
+        }
+
+        public static ICipherParameters CreateBlockCipherParameters(SymmetricBlockCiphers cipherEnum, byte[] key, byte[] iv) {
+            ICipherParameters cipherParams = null;
+
+            if((iv == null || iv.Length == 0) && Athena.Cryptography.BlockCipherDirectory[cipherEnum].DefaultIVSize != -1) 
+                throw new NotSupportedException("IV is null or zero-zength.");
+
+            if (cipherEnum.ToString().Equals(SymmetricBlockCiphers.TripleDES.ToString())) {
+                if(!Athena.Cryptography.BlockCipherDirectory[cipherEnum].AllowableKeySizes.Contains(key.Length * 8)) 
+                    throw new InvalidDataException("Key size is unsupported/incompatible.");
+                cipherParams = new ParametersWithIV(new DesEdeParameters(key, 0, key.Length), iv, 0,
+                    iv.Length);
+            } else {
+                cipherParams = new ParametersWithIV(CreateKeyParameter(cipherEnum, key), iv, 0, iv.Length);
+            }
+
+            return cipherParams;
+        }
+
+        public static ICipherParameters CreateAEADBlockCipherParameters(SymmetricBlockCiphers cipherEnum, byte[] key, byte[] iv, 
+            int macSizeBits, byte[] ad)
+		{
+            ICipherParameters cipherParams = null;
+
+            if(!Athena.Cryptography.BlockCipherDirectory[cipherEnum].AllowableBlockSizes.Contains(macSizeBits)) 
+                throw new InvalidDataException("MAC size is unsupported/incompatible.");
+
+            if (cipherEnum == SymmetricBlockCiphers.TripleDES) {
+                // Treat 3DES differently to other ciphers for key parameter object creation
+                cipherParams = new AeadParameters(new DesEdeParameters(key, 0, key.Length), macSizeBits, iv,
+                    ad ?? new byte[0]);
+            } else {
+                cipherParams = new AeadParameters(new KeyParameter(key, 0, key.Length), macSizeBits, iv,
+                    ad ?? new byte[0]);
+            }
+
+            return cipherParams;
+        }
+
+        // Stream ciphers
+
+        /// <summary>
+        /// Instantiates and returns a symmetric stream cipher of the algorithm type that the instance this method was called from describes.
+        /// </summary>
+        /// <returns>An IStreamCipher cipher object implementing the relevant cipher algorithm.</returns>
+        public static IStreamCipher CreateStreamCipher (SymmetricStreamCiphers cipherEnum) {
+            return EngineInstantiatorsStream[cipherEnum]();
+        }
+
+        public static IStreamCipher CreateStreamCipher (string cipherName) {
+            return EngineInstantiatorsStream[cipherName.ToEnum<SymmetricStreamCiphers>()]();
+        }
+
+        public static ICipherParameters CreateStreamCipherParameters(SymmetricStreamCiphers cipherEnum, byte[] key, byte[] iv) {
+#if(INCLUDE_RC4)
+            if (cipher == SymmetricStreamCiphers.RC4) return CreateKeyParameter(key);
+#endif
+            if (cipherEnum == SymmetricStreamCiphers.ISAAC) return CreateKeyParameter(cipherEnum, key);
+
+            if (iv == null || iv.Length == 0) throw new InvalidDataException("IV is null or zero-length.");
+            if (!Athena.Cryptography.StreamCipherDirectory[cipherEnum].AllowableIVSizes.Contains(iv.Length * 8)) {
+                throw new InvalidDataException("IV size is unsupported/incompatible.");
+            }
+
+            var cipherParams = new ParametersWithIV(CreateKeyParameter(cipherEnum, key), iv);
+            return cipherParams;
+        }
+
+        // Authentication-related
+
 		/// <summary>
 		/// Instantiates and returns a hash/digest primitive.
 		/// </summary>
-		/// <param name="config">Configuration of the PRNG in byte-array encoded form.</param>
+		/// <param name="hashEnum">Hash/digest function to instantiate.</param>
 		/// <returns>
 		/// An digest object deriving from IDigest.
 		/// </returns>
-		public static IDigest CreateHashPrimitive (HashFunctions hash) {
-			return DigestInstantiators[hash]();
+		public static IDigest CreateHashPrimitive (HashFunctions hashEnum) {
+			return DigestInstantiators[hashEnum]();
 		}
 
 		public static IDigest CreateHashPrimitive(string hashName) {
@@ -364,6 +435,7 @@ namespace ObscurCore
 		/// <summary>
 		/// Instantiates and initialises a Message Authentication Code (MAC) primitive.
 		/// </summary>
+		/// <param name="macEnum">MAC function to instantiate.</param>
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
 		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
 		/// <param name="config">Configuration for the function, where applicable. For example,
@@ -371,20 +443,20 @@ namespace ObscurCore
 		/// <returns>
 		/// An MAC object deriving from IMac.
 		/// </returns>
-		public static IMac CreateMACPrimitive (MACFunctions mac, byte[] key, byte[] salt = null, byte[] config = null) {
+		public static IMac CreateMACPrimitive (MACFunctions macEnum, byte[] key, byte[] salt = null, byte[] config = null) {
 
 			IMac macObj;
-			if (mac == MACFunctions.HMAC) {
+			if (macEnum == MACFunctions.HMAC) {
 				if (config == null)
 					throw new ArgumentException ("No hash function specified (encoded as UTF-8 bytes).", "config");
 				return macObj = CreateHMACPrimitive(Encoding.UTF8.GetString(config).ToEnum<HashFunctions>(), key, salt);
-			} else if (mac == MACFunctions.CMAC) {
+			} else if (macEnum == MACFunctions.CMAC) {
 				if (config == null)
 					throw new ArgumentException ("No block cipher specified (encoded as UTF-8 bytes).", "config");
 				macObj = CreateCMACPrimitive(Encoding.UTF8.GetString(config).ToEnum<SymmetricBlockCiphers>(), key, salt);
 			} else {
-				macObj = MacInstantiators[mac]();
-				if (Athena.Cryptography.MACFunctionDirectory [mac].SaltSupported && salt != null) {
+				macObj = MacInstantiators[macEnum]();
+				if (Athena.Cryptography.MACFunctionDirectory [macEnum].SaltSupported && salt != null) {
 					// Primitive has its own special salting procedure
 					((IMacWithSalt)macObj).Init (key, salt);
 					return macObj;
@@ -404,8 +476,10 @@ namespace ObscurCore
 		/// Creates a CMAC primitive using a symmetric block cipher primitive configured with default block size. 
 		/// Default block sizes (and so, output sizes) can be found by querying Athena.
 		/// </summary>
+		/// <param name="cipherEnum">Cipher primitive to use as the basis for the CMAC construction.</param>
+		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
+		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
 		/// <returns>Pre-initialised CMAC primitive.</returns>
-		/// <param name="cipher">Cipher.</param>
 		public static IMac CreateCMACPrimitive(SymmetricBlockCiphers cipherEnum, byte[] key, byte[] salt = null) {
 			var defaultBlockSize = Athena.Cryptography.BlockCipherDirectory[cipherEnum].DefaultBlockSize;
 			if(defaultBlockSize != 64 && defaultBlockSize != 128) {
@@ -419,6 +493,13 @@ namespace ObscurCore
 			return macObj;
 		}
 
+        /// <summary>
+		/// Creates a HMAC primitive using a hash/digest primitive.
+		/// </summary>
+		/// <param name="hashEnum">Hash/digest primitive to use as the basis for the HMAC construction.</param>
+		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
+		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
+		/// <returns>Pre-initialised HMAC primitive.</returns>
 		public static IMac CreateHMACPrimitive(HashFunctions hashEnum, byte[] key, byte[] salt = null) {
 			var macObj = new HMac (DigestInstantiators [hashEnum]());
 			var keyParam = new KeyParameter (key);
@@ -428,90 +509,6 @@ namespace ObscurCore
 			return macObj;
 		}
 
-
-        public static ICipherParameters CreateBlockCipherParameters(ISymmetricCipherConfiguration config) {
-            return CreateBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCiphers>(), config.Key, config.IV);
-        }
-
-        public static ICipherParameters CreateBlockCipherParameters(SymmetricBlockCiphers cipher, byte[] key, byte[] iv) {
-            ICipherParameters cipherParams = null;
-
-            if((iv == null || iv.Length == 0) && Athena.Cryptography.BlockCipherDirectory[cipher].DefaultIVSize != -1) 
-                throw new NotSupportedException("IV is null or zero-zength.");
-
-
-            if (cipher.ToString().Equals(SymmetricBlockCiphers.TripleDES.ToString())) {
-                if(!Athena.Cryptography.BlockCipherDirectory[cipher].AllowableKeySizes.Contains(key.Length * 8)) 
-                    throw new InvalidDataException("Key size is unsupported/incompatible.");
-                cipherParams = new ParametersWithIV(new DesEdeParameters(key, 0, key.Length), iv, 0,
-                    iv.Length);
-            } else {
-                cipherParams = new ParametersWithIV(CreateKeyParameter(cipher, key), iv, 0, iv.Length);
-            }
-
-            return cipherParams;
-        }
-
-        public static ICipherParameters CreateAEADBlockCipherParameters(SymmetricBlockCiphers cipher, byte[] key, byte[] iv, 
-		                                                                int macSizeBits, byte[] ad)
-		{
-            ICipherParameters cipherParams = null;
-
-            //if (iv == null || !Athena.Cryptography.BlockCiphers[cipher].AllowableIVSizes.Contains(iv.Length * 8))
-                //throw new InvalidDataException("Nonce is null or incorrect size.");
-            // NOTE: May not need to check IV length outside of congruence with block/mac length
-
-            if(!Athena.Cryptography.BlockCipherDirectory[cipher]
-                        .AllowableBlockSizes.Contains(macSizeBits)) 
-                        throw new InvalidDataException("MAC size is unsupported/incompatible.");
-
-            
-
-            // Create the key+IV AEAD parameter object (here, nonce = IV)
-            // Treat 3DES differently to other ciphers for key parameter object creation
-            if (cipher == SymmetricBlockCiphers.TripleDES) {
-                cipherParams = new AeadParameters(new DesEdeParameters(key, 0, key.Length), macSizeBits, iv,
-                    ad ?? new byte[0]);
-            } else {
-                cipherParams = new AeadParameters(new KeyParameter(key, 0, key.Length), macSizeBits, iv,
-                    ad ?? new byte[0]);
-            }
-
-            return cipherParams;
-        }
-
-        public static ICipherParameters CreateStreamCipherParameters(SymmetricStreamCiphers cipher, byte[] key, byte[] iv) {
-#if(INCLUDE_RC4)
-            if (cipher == SymmetricStreamCiphers.RC4) return CreateKeyParameter(key);
-#endif
-            if (cipher == SymmetricStreamCiphers.ISAAC) return CreateKeyParameter(cipher, key);
-
-            if (iv == null || iv.Length == 0) throw new InvalidDataException("IV is null or zero-length.");
-            if (!Athena.Cryptography.StreamCipherDirectory[cipher].AllowableIVSizes.Contains(iv.Length * 8)) {
-                throw new InvalidDataException("IV size is unsupported/incompatible.");
-            }
-
-            var cipherParams = new ParametersWithIV(CreateKeyParameter(cipher, key), iv);
-            return cipherParams;
-        }
-
-        public static ICipherParameters CreateKeyParameter(SymmetricBlockCiphers cipher, byte[] key) {
-            if (!Athena.Cryptography.BlockCipherDirectory[cipher].AllowableKeySizes.Contains(key.Length * 8))
-                throw new InvalidDataException("Key size is unsupported/incompatible.");
-            
-            var cipherParams = new KeyParameter(key);
-            return cipherParams;
-        }
-
-        public static ICipherParameters CreateKeyParameter(SymmetricStreamCiphers cipher, byte[] key) {
-            if (!Athena.Cryptography.StreamCipherDirectory[cipher].AllowableKeySizes.Contains(key.Length * 8))
-                throw new InvalidDataException("Key size is unsupported/incompatible.");
-
-            var cipherParams = new KeyParameter(key);
-            return cipherParams;
-        }
-
-
         /// <summary>
 		/// Derives a working key with the KDF module.
 		/// </summary>
@@ -520,17 +517,46 @@ namespace ObscurCore
 		/// <param name="salt">Salt to use in derivation to increase entropy.</param>
 		/// <param name="outputSize">Output key size in bits.</param>
 		/// <param name="config">Configuration of the KDF in byte-array encoded form.</param>
-		public static byte[] DeriveKeyWithKDF (KeyDerivationFunctions kdf, byte[] key, byte[] salt, int outputSize, byte[] config) {
-			return KdfStatics[kdf](key, salt, outputSize, config);
+		public static byte[] DeriveKeyWithKDF (KeyDerivationFunctions kdfEnum, byte[] key, byte[] salt, int outputSize, byte[] config) {
+			return KdfStatics[kdfEnum](key, salt, outputSize, config);
 		}
 		
-		public static IKDFModule CreateKDF(KeyDerivationFunctions kdf, int outputSize, byte[] config) {
-			return KdfInstantiators[kdf](outputSize, config);
+		public static IKDFModule CreateKDF(KeyDerivationFunctions kdfEnum, int outputSize, byte[] config) {
+			return KdfInstantiators[kdfEnum](outputSize, config);
 		}
 
         public static IKDFModule CreateKDF(string kdfName, int outputSize, byte[] config) {
             return CreateKDF(kdfName.ToEnum<KeyDerivationFunctions>(), outputSize, config);
         }
+
+
+
+
+
+        
+
+        
+
+        
+
+        public static ICipherParameters CreateKeyParameter(SymmetricBlockCiphers cipherEnum, byte[] key) {
+            if (!Athena.Cryptography.BlockCipherDirectory[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
+                throw new InvalidDataException("Key size is unsupported/incompatible.");
+            
+            var cipherParams = new KeyParameter(key);
+            return cipherParams;
+        }
+
+        public static ICipherParameters CreateKeyParameter(SymmetricStreamCiphers cipherEnum, byte[] key) {
+            if (!Athena.Cryptography.StreamCipherDirectory[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
+                throw new InvalidDataException("Key size is unsupported/incompatible.");
+
+            var cipherParams = new KeyParameter(key);
+            return cipherParams;
+        }
+
+
+        
 
         /// <summary>
 		/// Instantiates and returns a PRNG implementing the mode of generation that the
@@ -540,38 +566,40 @@ namespace ObscurCore
 		/// <returns>
 		/// An PRNG object deriving from Random.
 		/// </returns>
-        public static CSPRNG CreateCSPRNG (CSPRNumberGenerators prng, byte[] config) {
-			return PrngInstantiators[prng](config);
+        public static CSPRNG CreateCSPRNG (CSPRNumberGenerators csprngEnum, byte[] config) {
+			return PrngInstantiators[csprngEnum](config);
 		}
 
-        public static CSPRNG CreateCSPRNG (string prngName, byte[] config) {
-            return CreateCSPRNG(prngName.ToEnum<CSPRNumberGenerators>(), config);
+        public static CSPRNG CreateCSPRNG (string csprngName, byte[] config) {
+            return CreateCSPRNG(csprngName.ToEnum<CSPRNumberGenerators>(), config);
         }
 
+        public static StreamCipherCSPRNGConfiguration CreateStreamCipherCSPRNGConfiguration
+            (SymmetricStreamCiphers cipherEnum)
+        {
 
-        public static StreamCipherCSPRNGConfiguration CreateStreamCipherCSPRNGConfiguration(
-            SymmetricStreamCiphers cipher) {
-
-            var prng = cipher.ToString().ToEnum<CSPRNumberGenerators>();
+            var prng = cipherEnum.ToString().ToEnum<CSPRNumberGenerators>();
             if (!PrngInstantiators.ContainsKey(prng)) {
                 throw new NotSupportedException(
                     "Stream cipher specified is not implemented/supported for use as a PRNG.");
             }
-            return StreamCSPRNG.CreateRandomConfiguration(cipher);
+            return StreamCSPRNG.CreateRandomConfiguration(cipherEnum);
+        }
+
+        public static ECDomainParameters GetECDomainParameters(ECFpCurves curveEnum) {
+            return GetECDomainParameters(curveEnum.ToString());
         }
 
         public static ECDomainParameters GetECDomainParameters(string name) {
             // Add extra checks if more curves are added
-            BrainpoolECFpCurves curve;
-            if (!Enum.TryParse<BrainpoolECFpCurves>(name, out curve)) {
+            ECFpCurves curve;
+            if (!Enum.TryParse<ECFpCurves>(name, out curve)) {
                 throw new NotSupportedException("Curve is unknown or otherwise unsupported.");
             }
             return EcParameters[name]();
         }
 
-        public static ECDomainParameters GetECDomainParameters(BrainpoolECFpCurves curve) {
-            return GetECDomainParameters(curve.ToString());
-        }
+        
 
         // Packaging related
 

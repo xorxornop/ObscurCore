@@ -18,17 +18,35 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography
 {
+    /// <summary>
+	/// Represents the error that occurs when, during package I/O, 
+	/// cryptographic key material associated with a payload item cannot be found. 
+	/// </summary>
+	public class ItemKeyMissingException : Exception
+	{
+		public ItemKeyMissingException (PayloadItem item) : base 
+			(String.Format("A cryptographic key for item GUID {0} and relative path \"{1}\" could not be found.", 
+			                item.Identifier.ToString(), item.RelativePath))
+		{}
+	}
+
+    public class KeyConfirmationException : Exception
+    {
+        public KeyConfirmationException() {}
+        public KeyConfirmationException(string message) : base(message) {}
+        public KeyConfirmationException(string message, Exception inner) : base(message, inner) {}
+    }
+
     public class PaddingException : Exception
 	{
 		public PaddingException () : base("The ciphertext padding is corrupt.") { }
 		public PaddingException (string message) : base("The ciphertext padding is corrupt.\n" + message) { }
 	}
 	
-    
-
 	public class AuthenticationException : Exception
 	{
 	    private const string ExceptionAttention = "WARNING: Possible security issue!";

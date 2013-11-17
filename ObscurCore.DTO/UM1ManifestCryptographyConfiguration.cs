@@ -26,7 +26,7 @@ namespace ObscurCore.DTO
 
     [ProtoContract]
     public class UM1ManifestCryptographyConfiguration : IManifestCryptographySchemeConfiguration, 
-        IDataTransferObject, IEquatable<UM1ManifestCryptographyConfiguration>
+        IDataTransferObject, IEquatable<UM1ManifestCryptographyConfiguration>, IUM1ManifestCryptographyConfiguration
     {
         /// <summary>
         /// Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
@@ -65,16 +65,12 @@ namespace ObscurCore.DTO
         public bool Equals(UM1ManifestCryptographyConfiguration other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            if(!IsSuperficiallyValid()) 
-                throw new InvalidDataException("Not a valid key agreement configuration.");
             return EphemeralKey.Equals(other.EphemeralKey) && SymmetricCipher.Equals(other.SymmetricCipher) 
                 && (KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) 
                 && KeyDerivation.Equals(other.KeyDerivation);
         }
 
         public override int GetHashCode () {
-            if (!IsSuperficiallyValid())
-                throw new InvalidDataException("Not a valid key agreement configuration.");
             unchecked {
                 int hashCode = EphemeralKey.GetHashCode(); // Must not be null! 
                 hashCode = (hashCode * 397) ^ SymmetricCipher.GetHashCode(); // Must not be null!
@@ -83,9 +79,29 @@ namespace ObscurCore.DTO
                 return hashCode;
             }
         }
-        // TODO: Use this concept on the other DTO objects, it's useful to have
-        public bool IsSuperficiallyValid() {
-            return EphemeralKey != null && SymmetricCipher != null && KeyDerivation != null;
-        }
+    }
+
+    public interface IUM1ManifestCryptographyConfiguration {
+        /// <summary>
+        /// Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
+        /// </summary>
+        ECKeyConfiguration EphemeralKey { get; set; }
+
+        /// <summary>
+        /// Configuration for the symmetric cipher to use with the key derived from the shared secret.
+        /// </summary>
+        SymmetricCipherConfiguration SymmetricCipher { get; set; }
+
+        /// <summary>
+        /// Key confirmation configuration for the manifest. 
+        /// Used to validate the existence and validity of keying material 
+        /// at the respondent's side without disclosing the key itself.
+        /// </summary>
+        VerificationFunctionConfiguration KeyConfirmation { get; set; }
+
+        /// <summary>
+        /// Configuration for the scheme used to derive a key from the shared secret.
+        /// </summary>
+        KeyDerivationConfiguration KeyDerivation { get; set; }
     }
 }

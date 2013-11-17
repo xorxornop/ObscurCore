@@ -25,14 +25,23 @@ namespace ObscurCore.DTO
     [ProtoContract]
     public class StreamCipherCSPRNGConfiguration : IDataTransferObject, IEquatable<StreamCipherCSPRNGConfiguration>
     {
+        /// <summary>
+        /// Name of the stream cipher primitive, e.g. Salsa20.
+        /// </summary>
         [ProtoMember(1, IsRequired = true)]
         public string CipherName { get; set; }
 
+        /// <summary>
+        /// Cryptographic key to configure the cipher primitive with.
+        /// </summary>
         [ProtoMember(2, IsRequired = true)]
         public byte[] Key { get; set; }
 
+        /// <summary>
+        /// Cryptographic nonce to initialise the cipher primitive with.
+        /// </summary>
         [ProtoMember(3, IsRequired = false)]
-        public byte[] IV { get; set; }
+        public byte[] Nonce { get; set; }
 
         /// <summary>
         /// Indicates whether the current object is equal to another object of the same type.
@@ -46,14 +55,14 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(this, other)) return true;
             return string.Equals(CipherName, other.CipherName) &&
                    (Key == null ? other.Key == null : Key.SequenceEqual(other.Key)) &&
-                   (IV == null ? other.IV == null : IV.SequenceEqual(other.IV));
+                   (Nonce == null ? other.Nonce == null : Nonce.SequenceEqual(other.Nonce));
         }
 
         public override int GetHashCode () {
             unchecked {
                 int hashCode = CipherName.GetHashCode(); // Must not be null!
 				hashCode = (hashCode * 397) ^ (Key != null ? Key.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (IV != null ? IV.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Nonce != null ? Nonce.GetHashCode() : 0);
                 return hashCode;
             }
         }

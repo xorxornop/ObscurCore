@@ -18,6 +18,10 @@ using System.IO;
 
 namespace ObscurCore
 {
+    /// <summary>
+    /// Base class for ObscurCore's decorating streams to inherit from. 
+    /// Provides baseline functionality, such as I/O directionality enforcement, and buffer information passthrough. 
+    /// </summary>
 	public abstract class DecoratingStream : Stream
 	{
 		public bool Writing { get; protected set; }

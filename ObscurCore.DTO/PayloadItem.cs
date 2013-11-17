@@ -26,7 +26,7 @@ namespace ObscurCore.DTO
     /// </summary>
     [ProtoContract]
     public sealed class PayloadItem : IStreamBinding, IDataTransferObject, IDisposable, 
-        IEquatable<PayloadItem>
+        IEquatable<PayloadItem>, IPayloadItem
     {
         public PayloadItem ()
         {
@@ -56,17 +56,21 @@ namespace ObscurCore.DTO
 
 		public void SetStreamBinding(Func<Stream> streamBinding) { _stream = new Lazy<Stream> (streamBinding); }
 
+        /// <summary>
+        /// Stream that the payload item is bound to.
+        /// For example, if the item is being read from a payload, the binding will be the location read to.
+        /// </summary>
         [ProtoIgnore]
         public Stream StreamBinding { get { return _stream.Value; } }
 
         /// <summary>
-        /// State of stream binding - whether stream is active, or in quiescent (lazy) state. Not the same as StreamHasBinding property.
+        /// State of stream binding - whether stream is active, or in quiescent (lazy) state. Not the same as <see cref="StreamHasBinding"/>.
         /// </summary>
         [ProtoIgnore]
         public bool StreamInitialised { get { return _stream.IsValueCreated; } }
 
         /// <summary>
-        /// State of stream binding - whether it has a lazy binding (can be activated), or none at all (activation is impossible; null reference).
+        /// State of <see cref="StreamBinding"/> - whether it has a lazy binding (can be activated), or none at all (activation is impossible; null reference).
         /// </summary>
         [ProtoIgnore]
         public bool StreamHasBinding { get { return _stream != null; } }
@@ -87,13 +91,13 @@ namespace ObscurCore.DTO
         public string RelativePath { get; set; }
 
         /// <summary>
-        /// Length of the item inside of the payload, excluding any additional length imparted by the payload layout module.
+        /// Length of the item inside of the payload, excluding any additional length imparted by the payload layout scheme.
         /// </summary>
         [ProtoMember(3, IsRequired = true)]
         public long InternalLength { get; set; }
 
         /// <summary>
-        /// Length of the item outside of the payload (unmodified - as it was before inclusion).
+        /// Length of the item outside of the payload, unmodified, as it was before inclusion.
         /// </summary>
         [ProtoMember(4, IsRequired = true)]
         public long ExternalLength { get; set; }
@@ -173,6 +177,9 @@ namespace ObscurCore.DTO
             }
         }
 
+        /// <summary>
+        /// Clean up the stream binding resource when disposing of the object.
+        /// </summary>
         public void Dispose () {
             if (_stream.IsValueCreated) {
                 _stream.Value.Close();
@@ -181,32 +188,72 @@ namespace ObscurCore.DTO
     }
 
 	/// <summary>
-	/// Interface for stream bindings that payload layout I/O modules accept as input.
+	/// Stripped-down access interface for payload items and compatible objects.
 	/// </summary>
 	public interface IStreamBinding
 	{
-		/// <summary>
-		/// Identifier used for stream binding for internal system use only. 
-		/// Not exported or useful outside of local data environment.
-		/// </summary>
 		Guid Identifier { get; }
-		
-		
 		Stream StreamBinding { get; }
-		
-		/// <summary>
-		/// Initialisation state of <see cref="StreamBinding"/> - whether stream is active, or in quiescent ("lazy") state. 
-		/// Not the same as <see cref="StreamHasBinding"/>!
-		/// </summary>
 		bool StreamInitialised { get; }
-		
-		/// <summary>
-		/// State of <see cref="StreamBinding"/> - whether it has a lazy binding (can be activated), 
-		/// or none at all (activation is impossible; null reference).
-		/// </summary>
 		bool StreamHasBinding { get; }
-		
-		long InternalLength { get; set; }
+        long InternalLength { get; set; }
         long ExternalLength { get; set; }
 	}
+
+    public interface IPayloadItem {
+        /// <summary>
+        /// Identifier used for stream binding.
+        /// </summary>
+        Guid Identifier { get; }
+
+        /// <summary>
+        /// Stream that the payload item is bound to.
+        /// For example, if the item is being read from a payload, the binding will be the location read to.
+        /// </summary>
+        Stream StreamBinding { get; }
+
+        /// <summary>
+        /// Item handling behaviour category. 
+        /// Key actions should be handled differently from the others.
+        /// </summary>
+        PayloadItemTypes Type { get; set; }
+
+        /// <summary>
+        /// Path of the stored data. 'Path' syntax may correspond to a key-value collection, filesystem, or other hierarchal schema. 
+        /// Syntax uses '/' to seperate stores/directories. Item names may or may not have extensions (if files/binary-data-type).
+        /// </summary>
+        string RelativePath { get; set; }
+
+        /// <summary>
+        /// Length of the item inside of the payload, excluding any additional length imparted by the payload layout scheme.
+        /// </summary>
+        long InternalLength { get; set; }
+
+        /// <summary>
+        /// Length of the item outside of the payload, unmodified, as it was before inclusion.
+        /// </summary>
+        long ExternalLength { get; set; }
+
+        /// <summary>
+        /// Encryption configuration for this payload item.
+        /// </summary>
+        SymmetricCipherConfiguration Encryption { get; set; }
+
+        /// <summary>
+        /// Key confirmation configuration for this payload item. 
+        /// Used to validate the existence and validity of keying material 
+        /// at the respondent's side without disclosing the key itself.
+        /// </summary>
+        VerificationFunctionConfiguration KeyConfirmation { get; set; }
+
+        /// <summary>
+        /// Key derivation configuration for this payload item.
+        /// </summary>
+        KeyDerivationConfiguration KeyDerivation { get; set; }
+
+        /// <summary>
+        /// Clean up the stream binding resource when disposing of the object.
+        /// </summary>
+        void Dispose ();
+    }
 }

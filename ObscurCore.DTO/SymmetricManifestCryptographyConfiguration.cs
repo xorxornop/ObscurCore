@@ -41,7 +41,7 @@ namespace ObscurCore.DTO
 		/// Key confirmation configuration used to validate the existence and validity 
 		/// of keying material at respondent's side without disclosing the key itself.
 		/// </summary>
-        [ProtoMember(2, IsRequired = true)]
+        [ProtoMember(2, IsRequired = false)]
         public VerificationFunctionConfiguration KeyConfirmation { get; set; }
 
 		/// <summary>
@@ -64,8 +64,6 @@ namespace ObscurCore.DTO
         }
 
         public override int GetHashCode () {
-            if (!IsSuperficiallyValid())
-                throw new InvalidDataException("Not a valid manifest cryptography configuration.");
             unchecked {
                 int hashCode = SymmetricCipher.GetHashCode();
                 hashCode = (hashCode * 397) ^ KeyConfirmation.GetHashCode();
@@ -73,7 +71,5 @@ namespace ObscurCore.DTO
                 return hashCode;
             }
         }
-
-        public bool IsSuperficiallyValid() { return (SymmetricCipher == null || KeyConfirmation == null || KeyDerivation == null); }
     }
 }

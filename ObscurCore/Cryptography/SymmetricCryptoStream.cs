@@ -149,7 +149,7 @@ namespace ObscurCore.Cryptography
                             cipherParams = Source.CreateAEADBlockCipherParameters(blockCipherEnum,
 				                workingKey, config.IV, config.MACSize, config.AssociatedData);
                             // Overlay the cipher with the mode of operation
-					        var aeadCipher = Source.OverlayBlockCipherWithAEAD(aeadModeEnum, blockCipher);
+					        var aeadCipher = Source.OverlayBlockCipherWithAEADMode(blockCipher, aeadModeEnum);
 
 					        // Create the I/O-enabled transform object
 					        if (!config.PaddingName.Equals(BlockCipherPaddings.None.ToString()) && !config.PaddingName.Equals(""))

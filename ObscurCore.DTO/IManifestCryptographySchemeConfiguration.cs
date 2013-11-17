@@ -16,7 +16,7 @@
 namespace ObscurCore.DTO
 {
     /// <summary>
-    /// Defines common data found in manifest cryptography scheme configurations.
+    /// Defines data that must be available in manifest cryptography scheme configurations.
     /// </summary>
     public interface IManifestCryptographySchemeConfiguration
     {

@@ -165,7 +165,7 @@ namespace ObscurCore.Extensions
                     if (!curveProvider.Equals ("Brainpool"))
                         throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
-                    BrainpoolECFpCurves curveEnum;
+                    ECFpCurves curveEnum;
                     if(!Enum.TryParse(curveName, out curveEnum)) 
                         throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
                     config.CurveName = curveName;
@@ -176,7 +176,7 @@ namespace ObscurCore.Extensions
                     if (!curveProvider.Equals ("Brainpool"))
                         throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
-                    BrainpoolECFpCurves curveEnum;
+                    ECFpCurves curveEnum;
                     if(!Enum.TryParse(curveName, out curveEnum)) 
                         throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
                     config.CurveName = curveName;

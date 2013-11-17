@@ -379,9 +379,9 @@ namespace ObscurCore.Cryptography
 	// Inability of use may hopefully deter one from thinking that they are suitable for use - which, for almost all cases, they are not.
 	
 	/// <summary>
-	/// Named Brainpool Elliptic-Curve curves over GF(p) .
+	/// Elliptic-Curve curves over GF(p) .
 	/// </summary>
-	public enum BrainpoolECFpCurves
+	public enum ECFpCurves
 	{
 		None,
 		BrainpoolP160r1,

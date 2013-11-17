@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using ObscurCore.Cryptography;
-using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.DTO;
 using ObscurCore.Packaging;
 
@@ -30,11 +25,11 @@ namespace ObscurCore.Tests.Packaging
                     PayloadConfiguration = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Frameshift)
                 };
 
-            IOTestBase.PackageDestinationDirectory.Create();
+            if(!IOTestBase.PackageDestinationDirectory.Exists) IOTestBase.PackageDestinationDirectory.Create();
             using (var fs = new FileStream(IOTestBase.PackageDestinationDirectory.FullName + 
                 Path.DirectorySeparatorChar + "SymmetricPackage" + IOTestBase.PackageExtension, FileMode.Create)) 
             {
-                StratCom.WritePackageSymmetric(fs, manifest, mCipher, preKey);
+                PackageWriter.WritePackageSymmetric(fs, manifest, mCipher, preKey);
             }
 
 
@@ -58,7 +53,7 @@ namespace ObscurCore.Tests.Packaging
 
             using (var ms = new MemoryStream()) 
             {
-                StratCom.WritePackageSymmetric(ms, manifest, mCipher, preKey);
+                PackageWriter.WritePackageSymmetric(ms, manifest, mCipher, preKey);
 
                 ms.Seek(0, SeekOrigin.Begin);
 
@@ -69,7 +64,7 @@ namespace ObscurCore.Tests.Packaging
 
                 var symKey = new List<byte[]> {preKey};
 
-                var readManifest = StratCom.ReadPackageManifest(ms, symKey, null, null, null, null, out offset);
+                var readManifest = PackageReader.ReadPackageManifest(ms, symKey, null, null, null, null, out offset);
 
             }
 			// TODO: Finish this

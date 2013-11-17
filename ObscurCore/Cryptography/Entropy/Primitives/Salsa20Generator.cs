@@ -14,13 +14,13 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
 		
 		public Salsa20Generator(StreamCipherCSPRNGConfiguration config) : base(config) {
             var cp = Source.CreateStreamCipherParameters(SymmetricStreamCiphers.Salsa20, Config.Key,
-                Config.IV);
+                Config.Nonce);
             _engine.Init(true, cp);
         }
 
         public Salsa20Generator(byte[] config) : base(config) {
             var cp = Source.CreateStreamCipherParameters(SymmetricStreamCiphers.Salsa20, Config.Key,
-                Config.IV);
+                Config.Nonce);
             _engine.Init(true, cp);
         }
 

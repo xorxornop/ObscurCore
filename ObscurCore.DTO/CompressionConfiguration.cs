@@ -33,7 +33,7 @@ namespace ObscurCore.DTO
         [ProtoMember(1, IsRequired = true)]
         public string AlgorithmName { get; set; }
 		
-        [ProtoMember(2)]
+        [ProtoMember(2, IsRequired = false)]
         public byte[] AlgorithmConfiguration { get; set; }
 
         public override bool Equals (object obj)

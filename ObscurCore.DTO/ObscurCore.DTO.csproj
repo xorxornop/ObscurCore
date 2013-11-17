@@ -59,7 +59,6 @@
     <Compile Include="Enums.cs" />
     <Compile Include="IDataTransferObject.cs" />
     <Compile Include="IManifestCryptographySchemeConfiguration.cs" />
-    <Compile Include="KDFConfigurations.cs" />
     <Compile Include="KeyDerivationConfiguration.cs" />
     <Compile Include="Manifest.cs" />
     <Compile Include="ManifestHeader.cs" />
