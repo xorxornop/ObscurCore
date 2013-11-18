@@ -552,25 +552,8 @@ namespace ObscurCore
             return CreateKDF(kdfName.ToEnum<KeyDerivationFunctions>(), outputSize, config);
         }
 
-
-
-
-
-        
-
-        
-
-        
-
-        
-
-        
-
-
-        
-
         /// <summary>
-		/// Instantiates and returns a PRNG implementing the mode of generation that the
+		/// Instantiates and returns a CSPRNG implementing the mode of generation that the
 		/// instance this method was called from describes.
 		/// </summary>
 		/// <param name="config">Configuration of the PRNG in byte-array encoded form.</param>

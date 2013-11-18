@@ -22,7 +22,8 @@ First up, a disclaimer:
 Now that that's out of the way, here's how you can use it for doing some stuff. Where there is a non-obvious parameter list, the signature of the constructor/method is included as a comment.
 
 
-### ObscurCore Packaging System ###
+ObscurCore Packaging System
+---------------------------
 
 **Please note that this part of the API is very, very new and is subject to change (a lot) on its way to a stable release. I'll try to minimise this, but the fact remains.**
 
@@ -48,7 +49,7 @@ The collection of items in the package is termed the "payload". There is a choic
 Simple just concatenates them together in "random" order. Frameshift does the same but inserts random lengths of bytes before and after each item. Fabric multiplexes "random"-length stripes of each item, mixing them all up.
 Fabric is currently disabled in the build as it's unpredictably buggy.
 
-* Obviously, if it were *actually* random, you'd never get your data back. No - rather, "random" is from the output of a stream-cipher-powered CSPRNG.
+... Obviously, if it were *actually* random, you'd never get your data back. No - rather, "random" is from the output of a stream-cipher-powered CSPRNG.
 
 
 Here's an example using the packager:
@@ -61,6 +62,9 @@ Here's an example using the packager:
     	PackageWriter.WritePackageSymmetric(outStream, temp, manifest, mCipher, preKey);
     }
 
+
+Functionality exposed through streams
+-------------------------------------
 
 ### Encryption/decryption ###
 
@@ -76,15 +80,15 @@ These block ciphers are supported:
 +	AES,
 +	Blowfish
 +	Camellia
-+	CAST5
-+	CAST6
++	CAST-5
++	CAST-6
 +	GOST28147 [disabled]
 +	IDEA
 +	NOEKEON
-+	RC6
++	RC-6
 +	Rijndael [disabled]
 +	Serpent
-+	ripleDES
++	TripleDES (3DES/DESEDE)
 +	Twofish
 
 ... in CBC mode (variety of paddings provided), CTR, CFB, OFB, and CTS. There is also GCM and EAX provided for your authenticated encryption/decryption needs.
@@ -96,11 +100,12 @@ And these stream ciphers:
 +	HC256
 +	ISAAC [disabled]
 +	Rabbit
-+	RC4
++	RC-4 [disabled]
 +	Salsa20
 +	SOSEMANUK
 +	VMPC [disabled]
 +	VMPC_KSA3 [disabled]
+
 
 ### Hashing and MAC ###
 
@@ -146,6 +151,9 @@ And here's all the MAC functions (MACFunctions enumeration) :
 
 ^ With CMAC you can use any symmetric block cipher (see above in Encryption section) with block size of 64 or 128 bits - which is all of them, currently. HMAC can use any hash/digest function. So that expands the selection significantly.
 
+
+Primitives
+----------
 
 ### Key derivation ###
 
