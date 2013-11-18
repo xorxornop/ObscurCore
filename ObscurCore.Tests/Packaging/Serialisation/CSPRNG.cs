@@ -14,7 +14,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
     {
         [Test]
         public void SOSEMANUK () {
-            var inputObj = Source.CreateStreamCipherCSPRNGConfiguration(SymmetricStreamCiphers.SOSEMANUK);
+            var inputObj = Source.CreateStreamCipherCSPRNGConfiguration(CSPRNumberGenerators.SOSEMANUK);
 
             var stream = SerialiseToMemory(inputObj);
             stream.Seek(0, SeekOrigin.Begin);

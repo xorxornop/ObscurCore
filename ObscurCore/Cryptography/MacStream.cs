@@ -25,7 +25,6 @@ namespace ObscurCore.Cryptography
 		/// <summary>
 		/// The output/digest of the internal hash function. Null if function is not finished.
 		/// </summary>
-		/// <value><c>true</c> if this instance hash; otherwise, <c>false</c>.</value>
 		public byte[] MAC { get { return _outputRef; } }
 
 		private IMac _mac;
@@ -100,8 +99,7 @@ namespace ObscurCore.Cryptography
 			_mac.Reset ();
 		}
 
-        public override void Close()
-        {
+        public override void Close() {
             Finish();
         }
 

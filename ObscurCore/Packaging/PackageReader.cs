@@ -237,7 +237,7 @@ namespace ObscurCore.Packaging
                     }
                     msIn.Seek(0, SeekOrigin.Begin);
                     // Decrypt the manifest from the MemoryStream buffer (prevents protobuf-net overread)
-                    using (var cs = new SymmetricCryptoStream(msIn, false, mCryptoConfig.SymmetricCipher, workingMKey, true)) {
+                    using (var cs = new SymmetricCryptoStream(msIn, false, mCryptoConfig.SymmetricCipher, workingMKey, false)) {
                         cs.CopyTo(msOut);
                     }
                     // Clear the manifest working key

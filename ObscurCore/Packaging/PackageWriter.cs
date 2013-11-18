@@ -287,9 +287,10 @@ namespace ObscurCore.Packaging
 
             using (var manifestTemp = new MemoryStream()) {
                 /* Write the manifest in encrypted form */
-                using (var cs = new SymmetricCryptoStream(manifestTemp, true, mCipherConfig, null, true)) {
+                using (var cs = new SymmetricCryptoStream(manifestTemp, true, mCipherConfig, null, false)) {
                     var manifestMS = StratCom.SerialiseDTO(manifest);
                     manifestMS.WriteTo(cs);
+                    manifestMS.Close();
                 }
                 Debug.Print(DebugUtility.CreateReportString("PackageWriter", "WritePackage", "Manifest length prefix offset (absolute)",
                     destination.Position.ToString()));

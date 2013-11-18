@@ -102,9 +102,8 @@ namespace ObscurCore.DTO
         byte[] Salt { get; set; }
     }
 
-
     [ProtoContract]
-    public class ScryptConfiguration : IDataTransferObject
+    public class ScryptConfiguration : IDataTransferObject, IEquatable<ScryptConfiguration>
     {
         /// <summary>
         /// Power to raise the iteration count by, e.g. 2^n iterations. 
@@ -167,8 +166,8 @@ namespace ObscurCore.DTO
     }
 
 	[ProtoContract]
-    public class PBKDF2Configuration : IDataTransferObject
-    {
+    public class PBKDF2Configuration : IDataTransferObject, IEquatable<PBKDF2Configuration>
+	{
 	    public PBKDF2Configuration() {
 	        AlgorithmName = "HMACSHA256";
 	    }

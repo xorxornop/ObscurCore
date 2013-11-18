@@ -24,11 +24,10 @@ namespace ObscurCore.Cryptography
 		/// <summary>
 		/// The output/digest of the internal hash function. Null if function is not finished.
 		/// </summary>
-		/// <value><c>true</c> if this instance hash; otherwise, <c>false</c>.</value>
 		public byte[] Hash { get { return _outputRef; } }
 
 		private IDigest _digest;
-		private byte[] _outputRef = null;
+		private readonly byte[] _outputRef;
 		private bool _disposed;
 
 		/// <summary>
@@ -39,14 +38,12 @@ namespace ObscurCore.Cryptography
 		/// <param name="function">Function.</param>
 		/// <param name="output">Byte array where the finished hash will be output to. Does not need to be initialised.</param>
 		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
-		/// <remarks>
-		/// 'ref' parameter descriptor for output is functionally superfluous, but serves rather to communicate the intended use.
-		/// </remarks>
-		public HashStream (Stream binding, bool writing, HashFunctions function, ref byte[] output, bool closeOnDispose = true) 
+		public HashStream (Stream binding, bool writing, HashFunctions function, out byte[] output, bool closeOnDispose = true) 
 			: base(binding, writing, closeOnDispose, false)
 		{
 			_digest = Source.CreateHashPrimitive (function);
-			_outputRef = output;
+            _outputRef = new byte[_digest.GetDigestSize()];
+			output = _outputRef;
 		}
 
 
@@ -81,7 +78,6 @@ namespace ObscurCore.Cryptography
 		protected override void Finish () {
 			if (Finished)
 				return;
-			_outputRef = new byte[_digest.GetDigestSize()];
 			_digest.DoFinal (_outputRef, 0);
 			base.Finish ();
 		}
@@ -90,6 +86,10 @@ namespace ObscurCore.Cryptography
 			base.Reset (finish);
 			_digest.Reset ();
 		}
+
+        public override void Close() {
+            Finish();
+        }
 
 		protected override void Dispose (bool disposing) {
 			if (!_disposed) {

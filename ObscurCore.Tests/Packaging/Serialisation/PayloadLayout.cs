@@ -32,7 +32,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			        }.SerialiseDTO(),
                 PrimaryPRNGName = CSPRNumberGenerators.SOSEMANUK.ToString(),
                 PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+                    CSPRNumberGenerators.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
             };
 
             var stream = SerialiseToMemory(inputObj);
@@ -54,7 +54,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			        }.SerialiseDTO(),
                 PrimaryPRNGName = CSPRNumberGenerators.SOSEMANUK.ToString(),
                 PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+                    CSPRNumberGenerators.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
             };
 
             var stream = SerialiseToMemory(inputObj);

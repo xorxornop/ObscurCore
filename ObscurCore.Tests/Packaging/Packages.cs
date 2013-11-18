@@ -35,9 +35,6 @@ namespace ObscurCore.Tests.Packaging
                     PackageWriter.WritePackageSymmetric(fs, temp, manifest, mCipher, preKey);
                 }
             }
-            
-
-
             // We've written the package and closed the stream now
         }
 

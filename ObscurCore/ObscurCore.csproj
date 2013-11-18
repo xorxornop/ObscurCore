@@ -165,7 +165,6 @@
     <Compile Include="Cryptography\KeyDerivation\Primitives\Pbkdf2.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Salsa20Core.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Scrypt.cs" />
-    <Compile Include="Cryptography\KeyDerivation\Utilities.cs" />
     <Compile Include="Cryptography\SymmetricCipherConfiguration.cs" />
     <Compile Include="Cryptography\SymmetricCryptoStream.cs" />
     <Compile Include="Cryptography\Templates.cs" />

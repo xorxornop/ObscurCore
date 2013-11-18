@@ -586,14 +586,8 @@ namespace ObscurCore
         }
 
         public static StreamCipherCSPRNGConfiguration CreateStreamCipherCSPRNGConfiguration
-            (SymmetricStreamCiphers cipherEnum)
+            (CSPRNumberGenerators cipherEnum)
         {
-
-            var prng = cipherEnum.ToString().ToEnum<CSPRNumberGenerators>();
-            if (!PrngInstantiators.ContainsKey(prng)) {
-                throw new NotSupportedException(
-                    "Stream cipher specified is not implemented/supported for use as a PRNG.");
-            }
             return StreamCSPRNG.CreateRandomConfiguration(cipherEnum);
         }
 

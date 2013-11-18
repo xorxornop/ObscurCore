@@ -68,10 +68,15 @@ namespace ObscurCore.Cryptography.KeyDerivation
 	{
 		private readonly int _outputSize, _iterationPower, _blocks, _parallelisation;
 
+        public const int DefaultIterationPower = 16, DefaultBlocks = 8, DefaultParallelisation = 2;
+
 	    public ScryptModule (int outputSize, byte[] config) {
 			_outputSize = outputSize;
-			ScryptConfigurationUtility.Read (config, out _iterationPower, out _blocks, out _parallelisation);
-		}
+	        var configObj = StratCom.DeserialiseDTO<ScryptConfiguration>(config);
+	        _iterationPower = configObj.IterationPower;
+	        _blocks = configObj.Blocks;
+	        _parallelisation = configObj.Parallelism;
+	    }
 		
 		public ScryptModule (int outputSize, int iterationPower, int blocks, int parallelisation) {
 			_outputSize = outputSize;
@@ -114,6 +119,12 @@ namespace ObscurCore.Cryptography.KeyDerivation
 			SCrypt.ComputeKey(key, salt, scConfig.IterationPower, scConfig.Blocks, scConfig.Parallelism, null, output);
 			return output;
 		}
+
+        public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, ScryptConfiguration config) {
+			var output = new byte[outputSize / 8];
+			SCrypt.ComputeKey(key, salt, config.IterationPower, config.Blocks, config.Parallelism, null, output);
+			return output;
+		}
 	}
 
 	/// <summary>
@@ -122,10 +133,16 @@ namespace ObscurCore.Cryptography.KeyDerivation
 	public sealed class PBKDF2Module : IKDFModule
 	{
 		private readonly int _outputSize, _iterations;
+	    private string _algorithm;
+
+        public const int DefaultIterations = 32768, MinimumIterations = 512, MaximumIterations = 1048576;
+		internal const string DefaultAlgorithm = "HMACSHA256";
 		
 		public PBKDF2Module (int outputSize, byte[] config) {
 			_outputSize = outputSize;
-			PBKDF2ConfigurationUtility.Read(config, out _iterations);
+            var pbkdf2Config = StratCom.DeserialiseDTO<PBKDF2Configuration>(config);
+		    _iterations = pbkdf2Config.Iterations;
+		    _algorithm = pbkdf2Config.AlgorithmName;
 		}
 		
 		#region IKDFModule implementation
@@ -161,6 +178,13 @@ namespace ObscurCore.Cryptography.KeyDerivation
             if(!pbkdf2Config.AlgorithmName.Equals("HMACSHA256")) throw new ArgumentException();
 			var output = new byte[outputSize];
 			Pbkdf2.ComputeKey(key, salt, pbkdf2Config.Iterations, Pbkdf2.CallbackFromHmac<HMACSHA256>(), outputSize / 8, output);
+			return output;
+		}
+
+        public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, PBKDF2Configuration config) {
+            if(!config.AlgorithmName.Equals("HMACSHA256")) throw new ArgumentException();
+			var output = new byte[outputSize];
+			Pbkdf2.ComputeKey(key, salt, config.Iterations, Pbkdf2.CallbackFromHmac<HMACSHA256>(), outputSize / 8, output);
 			return output;
 		}
 	}

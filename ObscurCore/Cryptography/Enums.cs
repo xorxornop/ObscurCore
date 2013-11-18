@@ -294,7 +294,7 @@ namespace ObscurCore.Cryptography
 #if INCLUDE_SHA1
 		/// <summary>
 		/// Very well known hash function/digest, but getting a little "long in the tooth" (old). 
-		/// Output size is 96 bits (20 bytes).
+		/// Output size is 160 bits (20 bytes).
 		/// </summary>
 		SHA1,
 #endif

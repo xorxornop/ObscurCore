@@ -31,7 +31,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
         [Test]
         public void SOSEMANUK_Int32 () {
             var generator = new SOSEMANUKGenerator(Source.CreateStreamCipherCSPRNGConfiguration(
-                    SymmetricStreamCiphers.SOSEMANUK));
+                    CSPRNumberGenerators.SOSEMANUK));
             TimeSpan time;
             double average;
 
@@ -48,7 +48,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
         [Test]
         public void SOSEMANUK_UInt32 () {
             var generator = new SOSEMANUKGenerator(Source.CreateStreamCipherCSPRNGConfiguration(
-                    SymmetricStreamCiphers.SOSEMANUK));
+                    CSPRNumberGenerators.SOSEMANUK));
             TimeSpan time;
             double average;
 
@@ -65,7 +65,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
         [Test]
         public void Salsa20_Int32 () {
             var generator = new Salsa20Generator(Source.CreateStreamCipherCSPRNGConfiguration(
-                    SymmetricStreamCiphers.Salsa20));
+                    CSPRNumberGenerators.Salsa20));
             TimeSpan time;
             double average;
 
@@ -82,7 +82,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
         [Test]
         public void Salsa20_UInt32 () {
             var generator = new Salsa20Generator(Source.CreateStreamCipherCSPRNGConfiguration(
-                    SymmetricStreamCiphers.Salsa20));
+                    CSPRNumberGenerators.Salsa20));
             TimeSpan time;
             double average;
 

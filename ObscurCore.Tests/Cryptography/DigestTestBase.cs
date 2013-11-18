@@ -12,7 +12,7 @@ namespace ObscurCore.Tests.Cryptography
             byte[] outputHash = null;
             var sw = new Stopwatch();
             using (var outputMS = new MemoryStream()) {
-                using (var macS = new HashStream(outputMS, true, function, ref outputHash, false)) {
+                using (var macS = new HashStream(outputMS, true, function, out outputHash, false)) {
                     sw.Start();
                     LargeBinaryFile.CopyTo(macS);
                     sw.Stop();

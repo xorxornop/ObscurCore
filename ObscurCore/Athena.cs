@@ -394,7 +394,7 @@ namespace ObscurCore
 				_hashFunctionDirectory.Add(HashFunctions.SHA1, new HashFunctionDescription {
 					Name = HashFunctions.SHA1.ToString(),
 					DisplayName = "SHA-1",
-					OutputSize = 96
+					OutputSize = 160
 				});
 #endif
 				_hashFunctionDirectory.Add(HashFunctions.SHA256, new HashFunctionDescription {

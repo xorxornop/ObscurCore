@@ -30,7 +30,7 @@ namespace ObscurCore.Packaging
                 SchemeName = scheme.ToString(),
 				PrimaryPRNGName = "SOSEMANUK",
 				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+                    CSPRNumberGenerators.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
 			};
 			
 			switch (scheme) {
@@ -55,24 +55,66 @@ namespace ObscurCore.Packaging
 				break;
 #endif
 			}
-
-			/*if(scheme != PayloadLayoutSchemes.Simple) {
-				config.SecondaryPRNGName = "SOSEMANUK";
-			    config.SecondaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>();
-			}*/
 			
 			return config;
 		}
 		
-		/*public static PayloadLayoutConfiguration CreateFrameshift() {
-            
-        }*/
-		
-		/*public static PayloadLayoutConfiguration CreateFabric() {
-            
-        }*/
-		
+		public static PayloadConfiguration CreateFrameshiftFixed(CSPRNumberGenerators generator, int? stripeSize = null) {
+            var config = new PayloadConfiguration {
+                SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
+                SchemeConfiguration = new PayloadSchemeConfiguration() {
+			            Minimum = (stripeSize == null ? FrameshiftMux.DefaultFixedPaddingLength : stripeSize.Value),
+			            Maximum = (stripeSize == null ? FrameshiftMux.DefaultFixedPaddingLength : stripeSize.Value),
+			        }.SerialiseDTO(),
+				PrimaryPRNGName = generator.ToString(),
+				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
+                    generator).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+			};
+		    return config;
+		}
+
+	    public static PayloadConfiguration CreateFrameshiftVariable(CSPRNumberGenerators generator, int? minStripe = null, int? maxStripe = null) {
+            var config = new PayloadConfiguration {
+                SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
+                SchemeConfiguration = new PayloadSchemeConfiguration() {
+			            Minimum = (minStripe == null ? FrameshiftMux.MinimumPaddingLength : minStripe.Value),
+			            Maximum = (maxStripe == null ? FrameshiftMux.MaximumPaddingLength : maxStripe.Value)
+			        }.SerialiseDTO(),
+				PrimaryPRNGName = generator.ToString(),
+				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
+                    generator).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+			};
+            return config;
+	    }
+#if INCLUDE_FABRIC
+	    public static PayloadConfiguration CreateFabricFixed(CSPRNumberGenerators generator, int? stripeSize = null) {
+            var config = new PayloadConfiguration {
+                SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
+                SchemeConfiguration = new PayloadSchemeConfiguration() {
+			            Minimum = (stripeSize == null ? FrameshiftMux.DefaultFixedPaddingLength : stripeSize.Value),
+			            Maximum = (stripeSize == null ? FrameshiftMux.DefaultFixedPaddingLength : stripeSize.Value),
+			        }.SerialiseDTO(),
+				PrimaryPRNGName = generator.ToString(),
+				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
+                    generator).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+			};
+		    return config;
+		}
+
+	    public static PayloadConfiguration CreateFabricVariable(CSPRNumberGenerators generator, int? minStripe = null, int? maxStripe = null) {
+            var config = new PayloadConfiguration {
+                SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
+                SchemeConfiguration = new PayloadSchemeConfiguration() {
+			            Minimum = (minStripe == null ? FabricMux.MinimumStripeLength : minStripe.Value),
+			            Maximum = (maxStripe == null ? FrameshiftMux.MaximumStripeLength : maxStripe.Value)
+			        }.SerialiseDTO(),
+				PrimaryPRNGName = generator.ToString(),
+				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
+                    generator).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+			};
+            return config;
+	    }
+#endif
 	}
 
 }

@@ -32,12 +32,13 @@ namespace ObscurCore.Cryptography.Entropy
             Config = config;
         }
 
-        public static StreamCipherCSPRNGConfiguration CreateRandomConfiguration(SymmetricStreamCiphers cipher) {
+        public static StreamCipherCSPRNGConfiguration CreateRandomConfiguration(CSPRNumberGenerators csprng) {
+            var cipherEnum = csprng.ToString().ToEnum<SymmetricStreamCiphers>();
             var config = new StreamCipherCSPRNGConfiguration()
                 {
-                    CipherName = cipher.ToString(),
-                    Key = new byte[Athena.Cryptography.StreamCipherDirectory[cipher].DefaultKeySize / 8],
-                    Nonce = new byte[Athena.Cryptography.StreamCipherDirectory[cipher].DefaultIVSize / 8]
+                    CipherName = csprng.ToString(),
+                    Key = new byte[Athena.Cryptography.StreamCipherDirectory[cipherEnum].DefaultKeySize / 8],
+                    Nonce = new byte[Athena.Cryptography.StreamCipherDirectory[cipherEnum].DefaultIVSize / 8]
                 };
             return config;
         }

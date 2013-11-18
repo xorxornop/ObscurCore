@@ -46,7 +46,6 @@ namespace ObscurCore.Cryptography
 		private bool _disposed;
 
 		private const int StreamStride = 64;
-		private const int ProcessingIOStride = 4096;
 
 		private const string UnknownFinaliseError = "An unknown type of error occured while transforming the final block of ciphertext.";
 		private const string UnexpectedLengthError = "The data in the ciphertext is not the expected length.";
@@ -58,9 +57,9 @@ namespace ObscurCore.Cryptography
 		/// <param name="isEncrypting">Specifies whether the stream is for writing (encrypting) or reading (decryption).</param>
 		/// <param name="config">Configuration object describing how to set up the internal cipher and associated services.</param>
 		/// <param name="key">Derived cryptographic key for the internal cipher to operate with. Overrides key in configuration.</param>
-		/// <param name="leaveOpen">Set to <c>false</c> to also close the base stream when closing, or vice-versa.</param>
+		/// <param name="closeOnDispose">Set to <c>true</c> to also close the base stream when closing, or vice-versa.</param>
 		public SymmetricCryptoStream (Stream target, bool isEncrypting, ISymmetricCipherConfiguration config, 
-		                              byte[] key = null, bool leaveOpen = false) : base(target, isEncrypting, !leaveOpen, true)
+		                              byte[] key = null, bool closeOnDispose = true) : base(target, isEncrypting, closeOnDispose, true)
 		{
             if ((config.Key == null || config.Key.Length == 0) && (key == null || key.Length == 0)) 
                 throw new ArgumentException("No key provided in field in configuration object or as parameter.");
