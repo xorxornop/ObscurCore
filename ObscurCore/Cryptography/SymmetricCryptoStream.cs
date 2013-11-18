@@ -57,7 +57,7 @@ namespace ObscurCore.Cryptography
 		/// <param name="target">Stream to be written/read to/from.</param>
 		/// <param name="isEncrypting">Specifies whether the stream is for writing (encrypting) or reading (decryption).</param>
 		/// <param name="config">Configuration object describing how to set up the internal cipher and associated services.</param>
-		/// <param name="key">Derived cryptographic key for the internal cipher to operate with.</param>
+		/// <param name="key">Derived cryptographic key for the internal cipher to operate with. Overrides key in configuration.</param>
 		/// <param name="leaveOpen">Set to <c>false</c> to also close the base stream when closing, or vice-versa.</param>
 		public SymmetricCryptoStream (Stream target, bool isEncrypting, ISymmetricCipherConfiguration config, 
 		                              byte[] key = null, bool leaveOpen = false) : base(target, isEncrypting, !leaveOpen, true)
@@ -67,7 +67,7 @@ namespace ObscurCore.Cryptography
 
 			ICipherParameters cipherParams = null;
 
-            byte[] workingKey = config.Key ?? key;
+            byte[] workingKey = key ?? config.Key;
 
 		    switch (config.Type) {
                 case SymmetricCipherType.None:

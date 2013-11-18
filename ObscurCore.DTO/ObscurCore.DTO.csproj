@@ -63,7 +63,9 @@
     <Compile Include="Manifest.cs" />
     <Compile Include="ManifestHeader.cs" />
     <Compile Include="PayloadItem.cs" />
-    <Compile Include="PayloadLayoutConfiguration.cs" />
+    <Compile Include="PayloadConfiguration.cs" />
+    <Compile Include="PayloadSchemeConfiguration.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StreamCipherCSPRNGConfiguration.cs" />
     <Compile Include="SymmetricCipherConfiguration.cs" />
     <Compile Include="SymmetricManifestCryptographyConfiguration.cs" />

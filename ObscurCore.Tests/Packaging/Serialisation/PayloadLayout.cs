@@ -15,7 +15,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             var stream = SerialiseToMemory(inputObj);
             stream.Seek(0, SeekOrigin.Begin);
-            var outputObj = DeserialiseFromMemory<PayloadLayoutConfiguration>(stream);
+            var outputObj = DeserialiseFromMemory<PayloadConfiguration>(stream);
 
             bool equal = inputObj.Equals(outputObj);
 
@@ -24,9 +24,12 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
         [Test]
         public void Frameshift_Fixed () {
-            var inputObj = new PayloadLayoutConfiguration() {
+            var inputObj = new PayloadConfiguration() {
                 SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
-                SchemeConfiguration = FrameshiftConfigurationUtility.WriteFixedPadding(32),
+                SchemeConfiguration = new PayloadSchemeConfiguration() {
+			            Minimum = FrameshiftMux.DefaultFixedPaddingLength,
+			            Maximum = FrameshiftMux.DefaultFixedPaddingLength
+			        }.SerialiseDTO(),
                 PrimaryPRNGName = CSPRNumberGenerators.SOSEMANUK.ToString(),
                 PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
                     SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
@@ -34,7 +37,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             var stream = SerialiseToMemory(inputObj);
             stream.Seek(0, SeekOrigin.Begin);
-            var outputObj = DeserialiseFromMemory<PayloadLayoutConfiguration>(stream);
+            var outputObj = DeserialiseFromMemory<PayloadConfiguration>(stream);
 
             bool equal = inputObj.Equals(outputObj);
 
@@ -43,9 +46,12 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
         [Test]
         public void Frameshift_Variable () {
-            var inputObj = new PayloadLayoutConfiguration() {
+            var inputObj = new PayloadConfiguration() {
                 SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
-                SchemeConfiguration = FrameshiftConfigurationUtility.WriteVariablePadding(8, 128),
+                SchemeConfiguration = new PayloadSchemeConfiguration() {
+			            Minimum = FrameshiftMux.MinimumPaddingLength,
+			            Maximum = FrameshiftMux.MaximumPaddingLength
+			        }.SerialiseDTO(),
                 PrimaryPRNGName = CSPRNumberGenerators.SOSEMANUK.ToString(),
                 PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
                     SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
@@ -53,7 +59,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             var stream = SerialiseToMemory(inputObj);
             stream.Seek(0, SeekOrigin.Begin);
-            var outputObj = DeserialiseFromMemory<PayloadLayoutConfiguration>(stream);
+            var outputObj = DeserialiseFromMemory<PayloadConfiguration>(stream);
 
             bool equal = inputObj.Equals(outputObj);
 
@@ -63,9 +69,13 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 #if(INCLUDE_FABRIC)
         [Test]
         public void Fabric_Fixed () {
-            var inputObj = new PayloadLayoutConfiguration() {
+
+            var inputObj = new PayloadConfiguration() {
                 SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
-                SchemeConfiguration = FabricConfigurationUtility.WriteFixedStriping(256),
+                SchemeConfiguration = new PayloadSchemeConfiguration {
+			            Minimum = FabricMux.DefaultFixedStripeLength,
+			            Maximum = FabricMux.DefaultFixedStripeLength
+			        }.SerialiseDTO(),
                 PrimaryPRNGName = CSPRNumberGenerators.SOSEMANUK.ToString(),
                 PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
                     SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
@@ -73,7 +83,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             var stream = SerialiseToMemory(inputObj);
             stream.Seek(0, SeekOrigin.Begin);
-            var outputObj = DeserialiseFromMemory<PayloadLayoutConfiguration>(stream);
+            var outputObj = DeserialiseFromMemory<PayloadConfiguration>(stream);
 
             bool equal = inputObj.Equals(outputObj);
 
@@ -82,9 +92,12 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
         [Test]
         public void Fabric_Variable () {
-            var inputObj = new PayloadLayoutConfiguration() {                                        
+            var inputObj = new PayloadConfiguration() {                                        
                 SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
-                SchemeConfiguration = FabricConfigurationUtility.WriteVariableStriping(64, 2048),
+                SchemeConfiguration = new PayloadSchemeConfiguration {
+			            Minimum = FabricMux.MinimumStripeLength,
+			            Maximum = FabricMux.MaximumStripeLength
+			        }.SerialiseDTO(),
                 PrimaryPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
                 PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
                     SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
@@ -92,7 +105,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             var stream = SerialiseToMemory(inputObj);
             stream.Seek(0, SeekOrigin.Begin);
-            var outputObj = DeserialiseFromMemory<PayloadLayoutConfiguration>(stream);
+            var outputObj = DeserialiseFromMemory<PayloadConfiguration>(stream);
 
             bool equal = inputObj.Equals(outputObj);
 

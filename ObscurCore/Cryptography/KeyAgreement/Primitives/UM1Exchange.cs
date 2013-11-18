@@ -20,7 +20,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 {
 	// One-Pass Unified Model, C(1,2 EC-DHC). Defined in NIST 800-56A in section 6.2.1.2.
 	
-	/// <summary>
+    /// <summary>
 	/// One-Pass Unified Model EC-DHC functionality for initiator/sender.
 	/// </summary>
 	/// <remarks>
@@ -34,28 +34,20 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 	/// different PKC schemes, or incompatible instances (e.g domain parameters) thereof.
 	/// However, a user is not allowed to have multiple keys of the same configuration.
 	/// </para>
-	/// </remarks>		
-	public sealed class UM1ExchangeInitiator
-	{
-		private readonly ECPrivateKeyParameters d_static_U; // Private key of initiator (local user - sender)
-		private readonly ECPublicKeyParameters Q_static_V; // Public key of responder (remote user - receiver)
-		
-		public UM1ExchangeInitiator (ECPublicKeyParameters responderPublic, ECPrivateKeyParameters initiatorPrivate) {
-			this.Q_static_V = responderPublic;
-			this.d_static_U = initiatorPrivate;
-		}
-		
-		/// <summary>
-		/// Calculates the shared secret in participant U's role.
-		/// </summary>
-		/// <param name='Q_key'>
-		/// Public key of the initiator (U, sender).
-		/// </param>
-		/// <param name='Q_ephemeral_V'>
-		/// Ephemeral public key to send to the responder (V, receiver).
-		/// </param>
-		public byte[] CalculateSharedSecret (out ECPublicKeyParameters Q_ephemeral_V) {
-			AsymmetricCipherKeyPair pair = ECAgreementUtility.GenerateKeyPair(Q_static_V.Parameters);
+	/// </remarks>
+    public static class UM1Exchange
+    {
+        /// <summary>
+        /// Calculate the shared secret in participant U's (initiator) role.
+        /// </summary>
+        /// <param name="Q_static_V">Public key of the recipient.</param>
+        /// <param name="d_static_U">Private key of the sender.</param>
+        /// <param name="Q_ephemeral_V">Ephemeral public key to send to the responder (V, receiver). Output to this variable.</param>
+        /// <returns></returns>
+        public static byte[] Initiate(ECPublicKeyParameters Q_static_V, ECPrivateKeyParameters d_static_U, 
+            out ECPublicKeyParameters Q_ephemeral_V)
+        {
+            AsymmetricCipherKeyPair pair = ECAgreementUtility.GenerateKeyPair(Q_static_V.Parameters);
 			Q_ephemeral_V = (ECPublicKeyParameters)pair.Public;
 			
 			ECDomainParameters domain = Q_static_V.Parameters;
@@ -74,30 +66,16 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 			Array.Copy(Ze_encoded, Z, Ze_encoded.Length);
 			Array.Copy(Zs_encoded, 0, Z, Ze_encoded.Length, Zs_encoded.Length);
 			return Z;
-		}
-	}
-	
-	/// <summary>
-	/// One-Pass Unified Model EC-DHC functionality for responder/receiver.
-	/// </summary>
-	public sealed class UM1ExchangeResponder
-	{
-		private readonly ECPrivateKeyParameters d_static_V; // Private key of respondent (local user - receiver)
-		private readonly ECPublicKeyParameters Q_static_U; // Public key of initiator (remote user - sender)
-		
-		public UM1ExchangeResponder (ECPublicKeyParameters senderPublic, ECPrivateKeyParameters responderPrivate) {
-			this.Q_static_U = senderPublic;
-			this.d_static_V = responderPrivate;
-		}
-		
-		/// <summary>
-		/// Calculates the shared secret in participant V's role.
+        }
+
+        /// <summary>
+		/// Calculates the shared secret in participant V's (responder) role.
 		/// </summary>
-		/// <param name='Q_ephemeral_U'>
-		/// Ephemeral public key supplied by the initiator (U, sender).
-		/// </param>
-		public byte[] CalculateSharedSecret(ECPublicKeyParameters Q_ephemeral_U) {
-			// TODO: Verify QeU! Section 5.6.2.3.
+		/// <param name="Q_static_U">Public key of the sender.</param>
+        /// <param name="d_static_V">Private key of the recipient.</param>
+		/// <param name='Q_ephemeral_U'>Ephemeral public key supplied by the initiator (U, sender).</param>
+        public static byte[] Respond(ECPublicKeyParameters Q_static_U, ECPrivateKeyParameters d_static_V, ECPublicKeyParameters Q_ephemeral_U) {
+            // TODO: Verify QeU! Section 5.6.2.3.
 			
 			ECDomainParameters domain = Q_static_U.Parameters;
 
@@ -114,10 +92,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 			Array.Copy(Ze_encoded, Z, Ze_encoded.Length);
 			Array.Copy(Zs_encoded, 0, Z, Ze_encoded.Length, Zs_encoded.Length);
 			return Z;
-		}
-	}
+        }
 
-
-
+    }
 }
 

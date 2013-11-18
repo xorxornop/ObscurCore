@@ -24,8 +24,8 @@ namespace ObscurCore.DTO
     /// in sequences of bytes relative to each other.
     /// </summary>
     [ProtoContract]
-    public sealed class PayloadLayoutConfiguration : IPayloadLayoutConfiguration, 
-        IDataTransferObject, IEquatable<PayloadLayoutConfiguration>
+    public sealed class PayloadConfiguration : IPayloadConfiguration, 
+        IDataTransferObject, IEquatable<PayloadConfiguration>
     {
         /// <summary>
         /// Name of the payload layout scheme, e.g. Frameshift.
@@ -67,11 +67,19 @@ namespace ObscurCore.DTO
         //[ProtoMember(6)]
         //public byte[] SecondaryPRNGConfiguration { get; set; }
 
+        /// <summary>
+        /// Offset at which the payload may be found 
+        /// relative to the manifest end in the bytestream. 
+        /// This allows for payload I/O frameshifting to increase security.
+        /// </summary>
+        [ProtoMember(7)]
+        public int Offset { get; set; }
+
         public override bool Equals (object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is PayloadLayoutConfiguration && Equals((PayloadLayoutConfiguration) obj);
+            return obj is PayloadConfiguration && Equals((PayloadConfiguration) obj);
         }
 
         /// <summary>
@@ -81,7 +89,7 @@ namespace ObscurCore.DTO
         /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
-        public bool Equals (PayloadLayoutConfiguration other) {
+        public bool Equals (PayloadConfiguration other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return string.Equals(SchemeName, other.SchemeName) &&
@@ -112,12 +120,13 @@ namespace ObscurCore.DTO
                 hashCode = (hashCode * 397) ^ (SecondaryPRNGName != null ? SecondaryPRNGName.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (SecondaryPRNGConfiguration != null ? SecondaryPRNGConfiguration.GetHashCode() : 0);
                 */
+                hashCode = (hashCode * 397) ^ Offset.GetHashCode();
                 return hashCode;
             }
         }
     }
 
-    public interface IPayloadLayoutConfiguration
+    public interface IPayloadConfiguration
     {
         /// <summary>
         /// Name of the payload layout scheme, e.g. Frameshift.
@@ -157,5 +166,12 @@ namespace ObscurCore.DTO
         ///// Format of the configuration is that of the consuming type.
         ///// </remarks>
         //byte[] SecondaryPRNGConfiguration { get; }
+
+        /// <summary>
+        /// Offset at which the payload may be found 
+        /// relative to the manifest end in the bytestream. 
+        /// This allows for payload I/O frameshifting to increase security.
+        /// </summary>
+        int Offset { get; set; }
     }
 }

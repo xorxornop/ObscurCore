@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
 using ObscurCore.Cryptography;
@@ -26,11 +28,14 @@ namespace ObscurCore.Tests.Packaging
                 };
 
             if(!IOTestBase.PackageDestinationDirectory.Exists) IOTestBase.PackageDestinationDirectory.Create();
-            using (var fs = new FileStream(IOTestBase.PackageDestinationDirectory.FullName + 
-                Path.DirectorySeparatorChar + "SymmetricPackage" + IOTestBase.PackageExtension, FileMode.Create)) 
-            {
-                PackageWriter.WritePackageSymmetric(fs, manifest, mCipher, preKey);
+            using (var temp = new MemoryStream()) {
+                using (var fs = new FileStream(IOTestBase.PackageDestinationDirectory.FullName + Path.DirectorySeparatorChar + 
+                    "SymmetricPackage" + IOTestBase.PackageExtension, FileMode.Create)) 
+                {
+                    PackageWriter.WritePackageSymmetric(fs, temp, manifest, mCipher, preKey);
+                }
             }
+            
 
 
             // We've written the package and closed the stream now
@@ -44,31 +49,39 @@ namespace ObscurCore.Tests.Packaging
             var preKey = new byte[mCipher.KeySize / 8];
             StratCom.EntropySource.NextBytes(preKey);
 
+            var preKeyBackup = new byte[preKey.Length]; // we have to save the key from the security procedure of clearing it!
+            Array.Copy(preKey, preKeyBackup,preKey.Length);
+
             var items = Utilities.GetItemsStreamExample(IOTestBase.SmallTextFileList);
             var manifest = new Manifest
                 {
                     PayloadItems = items,
-                    PayloadConfiguration = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Frameshift)
+                    PayloadConfiguration = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Simple)
                 };
 
-            using (var ms = new MemoryStream()) 
-            {
-                PackageWriter.WritePackageSymmetric(ms, manifest, mCipher, preKey);
-
+            using (var ms = new MemoryStream()) {
+                Debug.Print("\nSTARTING PACKAGE WRITE SECTION OF UNIT TEST\n");
+                using (var temp = new MemoryStream()) {
+                    PackageWriter.WritePackageSymmetric(ms, temp, manifest, mCipher, preKey);
+                }
                 ms.Seek(0, SeekOrigin.Begin);
-
-                IManifestCryptographySchemeConfiguration mCryptoConfig;
-                ManifestCryptographySchemes scheme;
                 int offset;
-                //var header = StratCom.ReadPackageManifestHeader(ms, out mCryptoConfig, out scheme, out offset);
+                var symKey = new List<byte[]> {preKeyBackup};
 
-                var symKey = new List<byte[]> {preKey};
+                Debug.Print("\nSTARTING PACKAGE READ SECTION OF UNIT TEST\n");
 
-                var readManifest = PackageReader.ReadPackageManifest(ms, symKey, null, null, null, null, out offset);
+                var readManifest = PackageReader.ReadPackageManifest(ms, symKey, null, null, null, null);
+
+                var path = IOTestBase.SmallTextFilesDestinationDirectory.FullName + Path.DirectorySeparatorChar;
+
+                foreach (var item in readManifest.PayloadItems) {
+                    var relativePath = item.RelativePath.Insert(0, path).Replace('/', Path.DirectorySeparatorChar);
+                    item.SetStreamBinding(() => new FileStream(relativePath, FileMode.Create));
+                }
+
+                PackageReader.ReadPackagePayload(ms, readManifest, null);
 
             }
-			// TODO: Finish this
-            
         }
     }
 }

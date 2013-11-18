@@ -102,12 +102,11 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		}
 		
 		private static void DoUM1Exchange(AsymmetricCipherKeyPair kpInitiator, AsymmetricCipherKeyPair kpResponder, out byte[] initiatorSS, out byte[] responderSS) {
-			var initiator = new UM1ExchangeInitiator((ECPublicKeyParameters) kpResponder.Public, (ECPrivateKeyParameters) kpInitiator.Private);
-			var responder = new UM1ExchangeResponder((ECPublicKeyParameters) kpInitiator.Public, (ECPrivateKeyParameters) kpResponder.Private);
-			
 			ECPublicKeyParameters ephemeral;
-			initiatorSS = initiator.CalculateSharedSecret(out ephemeral);
-			responderSS = responder.CalculateSharedSecret(ephemeral);
+		    initiatorSS = UM1Exchange.Initiate((ECPublicKeyParameters) kpResponder.Public,
+		        (ECPrivateKeyParameters) kpInitiator.Private, out ephemeral);
+			responderSS = UM1Exchange.Respond((ECPublicKeyParameters) kpInitiator.Public, 
+                (ECPrivateKeyParameters) kpResponder.Private, ephemeral);
 		}
 	}
 }

@@ -36,20 +36,23 @@ namespace ObscurCore.Packaging
 		protected readonly int minStripe, maxStripe;
 
 		public FabricMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, IList<Func<Stream, DecoratingStream>> transforms, 
-			IPayloadLayoutConfiguration config) : base(writing, multiplexedStream, streams, transforms, config, MaximumStripeLength)
-		{
-			FabricConfigurationUtility.Read(config.SchemeConfiguration, out minStripe, out maxStripe);
+			IPayloadConfiguration config) : base(writing, multiplexedStream, streams, transforms, config, MaximumStripeLength)
+        {
+		    var fabricConfig = StratCom.DeserialiseDTO<PayloadSchemeConfiguration>(config.SchemeConfiguration);
+		    minStripe = fabricConfig.Minimum;
+		    maxStripe = fabricConfig.Maximum;
+
 			if (minStripe < MinimumStripeLength)
 				throw new ArgumentOutOfRangeException("config", "Minimum stripe length is set below specification minimum.");
 			if (maxStripe > MaximumStripeLength)
 				throw new ArgumentOutOfRangeException("config", "Maximum stripe length is set above specification minimum.");
 
-            mode = FabricConfigurationUtility.CheckMode(minStripe, maxStripe);
+		    mode = minStripe == maxStripe ? FabricStripeModes.FixedLength : FabricStripeModes.VariableLength;
 
-            /*if(mode == FabricStripeModes.VariableLength) {
-                PrngStripe = Source.CreateCSPRNG(config.SecondaryPRNGName.ToEnum<CSPRNumberGenerators>(),
-                    config.SecondaryPRNGConfiguration);
-            }*/
+            //if(mode == FabricStripeModes.VariableLength) {
+            //    PrngStripe = Source.CreateCSPRNG(config.SecondaryPRNGName.ToEnum<CSPRNumberGenerators>(),
+            //        config.SecondaryPRNGConfiguration);
+            //}
 		}
 		
 		/// <summary>
@@ -59,7 +62,10 @@ namespace ObscurCore.Packaging
 		/// <returns>The operation length.</returns>
 		protected override long NextOperationLength() {
 		    var opLen = mode == FabricStripeModes.VariableLength ? SelectionSource.Next(minStripe, maxStripe) : maxStripe;
-            Debug.Print("NextOperationLength() : " + opLen);
+
+            Debug.Print(DebugUtility.CreateReportString("FrameshiftMux", "NextOperationLength", "Generated stripe length",
+                    opLen.ToString()));
+
 		    return opLen;
 		}
 	}

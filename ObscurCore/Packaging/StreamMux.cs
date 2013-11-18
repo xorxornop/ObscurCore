@@ -205,7 +205,9 @@ namespace ObscurCore.Packaging
 
             var nextOpLen = NextOperationLength();
             var targetPosition = Math.Min(SourceAccumulator + nextOpLen, Writing ? CurrentItem.ExternalLength : CurrentItem.InternalLength);
-            Debug.Print("ExecuteSingle() : Target position: {0}, opLength: {1}", targetPosition, targetPosition - SourceAccumulator);
+
+            Debug.Print(DebugUtility.CreateReportString("StreamMux", "ExecuteSingle", "Target position (item-relative)",
+                    targetPosition.ToString()));
 
             bool sourceDepleted = false;
             while (SourceAccumulator < targetPosition) {
@@ -254,7 +256,9 @@ namespace ObscurCore.Packaging
                 DestinationAccumulator *= 1;
                 ItemsCompleted++;
                 if(Writing) CurrentSource.Close();
-                Debug.Print("ExecuteSingle() : ##### END OF ITEM #####");
+
+                Debug.Print(DebugUtility.CreateReportString("StreamMux", "ExecuteSingle", "[* END OF ITEM *]",
+                    CurrentIndex.ToString()));
             }
         }
 
@@ -280,7 +284,10 @@ namespace ObscurCore.Packaging
                 do {
                     NextSource();
                 } while (SourceAccumulator < 0);
-                Debug.Print("AdvanceSource() : Selected stream index: " + CurrentIndex);
+
+                Debug.Print(DebugUtility.CreateReportString("StreamMux", "AdvanceSource", "Selected stream index",
+                    CurrentIndex.ToString()));
+
                 return true;
             }
         }

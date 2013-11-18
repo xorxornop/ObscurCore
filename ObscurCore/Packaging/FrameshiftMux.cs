@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using ObscurCore.DTO;
 
@@ -36,16 +37,18 @@ namespace ObscurCore.Packaging
 	    protected readonly Random paddingSrc = StratCom.EntropySource;
 		
 		public FrameshiftMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, IList<Func<Stream, DecoratingStream>> transforms, 
-		                      IPayloadLayoutConfiguration config) : base(writing, multiplexedStream, streams, transforms, config)
+		                      IPayloadConfiguration config) : base(writing, multiplexedStream, streams, transforms, config)
 		{
-			FrameshiftConfigurationUtility.Read(config.SchemeConfiguration, out minPadding, out maxPadding);
+			var frameshiftConfig = StratCom.DeserialiseDTO<PayloadSchemeConfiguration>(config.SchemeConfiguration);
+		    minPadding = frameshiftConfig.Minimum;
+		    maxPadding = frameshiftConfig.Maximum;
 			
 			if (minPadding < MinimumPaddingLength)
 				throw new ArgumentOutOfRangeException("config", "Minimum padding length is set below specification minimum.");
 			if (maxPadding < MaximumPaddingLength)
 				throw new ArgumentOutOfRangeException("config", "Maximum padding length is set above specification maximum.");
 
-            mode = FrameshiftConfigurationUtility.CheckMode(minPadding, maxPadding);
+            mode = minPadding == maxPadding ? FrameshiftPaddingModes.FixedLength : FrameshiftPaddingModes.VariableLength;
 
             /*if (mode == FrameshiftPaddingModes.VariableLength) {
                 prngPadding = Source.CreateCSPRNG(config.SecondaryPRNGName.ToEnum<CSPRNumberGenerators>(),
@@ -59,6 +62,10 @@ namespace ObscurCore.Packaging
 
         private int EmitPadding () {
             var paddingLength = (mode == FrameshiftPaddingModes.VariableLength) ? SelectionSource.Next(minPadding, maxPadding) : maxPadding;
+
+            Debug.Print(DebugUtility.CreateReportString("FrameshiftMux", "EmitPadding", "Padding length",
+                    paddingLength.ToString()));
+
             var paddingBuffer = new byte[paddingLength];
             paddingSrc.NextBytes(paddingBuffer);
             CurrentDestination.Write(paddingBuffer, 0, paddingLength);
@@ -71,6 +78,10 @@ namespace ObscurCore.Packaging
 		
 		private int ConsumePadding() {
             var paddingLength = (mode == FrameshiftPaddingModes.VariableLength) ? SelectionSource.Next(minPadding, maxPadding) : maxPadding;
+
+            Debug.Print(DebugUtility.CreateReportString("FrameshiftMux", "ConsumePadding", "Padding length",
+                    paddingLength.ToString()));
+
 			if (CurrentSource.CanSeek) CurrentSource.Seek(paddingLength, SeekOrigin.Current);
 			else CurrentSource.Read(new byte[paddingLength], 0, paddingLength);
 			return paddingLength;

@@ -5,11 +5,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
     public static class Curve25519UM1Exchange
     {
         /// <summary>
-        /// Calculate the shared secret in participant U's role.
+        /// Calculate the shared secret in participant U's (initiator) role.
         /// </summary>
-        /// <param name="pubKeyRecipient"></param>
-        /// <param name="privKeySender"></param>
-        /// <param name="Q_ephemeral_V">Ephemeral public key to send to the responder (V, receiver).</param>
+        /// <param name="pubKeyRecipient">Public key of the recipient.</param>
+        /// <param name="privKeySender">Private key of the sender.</param>
+        /// <param name="Q_ephemeral_V">Ephemeral public key to send to the responder (V, receiver). Output to this variable.</param>
         /// <returns></returns>
         public static byte[] Initiate(byte[] pubKeyRecipient, byte[] privKeySender, out byte[] Q_ephemeral_V) {
             var privKeyEntropy = new byte[32];

@@ -31,7 +31,7 @@ namespace ObscurCore.Packaging
 		protected CSPRNG SelectionSource;
 
 		public SimpleMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, IList<Func<Stream, DecoratingStream>> transforms, 
-		                  IPayloadLayoutConfiguration config, int maxOpSize = 16384) : base(writing, multiplexedStream, streams, transforms, maxOpSize)
+		                  IPayloadConfiguration config, int maxOpSize = 16384) : base(writing, multiplexedStream, streams, transforms, maxOpSize)
 		{
 			SelectionSource = Source.CreateCSPRNG(config.PrimaryPRNGName.ToEnum<CSPRNumberGenerators>(),
 		        config.PrimaryPRNGConfiguration);
@@ -46,7 +46,10 @@ namespace ObscurCore.Packaging
 		/// <returns>The next stream index.</returns>
 		protected override sealed int NextSource() {
 		    CurrentIndex = SelectionSource.Next(0, ItemCount - 1);
-            Debug.Print("NextSource() : " + CurrentIndex);
+
+            Debug.Print(DebugUtility.CreateReportString("SimpleMux", "NextSource", "Generated index",
+                    CurrentIndex.ToString()));
+
 			return CurrentIndex;
 		}
 	}

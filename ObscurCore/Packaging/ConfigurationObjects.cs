@@ -25,8 +25,8 @@ namespace ObscurCore.Packaging
 		/// If fine-tuning is desired, use the specialised constructors.
 		/// </summary>
 		/// <param name="scheme">Desired payload layout scheme.</param>
-		public static PayloadLayoutConfiguration CreateDefault(PayloadLayoutSchemes scheme) {
-			var config = new PayloadLayoutConfiguration {
+		public static PayloadConfiguration CreateDefault(PayloadLayoutSchemes scheme) {
+			var config = new PayloadConfiguration {
                 SchemeName = scheme.ToString(),
 				PrimaryPRNGName = "SOSEMANUK",
 				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
@@ -38,16 +38,20 @@ namespace ObscurCore.Packaging
 				break;
 			case PayloadLayoutSchemes.Frameshift:
 				// Padding length is variable by default.
-				config.SchemeConfiguration =
-					FrameshiftConfigurationUtility.WriteVariablePadding(
-						FrameshiftMux.MinimumPaddingLength, FrameshiftMux.MaximumPaddingLength);
+			    var frameshiftConfig = new PayloadSchemeConfiguration() {
+			            Minimum = FrameshiftMux.MinimumPaddingLength,
+			            Maximum = FrameshiftMux.MaximumPaddingLength
+			        };
+			    config.SchemeConfiguration = frameshiftConfig.SerialiseDTO();
 				break;
 #if(INCLUDE_FABRIC)
             case PayloadLayoutSchemes.Fabric:
 				// Stripe length is variable by default.
-				config.SchemeConfiguration =
-					FabricConfigurationUtility.WriteVariableStriping(FabricMux.MinimumStripeLength,
-					                                                 FabricMux.MaximumStripeLength);
+				var fabricConfig = new PayloadSchemeConfiguration() {
+			            Minimum = FabricMux.MinimumStripeLength,
+			            Maximum = FabricMux.MaximumStripeLength
+			        };
+			    config.SchemeConfiguration = fabricConfig.SerialiseDTO();
 				break;
 #endif
 			}

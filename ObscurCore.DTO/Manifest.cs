@@ -41,15 +41,7 @@ namespace ObscurCore.DTO
         /// Configuration of the payload packaging.
         /// </summary>
         [ProtoMember(2)]
-        public PayloadLayoutConfiguration PayloadConfiguration { get; set; }
-		
-        /// <summary>
-        /// Offset at which the payload may be found 
-        /// relative to the manifest end in the bytestream. 
-        /// This allows for payload I/O frameshifting to increase security.
-        /// </summary>
-        [ProtoMember(3)]
-        public int PayloadOffset { get; set; }
+        public PayloadConfiguration PayloadConfiguration { get; set; }
 
         public override bool Equals (object obj) {
             if (ReferenceEquals(null, obj)) return false;
@@ -69,8 +61,7 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return PayloadItems.Equals(other.PayloadItems) &&
-                   PayloadConfiguration.Equals(other.PayloadConfiguration) &&
-                   PayloadOffset == other.PayloadOffset;
+                   PayloadConfiguration.Equals(other.PayloadConfiguration);
         }
 
         /// <summary>
@@ -84,7 +75,6 @@ namespace ObscurCore.DTO
             unchecked {
                 int hashCode = PayloadItems.GetHashCode();
                 hashCode = (hashCode * 397) ^ PayloadConfiguration.GetHashCode();
-                hashCode = (hashCode * 397) ^ PayloadOffset;
                 return hashCode;
             }
         }
@@ -106,12 +96,6 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Configuration of the payload packaging.
         /// </summary>
-        PayloadLayoutConfiguration PayloadConfiguration { get; }
-
-        /// <summary>
-        /// Offset at which the payload may be found 
-        /// relative to the manifest end in the bytestream.
-        /// </summary>
-        int PayloadOffset { get; }
+        PayloadConfiguration PayloadConfiguration { get; }
     }
 }

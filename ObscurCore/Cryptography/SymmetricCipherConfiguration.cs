@@ -39,7 +39,7 @@ namespace ObscurCore.Cryptography
                 throw new KeySizeException(keySizeNonNull,
                     Athena.Cryptography.BlockCipherDirectory[cipher].DisplayName + " specification");
             }
-            config.Key = new byte[config.KeySize];
+            config.Key = new byte[config.KeySize / 8];
 
              // Set the block size
             var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCipherDirectory[cipher].DefaultBlockSize;
@@ -90,7 +90,7 @@ namespace ObscurCore.Cryptography
                 throw new KeySizeException(keySizeNonNull,
                     Athena.Cryptography.BlockCipherDirectory[cipher].DisplayName + " specification");
             }
-            config.Key = new byte[config.KeySize];
+            config.Key = new byte[config.KeySize / 8];
 
             // Set the block size
             var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCipherDirectory[cipher].DefaultBlockSize;
@@ -143,7 +143,7 @@ namespace ObscurCore.Cryptography
                 throw new KeySizeException(keySizeNonNull,
                     Athena.Cryptography.StreamCipherDirectory[cipher].DisplayName + " specification");
             }
-            config.Key = new byte[config.KeySize];
+            config.Key = new byte[config.KeySize / 8];
             config.CipherName = cipher.ToString();
             if(Athena.Cryptography.StreamCipherDirectory[cipher].DefaultIVSize != -1) 
                 config.IV = new byte[Athena.Cryptography.StreamCipherDirectory[cipher].DefaultIVSize / 8];

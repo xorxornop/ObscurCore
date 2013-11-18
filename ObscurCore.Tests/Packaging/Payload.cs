@@ -57,18 +57,7 @@ namespace ObscurCore.Tests.Packaging
         [Test]
 		public void Fabric () {
 			var items = Utilities.GetItemsStreamExample(SourceFiles);
-            //var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Fabric);
-
-		    var payloadConfig = new PayloadLayoutConfiguration()
-		        {
-		            SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
-                    SchemeConfiguration = FabricConfigurationUtility.WriteFixedStriping(FabricMux.DefaultFixedStripeLength),
-		            //SchemeConfiguration = FabricConfigurationUtility.WriteVariableStriping(FabricMux.MinimumStripeLength, FabricMux.MaximumStripeLength),
-		            PrimaryPRNGName = "SOSEMANUK",
-		            PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
-		        };
-
+            var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Fabric);
 			DoMux (payloadConfig, items, SourceFiles);
 		}
 #endif
@@ -77,7 +66,7 @@ namespace ObscurCore.Tests.Packaging
             return items.Select(item => (Func<Stream, DecoratingStream>) (binding => item.BindTransformStream(writingPayload, binding))).ToList();
 		}
 
-	    protected void DoMux(PayloadLayoutConfiguration payloadConfig, List<PayloadItem> items, List<FileInfo> files,  bool outputPayload = false) {
+	    protected void DoMux(PayloadConfiguration payloadConfig, List<PayloadItem> items, List<FileInfo> files,  bool outputPayload = false) {
 			
             var ms = new MemoryStream ();
 
