@@ -8,6 +8,8 @@ Thanks
 
 To the BouncyCastle project. This work is built heavily on top of theirs, and it likely would not have been possible without it. So - thank you!
 
+Also a big thanks to Marc Gravell for his excellent protobuf-net and its associated precompiler. It is used extensively throughout (especially for the packaging features) and provides great flexibility and performance.
+
 How do I use it?
 ----------------
 
@@ -82,7 +84,7 @@ These block ciphers are supported:
 +	Camellia
 +	CAST-5
 +	CAST-6
-+	GOST28147 [disabled]
++	GOST 28147-89 [disabled]
 +	IDEA
 +	NOEKEON
 +	RC-6
@@ -96,8 +98,8 @@ Paddings available: ISO 10126-2, ISO/IEC 7816-4, PKCS7, TBC, and ANSI X.923.
 
 And these stream ciphers:
 
-+	HC128
-+	HC256
++	HC-128
++	HC-256
 +	ISAAC [disabled]
 +	Rabbit
 +	RC-4 [disabled]
@@ -116,8 +118,9 @@ And these stream ciphers:
 	}
 
 	byte[] mac = null;
-	/* HashStream (Stream binding, bool writing, HashFunctions function, ref byte[] output, bool closeOnDispose = true) */
-	using (var hs = new HashStream(destStream, true, HashFunctions.BLAKE2B256, hash, true) ) {
+	/* MacStream (Stream binding, bool writing, MACFunctions function, out byte[] output, byte[] key, 
+		byte[] salt = null, byte[] config = null, bool closeOnDispose = true) */
+	using (var ms = new MacStream(destStream, true, HashFunctions.BLAKE2B256, mac, key, salt, null, true) ) {
 		sourceStream.CopyTo(cs);
 	}
 
