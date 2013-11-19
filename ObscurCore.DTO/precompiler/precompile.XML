@@ -64,6 +64,21 @@
             The accessibility of the generated type
             </summary>
         </member>
+        <member name="P:ProtoBuf.Precompile.PreCompileContext.KeyFile">
+            <summary>
+            The path to the file to use to sign the assembly
+            </summary>
+        </member>
+        <member name="P:ProtoBuf.Precompile.PreCompileContext.KeyContainer">
+            <summary>
+            The container to use to sign the assembly
+            </summary>
+        </member>
+        <member name="P:ProtoBuf.Precompile.PreCompileContext.PublicKey">
+            <summary>
+            The public key (in hexadecimal) to use to sign the assembly
+            </summary>
+        </member>
         <member name="T:ProtoBuf.Precompile.CommandLineAttribute">
             <summary>
             Defines a mapping from command-line attributes to properties
