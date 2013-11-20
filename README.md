@@ -6,7 +6,7 @@ A general purpose, easy to use, highly customisable and extensible encryption an
 Thanks
 ------
 
-To the The Legion of the [Bouncy Castle](http://www.bouncycastle.org/).
+To the Legion of the [Bouncy Castle](http://www.bouncycastle.org/).
 
 ![BouncyCastle C# logo](http://www.bouncycastle.org/images/csharp_logo.gif)
 
@@ -90,12 +90,14 @@ More to come... it is desired to be a very comprehensive system.
 Functionality exposed through streams
 -------------------------------------
 
+**Please note the parameter closeOnDispose. If you test these methods using a MemoryStream, and the parameter set to true (by default or explicitly), the stream will be closed, and your data will be missing.**
+
 ### Encryption/decryption ###
 
 	var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCiphers.AES,
 		BlockCipherModes.CTR, BlockCipherPaddings.None);
-	/* SymmetricCryptoStream (Stream target, bool isEncrypting, ISymmetricCipherConfiguration config, byte[] key = null, bool leaveOpen = false) */
-	using (var cs = new SymmetricCryptoStream(destStream, true, config, true) ) {
+	/* SymmetricCryptoStream (Stream target, bool isEncrypting, ISymmetricCipherConfiguration config, byte[] key = null, bool closeOnDispose = true) */
+	using (var cs = new SymmetricCryptoStream(destStream, true, config) ) {
 		sourceStream.CopyTo(cs);
 	}
 
