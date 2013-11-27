@@ -38,11 +38,11 @@ namespace ObscurCore.Cryptography
 		/// <param name="function">Function.</param>
 		/// <param name="output">Byte array where the finished hash will be output to. Does not need to be initialised.</param>
 		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
-		public HashStream (Stream binding, bool writing, HashFunctions function, out byte[] output, bool closeOnDispose = true) 
+		public HashStream (Stream binding, bool writing, HashFunction function, out byte[] output, bool closeOnDispose = true) 
 			: base(binding, writing, closeOnDispose, false)
 		{
 			_digest = Source.CreateHashPrimitive (function);
-            _outputRef = new byte[_digest.GetDigestSize()];
+            _outputRef = new byte[_digest.DigestSize];
 			output = _outputRef;
 		}
 

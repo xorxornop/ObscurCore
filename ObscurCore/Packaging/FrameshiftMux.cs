@@ -25,30 +25,30 @@ namespace ObscurCore.Packaging
 	/// Derived stream mux implementing stream selection with PRNG, 
 	/// and random-data item headers & trailers of constant or PRNG-varied length.
 	/// </summary>
-	public class FrameshiftMux : SimpleMux
+	public sealed class FrameshiftMux : SimpleMux
 	{
 		public const int	MinimumPaddingLength 		= 8,
 							MaximumPaddingLength 		= 256,
 							DefaultFixedPaddingLength 	= 32;
 
 		//protected readonly Random prngPadding;
-	    protected readonly FrameshiftPaddingModes mode;
-		protected readonly int minPadding, maxPadding;
-	    protected readonly Random paddingSrc = StratCom.EntropySource;
+	    private readonly FrameshiftPaddingModes _mode;
+	    private readonly int _minPadding, _maxPadding;
+	    private readonly Random _paddingSrc = StratCom.EntropySource;
 		
 		public FrameshiftMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, IList<Func<Stream, DecoratingStream>> transforms, 
 		                      IPayloadConfiguration config) : base(writing, multiplexedStream, streams, transforms, config)
 		{
 			var frameshiftConfig = StratCom.DeserialiseDTO<PayloadSchemeConfiguration>(config.SchemeConfiguration);
-		    minPadding = frameshiftConfig.Minimum;
-		    maxPadding = frameshiftConfig.Maximum;
+		    _minPadding = frameshiftConfig.Minimum;
+		    _maxPadding = frameshiftConfig.Maximum;
 			
-			if (minPadding < MinimumPaddingLength)
+			if (_minPadding < MinimumPaddingLength)
 				throw new ArgumentOutOfRangeException("config", "Minimum padding length is set below specification minimum.");
-			if (maxPadding < MaximumPaddingLength)
+			if (_maxPadding < MaximumPaddingLength)
 				throw new ArgumentOutOfRangeException("config", "Maximum padding length is set above specification maximum.");
 
-            mode = minPadding == maxPadding ? FrameshiftPaddingModes.FixedLength : FrameshiftPaddingModes.VariableLength;
+            _mode = _minPadding == _maxPadding ? FrameshiftPaddingModes.FixedLength : FrameshiftPaddingModes.VariableLength;
 
             /*if (mode == FrameshiftPaddingModes.VariableLength) {
                 prngPadding = Source.CreateCSPRNG(config.SecondaryPRNGName.ToEnum<CSPRNumberGenerators>(),
@@ -61,13 +61,13 @@ namespace ObscurCore.Packaging
 		protected override int EmitTrailer () { return EmitHeader(); }
 
         private int EmitPadding () {
-            var paddingLength = (mode == FrameshiftPaddingModes.VariableLength) ? SelectionSource.Next(minPadding, maxPadding) : maxPadding;
+            var paddingLength = (_mode == FrameshiftPaddingModes.VariableLength) ? SelectionSource.Next(_minPadding, _maxPadding) : _maxPadding;
 
             Debug.Print(DebugUtility.CreateReportString("FrameshiftMux", "EmitPadding", "Padding length",
                     paddingLength.ToString()));
 
             var paddingBuffer = new byte[paddingLength];
-            paddingSrc.NextBytes(paddingBuffer);
+            _paddingSrc.NextBytes(paddingBuffer);
             CurrentDestination.Write(paddingBuffer, 0, paddingLength);
             return paddingLength;
         }
@@ -77,7 +77,7 @@ namespace ObscurCore.Packaging
 		protected override int ConsumeTrailer () { return ConsumePadding(); }
 		
 		private int ConsumePadding() {
-            var paddingLength = (mode == FrameshiftPaddingModes.VariableLength) ? SelectionSource.Next(minPadding, maxPadding) : maxPadding;
+            var paddingLength = (_mode == FrameshiftPaddingModes.VariableLength) ? SelectionSource.Next(_minPadding, _maxPadding) : _maxPadding;
 
             Debug.Print(DebugUtility.CreateReportString("FrameshiftMux", "ConsumePadding", "Padding length",
                     paddingLength.ToString()));

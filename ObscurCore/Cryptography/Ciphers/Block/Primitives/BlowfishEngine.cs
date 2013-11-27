@@ -381,9 +381,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         {
         }
 
-        public int GetBlockSize()
-        {
-            return BLOCK_SIZE;
+        public int BlockSize {
+            get { return BLOCK_SIZE; }
         }
 
         //==================================

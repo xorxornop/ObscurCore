@@ -10,7 +10,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
     public class CtsBlockCipher
 		: BufferedBlockCipher
     {
-        private readonly int blockSize;
+        private readonly int _blockSize;
 
         /**
         * Create a buffered block cipher that uses Cipher Text Stealing
@@ -27,9 +27,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 
 			this.cipher = cipher;
 
-            blockSize = cipher.GetBlockSize();
+            _blockSize = cipher.BlockSize;
 
-            buf = new byte[blockSize * 2];
+            buf = new byte[_blockSize * 2];
             bufOff = 0;
         }
 
@@ -88,10 +88,10 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             if (bufOff == buf.Length)
             {
                 resultLen = cipher.ProcessBlock(buf, 0, output, outOff);
-				Debug.Assert(resultLen == blockSize);
+				Debug.Assert(resultLen == _blockSize);
 
-				Array.Copy(buf, blockSize, buf, 0, blockSize);
-                bufOff = blockSize;
+				Array.Copy(buf, _blockSize, buf, 0, _blockSize);
+                bufOff = _blockSize;
             }
 
             buf[bufOff++] = input;
@@ -123,7 +123,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
                 throw new ArgumentException("Can't have a negative input outLength!");
             }
 
-            int blockSize = GetBlockSize();
+            int blockSize = BlockSize;
             int outLength = GetUpdateOutputSize(length);
 
             if (outLength > 0)
@@ -189,11 +189,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
                 throw new DataLengthException("output buffer too small in doFinal");
             }
 
-            int blockSize = cipher.GetBlockSize();
+            int blockSize = cipher.BlockSize;
             int length = bufOff - blockSize;
             byte[] block = new byte[blockSize];
 
-			IBlockCipher c = ((CbcBlockCipher)cipher).GetUnderlyingCipher();
+			IBlockCipher c = ((CbcBlockCipher)cipher).UnderlyingCipher;
 
             if (forEncryption)
             {

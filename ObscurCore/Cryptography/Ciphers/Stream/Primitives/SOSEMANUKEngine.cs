@@ -14,15 +14,16 @@
 //    limitations under the License.
 
 using System;
+using ObscurCore.Cryptography.Entropy;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
-    public sealed class SOSEMANUKEngine : IStreamCipher
+    public sealed class SosemanukEngine : IStreamCipher, ICsprngCompatible
     {
         // Stores engine state
-        private byte[]          _workingKey     = null,
-                                _workingIV      = null;
-        private bool	        _initialised    = false;
+        private byte[]          _workingKey,
+                                _workingIV;
+        private bool	        _initialised;
 
         private int lfsr0, lfsr1, lfsr2, lfsr3, lfsr4;
         private int lfsr5, lfsr6, lfsr7, lfsr8, lfsr9;
@@ -32,13 +33,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             // forEncryption parameter is irrelevant for SOSEMANUK as operations are symmetrical, 
             // but required by class interface
 
-            ParametersWithIV ivParams = parameters as ParametersWithIV;
+            var ivParams = parameters as ParametersWithIV;
             if (ivParams == null) throw new ArgumentException("SOSEMANUK initialisation requires an IV.", "parameters");
             _workingIV = ivParams.GetIV();
             if (_workingIV == null || _workingIV.Length != 16)
                 throw new ArgumentException("SOSEMANUK requires exactly 16 bytes (128 bits) of IV.");
 
-            KeyParameter key = ivParams.Parameters as KeyParameter;
+            var key = ivParams.Parameters as KeyParameter;
             if (key == null) throw new ArgumentException("SOSEMANUK initialisation requires a key.", "parameters");
             _workingKey = key.GetKey();
             if (_workingKey.Length != 32) throw new ArgumentException("SOSEMANUK requires exactly 32 bytes (256 bits) of key.", "parameters");
@@ -76,16 +77,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             GenerateKeystream(keyStream, 0, len);
             Array.Copy(inBytes, inOff, bitStream, 0, len);
 
-            //var output = keyStream.ParallelXOR(bitStream, 4); // tuning parameter! controls level of parallelism used in XORing the keystream to the input data.
-            // actually appears to be slower :-S !
-
             var output = new byte[keyStream.Length];
             for (var i = 0; i < keyStream.Length; i++) output[i] = (byte) (keyStream[i] ^ bitStream[i]);
 
             Array.Copy(output, 0, outBytes, outOff, len);
         }
 
-        public void GetRawKeystream(byte[] buffer, int offset, int len) {
+        public void GetKeystream(byte[] buffer, int offset, int len) {
             if (!_initialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
 			if ((offset + len) > buffer.Length) throw new ArgumentException("Output buffer too short.");
             //CheckLimitExceeded();
@@ -105,18 +103,18 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
         // Subkeys for Serpent24: 100 32-bit words.
         private readonly int[] _serpent24SubKeys = new int[100];
-        private static readonly int[] mulAlpha = new int[256];
-        private static readonly int[] divAlpha = new int[256];
+        private static readonly int[] MulAlpha = new int[256];
+        private static readonly int[] DivAlpha = new int[256];
 
         /*
          * Internal buffer for partial blocks. "streamPtr" points to the 
          * first stream byte which has been computed but not output.
          */
-        private const int BUFFERLEN = 80;
-        private byte[] streamBuf = new byte[BUFFERLEN];
-        private int streamPtr = BUFFERLEN;
+        private const int BufferLen = 80;
+        private readonly byte[] _streamBuf = new byte[BufferLen];
+        private int _streamPtr = BufferLen;
 
-        static SOSEMANUKEngine() {
+        static SosemanukEngine() {
             /*
              * We first build exponential and logarithm tables
              * relatively to beta in F_{2^8}. We set log(0x00) = 0xFF
@@ -148,15 +146,15 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
              * 1/alpha = beta^16 * alpha^3 + beta^39 * alpha^2
              *           + beta^6 * alpha + beta^64
              */
-            mulAlpha[0x00] = 0x00000000;
-            divAlpha[0x00] = 0x00000000;
+            MulAlpha[0x00] = 0x00000000;
+            DivAlpha[0x00] = 0x00000000;
             for (int x = 1; x < 0x100; x++) {
                 int ex = logb[x];
-                mulAlpha[x] = (expb[(ex + 23) % 255] << 24)
+                MulAlpha[x] = (expb[(ex + 23) % 255] << 24)
                     | (expb[(ex + 245) % 255] << 16)
                     | (expb[(ex + 48) % 255] << 8)
                     | expb[(ex + 239) % 255];
-                divAlpha[x] = (expb[(ex + 16) % 255] << 24)
+                DivAlpha[x] = (expb[(ex + 16) % 255] << 24)
                     | (expb[(ex + 39) % 255] << 16)
                     | (expb[(ex + 6) % 255] << 8)
                     | expb[(ex + 64) % 255];
@@ -164,24 +162,24 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         }
 
         private void GenerateKeystream (byte[] buf, int off, int len) {
-            if (streamPtr < BUFFERLEN) {
-                var blen = BUFFERLEN - streamPtr;
+            if (_streamPtr < BufferLen) {
+                var blen = BufferLen - _streamPtr;
                 if (blen > len)
                     blen = len;
-                Array.Copy(streamBuf, streamPtr, buf, off, blen);
-                streamPtr += blen;
+                Array.Copy(_streamBuf, _streamPtr, buf, off, blen);
+                _streamPtr += blen;
                 off += blen;
                 len -= blen;
             }
             while (len > 0) {
-                if (len >= BUFFERLEN) {
+                if (len >= BufferLen) {
                     makeStreamBlock(buf, off);
-                    off += BUFFERLEN;
-                    len -= BUFFERLEN;
+                    off += BufferLen;
+                    len -= BufferLen;
                 } else {
-                    makeStreamBlock(streamBuf, 0);
-                    Array.Copy(streamBuf, 0, buf, off, len);
-                    streamPtr = len;
+                    makeStreamBlock(_streamBuf, 0);
+                    Array.Copy(_streamBuf, 0, buf, off, len);
+                    _streamPtr = len;
                     len = 0;
                 }
             }
@@ -227,32 +225,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v0 = s0;
-		    s0 = ((s0 << 8) ^ mulAlpha[(int)((uint)s0 >> 24)])
-			    ^ ((int)((uint)s3 >> 8) ^ divAlpha[s3 & 0xFF]) ^ s9;
+		    s0 = ((s0 << 8) ^ MulAlpha[(int)((uint)s0 >> 24)])
+			    ^ ((int)((uint)s3 >> 8) ^ DivAlpha[s3 & 0xFF]) ^ s9;
 		    f0 = (s9 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v1 = s1;
-		    s1 = ((s1 << 8) ^ mulAlpha[(int)((uint)s1 >> 24)])
-			    ^ ((int)((uint)s4 >> 8) ^ divAlpha[s4 & 0xFF]) ^ s0;
+		    s1 = ((s1 << 8) ^ MulAlpha[(int)((uint)s1 >> 24)])
+			    ^ ((int)((uint)s4 >> 8) ^ DivAlpha[s4 & 0xFF]) ^ s0;
 		    f1 = (s0 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v2 = s2;
-		    s2 = ((s2 << 8) ^ mulAlpha[(int)((uint)s2 >> 24)])
-			    ^ ((int)((uint)s5 >> 8) ^ divAlpha[s5 & 0xFF]) ^ s1;
+		    s2 = ((s2 << 8) ^ MulAlpha[(int)((uint)s2 >> 24)])
+			    ^ ((int)((uint)s5 >> 8) ^ DivAlpha[s5 & 0xFF]) ^ s1;
 		    f2 = (s1 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v3 = s3;
-		    s3 = ((s3 << 8) ^ mulAlpha[(int)((uint)s3 >> 24)])
-			    ^ ((int)((uint)s6 >> 8) ^ divAlpha[s6 & 0xFF]) ^ s2;
+		    s3 = ((s3 << 8) ^ MulAlpha[(int)((uint)s3 >> 24)])
+			    ^ ((int)((uint)s6 >> 8) ^ DivAlpha[s6 & 0xFF]) ^ s2;
 		    f3 = (s2 + r1) ^ r2;
 
 		    /*
@@ -287,32 +285,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v0 = s4;
-		    s4 = ((s4 << 8) ^ mulAlpha[(int)((uint)s4 >> 24)])
-			    ^ ((int)((uint)s7 >> 8) ^ divAlpha[s7 & 0xFF]) ^ s3;
+		    s4 = ((s4 << 8) ^ MulAlpha[(int)((uint)s4 >> 24)])
+			    ^ ((int)((uint)s7 >> 8) ^ DivAlpha[s7 & 0xFF]) ^ s3;
 		    f0 = (s3 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v1 = s5;
-		    s5 = ((s5 << 8) ^ mulAlpha[(int)((uint)s5 >> 24)])
-			    ^ ((int)((uint)s8 >> 8) ^ divAlpha[s8 & 0xFF]) ^ s4;
+		    s5 = ((s5 << 8) ^ MulAlpha[(int)((uint)s5 >> 24)])
+			    ^ ((int)((uint)s8 >> 8) ^ DivAlpha[s8 & 0xFF]) ^ s4;
 		    f1 = (s4 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v2 = s6;
-		    s6 = ((s6 << 8) ^ mulAlpha[(int)((uint)s6 >> 24)])
-			    ^ ((int)((uint)s9 >> 8) ^ divAlpha[s9 & 0xFF]) ^ s5;
+		    s6 = ((s6 << 8) ^ MulAlpha[(int)((uint)s6 >> 24)])
+			    ^ ((int)((uint)s9 >> 8) ^ DivAlpha[s9 & 0xFF]) ^ s5;
 		    f2 = (s5 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v3 = s7;
-		    s7 = ((s7 << 8) ^ mulAlpha[(int)((uint)s7 >> 24)])
-			    ^ ((int)((uint)s0 >> 8) ^ divAlpha[s0 & 0xFF]) ^ s6;
+		    s7 = ((s7 << 8) ^ MulAlpha[(int)((uint)s7 >> 24)])
+			    ^ ((int)((uint)s0 >> 8) ^ DivAlpha[s0 & 0xFF]) ^ s6;
 		    f3 = (s6 + r1) ^ r2;
 
 		    /*
@@ -347,32 +345,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v0 = s8;
-		    s8 = ((s8 << 8) ^ mulAlpha[(int)((uint)s8 >> 24)])
-			    ^ ((int)((uint)s1 >> 8) ^ divAlpha[s1 & 0xFF]) ^ s7;
+		    s8 = ((s8 << 8) ^ MulAlpha[(int)((uint)s8 >> 24)])
+			    ^ ((int)((uint)s1 >> 8) ^ DivAlpha[s1 & 0xFF]) ^ s7;
 		    f0 = (s7 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v1 = s9;
-		    s9 = ((s9 << 8) ^ mulAlpha[(int)((uint)s9 >> 24)])
-			    ^ ((int)((uint)s2 >> 8) ^ divAlpha[s2 & 0xFF]) ^ s8;
+		    s9 = ((s9 << 8) ^ MulAlpha[(int)((uint)s9 >> 24)])
+			    ^ ((int)((uint)s2 >> 8) ^ DivAlpha[s2 & 0xFF]) ^ s8;
 		    f1 = (s8 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v2 = s0;
-		    s0 = ((s0 << 8) ^ mulAlpha[(int)((uint)s0 >> 24)])
-			    ^ ((int)((uint)s3 >> 8) ^ divAlpha[s3 & 0xFF]) ^ s9;
+		    s0 = ((s0 << 8) ^ MulAlpha[(int)((uint)s0 >> 24)])
+			    ^ ((int)((uint)s3 >> 8) ^ DivAlpha[s3 & 0xFF]) ^ s9;
 		    f2 = (s9 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v3 = s1;
-		    s1 = ((s1 << 8) ^ mulAlpha[(int)((uint)s1 >> 24)])
-			    ^ ((int)((uint)s4 >> 8) ^ divAlpha[s4 & 0xFF]) ^ s0;
+		    s1 = ((s1 << 8) ^ MulAlpha[(int)((uint)s1 >> 24)])
+			    ^ ((int)((uint)s4 >> 8) ^ DivAlpha[s4 & 0xFF]) ^ s0;
 		    f3 = (s0 + r1) ^ r2;
 
 		    /*
@@ -407,32 +405,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v0 = s2;
-		    s2 = ((s2 << 8) ^ mulAlpha[(int)((uint)s2 >> 24)])
-			    ^ ((int)((uint)s5 >> 8) ^ divAlpha[s5 & 0xFF]) ^ s1;
+		    s2 = ((s2 << 8) ^ MulAlpha[(int)((uint)s2 >> 24)])
+			    ^ ((int)((uint)s5 >> 8) ^ DivAlpha[s5 & 0xFF]) ^ s1;
 		    f0 = (s1 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v1 = s3;
-		    s3 = ((s3 << 8) ^ mulAlpha[(int)((uint)s3 >> 24)])
-			    ^ ((int)((uint)s6 >> 8) ^ divAlpha[s6 & 0xFF]) ^ s2;
+		    s3 = ((s3 << 8) ^ MulAlpha[(int)((uint)s3 >> 24)])
+			    ^ ((int)((uint)s6 >> 8) ^ DivAlpha[s6 & 0xFF]) ^ s2;
 		    f1 = (s2 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v2 = s4;
-		    s4 = ((s4 << 8) ^ mulAlpha[(int)((uint)s4 >> 24)])
-			    ^ ((int)((uint)s7 >> 8) ^ divAlpha[s7 & 0xFF]) ^ s3;
+		    s4 = ((s4 << 8) ^ MulAlpha[(int)((uint)s4 >> 24)])
+			    ^ ((int)((uint)s7 >> 8) ^ DivAlpha[s7 & 0xFF]) ^ s3;
 		    f2 = (s3 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v3 = s5;
-		    s5 = ((s5 << 8) ^ mulAlpha[(int)((uint)s5 >> 24)])
-			    ^ ((int)((uint)s8 >> 8) ^ divAlpha[s8 & 0xFF]) ^ s4;
+		    s5 = ((s5 << 8) ^ MulAlpha[(int)((uint)s5 >> 24)])
+			    ^ ((int)((uint)s8 >> 8) ^ DivAlpha[s8 & 0xFF]) ^ s4;
 		    f3 = (s4 + r1) ^ r2;
 
 		    /*
@@ -467,32 +465,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v0 = s6;
-		    s6 = ((s6 << 8) ^ mulAlpha[(int)((uint)s6 >> 24)])
-			    ^ ((int)((uint)s9 >> 8) ^ divAlpha[s9 & 0xFF]) ^ s5;
+		    s6 = ((s6 << 8) ^ MulAlpha[(int)((uint)s6 >> 24)])
+			    ^ ((int)((uint)s9 >> 8) ^ DivAlpha[s9 & 0xFF]) ^ s5;
 		    f0 = (s5 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v1 = s7;
-		    s7 = ((s7 << 8) ^ mulAlpha[(int)((uint)s7 >> 24)])
-			    ^ ((int)((uint)s0 >> 8) ^ divAlpha[s0 & 0xFF]) ^ s6;
+		    s7 = ((s7 << 8) ^ MulAlpha[(int)((uint)s7 >> 24)])
+			    ^ ((int)((uint)s0 >> 8) ^ DivAlpha[s0 & 0xFF]) ^ s6;
 		    f1 = (s6 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v2 = s8;
-		    s8 = ((s8 << 8) ^ mulAlpha[(int)((uint)s8 >> 24)])
-			    ^ ((int)((uint)s1 >> 8) ^ divAlpha[s1 & 0xFF]) ^ s7;
+		    s8 = ((s8 << 8) ^ MulAlpha[(int)((uint)s8 >> 24)])
+			    ^ ((int)((uint)s1 >> 8) ^ DivAlpha[s1 & 0xFF]) ^ s7;
 		    f2 = (s7 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v3 = s9;
-		    s9 = ((s9 << 8) ^ mulAlpha[(int)((uint)s9 >> 24)])
-                ^ ((int) ((uint) s2 >> 8) ^ divAlpha[s2 & 0xFF]) ^ s8;
+		    s9 = ((s9 << 8) ^ MulAlpha[(int)((uint)s9 >> 24)])
+                ^ ((int) ((uint) s2 >> 8) ^ DivAlpha[s2 & 0xFF]) ^ s8;
 		    f3 = (s8 + r1) ^ r2;
 
 		    /*

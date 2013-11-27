@@ -8,7 +8,7 @@ namespace ObscurCore.Tests.Cryptography.BlockCiphers
     class IDEA : BlockCipherTestBase
     {
         public IDEA ()
-            : base(SymmetricBlockCiphers.IDEA, 64, 128) {
+            : base(SymmetricBlockCipher.Idea, 64, 128) {
         }
 
         [Test]
@@ -17,7 +17,7 @@ namespace ObscurCore.Tests.Cryptography.BlockCiphers
             SymmetricCipherConfiguration config = null;
 
             Assert.Throws<MACSizeException>(() => config =
-                SymmetricCipherConfigurationFactory.CreateAEADBlockCipherConfiguration(_blockCipher, AEADBlockCipherModes.GCM, BlockCipherPaddings.None, _defaultKeySize, _defaultBlockSize),
+                SymmetricCipherConfigurationFactory.CreateAeadBlockCipherConfiguration(BlockCipher, AeadBlockCipherMode.Gcm, BlockCipherPadding.None, _defaultKeySize, _defaultBlockSize, null),
                 "GCM mode incompatible with " + _defaultBlockSize + " bit block size!");
             //RunEqualityTest(config);
         }

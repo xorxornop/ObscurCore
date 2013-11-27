@@ -2,8 +2,7 @@ using System;
 
 namespace ObscurCore.Cryptography.Ciphers
 {
-
-    /// <summary> Cipher parameters with a fixed salt value associated with them.</summary>
+    /// <summary>Parameters that include a fixed salt value.</summary>
     public class ParametersWithSalt : ICipherParameters
     {
         private byte[] salt;

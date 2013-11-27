@@ -24,7 +24,7 @@ namespace ObscurCore.Tests.Cryptography
             Salt = CreateRandomBytes(lengthBits);
         }
 
-        protected void RunMACTest (MACFunctions function, byte[] config = null, byte[] overrideKey = null, byte[] overrideSalt = null) {
+        protected void RunMACTest (MacFunction function, byte[] config = null, byte[] overrideKey = null, byte[] overrideSalt = null) {
             byte[] outputMAC;
             var sw = new Stopwatch();
             using (var outputMS = new MemoryStream()) {

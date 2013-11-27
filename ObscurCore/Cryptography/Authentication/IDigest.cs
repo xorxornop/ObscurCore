@@ -1,61 +1,51 @@
-using System;
-
 namespace ObscurCore.Cryptography.Authentication
 {
-    /**
-     * interface that a message digest conforms to.
-     */
+    /// <summary>
+    /// Interface that a digest/hash function conforms to.
+    /// </summary>
     public interface IDigest
     {
-        /**
-         * return the algorithm name
-         *
-         * @return the algorithm name
-         */
+        /// <summary>
+        /// Name of the digest algorithm/function.
+        /// </summary>
         string AlgorithmName { get; }
 
-		/**
-         * return the size, in bytes, of the digest produced by this message digest.
-         *
-         * @return the size, in bytes, of the digest produced by this message digest.
-         */
-		int GetDigestSize();
+		/// <summary>
+		/// Size in bytes of output digest.
+		/// </summary>
+        int DigestSize { get; }
 
-		/**
-         * return the size, in bytes, of the internal buffer used by this digest.
-         *
-         * @return the size, in bytes, of the internal buffer used by this digest.
-         */
-		int GetByteLength();
+        /// <summary>
+        /// Size in bytes of internal buffer.
+        /// </summary>
+        int ByteLength { get; }
 
-		/**
-         * update the message digest with a single byte.
-         *
-         * @param inByte the input byte to be entered.
-         */
+        /// <summary>
+        /// Update the digest with a single byte.
+        /// </summary>
+        /// <param name="input">Byte to update with.</param>
         void Update(byte input);
 
-        /**
-         * update the message digest with a block of bytes.
-         *
-         * @param input the byte array containing the data.
-         * @param inOff the offset into the byte array where the data starts.
-         * @param len the length of the data.
-         */
+        /// <summary>
+        /// Update the digest with a block of bytes.
+        /// </summary>
+        /// <param name="input">The byte array containing the data to update with.</param>
+        /// <param name="inOff">Offset into the byte array where the data starts.</param>
+        /// <param name="length">The length of the data.</param>
         void BlockUpdate(byte[] input, int inOff, int length);
 
-        /**
-         * Close the digest, producing the final digest value. The doFinal
-         * call leaves the digest reset.
-         *
-         * @param output the array the digest is to be copied into.
-         * @param outOff the offset into the out array the digest is to start at.
-         */
+        /// <summary>
+        /// Close the digest, producing the final digest value, 
+        /// and resetting the state of the digest.
+        /// </summary>
+        /// <param name="output">Array in which to place the produced digest.</param>
+        /// <param name="outOff">Offset at which the digest will be copied in at.</param>
+        /// <returns>Final digest value as byte array.</returns>
         int DoFinal(byte[] output, int outOff);
 
-        /**
-         * reset the digest back to it's initial state.
-         */
+        /// <summary>
+        /// Reset the digest back to it's initial state.
+        /// </summary>
         void Reset();
     }
 }

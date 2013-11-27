@@ -31,12 +31,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
     {
         private const int  BLOCK_SIZE = 8;
         private int[] workingKey;
-        /**
-        * standard constructor.
-        */
-        public IdeaEngine()
-        {
-        }
+
         /**
         * initialise an IDEA cipher.
         *
@@ -66,12 +61,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			get { return false; }
 		}
 
-		public int GetBlockSize()
-        {
-            return BLOCK_SIZE;
+        public int BlockSize {
+            get { return BLOCK_SIZE; }
         }
 
-		public int ProcessBlock(
+        public int ProcessBlock(
             byte[] input,
             int inOff,
             byte[] output,
@@ -97,13 +91,13 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         }
         private static readonly int    MASK = 0xffff;
         private static readonly int    BASE = 0x10001;
-        private int BytesToWord(
+        private static int BytesToWord(
             byte[]  input,
             int     inOff)
         {
             return ((input[inOff] << 8) & 0xff00) + (input[inOff + 1] & 0xff);
         }
-        private void WordToBytes(
+        private static void WordToBytes(
             int     word,
             byte[]  outBytes,
             int     outOff)
@@ -120,7 +114,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         * @param y the y value
         * @return x = x * y
         */
-        private int Mul(
+        private static int Mul(
             int x,
             int y)
         {
@@ -141,7 +135,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             }
             return x & MASK;
         }
-        private void IdeaFunc(
+        private static void IdeaFunc(
             int[]   workingKey,
             byte[]  input,
             int     inOff,
@@ -188,7 +182,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         * is calculated by rotating the previous 16 bytes by 25 bits to the left,
         * and so on until the subkey is completed.
         */
-        private int[] ExpandKey(
+        private static int[] ExpandKey(
             byte[]  uKey)
         {
             int[]   key = new int[52];
@@ -226,7 +220,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         * i.e. x * MulInv(x) == 1 (modulo BASE)
 		* </p>
         */
-        private int MulInv(
+        private static int MulInv(
             int x)
         {
             int t0, t1, q, y;
@@ -259,7 +253,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         * i.e. x + AddInv(x) == 0
 		* </p>
         */
-        int AddInv(
+
+        static int AddInv(
             int x)
         {
             return (0 - x) & MASK;
@@ -269,7 +264,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         * The function to invert the encryption subkey to the decryption subkey.
         * It also involves the multiplicative inverse and the additive inverse functions.
         */
-        private int[] InvertKey(
+        private static int[] InvertKey(
             int[] inKey)
         {
             int     t1, t2, t3, t4;
@@ -318,7 +313,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return key;
         }
 
-        private int[] GenerateWorkingKey(
+        private static int[] GenerateWorkingKey(
             bool forEncryption,
             byte[]  userKey)
         {

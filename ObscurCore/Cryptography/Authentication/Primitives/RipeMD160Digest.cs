@@ -45,12 +45,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			get { return "RIPEMD160"; }
 		}
 
-		public override int GetDigestSize()
-		{
-			return DigestLength;
-		}
+        public override int DigestSize {
+            get { return DigestLength; }
+        }
 
-		internal override void ProcessWord(
+        internal override void ProcessWord(
             byte[] input,
             int inOff)
         {
@@ -75,7 +74,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             X[15] = (int)((ulong) bitLength >> 32);
         }
 
-        private void UnpackWord(
+        private static void UnpackWord(
             int word,
             byte[] outBytes,
             int outOff)
@@ -127,7 +126,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         /*
         * rotate int x left n bits.
         */
-        private  int RL(
+        private static int RL(
             int x,
             int n)
         {
@@ -141,7 +140,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         /*
         * rounds 0-15
         */
-        private  int F1(
+        private static int F1(
             int x,
             int y,
             int z)
@@ -152,7 +151,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         /*
         * rounds 16-31
         */
-        private  int F2(
+        private static int F2(
             int x,
             int y,
             int z)
@@ -163,7 +162,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         /*
         * rounds 32-47
         */
-        private  int F3(
+        private static int F3(
             int x,
             int y,
             int z)
@@ -174,7 +173,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         /*
         * rounds 48-63
         */
-        private  int F4(
+        private static int F4(
             int x,
             int y,
             int z)
@@ -185,7 +184,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         /*
         * rounds 64-79
         */
-        private  int F5(
+        private static int F5(
             int x,
             int y,
             int z)

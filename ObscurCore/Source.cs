@@ -46,33 +46,33 @@ namespace ObscurCore
     /// </summary>
     public static class Source
     {
-        private readonly static IDictionary<SymmetricBlockCiphers, Func<int, IBlockCipher>> EngineInstantiatorsBlock =
-            new Dictionary<SymmetricBlockCiphers, Func<int, IBlockCipher>>();
-        private readonly static IDictionary<SymmetricStreamCiphers, Func<IStreamCipher>> EngineInstantiatorsStream =
-            new Dictionary<SymmetricStreamCiphers, Func<IStreamCipher>>();
+        private readonly static IDictionary<SymmetricBlockCipher, Func<int, IBlockCipher>> EngineInstantiatorsBlock =
+            new Dictionary<SymmetricBlockCipher, Func<int, IBlockCipher>>();
+        private readonly static IDictionary<SymmetricStreamCipher, Func<IStreamCipher>> EngineInstantiatorsStream =
+            new Dictionary<SymmetricStreamCipher, Func<IStreamCipher>>();
 
-        private readonly static IDictionary<BlockCipherModes, Func<IBlockCipher, int, IBlockCipher>> ModeInstantiatorsBlock =
-            new Dictionary<BlockCipherModes, Func<IBlockCipher, int, IBlockCipher>>();
-        private readonly static IDictionary<AEADBlockCipherModes, Func<IBlockCipher, IAeadBlockCipher>> ModeInstantiatorsAead =
-            new Dictionary<AEADBlockCipherModes, Func<IBlockCipher, IAeadBlockCipher>>();
+        private readonly static IDictionary<BlockCipherMode, Func<IBlockCipher, int, IBlockCipher>> ModeInstantiatorsBlock =
+            new Dictionary<BlockCipherMode, Func<IBlockCipher, int, IBlockCipher>>();
+        private readonly static IDictionary<AeadBlockCipherMode, Func<IBlockCipher, IAeadBlockCipher>> ModeInstantiatorsAead =
+            new Dictionary<AeadBlockCipherMode, Func<IBlockCipher, IAeadBlockCipher>>();
 
-        private readonly static IDictionary<BlockCipherPaddings, Func<IBlockCipherPadding>> PaddingInstantiators =
-            new Dictionary<BlockCipherPaddings, Func<IBlockCipherPadding>>();
+        private readonly static IDictionary<BlockCipherPadding, Func<IBlockCipherPadding>> PaddingInstantiators =
+            new Dictionary<BlockCipherPadding, Func<IBlockCipherPadding>>();
 
-        private readonly static IDictionary<KeyDerivationFunctions, Func<int, byte[], IKDFModule>> KdfInstantiators =
-			new Dictionary<KeyDerivationFunctions, Func<int, byte[], IKDFModule>>();
+        private readonly static IDictionary<KeyDerivationFunction, Func<int, byte[], IKdfFunction>> KdfInstantiators =
+			new Dictionary<KeyDerivationFunction, Func<int, byte[], IKdfFunction>>();
 		
-		private readonly static IDictionary<KeyDerivationFunctions, Func<byte[], byte[], int, byte[], byte[]>> KdfStatics =
-			new Dictionary<KeyDerivationFunctions, Func<byte[], byte[], int, byte[], byte[]>>();
+		private readonly static IDictionary<KeyDerivationFunction, Func<byte[], byte[], int, byte[], byte[]>> KdfStatics =
+			new Dictionary<KeyDerivationFunction, Func<byte[], byte[], int, byte[], byte[]>>();
 
-        private readonly static IDictionary<CSPRNumberGenerators, Func<byte[], CSPRNG>> PrngInstantiators =
-			new Dictionary<CSPRNumberGenerators, Func<byte[], CSPRNG>>();
+        private readonly static IDictionary<CsPseudorandomNumberGenerator, Func<byte[], CSPRNG>> PrngInstantiators =
+			new Dictionary<CsPseudorandomNumberGenerator, Func<byte[], CSPRNG>>();
 
-        private readonly static IDictionary<HashFunctions, Func<IDigest>> DigestInstantiators =
-			new Dictionary<HashFunctions, Func<IDigest>>();
+        private readonly static IDictionary<HashFunction, Func<IDigest>> DigestInstantiators =
+			new Dictionary<HashFunction, Func<IDigest>>();
 
-        private readonly static IDictionary<MACFunctions, Func<IMac>> MacInstantiators =
-			new Dictionary<MACFunctions, Func<IMac>>();
+        private readonly static IDictionary<MacFunction, Func<IMac>> MacInstantiators =
+			new Dictionary<MacFunction, Func<IMac>>();
 
         private readonly static IDictionary<string, Func<ECDomainParameters>> EcParameters =
 			new Dictionary<string, Func<ECDomainParameters>>();
@@ -80,116 +80,116 @@ namespace ObscurCore
         // Packaging related
 
         private readonly static IDictionary<PayloadLayoutSchemes, Func<bool, Stream, IList<IStreamBinding>, IList<Func<Stream, DecoratingStream>>, 
-			IPayloadConfiguration, StreamMux>> PayloadLayoutModuleInstantiators = new Dictionary<PayloadLayoutSchemes, 
-		    Func<bool, Stream, IList<IStreamBinding>, IList<Func<Stream, DecoratingStream>>, IPayloadConfiguration, StreamMux>>();
+			IPayloadConfiguration, PayloadMultiplexer>> PayloadLayoutModuleInstantiators = new Dictionary<PayloadLayoutSchemes, 
+		    Func<bool, Stream, IList<IStreamBinding>, IList<Func<Stream, DecoratingStream>>, IPayloadConfiguration, PayloadMultiplexer>>();
 
         static Source() {
             // ######################################## ENGINES ########################################
             // Block engines
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.AES, blockSize => new AesFastEngine());
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.Blowfish, blockSize => new BlowfishEngine());
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.CAST5, blockSize => new Cast5Engine());
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.CAST6, blockSize => new Cast6Engine());
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.Camellia, blockSize => new CamelliaEngine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Aes, blockSize => new AesFastEngine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Blowfish, blockSize => new BlowfishEngine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Cast5, blockSize => new Cast5Engine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Cast6, blockSize => new Cast6Engine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Camellia, blockSize => new CamelliaEngine());
 #if INCLUDE_GOST28147
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.GOST28147, blockSize => new Gost28147Engine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Gost28147, blockSize => new Gost28147Engine());
 #endif
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.IDEA, blockSize => new IdeaEngine());
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.NOEKEON, blockSize => new NoekeonEngine());
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.RC6, blockSize => new RC6Engine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Idea, blockSize => new IdeaEngine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Noekeon, blockSize => new NoekeonEngine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Rc6, blockSize => new Rc6Engine());
 #if INCLUDE_RIJNDAEL
             EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.Rijndael, blockSize => new RijndaelEngine(blockSize));
 #endif
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.Serpent, blockSize => new SerpentEngine());
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.TripleDES, blockSize => new DesEdeEngine());
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.Twofish, blockSize => new TwofishEngine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Serpent, blockSize => new SerpentEngine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.TripleDes, blockSize => new DesEdeEngine());
+            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Twofish, blockSize => new TwofishEngine());
 
             // Stream engines
-            EngineInstantiatorsStream.Add(SymmetricStreamCiphers.HC128, () => new HC128Engine());
-            EngineInstantiatorsStream.Add(SymmetricStreamCiphers.HC256, () => new HC256Engine());
+            EngineInstantiatorsStream.Add(SymmetricStreamCipher.Hc128, () => new Hc128Engine());
+            EngineInstantiatorsStream.Add(SymmetricStreamCipher.Hc256, () => new Hc256Engine());
 #if INCLUDE_ISAAC
-            EngineInstantiatorsStream.Add(SymmetricStreamCiphers.ISAAC, () => new IsaacEngine());
+            EngineInstantiatorsStream.Add(SymmetricStreamCipher.Isaac, () => new IsaacEngine());
 #endif
-            EngineInstantiatorsStream.Add(SymmetricStreamCiphers.Rabbit, () => new RabbitEngine());
+            EngineInstantiatorsStream.Add(SymmetricStreamCipher.Rabbit, () => new RabbitEngine());
 #if INCLUDE_RC4
-            _engineInstantiatorsStream.Add(SymmetricStreamCiphers.RC4, () => new RC4Engine());
+            _engineInstantiatorsStream.Add(SymmetricStreamCipher.Rc4, () => new Rc4Engine());
 #endif
-            EngineInstantiatorsStream.Add(SymmetricStreamCiphers.Salsa20, () => new Salsa20Engine());
-            EngineInstantiatorsStream.Add(SymmetricStreamCiphers.SOSEMANUK, () => new SOSEMANUKEngine());
+            EngineInstantiatorsStream.Add(SymmetricStreamCipher.Salsa20, () => new Salsa20Engine());
+            EngineInstantiatorsStream.Add(SymmetricStreamCipher.Sosemanuk, () => new SosemanukEngine());
 #if INCLUDE_VMPC
             EngineInstantiatorsBlock.Add(SymmetricStreamCiphers.VMPC, () => new VMPCEngine());
             EngineInstantiatorsBlock.Add(SymmetricStreamCiphers.VMPC_KSA3, () => new VMPCKSA3Engine());
 #endif
 
             // ######################################## BLOCK MODES ########################################
-            ModeInstantiatorsBlock.Add(BlockCipherModes.CBC, (cipher, size) => new CbcBlockCipher(cipher));
-            ModeInstantiatorsBlock.Add(BlockCipherModes.CFB, (cipher, size) => new CfbBlockCipher(cipher, size));
-            ModeInstantiatorsBlock.Add(BlockCipherModes.CTR, (cipher, size) => new SicBlockCipher(cipher));
+            ModeInstantiatorsBlock.Add(BlockCipherMode.Cbc, (cipher, size) => new CbcBlockCipher(cipher));
+            ModeInstantiatorsBlock.Add(BlockCipherMode.Cfb, (cipher, size) => new CfbBlockCipher(cipher, size));
+            ModeInstantiatorsBlock.Add(BlockCipherMode.Ctr, (cipher, size) => new SicBlockCipher(cipher));
             // CTS is not properly supported here...
             // Interim solution is just to return a CBC mode cipher, then it can be transformed into a CTS cipher afterwards. 
             // The return type is non-compatible :( .
-            ModeInstantiatorsBlock.Add(BlockCipherModes.CTS_CBC, (cipher, size) => new CbcBlockCipher(cipher));
-            ModeInstantiatorsBlock.Add(BlockCipherModes.OFB, (cipher, size) => new OfbBlockCipher(cipher, size));
+            ModeInstantiatorsBlock.Add(BlockCipherMode.CtsCbc, (cipher, size) => new CbcBlockCipher(cipher));
+            ModeInstantiatorsBlock.Add(BlockCipherMode.Ofb, (cipher, size) => new OfbBlockCipher(cipher, size));
             // AEAD modes
-            ModeInstantiatorsAead.Add(AEADBlockCipherModes.EAX, cipher => new EaxBlockCipher(cipher));
-            ModeInstantiatorsAead.Add(AEADBlockCipherModes.GCM, cipher => new GcmBlockCipher(cipher));
-            //ModeInstantiatorsAead.Add(AEADBlockCipherModes.SIV, cipher => new SivBlockCipher(cipher));
-			//ModeInstantiatorsAead.Add(AEADBlockCipherModes.OCB, cipher => new OcbBlockCipher(cipher));
+            ModeInstantiatorsAead.Add(AeadBlockCipherMode.Eax, cipher => new EaxBlockCipher(cipher));
+            ModeInstantiatorsAead.Add(AeadBlockCipherMode.Gcm, cipher => new GcmBlockCipher(cipher));
+            //ModeInstantiatorsAead.Add(AeadBlockCipherMode.Siv, cipher => new SivBlockCipher(cipher));
+			//ModeInstantiatorsAead.Add(AeadBlockCipherMode.Ocb, cipher => new OcbBlockCipher(cipher));
 
             // ######################################## PADDING ########################################
 
-            PaddingInstantiators.Add(BlockCipherPaddings.ISO10126D2, () => new ISO10126d2Padding());
-            PaddingInstantiators.Add(BlockCipherPaddings.ISO7816D4, () => new ISO7816d4Padding());
-            PaddingInstantiators.Add(BlockCipherPaddings.PKCS7, () => new ISO10126d2Padding());
-            PaddingInstantiators.Add(BlockCipherPaddings.TBC, () => new ISO10126d2Padding());
-            PaddingInstantiators.Add(BlockCipherPaddings.X923, () => new ISO10126d2Padding());
+            PaddingInstantiators.Add(BlockCipherPadding.Iso10126D2, () => new ISO10126d2Padding());
+            PaddingInstantiators.Add(BlockCipherPadding.Iso7816D4, () => new ISO7816d4Padding());
+            PaddingInstantiators.Add(BlockCipherPadding.Pkcs7, () => new ISO10126d2Padding());
+            PaddingInstantiators.Add(BlockCipherPadding.Tbc, () => new ISO10126d2Padding());
+            PaddingInstantiators.Add(BlockCipherPadding.X923, () => new ISO10126d2Padding());
 
             // ######################################## KEY DERIVATION ########################################
 
-            KdfInstantiators.Add(KeyDerivationFunctions.PBKDF2, (outputSize, config) => new PBKDF2Module(outputSize, config));
-			KdfInstantiators.Add(KeyDerivationFunctions.Scrypt, (outputSize, config) => new ScryptModule(outputSize, config));
+            KdfInstantiators.Add(KeyDerivationFunction.Pbkdf2, (outputSize, config) => new Pbkdf2Module(outputSize, config));
+			KdfInstantiators.Add(KeyDerivationFunction.Scrypt, (outputSize, config) => new ScryptModule(outputSize, config));
 			
-			KdfStatics.Add(KeyDerivationFunctions.PBKDF2, PBKDF2Module.DeriveKeyWithConfig);
-			KdfStatics.Add(KeyDerivationFunctions.Scrypt, ScryptModule.DeriveKeyWithConfig);
+			KdfStatics.Add(KeyDerivationFunction.Pbkdf2, Pbkdf2Module.DeriveKeyWithConfig);
+			KdfStatics.Add(KeyDerivationFunction.Scrypt, ScryptModule.DeriveKeyWithConfig);
 
             // ######################################## PRNG ########################################
 
-            PrngInstantiators.Add(CSPRNumberGenerators.Salsa20, config => new Salsa20Generator(config));
-			PrngInstantiators.Add(CSPRNumberGenerators.SOSEMANUK, config => new SOSEMANUKGenerator(config));
+            PrngInstantiators.Add(CsPseudorandomNumberGenerator.Salsa20, config => new Salsa20Generator(config));
+			PrngInstantiators.Add(CsPseudorandomNumberGenerator.Sosemanuk, config => new SosemanukGenerator(config));
 
             // ######################################## HASHING ########################################
 
-            DigestInstantiators.Add(HashFunctions.BLAKE2B256, () => new Blake2BDigest(256, true));
-			DigestInstantiators.Add(HashFunctions.BLAKE2B384, () => new Blake2BDigest(384, true));
-			DigestInstantiators.Add(HashFunctions.BLAKE2B512, () => new Blake2BDigest(512, true));
+            DigestInstantiators.Add(HashFunction.Blake2B256, () => new Blake2BDigest(256, true));
+			DigestInstantiators.Add(HashFunction.Blake2B384, () => new Blake2BDigest(384, true));
+			DigestInstantiators.Add(HashFunction.Blake2B512, () => new Blake2BDigest(512, true));
 
-			DigestInstantiators.Add(HashFunctions.Keccak224, () => new KeccakManaged(224, true));
-			DigestInstantiators.Add(HashFunctions.Keccak256, () => new KeccakManaged(256, true));
-			DigestInstantiators.Add(HashFunctions.Keccak384, () => new KeccakManaged(384, true));
-			DigestInstantiators.Add(HashFunctions.Keccak512, () => new KeccakManaged(512, true));
+			DigestInstantiators.Add(HashFunction.Keccak224, () => new KeccakManaged(224, true));
+			DigestInstantiators.Add(HashFunction.Keccak256, () => new KeccakManaged(256, true));
+			DigestInstantiators.Add(HashFunction.Keccak384, () => new KeccakManaged(384, true));
+			DigestInstantiators.Add(HashFunction.Keccak512, () => new KeccakManaged(512, true));
 
 #if INCLUDE_SHA1
-            DigestInstantiators.Add(HashFunctions.SHA1, () => new Sha1Digest());
+            DigestInstantiators.Add(HashFunction.Sha1, () => new Sha1Digest());
 #endif
-            DigestInstantiators.Add(HashFunctions.SHA256, () => new Sha256Digest());
-            DigestInstantiators.Add(HashFunctions.SHA512, () => new Sha512Digest());
+            DigestInstantiators.Add(HashFunction.Sha256, () => new Sha256Digest());
+            DigestInstantiators.Add(HashFunction.Sha512, () => new Sha512Digest());
 
-            DigestInstantiators.Add(HashFunctions.RIPEMD160, () => new RipeMD160Digest());
+            DigestInstantiators.Add(HashFunction.Ripemd160, () => new RipeMD160Digest());
 
-            DigestInstantiators.Add(HashFunctions.Tiger, () => new TigerDigest());
+            DigestInstantiators.Add(HashFunction.Tiger, () => new TigerDigest());
 
-            DigestInstantiators.Add(HashFunctions.Whirlpool, () => new WhirlpoolDigest());
+            DigestInstantiators.Add(HashFunction.Whirlpool, () => new WhirlpoolDigest());
 
             // ######################################## MAC ########################################
 
-            MacInstantiators.Add(MACFunctions.BLAKE2B256, () => new Blake2BMac(256, true, false));
-			MacInstantiators.Add(MACFunctions.BLAKE2B384, () => new Blake2BMac(384, true, false));
-			MacInstantiators.Add(MACFunctions.BLAKE2B512, () => new Blake2BMac(512, true, false));
+            MacInstantiators.Add(MacFunction.Blake2B256, () => new Blake2BMac(256, true, false));
+			MacInstantiators.Add(MacFunction.Blake2B384, () => new Blake2BMac(384, true, false));
+			MacInstantiators.Add(MacFunction.Blake2B512, () => new Blake2BMac(512, true, false));
 
-			MacInstantiators.Add(MACFunctions.Keccak224, () => new KeccakMac(224, true));
-			MacInstantiators.Add(MACFunctions.Keccak256, () => new KeccakMac(256, true));
-			MacInstantiators.Add(MACFunctions.Keccak384, () => new KeccakMac(384, true));
-			MacInstantiators.Add(MACFunctions.Keccak512, () => new KeccakMac(512, true));
+			MacInstantiators.Add(MacFunction.Keccak224, () => new KeccakMac(224, true));
+			MacInstantiators.Add(MacFunction.Keccak256, () => new KeccakMac(256, true));
+			MacInstantiators.Add(MacFunction.Keccak384, () => new KeccakMac(384, true));
+			MacInstantiators.Add(MacFunction.Keccak512, () => new KeccakMac(512, true));
 
             // ######################################## EC ########################################
 
@@ -201,7 +201,7 @@ namespace ObscurCore
 				    	new BigInteger(y, 16), false), new BigInteger(q, 16));
                 });
 
-            EcParameters.Add(ECFpCurves.BrainpoolP160r1.ToString(), () => domainFunc(
+            EcParameters.Add(EcFpCurves.BrainpoolP160r1.ToString(), () => domainFunc(
 				"E95E4A5F737059DC60DFC7AD95B3D8139515620F",
 				"340E7BE2A280EB74E2BE61BADA745D97E8F7C300",
 				"1E589A8595423412134FAA2DBDEC95C8D8675E58",
@@ -210,7 +210,7 @@ namespace ObscurCore
 				"E95E4A5F737059DC60DF5991D45029409E60FC09"
 				));
 			
-			EcParameters.Add(ECFpCurves.BrainpoolP192r1.ToString(), () => domainFunc(
+			EcParameters.Add(EcFpCurves.BrainpoolP192r1.ToString(), () => domainFunc(
 				"C302F41D932A36CDA7A3463093D18DB78FCE476DE1A86297",
 				"6A91174076B1E0E19C39C031FE8685C1CAE040E5C69A28EF",
 				"469A28EF7C28CCA3DC721D044F4496BCCA7EF4146FBF25C9",
@@ -219,7 +219,7 @@ namespace ObscurCore
 				"C302F41D932A36CDA7A3462F9E9E916B5BE8F1029AC4ACC1"
 				));
 			
-			EcParameters.Add(ECFpCurves.BrainpoolP224r1.ToString(), () => domainFunc(
+			EcParameters.Add(EcFpCurves.BrainpoolP224r1.ToString(), () => domainFunc(
 				"D7C134AA264366862A18302575D1D787B09F075797DA89F57EC8C0FF",
 				"68A5E62CA9CE6C1C299803A6C1530B514E182AD8B0042A59CAD29F43",
 				"2580F63CCFE44138870713B1A92369E33E2135D266DBB372386C400B",
@@ -228,7 +228,7 @@ namespace ObscurCore
 				"D7C134AA264366862A18302575D0FB98D116BC4B6DDEBCA3A5A7939F"
 				));
 			
-			EcParameters.Add(ECFpCurves.BrainpoolP256r1.ToString(), () => domainFunc(
+			EcParameters.Add(EcFpCurves.BrainpoolP256r1.ToString(), () => domainFunc(
 				"A9FB57DBA1EEA9BC3E660A909D838D726E3BF623D52620282013481D1F6E5377",
 				"7D5A0975FC2C3057EEF67530417AFFE7FB8055C126DC5C6CE94A4B44F330B5D9",
 				"26DC5C6CE94A4B44F330B5D9BBD77CBF958416295CF7E1CE6BCCDC18FF8C07B6",
@@ -237,7 +237,7 @@ namespace ObscurCore
 				"A9FB57DBA1EEA9BC3E660A909D838D718C397AA3B561A6F7901E0E82974856A7"
 				));
 			
-			EcParameters.Add(ECFpCurves.BrainpoolP320r1.ToString(), () => domainFunc(
+			EcParameters.Add(EcFpCurves.BrainpoolP320r1.ToString(), () => domainFunc(
 				"D35E472036BC4FB7E13C785ED201E065F98FCFA6F6F40DEF4F92B9EC7893EC28FCD412B1F1B32E27",
 				"3EE30B568FBAB0F883CCEBD46D3F3BB8A2A73513F5EB79DA66190EB085FFA9F492F375A97D860EB4",
 				"520883949DFDBC42D3AD198640688A6FE13F41349554B49ACC31DCCD884539816F5EB4AC8FB1F1A6",
@@ -246,7 +246,7 @@ namespace ObscurCore
 				"D35E472036BC4FB7E13C785ED201E065F98FCFA5B68F12A32D482EC7EE8658E98691555B44C59311"
 				));
 			
-			EcParameters.Add(ECFpCurves.BrainpoolP384r1.ToString(), () => domainFunc(
+			EcParameters.Add(EcFpCurves.BrainpoolP384r1.ToString(), () => domainFunc(
 				"8CB91E82A3386D280F5D6F7E50E641DF152F7109ED5456B412B1DA197FB71123ACD3A729901D1A71874700133107EC53",
 				"7BC382C63D8C150C3C72080ACE05AFA0C2BEA28E4FB22787139165EFBA91F90F8AA5814A503AD4EB04A8C7DD22CE2826",
 				"4A8C7DD22CE28268B39B55416F0447C2FB77DE107DCD2A62E880EA53EEB62D57CB4390295DBC9943AB78696FA504C11",
@@ -255,7 +255,7 @@ namespace ObscurCore
 				"8CB91E82A3386D280F5D6F7E50E641DF152F7109ED5456B31F166E6CAC0425A7CF3AB6AF6B7FC3103B883202E9046565"
 				));
 			
-			EcParameters.Add(ECFpCurves.BrainpoolP512r1.ToString(), () => domainFunc(
+			EcParameters.Add(EcFpCurves.BrainpoolP512r1.ToString(), () => domainFunc(
 				"AADD9DB8DBE9C48B3FD4E6AE33C9FC07CB308DB3B3C9D20ED6639CCA703308717D4D9B009BC66842AECDA12AE6A380E62881FF2F2D82C68528AA6056583A48F3",
 				"7830A3318B603B89E2327145AC234CC594CBDD8D3DF91610A83441CAEA9863BC2DED5D5AA8253AA10A2EF1C98B9AC8B57F1117A72BF2C7B9E7C1AC4D77FC94CA",
 				"3DF91610A83441CAEA9863BC2DED5D5AA8253AA10A2EF1C98B9AC8B57F1117A72BF2C7B9E7C1AC4D77FC94CADC083E67984050B75EBAE5DD2809BD638016F723",
@@ -283,13 +283,13 @@ namespace ObscurCore
         /// Instantiates and returns an implementation of the requested symmetric block cipher.
         /// </summary>
         /// <returns>An IBlockCipher cipher object implementing the relevant cipher algorithm.</returns>
-        public static IBlockCipher CreateBlockCipher (SymmetricBlockCiphers cipherEnum, int? blockSize = null) {
-            if (blockSize == null) blockSize = Athena.Cryptography.BlockCipherDirectory[cipherEnum].DefaultBlockSize;
+        public static IBlockCipher CreateBlockCipher (SymmetricBlockCipher cipherEnum, int? blockSize = null) {
+            if (blockSize == null) blockSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
             return EngineInstantiatorsBlock[cipherEnum](blockSize.Value);
         }
 
         public static IBlockCipher CreateBlockCipher (string cipherName, int? blockSize = null) {
-            return CreateBlockCipher(cipherName.ToEnum<SymmetricBlockCiphers>(), blockSize);
+            return CreateBlockCipher(cipherName.ToEnum<SymmetricBlockCipher>(), blockSize);
         }
 
         /// <summary>
@@ -303,15 +303,18 @@ namespace ObscurCore
         /// IBlockCipher object implementing the relevant mode of operation, 
         /// overlaying the supplied symmetric block cipher.
         /// </returns>
-        public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, BlockCipherModes modeEnum, int? size = null) {
+        public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, BlockCipherMode modeEnum, int? size = null) {
+            if (cipher == null) {
+                throw new ArgumentNullException();
+            }
             var cipherMode = ModeInstantiatorsBlock[modeEnum](cipher, size ??
-                (cipher != null ? Athena.Cryptography.BlockCipherDirectory[cipher.AlgorithmName.ToEnum<SymmetricBlockCiphers>(true)]
-                    .DefaultBlockSize : cipher.GetBlockSize()));
+                    Athena.Cryptography.BlockCiphers[cipher.AlgorithmName.ToEnum<SymmetricBlockCipher>(true)]
+                        .DefaultBlockSize);
             return cipherMode;
         }
 
         public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, string modeName, int? size = null) {
-            return OverlayBlockCipherWithMode(cipher, modeName.ToEnum<BlockCipherModes>(), size);
+            return OverlayBlockCipherWithMode(cipher, modeName.ToEnum<BlockCipherMode>(), size);
         }
 
         /// <summary>
@@ -321,12 +324,12 @@ namespace ObscurCore
         /// <returns>
         /// An IBlockCipherPadding cipher object implementing the relevant padding scheme.
         /// </returns>
-        public static IBlockCipherPadding CreatePadding (BlockCipherPaddings paddingEnum) {
+        public static IBlockCipherPadding CreatePadding (BlockCipherPadding paddingEnum) {
             return PaddingInstantiators[paddingEnum]();
         }
 
         public static IBlockCipherPadding CreatePadding (string paddingName) {
-            return CreatePadding(paddingName.ToEnum<BlockCipherPaddings>());
+            return CreatePadding(paddingName.ToEnum<BlockCipherPadding>());
         }
 
         /// <summary>
@@ -338,18 +341,18 @@ namespace ObscurCore
         /// IAeadBlockCipher object implementing the relevant mode of operation, 
         /// overlaying the supplied symmetric block cipher.
         /// </returns>
-        public static IAeadBlockCipher OverlayBlockCipherWithAEADMode (IBlockCipher cipher, AEADBlockCipherModes modeEnum) {
+        public static IAeadBlockCipher OverlayBlockCipherWithAeadMode (IBlockCipher cipher, AeadBlockCipherMode modeEnum) {
             return ModeInstantiatorsAead[modeEnum](cipher);
         }
 
-        public static IAeadBlockCipher OverlayBlockCipherWithAEADMode (IBlockCipher cipher, string modeName) {
-            return ModeInstantiatorsAead[modeName.ToEnum<AEADBlockCipherModes>()](cipher);
+        public static IAeadBlockCipher OverlayBlockCipherWithAeadMode (IBlockCipher cipher, string modeName) {
+            return ModeInstantiatorsAead[modeName.ToEnum<AeadBlockCipherMode>()](cipher);
         }
 
         // Block cipher parameters
 
-        public static ICipherParameters CreateKeyParameter(SymmetricBlockCiphers cipherEnum, byte[] key) {
-            if (!Athena.Cryptography.BlockCipherDirectory[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
+        public static ICipherParameters CreateKeyParameter(SymmetricBlockCipher cipherEnum, byte[] key) {
+            if (!Athena.Cryptography.BlockCiphers[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
                 throw new InvalidDataException("Key size is unsupported/incompatible.");
             
             var cipherParams = new KeyParameter(key);
@@ -357,17 +360,17 @@ namespace ObscurCore
         }
 
         public static ICipherParameters CreateBlockCipherParameters(ISymmetricCipherConfiguration config) {
-            return CreateBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCiphers>(), config.Key, config.IV);
+            return CreateBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCipher>(), config.Key, config.IV);
         }
 
-        public static ICipherParameters CreateBlockCipherParameters(SymmetricBlockCiphers cipherEnum, byte[] key, byte[] iv) {
+        public static ICipherParameters CreateBlockCipherParameters(SymmetricBlockCipher cipherEnum, byte[] key, byte[] iv) {
             ICipherParameters cipherParams = null;
 
-            if((iv == null || iv.Length == 0) && Athena.Cryptography.BlockCipherDirectory[cipherEnum].DefaultIVSize != -1) 
+            if((iv == null || iv.Length == 0) && Athena.Cryptography.BlockCiphers[cipherEnum].DefaultIvSize != -1) 
                 throw new NotSupportedException("IV is null or zero-zength.");
 
-            if (cipherEnum.ToString().Equals(SymmetricBlockCiphers.TripleDES.ToString())) {
-                if(!Athena.Cryptography.BlockCipherDirectory[cipherEnum].AllowableKeySizes.Contains(key.Length * 8)) 
+            if (cipherEnum.ToString().Equals(SymmetricBlockCipher.TripleDes.ToString())) {
+                if(!Athena.Cryptography.BlockCiphers[cipherEnum].AllowableKeySizes.Contains(key.Length * 8)) 
                     throw new InvalidDataException("Key size is unsupported/incompatible.");
                 cipherParams = new ParametersWithIV(new DesEdeParameters(key, 0, key.Length), iv, 0,
                     iv.Length);
@@ -378,15 +381,15 @@ namespace ObscurCore
             return cipherParams;
         }
 
-        public static ICipherParameters CreateAEADBlockCipherParameters(SymmetricBlockCiphers cipherEnum, byte[] key, byte[] iv, 
+        public static ICipherParameters CreateAeadBlockCipherParameters(SymmetricBlockCipher cipherEnum, byte[] key, byte[] iv, 
             int macSizeBits, byte[] ad)
 		{
             ICipherParameters cipherParams = null;
 
-            if(!Athena.Cryptography.BlockCipherDirectory[cipherEnum].AllowableBlockSizes.Contains(macSizeBits)) 
+            if(!Athena.Cryptography.BlockCiphers[cipherEnum].AllowableBlockSizes.Contains(macSizeBits)) 
                 throw new InvalidDataException("MAC size is unsupported/incompatible.");
 
-            if (cipherEnum == SymmetricBlockCiphers.TripleDES) {
+            if (cipherEnum == SymmetricBlockCipher.TripleDes) {
                 // Treat 3DES differently to other ciphers for key parameter object creation
                 cipherParams = new AeadParameters(new DesEdeParameters(key, 0, key.Length), macSizeBits, iv,
                     ad ?? new byte[0]);
@@ -404,25 +407,25 @@ namespace ObscurCore
         /// Instantiates and returns a symmetric stream cipher of the algorithm type that the instance this method was called from describes.
         /// </summary>
         /// <returns>An IStreamCipher cipher object implementing the relevant cipher algorithm.</returns>
-        public static IStreamCipher CreateStreamCipher (SymmetricStreamCiphers cipherEnum) {
+        public static IStreamCipher CreateStreamCipher (SymmetricStreamCipher cipherEnum) {
             return EngineInstantiatorsStream[cipherEnum]();
         }
 
         public static IStreamCipher CreateStreamCipher (string cipherName) {
-            return EngineInstantiatorsStream[cipherName.ToEnum<SymmetricStreamCiphers>()]();
+            return EngineInstantiatorsStream[cipherName.ToEnum<SymmetricStreamCipher>()]();
         }
 
         // Stream cipher parameters
 
-        public static ICipherParameters CreateKeyParameter(SymmetricStreamCiphers cipherEnum, byte[] key) {
-            if (!Athena.Cryptography.StreamCipherDirectory[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
+        public static ICipherParameters CreateKeyParameter(SymmetricStreamCipher cipherEnum, byte[] key) {
+            if (!Athena.Cryptography.StreamCiphers[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
                 throw new InvalidDataException("Key size is unsupported/incompatible.");
 
             var cipherParams = new KeyParameter(key);
             return cipherParams;
         }
 
-        public static ICipherParameters CreateStreamCipherParameters(SymmetricStreamCiphers cipherEnum, byte[] key, byte[] iv) {
+        public static ICipherParameters CreateStreamCipherParameters(SymmetricStreamCipher cipherEnum, byte[] key, byte[] iv) {
 #if(INCLUDE_RC4)
             if (cipher == SymmetricStreamCiphers.RC4) return CreateKeyParameter(key);
 #endif
@@ -430,7 +433,7 @@ namespace ObscurCore
             if (cipherEnum == SymmetricStreamCiphers.ISAAC) return CreateKeyParameter(cipherEnum, key);
 #endif
             if (iv == null || iv.Length == 0) throw new InvalidDataException("IV is null or zero-length.");
-            if (!Athena.Cryptography.StreamCipherDirectory[cipherEnum].AllowableIVSizes.Contains(iv.Length * 8)) {
+            if (!Athena.Cryptography.StreamCiphers[cipherEnum].AllowableIvSizes.Contains(iv.Length * 8)) {
                 throw new InvalidDataException("IV size is unsupported/incompatible.");
             }
 
@@ -447,12 +450,12 @@ namespace ObscurCore
 		/// <returns>
 		/// An digest object deriving from IDigest.
 		/// </returns>
-		public static IDigest CreateHashPrimitive (HashFunctions hashEnum) {
+		public static IDigest CreateHashPrimitive (HashFunction hashEnum) {
 			return DigestInstantiators[hashEnum]();
 		}
 
 		public static IDigest CreateHashPrimitive(string hashName) {
-			return CreateHashPrimitive(hashName.ToEnum<HashFunctions>());
+			return CreateHashPrimitive(hashName.ToEnum<HashFunction>());
 		}
 
 		/// <summary>
@@ -466,20 +469,20 @@ namespace ObscurCore
 		/// <returns>
 		/// An MAC object deriving from IMac.
 		/// </returns>
-		public static IMac CreateMACPrimitive (MACFunctions macEnum, byte[] key, byte[] salt = null, byte[] config = null) {
+		public static IMac CreateMacPrimitive (MacFunction macEnum, byte[] key, byte[] salt = null, byte[] config = null) {
 
 			IMac macObj;
-			if (macEnum == MACFunctions.HMAC) {
+			if (macEnum == MacFunction.Hmac) {
 				if (config == null)
 					throw new ArgumentException ("No hash function specified (encoded as UTF-8 bytes).", "config");
-				return macObj = CreateHMACPrimitive(Encoding.UTF8.GetString(config).ToEnum<HashFunctions>(), key, salt);
-			} else if (macEnum == MACFunctions.CMAC) {
+				return macObj = CreateHmacPrimitive(Encoding.UTF8.GetString(config).ToEnum<HashFunction>(), key, salt);
+			} else if (macEnum == MacFunction.Cmac) {
 				if (config == null)
 					throw new ArgumentException ("No block cipher specified (encoded as UTF-8 bytes).", "config");
-				macObj = CreateCMACPrimitive(Encoding.UTF8.GetString(config).ToEnum<SymmetricBlockCiphers>(), key, salt);
+				macObj = CreateCmacPrimitive(Encoding.UTF8.GetString(config).ToEnum<SymmetricBlockCipher>(), key, salt);
 			} else {
 				macObj = MacInstantiators[macEnum]();
-				if (Athena.Cryptography.MACFunctionDirectory [macEnum].SaltSupported && salt != null) {
+				if (Athena.Cryptography.MacFunctions [macEnum].SaltSupported && salt != null) {
 					// Primitive has its own special salting procedure
 					((IMacWithSalt)macObj).Init (key, salt);
 					return macObj;
@@ -491,8 +494,8 @@ namespace ObscurCore
 			return macObj;
 		}
 
-		public static IMac CreateMACPrimitive(string macName, byte[] key, byte[] salt = null, byte[] config = null) {
-			return CreateMACPrimitive(macName.ToEnum<MACFunctions>(), key, salt, config);
+		public static IMac CreateMacPrimitive(string macName, byte[] key, byte[] salt = null, byte[] config = null) {
+			return CreateMacPrimitive(macName.ToEnum<MacFunction>(), key, salt, config);
 		}
 
 		/// <summary>
@@ -503,8 +506,8 @@ namespace ObscurCore
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
 		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
 		/// <returns>Pre-initialised CMAC primitive.</returns>
-		public static IMac CreateCMACPrimitive(SymmetricBlockCiphers cipherEnum, byte[] key, byte[] salt = null) {
-			var defaultBlockSize = Athena.Cryptography.BlockCipherDirectory[cipherEnum].DefaultBlockSize;
+		public static IMac CreateCmacPrimitive(SymmetricBlockCipher cipherEnum, byte[] key, byte[] salt = null) {
+			var defaultBlockSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
 			if(defaultBlockSize != 64 && defaultBlockSize != 128) {
 				throw new NotSupportedException ("CMAC/OMAC1 only supports ciphers with 64 / 128 bit block sizes.");
 			}
@@ -523,7 +526,7 @@ namespace ObscurCore
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
 		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
 		/// <returns>Pre-initialised HMAC primitive.</returns>
-		public static IMac CreateHMACPrimitive(HashFunctions hashEnum, byte[] key, byte[] salt = null) {
+		public static IMac CreateHmacPrimitive(HashFunction hashEnum, byte[] key, byte[] salt = null) {
 			var macObj = new HMac (DigestInstantiators [hashEnum]());
 			var keyParam = new KeyParameter (key);
 			macObj.Init (keyParam);
@@ -540,16 +543,16 @@ namespace ObscurCore
 		/// <param name="salt">Salt to use in derivation to increase entropy.</param>
 		/// <param name="outputSize">Output key size in bits.</param>
 		/// <param name="config">Configuration of the KDF in byte-array encoded form.</param>
-		public static byte[] DeriveKeyWithKDF (KeyDerivationFunctions kdfEnum, byte[] key, byte[] salt, int outputSize, byte[] config) {
+		public static byte[] DeriveKeyWithKdf (KeyDerivationFunction kdfEnum, byte[] key, byte[] salt, int outputSize, byte[] config) {
 			return KdfStatics[kdfEnum](key, salt, outputSize, config);
 		}
 		
-		public static IKDFModule CreateKDF(KeyDerivationFunctions kdfEnum, int outputSize, byte[] config) {
+		public static IKdfFunction CreateKdf(KeyDerivationFunction kdfEnum, int outputSize, byte[] config) {
 			return KdfInstantiators[kdfEnum](outputSize, config);
 		}
 
-        public static IKDFModule CreateKDF(string kdfName, int outputSize, byte[] config) {
-            return CreateKDF(kdfName.ToEnum<KeyDerivationFunctions>(), outputSize, config);
+        public static IKdfFunction CreateKdf(string kdfName, int outputSize, byte[] config) {
+            return CreateKdf(kdfName.ToEnum<KeyDerivationFunction>(), outputSize, config);
         }
 
         /// <summary>
@@ -560,28 +563,28 @@ namespace ObscurCore
 		/// <returns>
 		/// An PRNG object deriving from Random.
 		/// </returns>
-        public static CSPRNG CreateCSPRNG (CSPRNumberGenerators csprngEnum, byte[] config) {
+        public static CSPRNG CreateCsprng (CsPseudorandomNumberGenerator csprngEnum, byte[] config) {
 			return PrngInstantiators[csprngEnum](config);
 		}
 
-        public static CSPRNG CreateCSPRNG (string csprngName, byte[] config) {
-            return CreateCSPRNG(csprngName.ToEnum<CSPRNumberGenerators>(), config);
+        public static CSPRNG CreateCsprng (string csprngName, byte[] config) {
+            return CreateCsprng(csprngName.ToEnum<CsPseudorandomNumberGenerator>(), config);
         }
 
-        public static StreamCipherCSPRNGConfiguration CreateStreamCipherCSPRNGConfiguration
-            (CSPRNumberGenerators cipherEnum)
+        public static StreamCipherCSPRNGConfiguration CreateStreamCipherCsprngConfiguration
+            (CsPseudorandomNumberGenerator cipherEnum)
         {
             return StreamCSPRNG.CreateRandomConfiguration(cipherEnum);
         }
 
-        public static ECDomainParameters GetECDomainParameters(ECFpCurves curveEnum) {
-            return GetECDomainParameters(curveEnum.ToString());
+        public static ECDomainParameters GetEcDomainParameters(EcFpCurves curveEnum) {
+            return GetEcDomainParameters(curveEnum.ToString());
         }
 
-        public static ECDomainParameters GetECDomainParameters(string name) {
+        public static ECDomainParameters GetEcDomainParameters(string name) {
             // Add extra checks if more curves are added
-            ECFpCurves curve;
-            if (!Enum.TryParse<ECFpCurves>(name, out curve)) {
+            EcFpCurves curve;
+            if (!Enum.TryParse<EcFpCurves>(name, out curve)) {
                 throw new NotSupportedException("Curve is unknown or otherwise unsupported.");
             }
             return EcParameters[name]();
@@ -599,10 +602,10 @@ namespace ObscurCore
 		/// <returns>
 		/// An module object deriving from IPayloadModule.
 		/// </returns>
-		public static StreamMux CreatePayloadMultiplexer (PayloadLayoutSchemes scheme, bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, 
+		public static PayloadMultiplexer CreatePayloadMultiplexer (PayloadLayoutSchemes schemeEnum, bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, 
 		                                            IList<Func<Stream, DecoratingStream>> transforms, IPayloadConfiguration config)
 		{
-			return PayloadLayoutModuleInstantiators[scheme](writing, multiplexedStream, streams, transforms, config);
+			return PayloadLayoutModuleInstantiators[schemeEnum](writing, multiplexedStream, streams, transforms, config);
 		}
     }
 }

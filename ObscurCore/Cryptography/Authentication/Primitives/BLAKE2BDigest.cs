@@ -45,17 +45,15 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
 		#region IDigest implementation
 
-		public int GetDigestSize ()
-		{
-			return outputSize;
-		}
+	    public int DigestSize {
+	        get { return outputSize; }
+	    }
 
-		public int GetByteLength ()
-		{
-			return 128;
-		}
+	    public int ByteLength {
+	        get { return 128; }
+	    }
 
-		public void Update (byte input)
+	    public void Update (byte input)
 		{
 			hasher.Update (new byte[] { input });
 		}

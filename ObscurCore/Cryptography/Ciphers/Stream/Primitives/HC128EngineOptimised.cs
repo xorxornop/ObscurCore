@@ -1,4 +1,19 @@
-﻿using System;
+﻿//
+//  Copyright 2013  Matthew Ducker
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//        http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
+using System;
 using ObscurCore.Cryptography.Support;
 
 // Optimised by Matthew Ducker from original BC source. Removed method calls.
@@ -18,12 +33,12 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	* http://www.ecrypt.eu.org/stream/hcp3.html
 	* </p>
 	*/
-	public class HC128Engine
+	public class Hc128Engine
 		: IStreamCipher
 	{
-		private uint[] p = new uint[512];
-		private uint[] q = new uint[512];
-		private uint cnt = 0;
+		private readonly uint[] _p = new uint[512];
+		private readonly uint[] _q = new uint[512];
+		private uint _cnt;
 
         //private static uint F1(uint x)
         //{
@@ -83,20 +98,20 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		private uint Step()
 		{
             //Mod512(cnt);
-			uint j = cnt & 0x1FF; 
+			uint j = _cnt & 0x1FF; 
 			uint ret;
-			if (cnt < 512)
+			if (_cnt < 512)
 			{
 				//p[j] += G1(p[Dim(j, 3)], p[Dim(j, 10)], p[Dim(j, 511)]);
                 // ## G1 = RotateRight((j - 3) & 0x1FF, 10) ^ RotateRight((j - 10) & 0x1FF, 23)) + RotateRight((j - 511) & 0x1FF, 8);
 
-                p[j] += RotateRight((j-3) & 0x1FF, 10) ^ RotateRight((j - 10) & 0x1FF, 23) + RotateRight((j - 511) & 0x1FF, 8);
+                _p[j] += RotateRight((j-3) & 0x1FF, 10) ^ RotateRight((j - 10) & 0x1FF, 23) + RotateRight((j - 511) & 0x1FF, 8);
 
 				//ret = H1(p[Dim(j, 12)]) ^ p[j];
                 // ## H1 = q[x & 0xFF] + q[((x >> 16) & 0xFF) + 256];
 
-                uint x = p[(j - 12) & 0x1FF];
-			    ret = q[x & 0xFF] + q[((x >> 16) & 0xFF) + 256];
+                uint x = _p[(j - 12) & 0x1FF];
+			    ret = _q[x & 0xFF] + _q[((x >> 16) & 0xFF) + 256];
 
 			}
 			else
@@ -104,18 +119,18 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				// q[j] += G2(q[Dim(j, 3)], q[Dim(j, 10)], q[Dim(j, 511)]);
                 // ## G2 = (RotateLeft(x, 10) ^ RotateLeft(z, 23)) + RotateLeft(y, 8)
 
-                q[j] += RotateLeft((j - 3) & 0x1FF, 10) ^ RotateLeft((j - 10) & 0x1FF, 23) + RotateLeft((j - 511) & 0x1FF, 8);
+                _q[j] += RotateLeft((j - 3) & 0x1FF, 10) ^ RotateLeft((j - 10) & 0x1FF, 23) + RotateLeft((j - 511) & 0x1FF, 8);
 
 				//ret = H2(q[Dim(j, 12)]) ^ q[j];
                 // ## H2 = p[x & 0xFF] + p[((x >> 16) & 0xFF) + 256];
 
-                uint x = p[(j - 12) & 0x1FF];
-                ret = p[x & 0xFF] + p[((x >> 16) & 0xFF) + 256];
+                uint x = _p[(j - 12) & 0x1FF];
+                ret = _p[x & 0xFF] + _p[((x >> 16) & 0xFF) + 256];
 			}
 			
             //cnt = Mod1024(cnt + 1);
 
-            cnt = (cnt + 1) & 0x3FF;
+            _cnt = (_cnt + 1) & 0x3FF;
 
 			return ret;
 		}
@@ -128,7 +143,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			if (key.Length != 16)
 				throw new ArgumentException("The key must be 128 bits long");
 
-			cnt = 0;
+			_cnt = 0;
 
 			uint[] w = new uint[1280];
 
@@ -158,19 +173,19 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 					+ w[i - 16] + i;
 			}
 
-			Array.Copy(w, 256, p, 0, 512);
-			Array.Copy(w, 768, q, 0, 512);
+			Array.Copy(w, 256, _p, 0, 512);
+			Array.Copy(w, 768, _q, 0, 512);
 
 			for (int i = 0; i < 512; i++)
 			{
-				p[i] = Step();
+				_p[i] = Step();
 			}
 			for (int i = 0; i < 512; i++)
 			{
-				q[i] = Step();
+				_q[i] = Step();
 			}
 
-			cnt = 0;
+			_cnt = 0;
 		}
 
 		public string AlgorithmName
@@ -219,7 +234,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		}
 
 		private byte[] buf = new byte[4];
-		private int idx = 0;
+		private int idx;
 
 		private byte GetByte()
 		{

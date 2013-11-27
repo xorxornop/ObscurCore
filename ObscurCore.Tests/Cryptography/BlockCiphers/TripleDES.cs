@@ -7,7 +7,7 @@ namespace ObscurCore.Tests.Cryptography.BlockCiphers
     class TripleDES : BlockCipherTestBase
     {
         public TripleDES ()
-            : base(SymmetricBlockCiphers.TripleDES, 64, 192) {
+            : base(SymmetricBlockCipher.TripleDes, 64, 192) {
         }
 
         [Test]
@@ -16,7 +16,7 @@ namespace ObscurCore.Tests.Cryptography.BlockCiphers
             SymmetricCipherConfiguration config = null;
 
             Assert.Throws<MACSizeException>(() => config =
-                SymmetricCipherConfigurationFactory.CreateAEADBlockCipherConfiguration(_blockCipher, AEADBlockCipherModes.GCM, BlockCipherPaddings.None, _defaultKeySize, _defaultBlockSize),
+                SymmetricCipherConfigurationFactory.CreateAeadBlockCipherConfiguration(BlockCipher, AeadBlockCipherMode.Gcm, BlockCipherPadding.None, _defaultKeySize, _defaultBlockSize, null),
                 "GCM mode incompatible with " + _defaultBlockSize + " bit block size!");
             //RunEqualityTest(config);
         }

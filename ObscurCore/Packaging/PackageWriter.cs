@@ -61,7 +61,7 @@ namespace ObscurCore.Packaging
                 preMKey.ToHexString()));
 
             // Derive the key which will be used for encrypting the package manifest
-            var workingMKey = Source.DeriveKeyWithKDF(mCrypto.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunctions>(),
+            var workingMKey = Source.DeriveKeyWithKdf(mCrypto.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunction>(),
                 preMKey, mCrypto.KeyDerivation.Salt, mCrypto.SymmetricCipher.KeySize,
                 mCrypto.KeyDerivation.SchemeConfiguration);
 
@@ -133,7 +133,7 @@ namespace ObscurCore.Packaging
             Debug.Print(DebugUtility.CreateReportString("PackageWriter", "WritePackageCurve25519UM1", "Manifest pre-key",
                 preMKey.ToHexString()));
 
-            var workingMKey = Source.DeriveKeyWithKDF(mCrypto.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunctions>(),
+            var workingMKey = Source.DeriveKeyWithKdf(mCrypto.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunction>(),
                     preMKey, mCrypto.KeyDerivation.Salt,
                     mCrypto.SymmetricCipher.KeySize,
                     mCrypto.KeyDerivation.SchemeConfiguration);
@@ -194,7 +194,7 @@ namespace ObscurCore.Packaging
             Debug.Print(DebugUtility.CreateReportString("PackageWriter", "WritePackageUM1Hybrid", "Manifest pre-key",
                 preMKey.ToHexString()));
 
-            var workingMKey = Source.DeriveKeyWithKDF(mCrypto.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunctions>(),
+            var workingMKey = Source.DeriveKeyWithKdf(mCrypto.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunction>(),
                     preMKey, mCrypto.KeyDerivation.Salt, mCrypto.SymmetricCipher.KeySize, 
                     mCrypto.KeyDerivation.SchemeConfiguration);
 
@@ -227,7 +227,7 @@ namespace ObscurCore.Packaging
                     Parallelism = 2
                 };
             var config = new KeyDerivationConfiguration {
-                    SchemeName = KeyDerivationFunctions.Scrypt.ToString(),
+                    SchemeName = KeyDerivationFunction.Scrypt.ToString(),
                     SchemeConfiguration = schemeConfig.SerialiseDTO(),
                     Salt = new byte[keyLengthBytes]
                 };
@@ -240,13 +240,14 @@ namespace ObscurCore.Packaging
             Debug.Print(DebugUtility.CreateReportString("PackageWriter", "WritePackage", "[*PACKAGE START*] Header offset (absolute)",
                 destination.Position.ToString()));
 
-            // Write the header tag to the true destination
-            destination.Write(Athena.Packaging.HeaderTagBytes, 0, Athena.Packaging.HeaderTagBytes.Length);
+            // Write the header tag
+            var headerTag = Athena.Packaging.GetHeaderTag();
+            destination.Write(headerTag, 0, headerTag.Length);
 
             Debug.Print(DebugUtility.CreateReportString("PackageWriter", "WritePackage", "Manifest header offset (absolute)",
                 destination.Position.ToString()));
 
-            // Serialise and write ManifestHeader to destination stream (this part is written as plaintext, otherwise INCEPTION!)
+            // Serialise and write ManifestHeader (this part is written as plaintext, otherwise INCEPTION!)
             StratCom.Serialiser.SerializeWithLengthPrefix(destination, mHeader, typeof (ManifestHeader),
                 PrefixStyle.Base128, 0);
 
@@ -322,7 +323,8 @@ namespace ObscurCore.Packaging
                     destination.Position.ToString()));
 
             // Write the trailer tag
-            destination.Write(Athena.Packaging.TrailerTagBytes, 0, Athena.Packaging.TrailerTagBytes.Length);
+            var trailerTag = Athena.Packaging.GetTrailerTag();
+            destination.Write(trailerTag, 0, trailerTag.Length);
 
             Debug.Print(DebugUtility.CreateReportString("PackageWriter", "WritePackage", "[* PACKAGE END *] Offset (absolute)",
                     destination.Position.ToString()));

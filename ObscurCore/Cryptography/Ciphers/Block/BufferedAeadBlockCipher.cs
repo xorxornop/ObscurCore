@@ -53,12 +53,12 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 		*
 		* @return the blocksize for the underlying cipher.
 		*/
-		public override int GetBlockSize()
-		{
-			return cipher.GetBlockSize();
-		}
 
-		/**
+	    public override int BlockSize {
+	        get { return cipher.BlockSize; }
+	    }
+
+	    /**
 		* return the size of the output buffer required for an update
 		* an input of len bytes.
 		*

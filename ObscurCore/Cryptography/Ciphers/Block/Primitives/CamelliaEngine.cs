@@ -8,7 +8,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 	public class CamelliaEngine
 		: IBlockCipher
 	{
-		private bool initialised = false;
+		private bool initialised;
 		private bool _keyIs128;
 
 		private const int BLOCK_SIZE = 16;
@@ -605,11 +605,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			return BLOCK_SIZE;
 		}
 
-		public CamelliaEngine()
-		{
-		}
-
-		public void Init(
+	    public void Init(
 			bool				forEncryption,
 			ICipherParameters	parameters)
 		{
@@ -631,12 +627,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			get { return false; }
 		}
 
-		public int GetBlockSize()
-		{
-			return BLOCK_SIZE;
-		}
+	    public int BlockSize {
+	        get { return BLOCK_SIZE; }
+	    }
 
-		public int ProcessBlock(
+	    public int ProcessBlock(
 			byte[]	input,
 			int		inOff,
 			byte[]	output,

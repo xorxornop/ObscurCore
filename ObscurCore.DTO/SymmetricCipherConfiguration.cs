@@ -88,7 +88,7 @@ namespace ObscurCore.DTO
         /// Size of the Message Authentication Code (MAC) hash in bits.
         /// </summary>
         [ProtoMember(9)]
-        public int MACSize { get; set; }
+        public int MacSize { get; set; }
 
         /// <summary>
         /// Data concatenated with the ciphertext that is authenticated, but not encrypted (authenticity without privacy).
@@ -120,7 +120,7 @@ namespace ObscurCore.DTO
 					(Key == null ? other.Key == null : Key.SequenceEqual(other.Key)) &&
                    (IV == null ? other.IV == null : IV.SequenceEqual(other.IV)) &&
                    string.Equals(ModeName, other.ModeName) && BlockSize == other.BlockSize && string.Equals(PaddingName, other.PaddingName) &&
-                   MACSize == other.MACSize &&
+                   MacSize == other.MacSize &&
                    (AssociatedData == null ? other.AssociatedData == null : AssociatedData.SequenceEqual(other.AssociatedData));
         }
 
@@ -141,7 +141,7 @@ namespace ObscurCore.DTO
                 hashCode = (hashCode * 397) ^ (ModeName != null ? ModeName.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ BlockSize;
                 hashCode = (hashCode * 397) ^ (PaddingName != null ? PaddingName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ MACSize;
+                hashCode = (hashCode * 397) ^ MacSize;
                 hashCode = (hashCode * 397) ^ (AssociatedData != null ? AssociatedData.GetHashCode() : 0);
                 return hashCode;
             }
@@ -206,7 +206,7 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Size of the Message Authentication Code (MAC) hash in bits.
         /// </summary>
-        int MACSize { get; }
+        int MacSize { get; }
 
         /// <summary>
         /// Data concatenated with the ciphertext that is authenticated, but not encrypted (authenticity without privacy).

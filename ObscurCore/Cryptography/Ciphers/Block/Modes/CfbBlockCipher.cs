@@ -29,19 +29,15 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
         {
             this.cipher = cipher;
             this.blockSize = bitBlockSize / 8;
-            this.IV = new byte[cipher.GetBlockSize()];
-            this.cfbV = new byte[cipher.GetBlockSize()];
-            this.cfbOutV = new byte[cipher.GetBlockSize()];
+            this.IV = new byte[cipher.BlockSize];
+            this.cfbV = new byte[cipher.BlockSize];
+            this.cfbOutV = new byte[cipher.BlockSize];
         }
-        /**
-        * return the underlying block cipher that we are wrapping.
-        *
-        * @return the underlying block cipher that we are wrapping.
-        */
-        public IBlockCipher GetUnderlyingCipher()
-        {
-            return cipher;
+        
+        public IBlockCipher UnderlyingCipher {
+            get { return cipher; }
         }
+
         /**
         * Initialise the cipher and, possibly, the initialisation vector (IV).
         * If an IV isn't passed as part of the parameter, the IV will be all zeros.
@@ -92,12 +88,12 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
         *
         * @return the block size we are operating at (in bytes).
         */
-        public int GetBlockSize()
-        {
-            return blockSize;
+
+        public int BlockSize {
+            get { return blockSize; }
         }
 
-		/**
+        /**
         * Process one block of input from the array in and write it to
         * the out array.
         *

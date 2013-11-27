@@ -3,9 +3,9 @@ using ObscurCore.Cryptography.Entropy;
 
 namespace ObscurCore.Cryptography.Ciphers.Block.Padding
 {
-    /**
-     * Block cipher padders are expected to conform to this interface
-     */
+    /// <summary>
+    /// Interface that block cipher padders conform to.
+    /// </summary>
     public interface IBlockCipherPadding
     {
         /**

@@ -12,7 +12,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives.BLAKE2B
 			if (isSequential)
 				treeConfig = SequentialTreeConfig;
 			var rawConfig = new ulong[8];
-			var result = new ulong[8];
+			//var result = new ulong[8]; //TODO: Investigate this
 			
 			//digest length
 			if (config.OutputSizeInBytes <= 0 | config.OutputSizeInBytes > 64)

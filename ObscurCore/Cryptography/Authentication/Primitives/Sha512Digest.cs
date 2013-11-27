@@ -39,12 +39,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			get { return "SHA-512"; }
 		}
 
-		public override int GetDigestSize()
-		{
-			return DigestLength;
-		}
+        public override int DigestSize {
+            get { return DigestLength; }
+        }
 
-		public override int DoFinal(
+        public override int DoFinal(
             byte[]  output,
             int     outOff)
         {

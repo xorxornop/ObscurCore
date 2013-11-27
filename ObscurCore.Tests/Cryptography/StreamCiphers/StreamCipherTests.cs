@@ -12,13 +12,13 @@ namespace ObscurCore.Tests.Cryptography.StreamCiphers
 
         [Test]
         public void HC128 () {
-            var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCiphers.HC128);
+            var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Hc128);
             RunEqualityTest(config, CreateRandomKey(128));
         }
 
         [Test]
         public void HC256 () {
-            var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCiphers.HC256);
+            var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Hc256);
             RunEqualityTest(config);
         }
 
@@ -32,7 +32,7 @@ namespace ObscurCore.Tests.Cryptography.StreamCiphers
 
         [Test]
         public void Rabbit () {
-            var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCiphers.Rabbit);
+            var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Rabbit);
             RunEqualityTest(config, CreateRandomKey(128));
         }
 
@@ -52,13 +52,13 @@ namespace ObscurCore.Tests.Cryptography.StreamCiphers
 
         [Test]
         public void Salsa20_256 () {
-            var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCiphers.Salsa20);
+            var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Salsa20);
             RunEqualityTest(config);
         }
 
         [Test]
         public void SOSEMANUK () {
-            var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCiphers.SOSEMANUK);
+            var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Sosemanuk);
             RunEqualityTest(config);
         }
 

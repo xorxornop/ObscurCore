@@ -315,10 +315,6 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         private byte[] _workingKey;
         private int _rounds = MAX_ROUNDS;
 
-        public Cast5Engine()
-        {
-        }
-
         /**
         * initialise a CAST cipher.
         *
@@ -355,7 +351,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             byte[]	output,
             int		outOff)
         {
-			int blockSize = GetBlockSize();
+			int blockSize = BlockSize;
             if (_workingKey == null)
                 throw new InvalidOperationException(AlgorithmName + " not initialised");
             if ((inOff + blockSize) > input.Length)
@@ -377,9 +373,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         {
         }
 
-        public virtual int GetBlockSize()
-        {
-            return BLOCK_SIZE;
+        public virtual int BlockSize {
+            get { return BLOCK_SIZE; }
         }
 
         //==================================

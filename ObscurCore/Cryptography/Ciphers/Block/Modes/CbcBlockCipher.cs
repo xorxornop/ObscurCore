@@ -22,21 +22,15 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             IBlockCipher cipher)
         {
             this.cipher = cipher;
-            this.blockSize = cipher.GetBlockSize();
+            this.blockSize = cipher.BlockSize;
 
             this.IV = new byte[blockSize];
             this.cbcV = new byte[blockSize];
             this.cbcNextV = new byte[blockSize];
         }
 
-        /**
-        * return the underlying block cipher that we are wrapping.
-        *
-        * @return the underlying block cipher that we are wrapping.
-        */
-        public IBlockCipher GetUnderlyingCipher()
-        {
-            return cipher;
+        public IBlockCipher UnderlyingCipher {
+            get { return cipher; }
         }
 
         /**
@@ -95,9 +89,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
         *
         * @return the block size of the underlying cipher.
         */
-        public int GetBlockSize()
-        {
-            return cipher.GetBlockSize();
+
+        public int BlockSize {
+            get { return cipher.BlockSize; }
         }
 
         /**

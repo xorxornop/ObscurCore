@@ -9,9 +9,9 @@ namespace ObscurCore.Cryptography.Ciphers
 
 		public abstract void Init(bool forEncryption, ICipherParameters parameters);
 
-		public abstract int GetBlockSize();
+	    public abstract int BlockSize { get; }
 
-		public abstract int GetOutputSize(int inputLen);
+	    public abstract int GetOutputSize(int inputLen);
 		public abstract int GetUpdateOutputSize(int inputLen);
 
 		public abstract byte[] ProcessByte(byte input);

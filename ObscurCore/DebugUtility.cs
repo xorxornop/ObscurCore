@@ -8,8 +8,14 @@ namespace ObscurCore
 {
     public static class DebugUtility
     {
+        public static string CreateReportString(string component, string locality, string description, string value)
+        {
+            return CreateReportString(component, locality, description, value, false);
+        }
+
         public static string CreateReportString(string component, string locality, string description,
-            string value, bool lineBreak = false) {
+            string value, bool lineBreak)
+        {
             var returnStr = String.Format("[{0}.{1}] {2} : {3}", component, locality, description, value);
             if (lineBreak) returnStr = returnStr + "\n";
             return returnStr;

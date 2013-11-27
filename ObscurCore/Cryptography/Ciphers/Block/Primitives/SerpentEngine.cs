@@ -56,9 +56,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			get { return false; }
 		}
 
-		public int GetBlockSize()
-        {
-            return BLOCK_SIZE;
+        public int BlockSize {
+            get { return BLOCK_SIZE; }
         }
 
         /**
@@ -234,21 +233,21 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return w;
         }
 
-        private int RotateLeft(
+        private static int RotateLeft(
             int     x,
             int     bits)
         {
             return ((x << bits) | (int) ((uint)x >> (32 - bits)));
         }
 
-        private int RotateRight(
+        private static int RotateRight(
             int     x,
             int     bits)
         {
             return ( (int)((uint)x >> bits) | (x << (32 - bits)));
         }
 
-        private int BytesToWord(
+        private static int BytesToWord(
             byte[]  src,
             int     srcOff)
         {
@@ -256,7 +255,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             ((src[srcOff + 2] & 0xff) << 8) | ((src[srcOff + 3] & 0xff)));
         }
 
-        private void WordToBytes(
+        private static void WordToBytes(
             int     word,
             byte[]  dst,
             int     dstOff)

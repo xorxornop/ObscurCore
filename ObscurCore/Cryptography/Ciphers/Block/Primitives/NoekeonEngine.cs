@@ -50,12 +50,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			get { return false; }
 		}
 
-		public int GetBlockSize()
-		{
-			return GenericSize;
-		}
+	    public int BlockSize {
+	        get { return GenericSize; }
+	    }
 
-		/**
+	    /**
 		* initialise
 		*
 		* @param forEncryption whether or not we are for encryption.
@@ -181,7 +180,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			return GenericSize;
 		}
 
-		private void gamma(uint[] a)
+		private static void gamma(uint[] a)
 		{
 			a[1] ^= ~a[3] & ~a[2];
 			a[0] ^= a[2] & a[1];
@@ -230,7 +229,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 
 		// Helpers
 
-		private uint rotl(uint x, int y)
+		private static uint rotl(uint x, int y)
 		{
 			return (x << y) | (x >> (32-y));
 		}

@@ -16,37 +16,37 @@ namespace ObscurCore.Tests.Cryptography.MACs
 
         [Test]
         public void BLAKE2B256 () {
-            RunMACTest(MACFunctions.BLAKE2B256, null, null, CreateRandomBytes(128));
+            RunMACTest(MacFunction.Blake2B256, null, null, CreateRandomBytes(128));
         }
 
         [Test]
         public void BLAKE2B384 () {
-            RunMACTest(MACFunctions.BLAKE2B384, null, CreateRandomBytes(384), CreateRandomBytes(128));
+            RunMACTest(MacFunction.Blake2B384, null, CreateRandomBytes(384), CreateRandomBytes(128));
         }
 
         [Test]
         public void BLAKE2B512 () {
-            RunMACTest(MACFunctions.BLAKE2B512, null, CreateRandomBytes(512), CreateRandomBytes(128));
+            RunMACTest(MacFunction.Blake2B512, null, CreateRandomBytes(512), CreateRandomBytes(128));
         }
 
         [Test]
         public void Keccak224 () {
-            RunMACTest(MACFunctions.Keccak224);
+            RunMACTest(MacFunction.Keccak224);
         }
 
         [Test]
         public void Keccak256 () {
-            RunMACTest(MACFunctions.Keccak256);
+            RunMACTest(MacFunction.Keccak256);
         }
 
         [Test]
         public void Keccak384 () {
-            RunMACTest(MACFunctions.Keccak384);
+            RunMACTest(MacFunction.Keccak384);
         }
 
         [Test]
         public void Keccak512 () {
-            RunMACTest(MACFunctions.Keccak512);
+            RunMACTest(MacFunction.Keccak512);
         }
     }
 }

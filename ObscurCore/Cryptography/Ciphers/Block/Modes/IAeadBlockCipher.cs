@@ -15,10 +15,10 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 		/// <param name="parameters">The key or other data required by the cipher.</param>
 		void Init(bool forEncryption, ICipherParameters parameters);
 
-		/// <returns>The block size for this cipher, in bytes.</returns>
-		int GetBlockSize();
+	    /// <value>The block size for this cipher, in bytes.</value>
+	    int BlockSize { get; }
 
-		/**
+	    /**
 		* Encrypt/decrypt a single byte.
 		*
 		* @param input the byte to be processed.

@@ -35,11 +35,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         private uint []_Tm = new uint[24 * 8];
         private uint[] _workingKey = new uint[8];
 
-		public Cast6Engine()
-        {
-        }
-
-		public override string AlgorithmName
+        public override string AlgorithmName
         {
             get { return "CAST6"; }
         }
@@ -48,12 +44,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         {
         }
 
-		public override int GetBlockSize()
-        {
-            return BLOCK_SIZE;
+        public override int BlockSize {
+            get { return BLOCK_SIZE; }
         }
 
-		//==================================
+        //==================================
         // Private Implementation
         //==================================
         /*

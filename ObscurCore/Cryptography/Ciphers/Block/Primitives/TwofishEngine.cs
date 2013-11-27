@@ -316,9 +316,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             }
         }
 
-        public int GetBlockSize()
-        {
-            return BLOCK_SIZE;
+        public int BlockSize {
+            get { return BLOCK_SIZE; }
         }
 
         //==================================
@@ -557,7 +556,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         * @param    k1 second 32-bit entity
         * @return     Remainder polynomial Generated using RS code
         */
-        private  int RS_MDS_Encode(int k0, int k1)
+        private static int RS_MDS_Encode(int k0, int k1)
         {
             int r = k1;
             for (int i = 0 ; i < 4 ; i++) // shift 1 byte at a time
@@ -582,7 +581,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         * where a = primitive root of field generator 0x14D
 		* </p>
         */
-        private  int RS_rem(int x)
+        private static int RS_rem(int x)
         {
             int b = (int) (((uint)x >> 24) & 0xff);
             int g2 = ((b << 1) ^
@@ -592,45 +591,45 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return ((x << 8) ^ (g3 << 24) ^ (g2 << 16) ^ (g3 << 8) ^ b);
         }
 
-        private  int LFSR1(int x)
+        private static int LFSR1(int x)
         {
             return (x >> 1) ^
                     (((x & 0x01) != 0) ? GF256_FDBK_2 : 0);
         }
 
-        private  int LFSR2(int x)
+        private static int LFSR2(int x)
         {
             return (x >> 2) ^
                     (((x & 0x02) != 0) ? GF256_FDBK_2 : 0) ^
                     (((x & 0x01) != 0) ? GF256_FDBK_4 : 0);
         }
 
-        private  int Mx_X(int x)
+        private static int Mx_X(int x)
         {
             return x ^ LFSR2(x);
         } // 5B
 
-        private  int Mx_Y(int x)
+        private static int Mx_Y(int x)
         {
             return x ^ LFSR1(x) ^ LFSR2(x);
         } // EF
 
-        private  int M_b0(int x)
+        private static int M_b0(int x)
         {
             return x & 0xff;
         }
 
-        private  int M_b1(int x)
+        private static int M_b1(int x)
         {
             return (int)((uint)x >> 8) & 0xff;
         }
 
-        private  int M_b2(int x)
+        private static int M_b2(int x)
         {
             return (int)((uint)x >> 16) & 0xff;
         }
 
-        private  int M_b3(int x)
+        private static int M_b3(int x)
         {
             return (int)((uint)x >> 24) & 0xff;
         }
@@ -651,7 +650,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
                 gSBox[ 0x201 + 2*((int)((uint)x >> 16) & 0xff) ];
         }
 
-        private  int BytesTo32Bits(byte[] b, int p)
+        private static int BytesTo32Bits(byte[] b, int p)
         {
             return ((b[p] & 0xff) ) |
                 ((b[p+1] & 0xff) << 8) |
@@ -659,7 +658,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
                 ((b[p+3] & 0xff) << 24);
         }
 
-        private  void Bits32ToBytes(int inData,  byte[] b, int offset)
+        private static void Bits32ToBytes(int inData,  byte[] b, int offset)
         {
             b[offset] = (byte)inData;
             b[offset + 1] = (byte)(inData >> 8);

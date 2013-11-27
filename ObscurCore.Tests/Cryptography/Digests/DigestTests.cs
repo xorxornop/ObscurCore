@@ -7,67 +7,67 @@ namespace ObscurCore.Tests.Cryptography.Digests
     {
         [Test]
         public void BLAKE2B256 () {
-            RunDigestTest(HashFunctions.BLAKE2B256);
+            RunDigestTest(HashFunction.Blake2B256);
         }
 
         [Test]
         public void BLAKE2B384 () {
-            RunDigestTest(HashFunctions.BLAKE2B384);
+            RunDigestTest(HashFunction.Blake2B384);
         }
 
         [Test]
         public void BLAKE2B512 () {
-            RunDigestTest(HashFunctions.BLAKE2B512);
+            RunDigestTest(HashFunction.Blake2B512);
         }
 
         [Test]
         public void Keccak224 () {
-            RunDigestTest(HashFunctions.Keccak224);
+            RunDigestTest(HashFunction.Keccak224);
         }
 
         [Test]
         public void Keccak256 () {
-            RunDigestTest(HashFunctions.Keccak256);
+            RunDigestTest(HashFunction.Keccak256);
         }
 
         [Test]
         public void Keccak384 () {
-            RunDigestTest(HashFunctions.Keccak384);
+            RunDigestTest(HashFunction.Keccak384);
         }
 
         [Test]
         public void Keccak512 () {
-            RunDigestTest(HashFunctions.Keccak512);
+            RunDigestTest(HashFunction.Keccak512);
         }
 
         [Test]
         public void RIPEMD160 () {
-            RunDigestTest(HashFunctions.RIPEMD160);
+            RunDigestTest(HashFunction.Ripemd160);
         }
 #if INCLUDE_SHA1
         [Test]
         public void SHA1 () {
-            RunDigestTest(HashFunctions.SHA1);
+            RunDigestTest(HashFunction.Sha1);
         }
 #endif
         [Test]
         public void SHA256 () {
-            RunDigestTest(HashFunctions.SHA256);
+            RunDigestTest(HashFunction.Sha256);
         }
 
         [Test]
         public void SHA512 () {
-            RunDigestTest(HashFunctions.SHA512);
+            RunDigestTest(HashFunction.Sha512);
         }
 
         [Test]
         public void Tiger () {
-            RunDigestTest(HashFunctions.Tiger);
+            RunDigestTest(HashFunction.Tiger);
         }
 
         [Test]
         public void Whirlpool () {
-            RunDigestTest(HashFunctions.Whirlpool);
+            RunDigestTest(HashFunction.Whirlpool);
         }
     }
 }

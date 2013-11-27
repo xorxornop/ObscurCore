@@ -7,21 +7,21 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes.GCM
 	{
 		internal static byte[] OneAsBytes()
 		{
-			byte[] tmp = new byte[16];
+			var tmp = new byte[16];
 			tmp[0] = 0x80;
 			return tmp;
 		}
 
 		internal static uint[] OneAsUints()
 		{
-			uint[] tmp = new uint[4];
+			var tmp = new uint[4];
 			tmp[0] = 0x80000000;
 			return tmp;
 		}
 
 		internal static uint[] AsUints(byte[] bs)
 		{
-			uint[] us = new uint[4];
+			var us = new uint[4];
 			us[0] = Pack.BE_To_UInt32(bs, 0);
 			us[1] = Pack.BE_To_UInt32(bs, 4);
 			us[2] = Pack.BE_To_UInt32(bs, 8);
@@ -31,8 +31,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes.GCM
 
 		internal static void Multiply(byte[] block, byte[] val)
 		{
-			byte[] tmp = Arrays.Clone(block);
-			byte[] c = new byte[16];
+			var tmp = Arrays.Clone(block);
+			var c = new byte[16];
 
 			for (int i = 0; i < 16; ++i)
 			{

@@ -15,11 +15,14 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
 		{
 #if NETCF_1_0
 			// No volatile keyword, but all fields implicitly volatile anyway
-			private int		counter = 0;
-			private bool	stop = false;
+			private int		counter;
+			private bool	stop;
 #else
-			private volatile int	counter = 0;
-			private volatile bool	stop = false;
+			private volatile int	counter;
+			private volatile bool	stop;
+		    public SeedGenerator() {
+		        counter = 0;
+		    }
 #endif
 
 			private void Run(object ignored)

@@ -1,5 +1,8 @@
 namespace ObscurCore.Cryptography.Ciphers
 {
+    /// <summary>
+    /// Parameters for AEAD-type block cipher mode of operation.
+    /// </summary>
 	public class AeadParameters
 		: ICipherParameters
 	{
@@ -8,14 +11,13 @@ namespace ObscurCore.Cryptography.Ciphers
 		private readonly KeyParameter key;
 		private readonly int macSize;
 
-		/**
-		 * Base constructor.
-		 *
-		 * @param key key to be used by underlying cipher
-		 * @param macSize macSize in bits
-		 * @param nonce nonce to be used
-		 * @param associatedText associated text, if any
-		 */
+		/// <summary>
+		/// Base constructor.
+		/// </summary>
+		/// <param name="key">Key to be used by underlying cipher.</param>
+		/// <param name="macSize">Size of MAC in bits.</param>
+		/// <param name="nonce">Nonce to be used.</param>
+		/// <param name="associatedText">Associated text, if any.</param>
 		public AeadParameters(
 			KeyParameter	key,
 			int				macSize,

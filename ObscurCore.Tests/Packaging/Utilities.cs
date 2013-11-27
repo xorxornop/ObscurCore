@@ -23,7 +23,7 @@ namespace ObscurCore.Tests.Packaging
                         Type = PayloadItemTypes.Binary,
                         //Compression = new CompressionConfiguration () { AlgorithmName = CompressionAlgorithms.LZ4.ToString() },
                         //Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCiphers.AES, BlockCipherModes.CTR, BlockCipherPaddings.None),
-                        Encryption = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCiphers.SOSEMANUK)
+                        Encryption = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Sosemanuk)
                     };
 
                 payloadItem.Encryption.Key = new byte[payloadItem.Encryption.KeySize / 8];
@@ -47,8 +47,8 @@ namespace ObscurCore.Tests.Packaging
                         ExternalLength = t.Length,
                         Type = PayloadItemTypes.Binary,
                         //Compression = new CompressionConfiguration () { AlgorithmName = CompressionAlgorithms.LZ4.ToString() },
-                        Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCiphers.Serpent, 
-                            BlockCipherModes.CTR, BlockCipherPaddings.None)
+                        Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCipher.Serpent, 
+                            BlockCipherMode.Ctr, BlockCipherPadding.None)
                     };
 
                 payloadItem.Encryption.Key = new byte[payloadItem.Encryption.KeySize / 8];

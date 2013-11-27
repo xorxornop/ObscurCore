@@ -560,7 +560,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			0xd04257b8
 		};
 
-        private uint Shift(
+        private static uint Shift(
             uint	r,
             int		shift)
 		{
@@ -573,7 +573,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         private const uint m2 = 0x7f7f7f7f;
         private const uint m3 = 0x0000001b;
 
-		private uint FFmulX(
+		private static uint FFmulX(
 			uint x)
 		{
 			return ((x & m2) << 1) ^ (((x & m1) >> 7) * m3);
@@ -589,7 +589,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 
         */
 
-        private uint Inv_Mcol(
+        private static uint Inv_Mcol(
 			uint x) {
             uint f2 = FFmulX(x);
             uint f4 = FFmulX(f2);
@@ -599,7 +599,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return f2 ^ f4 ^ f8 ^ Shift(f2 ^ f9, 8) ^ Shift(f4 ^ f9, 16) ^ Shift(f9, 24);
         }
 
-		private uint SubWord(
+		private static uint SubWord(
 			uint x)
 		{
 			return (uint)S[x&255]
@@ -676,13 +676,6 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         private const int BLOCK_SIZE = 16;
 
         /**
-        * default constructor - 128 bit block size.
-        */
-        public AesFastEngine()
-        {
-        }
-
-        /**
         * initialise an AES cipher.
         *
         * @param forEncryption whether or not we are for encryption.
@@ -711,9 +704,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			get { return false; }
 		}
 
-		public int GetBlockSize()
-        {
-            return BLOCK_SIZE;
+        public int BlockSize {
+            get { return BLOCK_SIZE; }
         }
 
         public int ProcessBlock(

@@ -4,6 +4,6 @@ namespace ObscurCore.Tests.Cryptography.BlockCiphers
 {
     public class AES : BlockCipherTestBase
     {
-        public AES() : base(SymmetricBlockCiphers.AES, 128, 128) { }
+        public AES() : base(SymmetricBlockCipher.Aes, 128, 128) { }
     }
 }

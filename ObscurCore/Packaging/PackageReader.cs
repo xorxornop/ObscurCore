@@ -67,7 +67,7 @@ namespace ObscurCore.Packaging
 			        //"payloadKeysSymmetric");
 			        throw new ItemKeyMissingException(item);
 			    }
-			    item.Encryption.Key = Source.DeriveKeyWithKDF(item.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunctions>(),
+			    item.Encryption.Key = Source.DeriveKeyWithKdf(item.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunction>(),
 			        preIKey, item.KeyDerivation.Salt, item.Encryption.KeySize,
 			        item.KeyDerivation.SchemeConfiguration);
 			}
@@ -92,16 +92,17 @@ namespace ObscurCore.Packaging
 				mux.ExecuteAll ();
 			} catch (Exception ex) {
 				// Catch different kinds of exception in future
-				throw ex;
+				throw;
 			}
 
             Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPackagePayload", "Trailer offset (absolute)",
                     source.Position.ToString()));
 
 			// Read the trailer
-			var trailerTag = new byte[Athena.Packaging.TrailerTagBytes.Length];
-			source.Read (trailerTag, 0, trailerTag.Length);
-			if(!trailerTag.SequenceEqual(Athena.Packaging.TrailerTagBytes)) {
+            var referenceHeaderTag = Athena.Packaging.GetTrailerTag();
+			var readTrailerTag = new byte[referenceHeaderTag.Length];
+			source.Read (readTrailerTag, 0, readTrailerTag.Length);
+			if(!readTrailerTag.SequenceEqual(referenceHeaderTag)) {
 				throw new InvalidDataException("Package is malformed. Trailer tag is either absent or malformed." 
 				                               + "It would appear, however, that the package has unpacked successfully despite this.");
 			}
@@ -201,7 +202,7 @@ namespace ObscurCore.Packaging
                     preMKey.ToHexString()));
 
             // Derive the manifest working key
-            var workingMKey = Source.DeriveKeyWithKDF(mCryptoConfig.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunctions>(),
+            var workingMKey = Source.DeriveKeyWithKdf(mCryptoConfig.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunction>(),
                     preMKey, mCryptoConfig.KeyDerivation.Salt, mCryptoConfig.SymmetricCipher.KeySize,
                     mCryptoConfig.KeyDerivation.SchemeConfiguration);
 
@@ -263,9 +264,10 @@ namespace ObscurCore.Packaging
             Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPackageManifestHeader", "[* PACKAGE START* ] Header offset (absolute)",
                     source.Position.ToString()));
 
-            var readHeaderTag = new byte[Athena.Packaging.HeaderTagBytes.Length];
+		    var referenceHeaderTag = Athena.Packaging.GetHeaderTag();
+            var readHeaderTag = new byte[referenceHeaderTag.Length];
             source.Read(readHeaderTag, 0, readHeaderTag.Length);
-            if (!readHeaderTag.SequenceEqual(Athena.Packaging.HeaderTagBytes)) {
+            if (!readHeaderTag.SequenceEqual(referenceHeaderTag)) {
                 throw new InvalidDataException("Package is malformed. Expected header tag is either absent or malformed.");
             }
 

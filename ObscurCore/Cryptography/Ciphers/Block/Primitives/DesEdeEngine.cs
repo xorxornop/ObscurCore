@@ -55,12 +55,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             get { return "DESede"; }
         }
 
-		public override int GetBlockSize()
-        {
-            return BLOCK_SIZE;
-        }
+	    public override int BlockSize {
+	        get { return BLOCK_SIZE; }
+	    }
 
-		public override int ProcessBlock(
+	    public override int ProcessBlock(
             byte[]	input,
             int		inOff,
             byte[]	output,

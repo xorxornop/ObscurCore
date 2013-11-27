@@ -15,7 +15,7 @@ namespace ObscurCore.Tests.Packaging
         [Test]
         public void WriteSimpleSymmetricPackage() {
             
-            var mCipher = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCiphers.HC256);
+            var mCipher = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Hc256);
 
             var preKey = new byte[mCipher.KeySize / 8];
             StratCom.EntropySource.NextBytes(preKey);
@@ -41,7 +41,7 @@ namespace ObscurCore.Tests.Packaging
 
         [Test]
         public void RoundTripSimpleSymmetricPackage() {
-            var mCipher = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCiphers.HC256);
+            var mCipher = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Hc256);
 
             var preKey = new byte[mCipher.KeySize / 8];
             StratCom.EntropySource.NextBytes(preKey);

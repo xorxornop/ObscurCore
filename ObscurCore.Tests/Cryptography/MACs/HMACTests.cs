@@ -10,7 +10,7 @@ namespace ObscurCore.Tests.Cryptography.MACs
 {
     class HMACTests : MACTestBase
     {
-        const MACFunctions function = MACFunctions.HMAC;
+        const MacFunction function = MacFunction.Hmac;
 
         public HMACTests() {
             SetRandomFixtureParameters(128);
@@ -18,67 +18,67 @@ namespace ObscurCore.Tests.Cryptography.MACs
 
         [Test]
         public void BLAKE2B256 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.BLAKE2B256.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Blake2B256.ToString()));
         }
 
         [Test]
         public void BLAKE2B384 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.BLAKE2B384.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Blake2B384.ToString()));
         }
 
         [Test]
         public void BLAKE2B512 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.BLAKE2B512.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Blake2B512.ToString()));
         }
 
         [Test]
         public void Keccak224 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.Keccak224.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Keccak224.ToString()));
         }
 
         [Test]
         public void Keccak256 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.Keccak256.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Keccak256.ToString()));
         }
 
         [Test]
         public void Keccak384 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.Keccak384.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Keccak384.ToString()));
         }
 
         [Test]
         public void Keccak512 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.Keccak512.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Keccak512.ToString()));
         }
 
         [Test]
         public void RIPEMD160 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.RIPEMD160.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Ripemd160.ToString()));
         }
 #if INCLUDE_SHA1
         [Test]
         public void SHA1 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.SHA1.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Sha1.ToString()));
         }
 #endif
         [Test]
         public void SHA256 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.SHA256.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Sha256.ToString()));
         }
 
         [Test]
         public void SHA512 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.SHA512.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Sha512.ToString()));
         }
 
         [Test]
         public void Tiger () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.Tiger.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Tiger.ToString()));
         }
 
         [Test]
         public void Whirlpool () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunctions.Whirlpool.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Whirlpool.ToString()));
         }
     }
 }

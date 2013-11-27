@@ -8,7 +8,7 @@ namespace ObscurCore.Tests.Cryptography
 {
     public abstract class DigestTestBase : IOTestBase
     {
-        protected void RunDigestTest (HashFunctions function) {
+        protected void RunDigestTest (HashFunction function) {
             byte[] outputHash = null;
             var sw = new Stopwatch();
             using (var outputMS = new MemoryStream()) {

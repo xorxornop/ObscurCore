@@ -29,9 +29,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             this.cipher = cipher;
             this.blockSize = blockSize / 8;
 
-            this.IV = new byte[cipher.GetBlockSize()];
-            this.ofbV = new byte[cipher.GetBlockSize()];
-            this.ofbOutV = new byte[cipher.GetBlockSize()];
+            this.IV = new byte[cipher.BlockSize];
+            this.ofbV = new byte[cipher.BlockSize];
+            this.ofbOutV = new byte[cipher.BlockSize];
         }
 
         /**
@@ -39,9 +39,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
         *
         * @return the underlying block cipher that we are wrapping.
         */
-        public IBlockCipher GetUnderlyingCipher()
-        {
-            return cipher;
+
+        public IBlockCipher UnderlyingCipher {
+            get { return cipher; }
         }
 
         /**
@@ -107,9 +107,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
         *
         * @return the block size we are operating at (in bytes).
         */
-        public int GetBlockSize()
-        {
-            return blockSize;
+
+        public int BlockSize {
+            get { return blockSize; }
         }
 
         /**

@@ -28,18 +28,18 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 	public class CMac
 		: IMac
 	{
-		private const byte CONSTANT_128 = (byte)0x87;
-		private const byte CONSTANT_64 = (byte)0x1b;
+		private const byte Constant128 = (byte)0x87;
+		private const byte Constant64 = (byte)0x1b;
 
-		private byte[] ZEROES;
+		private readonly byte[] _zeroes;
 
-		private byte[] mac;
+		private readonly byte[] _mac;
 
-		private byte[] buf;
-		private int bufOff;
-		private IBlockCipher cipher;
+		private readonly byte[] _buf;
+		private int _bufOff;
+		private readonly IBlockCipher _cipher;
 
-		private int macSize;
+		private readonly int macSize;
 
 		private byte[] L, Lu, Lu2;
 
@@ -52,7 +52,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		*/
 		public CMac(
 			IBlockCipher cipher)
-			: this(cipher, cipher.GetBlockSize() * 8)
+			: this(cipher, cipher.BlockSize * 8)
 		{
 		}
 
@@ -75,41 +75,41 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			if ((macSizeInBits % 8) != 0)
 				throw new ArgumentException("MAC size must be multiple of 8");
 
-			if (macSizeInBits > (cipher.GetBlockSize() * 8))
+			if (macSizeInBits > (cipher.BlockSize * 8))
 			{
 				throw new ArgumentException(
 					"MAC size must be less or equal to "
-						+ (cipher.GetBlockSize() * 8));
+						+ (cipher.BlockSize * 8));
 			}
 
-			if (cipher.GetBlockSize() != 8 && cipher.GetBlockSize() != 16)
+			if (cipher.BlockSize != 8 && cipher.BlockSize != 16)
 			{
 				throw new ArgumentException(
 					"Block size must be either 64 or 128 bits");
 			}
 
-			this.cipher = new CbcBlockCipher(cipher);
+			this._cipher = new CbcBlockCipher(cipher);
 			this.macSize = macSizeInBits / 8;
 
-			mac = new byte[cipher.GetBlockSize()];
+			_mac = new byte[cipher.BlockSize];
 
-			buf = new byte[cipher.GetBlockSize()];
+			_buf = new byte[cipher.BlockSize];
 
-			ZEROES = new byte[cipher.GetBlockSize()];
+			_zeroes = new byte[cipher.BlockSize];
 
-			bufOff = 0;
+			_bufOff = 0;
 		}
 
 		public string AlgorithmName
 		{
-			get { return cipher.AlgorithmName; }
+			get { return _cipher.AlgorithmName; }
 		}
 
-		private byte[] doubleLu(
+		private static byte[] doubleLu(
 			byte[] inBytes)
 		{
 			int FirstBit = (inBytes[0] & 0xFF) >> 7;
-			byte[] ret = new byte[inBytes.Length];
+			var ret = new byte[inBytes.Length];
 			for (int i = 0; i < inBytes.Length - 1; i++)
 			{
 				ret[i] = (byte)((inBytes[i] << 1) + ((inBytes[i + 1] & 0xFF) >> 7));
@@ -117,7 +117,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			ret[inBytes.Length - 1] = (byte)(inBytes[inBytes.Length - 1] << 1);
 			if (FirstBit == 1)
 			{
-				ret[inBytes.Length - 1] ^= inBytes.Length == 16 ? CONSTANT_128 : CONSTANT_64;
+				ret[inBytes.Length - 1] ^= inBytes.Length == 16 ? Constant128 : Constant64;
 			}
 			return ret;
 		}
@@ -127,32 +127,31 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		{
 			Reset();
 
-			cipher.Init(true, parameters);
+			_cipher.Init(true, parameters);
 
 			//initializes the L, Lu, Lu2 numbers
-			L = new byte[ZEROES.Length];
-			cipher.ProcessBlock(ZEROES, 0, L, 0);
+			L = new byte[_zeroes.Length];
+			_cipher.ProcessBlock(_zeroes, 0, L, 0);
 			Lu = doubleLu(L);
 			Lu2 = doubleLu(Lu);
 
-			cipher.Init(true, parameters);
+			_cipher.Init(true, parameters);
 		}
 
-		public int GetMacSize()
-		{
-			return macSize;
-		}
+	    public int MacSize {
+	        get { return macSize; }
+	    }
 
-		public void Update(
+	    public void Update(
 			byte input)
 		{
-			if (bufOff == buf.Length)
+			if (_bufOff == _buf.Length)
 			{
-				cipher.ProcessBlock(buf, 0, mac, 0);
-				bufOff = 0;
+				_cipher.ProcessBlock(_buf, 0, _mac, 0);
+				_bufOff = 0;
 			}
 
-			buf[bufOff++] = input;
+			_buf[_bufOff++] = input;
 		}
 
 		public void BlockUpdate(
@@ -163,58 +162,58 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			if (len < 0)
 				throw new ArgumentException("Can't have a negative input length!");
 
-			int blockSize = cipher.GetBlockSize();
-			int gapLen = blockSize - bufOff;
+			int blockSize = _cipher.BlockSize;
+			int gapLen = blockSize - _bufOff;
 
 			if (len > gapLen)
 			{
-				Array.Copy(inBytes, inOff, buf, bufOff, gapLen);
+				Array.Copy(inBytes, inOff, _buf, _bufOff, gapLen);
 
-				cipher.ProcessBlock(buf, 0, mac, 0);
+				_cipher.ProcessBlock(_buf, 0, _mac, 0);
 
-				bufOff = 0;
+				_bufOff = 0;
 				len -= gapLen;
 				inOff += gapLen;
 
 				while (len > blockSize)
 				{
-					cipher.ProcessBlock(inBytes, inOff, mac, 0);
+					_cipher.ProcessBlock(inBytes, inOff, _mac, 0);
 
 					len -= blockSize;
 					inOff += blockSize;
 				}
 			}
 
-			Array.Copy(inBytes, inOff, buf, bufOff, len);
+			Array.Copy(inBytes, inOff, _buf, _bufOff, len);
 
-			bufOff += len;
+			_bufOff += len;
 		}
 
 		public int DoFinal(
 			byte[]	outBytes,
 			int		outOff)
 		{
-			int blockSize = cipher.GetBlockSize();
+			int blockSize = _cipher.BlockSize;
 
 			byte[] lu;
-			if (bufOff == blockSize)
+			if (_bufOff == blockSize)
 			{
 				lu = Lu;
 			}
 			else
 			{
-				new ISO7816d4Padding().AddPadding(buf, bufOff);
+				new ISO7816d4Padding().AddPadding(_buf, _bufOff);
 				lu = Lu2;
 			}
 
-			for (int i = 0; i < mac.Length; i++)
+			for (int i = 0; i < _mac.Length; i++)
 			{
-				buf[i] ^= lu[i];
+				_buf[i] ^= lu[i];
 			}
 
-			cipher.ProcessBlock(buf, 0, mac, 0);
+			_cipher.ProcessBlock(_buf, 0, _mac, 0);
 
-			Array.Copy(mac, 0, outBytes, outOff, macSize);
+			Array.Copy(_mac, 0, outBytes, outOff, macSize);
 
 			Reset();
 
@@ -229,13 +228,13 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			/*
 			* clean the buffer.
 			*/
-			Array.Clear(buf, 0, buf.Length);
-			bufOff = 0;
+			Array.Clear(_buf, 0, _buf.Length);
+			_bufOff = 0;
 
 			/*
 			* Reset the underlying cipher.
 			*/
-			cipher.Reset();
+			_cipher.Reset();
 		}
 	}
 }

@@ -29,7 +29,7 @@ namespace ObscurCore.Packaging
     /// Supports extensions for control of operation size (partial/split item writes), ordering, 
     /// and item headers & trailers. Records I/O history itemwise and total.
     /// </remarks>
-    public class StreamMux
+    public class PayloadMultiplexer
     {
         /// <summary>
         /// Initializes a new instance of a stream multiplexer.
@@ -39,7 +39,7 @@ namespace ObscurCore.Packaging
         /// <param name="streams">Streams.</param>
         /// <param name="transformFuncs">Transform funcs.</param>
         /// <param name="maxOpSize">Maximum size that any single operation will be. Used to size copy buffer.</param>
-        public StreamMux(bool writing, Stream multiplexedStream, IList<IStreamBinding> streams,
+        public PayloadMultiplexer(bool writing, Stream multiplexedStream, IList<IStreamBinding> streams,
                          IList<Func<Stream, DecoratingStream>> transformFuncs, int maxOpSize = 16384) {
             if (streams.Count == 0 || transformFuncs.Count == 0)
                 throw new ArgumentException("No streams and/or transforms supplied for multiplexing operations.");
@@ -350,19 +350,28 @@ namespace ObscurCore.Packaging
             return Writing ? _accumulatorInternal[index] : _accumulatorExternal[index];
         }
 
-        public long GetItemIO(int index, bool source = true) {
+
+        public long GetItemIO(int index) {
+            return GetItemIO(index, true);
+        }
+
+        public long GetItemIO(int index, bool source) {
             if (index > _items.Count - 1)
                 throw new ArgumentException("Out of bounds.", "index");
             return Math.Abs(source ? GetSourceAccumulator(index) : GetDestinationAccumulator(index));
         }
 
-        public long? GetItemIO(Guid identifier, out bool completed, bool source = true) {
+        public long? GetItemIO(Guid identifier, out bool completed) {
+            return GetItemIO(identifier, out completed, true);
+        }
+
+        public long? GetItemIO(Guid identifier, out bool completed, bool source) {
             int index = _items.FindIndex(item => item.Identifier.Equals(identifier));
             if (index == -1) {
                 completed = false;
                 return null;
             }
-            var result = GetItemIO(index);
+            var result = GetItemIO(index, source);
             completed = result < 0;
             return result;
         }

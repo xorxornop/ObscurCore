@@ -15,15 +15,15 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	    private const int StateArraySize = SizeL << 5; // 256
 
 	    // Cipher's internal state
-		private uint[]   engineState   = null, // mm                
-						results       = null; // randrsl
-		private uint     a = 0, b = 0, c = 0;
+		private uint[]   engineState, // mm                
+						results; // randrsl
+		private uint     a, b, c;
 
 		// Engine state
-		private int     index         = 0;
+		private int     index;
 		private byte[]  keyStream     = new byte[StateArraySize<<2], // results expanded into bytes
-						workingKey    = null;
-		private bool	initialised   = false;
+						workingKey;
+		private bool	initialised;
 
 		/**
 		* initialise an ISAAC cipher.
@@ -214,7 +214,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			}
 		}
 
-		private void mix(uint[] x)
+		private static void mix(uint[] x)
 		{
 //			x[0]^=x[1]<< 11; x[3]+=x[0]; x[1]+=x[2];
 //			x[1]^=x[2]>>> 2; x[4]+=x[1]; x[2]+=x[3];
@@ -234,7 +234,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			x[7]^=x[0]>>  9; x[2]+=x[7]; x[0]+=x[1];
 		}
 
-		private uint byteToIntLittle(
+		private static uint byteToIntLittle(
 			byte[]	x,
 			int		offset)
 		{
@@ -245,7 +245,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return result;
 		}
 
-		private byte[] intToByteLittle(
+		private static byte[] intToByteLittle(
 			uint x)
 		{
 			byte[] output = new byte[4];
@@ -256,7 +256,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return output;
 		} 
 
-		private byte[] intToByteLittle(
+		private static byte[] intToByteLittle(
 			uint[] x)
 		{
 			byte[] output = new byte[4*x.Length];

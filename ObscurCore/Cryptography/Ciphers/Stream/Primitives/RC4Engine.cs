@@ -3,7 +3,7 @@ using System;
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
 #if(INCLUDE_RC4)
-    public class RC4Engine
+    public class Rc4Engine
 		: IStreamCipher
     {
         private const int StateLength = 256;

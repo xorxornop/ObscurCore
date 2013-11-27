@@ -26,26 +26,30 @@ namespace ObscurCore.Packaging
 	/// <summary>
 	/// Derived stream mux implementing stream selection with PRNG initialised with seed parameters.
 	/// </summary>
-	public class SimpleMux : StreamMux
+	public class SimpleMux : PayloadMultiplexer
 	{
-		protected CSPRNG SelectionSource;
+	    private readonly CSPRNG _selectionSource;
 
 		public SimpleMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, IList<Func<Stream, DecoratingStream>> transforms, 
 		                  IPayloadConfiguration config, int maxOpSize = 16384) : base(writing, multiplexedStream, streams, transforms, maxOpSize)
 		{
-			SelectionSource = Source.CreateCSPRNG(config.PrimaryPRNGName.ToEnum<CSPRNumberGenerators>(),
+			_selectionSource = Source.CreateCsprng(config.PrimaryPRNGName.ToEnum<CsPseudorandomNumberGenerator>(),
 		        config.PrimaryPRNGConfiguration);
 
 		    NextSource();
 		}
 
-		/// <summary>
+	    protected internal CSPRNG SelectionSource {
+	        get { return _selectionSource; }
+	    }
+
+	    /// <summary>
 		/// Advances and returns the index of the next stream to use in an I/O operation (whether to completion or just a buffer-full).
 		/// </summary>
 		/// <remarks>May be overriden in a derived class to provide for advanced stream selection logic.</remarks>
 		/// <returns>The next stream index.</returns>
 		protected override sealed int NextSource() {
-		    CurrentIndex = SelectionSource.Next(0, ItemCount - 1);
+		    CurrentIndex = _selectionSource.Next(0, ItemCount - 1);
 
             Debug.Print(DebugUtility.CreateReportString("SimpleMux", "NextSource", "Generated index",
                     CurrentIndex.ToString()));

@@ -332,13 +332,12 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817
 		};
 
-		public int GetByteLength()
-		{
-			return MyByteLength;
-		}
+        public int ByteLength {
+            get { return MyByteLength; }
+        }
 
-		public abstract string AlgorithmName { get; }
-		public abstract int GetDigestSize();
+        public abstract string AlgorithmName { get; }
+        public abstract int DigestSize { get; }
         public abstract int DoFinal(byte[] output, int outOff);
     }
 }

@@ -614,9 +614,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             get { return "Whirlpool"; }
         }
 
-        public int GetDigestSize()
-        {
-            return DIGEST_LENGTH_BYTES;
+        public int DigestSize {
+            get { return DIGEST_LENGTH_BYTES; }
         }
 
         public int DoFinal(byte[] output, int outOff)
@@ -631,7 +630,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
             Reset();
 
-            return GetDigestSize();
+            return DigestSize;
         }
 
         /**
@@ -829,7 +828,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
         private byte[] copyBitLength()
         {
-            byte[] rv = new byte[BITCOUNT_ARRAY_SIZE];
+            var rv = new byte[BITCOUNT_ARRAY_SIZE];
             for (int i = 0; i < rv.Length; i++)
             {
                 rv[i] = (byte)(_bitCount[i] & 0xff);
@@ -837,9 +836,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             return rv;
         }
 
-        public int GetByteLength()
-        {
-            return BYTE_LENGTH;
+        public int ByteLength {
+            get { return BYTE_LENGTH; }
         }
     }
 }

@@ -25,10 +25,10 @@ namespace ObscurCore.Cryptography.Entropy
 		{
 			this.digest = digest;
 
-			this.seed = new byte[digest.GetDigestSize()];
+			this.seed = new byte[digest.DigestSize];
 			this.seedCounter = 1;
 
-			this.state = new byte[digest.GetDigestSize()];
+			this.state = new byte[digest.DigestSize];
 			this.stateCounter = 1;
 		}
 

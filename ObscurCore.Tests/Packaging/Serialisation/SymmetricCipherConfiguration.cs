@@ -14,9 +14,9 @@ namespace ObscurCore.Tests.Packaging.Serialisation
                 CipherName = "AES",
                 KeySize = 128,
                 IV = new byte[] { 0x01, 0x02, 0x03 },
-                ModeName = BlockCipherModes.CTR.ToString(),
+                ModeName = BlockCipherMode.Ctr.ToString(),
                 BlockSize = 128,
-                PaddingName = BlockCipherPaddings.None.ToString()
+                PaddingName = BlockCipherPadding.None.ToString()
             };
 
 			var stream = SerialiseToMemory(inputObj);
@@ -35,11 +35,11 @@ namespace ObscurCore.Tests.Packaging.Serialisation
                 CipherName = "AES",
                 KeySize = 128,
                 IV = new byte[] { 0x01, 0x02, 0x03 },
-                ModeName = AEADBlockCipherModes.GCM.ToString(),
+                ModeName = AeadBlockCipherMode.Gcm.ToString(),
                 BlockSize = 128,
-                PaddingName = BlockCipherPaddings.None.ToString(),
+                PaddingName = BlockCipherPadding.None.ToString(),
                 AssociatedData = new byte[] { 0x03, 0x01, 0x04 },
-                MACSize = 128,
+                MacSize = 128,
 
             };
 

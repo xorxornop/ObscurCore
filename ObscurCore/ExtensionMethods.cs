@@ -105,8 +105,8 @@ namespace ObscurCore.Extensions
                     switch (item.Type) {
                         case PayloadItemTypes.Binary:
                             return (defaultExtension && withExtension && extensionStartIndex == -1) ? segment + ".bin" : segment;
-                        case PayloadItemTypes.UTF32:
-                        case PayloadItemTypes.UTF8:
+                        case PayloadItemTypes.Utf32:
+                        case PayloadItemTypes.Utf8:
                             return (defaultExtension && withExtension && extensionStartIndex == -1) ? segment + ".txt" : segment;
                         default:
                             throw new NotSupportedException("Item is a key agreement. It is not intended to be emitted as a file.");
@@ -130,7 +130,7 @@ namespace ObscurCore.Extensions
 
                     ECPublicKeyParameters publicKey;
                     try {
-                        var domain = Source.GetECDomainParameters(config.CurveName);
+                        var domain = Source.GetEcDomainParameters(config.CurveName);
                         ECPoint point;
                         ECKeyUtility.Read (config.EncodedKey, domain, out point);
                         publicKey = new ECPublicKeyParameters("ECDHC", point, domain);
@@ -148,7 +148,7 @@ namespace ObscurCore.Extensions
 
                     ECPrivateKeyParameters privateKey;
                     try {
-                        var domain = Source.GetECDomainParameters(config.CurveName);
+                        var domain = Source.GetEcDomainParameters(config.CurveName);
                         ECPoint point;
                         ECKeyUtility.Read (config.EncodedKey, domain, out point);
                         privateKey = new ECPrivateKeyParameters("ECDHC", new BigInteger(config.EncodedKey), domain);
@@ -165,7 +165,7 @@ namespace ObscurCore.Extensions
                     if (!curveProvider.Equals ("Brainpool"))
                         throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
-                    ECFpCurves curveEnum;
+                    EcFpCurves curveEnum;
                     if(!Enum.TryParse(curveName, out curveEnum)) 
                         throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
                     config.CurveName = curveName;
@@ -176,7 +176,7 @@ namespace ObscurCore.Extensions
                     if (!curveProvider.Equals ("Brainpool"))
                         throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
-                    ECFpCurves curveEnum;
+                    EcFpCurves curveEnum;
                     if(!Enum.TryParse(curveName, out curveEnum)) 
                         throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
                     config.CurveName = curveName;

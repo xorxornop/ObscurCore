@@ -28,7 +28,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Padding
 			this.cipher = cipher;
 			this.padding = padding;
 
-			buf = new byte[cipher.GetBlockSize()];
+			buf = new byte[cipher.BlockSize];
 			bufOff = 0;
 		}
 
@@ -170,7 +170,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Padding
 				throw new ArgumentException("Can't have a negative input length!");
 			}
 
-			int blockSize = GetBlockSize();
+			int blockSize = BlockSize;
 			int outLength = GetUpdateOutputSize(length);
 
 			if (outLength > 0)
@@ -228,7 +228,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Padding
 			byte[]  output,
 			int     outOff)
 		{
-			int blockSize = cipher.GetBlockSize();
+			int blockSize = cipher.BlockSize;
 			int resultLen = 0;
 
 			if (forEncryption)

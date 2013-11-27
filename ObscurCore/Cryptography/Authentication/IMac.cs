@@ -1,4 +1,3 @@
-using System;
 using ObscurCore.Cryptography.Ciphers;
 
 namespace ObscurCore.Cryptography.Authentication
@@ -29,7 +28,7 @@ namespace ObscurCore.Cryptography.Authentication
 		 *
 		 * @return the block size for this MAC in bytes.
 		 */
-		int GetMacSize();
+        int MacSize { get; }
 
         /**
          * add a single byte to the mac for processing.

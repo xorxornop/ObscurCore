@@ -92,8 +92,8 @@ namespace ObscurCore.DTO
 	public enum PayloadItemTypes
 	{
 		Binary = 0,
-		UTF8,
-        UTF32,
+		Utf8,
+        Utf32,
 		KeyAction
 	}
 	#endregion

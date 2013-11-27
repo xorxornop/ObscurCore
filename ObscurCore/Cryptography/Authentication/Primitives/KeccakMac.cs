@@ -29,20 +29,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             this.Init(key, salt);
 		}
 
-		public int GetMacSize ()
-		{
-			return GetDigestSize ();
-		}
+	    public int MacSize {
+	        get { return DigestSize; }
+	    }
 
-		/// <summary>
-		/// Reset this MAC instance. For a key and salt to be applied after this, Init() must be run again!
-		/// </summary>
-		public override void Reset ()
-		{
-			base.Reset ();
-		}
-
-		#endregion
+	    #endregion
 
         /// <summary>
         /// Init the specified key and salt by performing a block update with each sequentially, respectively. 

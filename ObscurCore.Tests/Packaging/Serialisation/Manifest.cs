@@ -21,7 +21,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			    };
 
             manifest.PayloadItems.Add(new PayloadItem() { Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration
-                                (SymmetricBlockCiphers.AES, BlockCipherModes.CTR, BlockCipherPaddings.None) });
+                                (SymmetricBlockCipher.AES, BlockCipherModes.CTR, BlockCipherPaddings.None) });
 
 		    var stream = StratCom.SerialiseDTO(manifest);
             stream.Seek(0, SeekOrigin.Begin);

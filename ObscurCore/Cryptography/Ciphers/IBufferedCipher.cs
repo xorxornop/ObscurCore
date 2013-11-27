@@ -1,6 +1,8 @@
 namespace ObscurCore.Cryptography.Ciphers
 {
-	/// <remarks>Block cipher engines are expected to conform to this interface.</remarks>
+	/// <summary>
+	/// Interface for block cipher engines to conform to.
+	/// </summary>
     public interface IBufferedCipher
     {
 		/// <summary>The name of the algorithm this cipher implements.</summary>
@@ -12,9 +14,9 @@ namespace ObscurCore.Cryptography.Ciphers
 		/// <param name="parameters">The key and other data required by the cipher.</param>
         void Init(bool forEncryption, ICipherParameters parameters);
 
-		int GetBlockSize();
+	    int BlockSize { get; }
 
-		int GetOutputSize(int inputLen);
+	    int GetOutputSize(int inputLen);
 
 		int GetUpdateOutputSize(int inputLen);
 

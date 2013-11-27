@@ -53,12 +53,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			get { return "SHA-256"; }
 		}
 
-		public override int GetDigestSize()
-		{
-			return DigestLength;
-		}
+        public override int DigestSize {
+            get { return DigestLength; }
+        }
 
-		internal override void ProcessWord(
+        internal override void ProcessWord(
             byte[]  input,
             int     inOff)
 		{

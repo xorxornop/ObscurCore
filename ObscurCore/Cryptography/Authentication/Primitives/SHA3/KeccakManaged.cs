@@ -30,7 +30,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives.SHA3
         protected override void HashCore (byte[] array, int ibStart, int cbSize) {
             base.HashCore(array, ibStart, cbSize);
             if (cbSize == 0) return;
-            int sizeInBytes = GetByteLength();
+            int sizeInBytes = ByteLength;
             if (buffer == null)
                 buffer = new byte[sizeInBytes];
             int stride = sizeInBytes >> 3;
@@ -56,8 +56,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives.SHA3
         }
 
         private byte[] HashFinal () {
-            int sizeInBytes = GetByteLength();
-            byte[] outb = new byte[GetDigestSize()];
+            int sizeInBytes = ByteLength;
+            byte[] outb = new byte[DigestSize];
             //    padding
             if (buffer == null) buffer = new byte[sizeInBytes];
             else Array.Clear(buffer, BuffLength, sizeInBytes - BuffLength);
@@ -67,7 +67,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives.SHA3
             ulong[] utemps = new ulong[stride];
             Buffer.BlockCopy(buffer, 0, utemps, 0, sizeInBytes);
             KeccakF(utemps, stride);
-            Buffer.BlockCopy(State, 0, outb, 0, GetDigestSize());
+            Buffer.BlockCopy(State, 0, outb, 0, DigestSize);
             return outb;
         }
 
@@ -339,7 +339,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives.SHA3
         // Implemented abstract methods.
 
         public override void Update (byte input) {
-            int sizeInBytes = GetByteLength();
+            int sizeInBytes = ByteLength;
             if (buffer == null)
                 buffer = new byte[sizeInBytes];
             int stride = sizeInBytes >> 3;
@@ -366,7 +366,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives.SHA3
             Buffer.BlockCopy(hash, 0, output, outOff, hash.Length);
             Reset();
 
-            return GetDigestSize();
+            return DigestSize;
         }
     }
 }

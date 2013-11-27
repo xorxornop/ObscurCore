@@ -32,9 +32,9 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             this.cipher = cipher;
             this.blockSize = bitBlockSize / 8;
 
-            this.IV = new byte[cipher.GetBlockSize()];
-            this.cfbV = new byte[cipher.GetBlockSize()];
-            this.cfbOutV = new byte[cipher.GetBlockSize()];
+            this.IV = new byte[cipher.BlockSize];
+            this.cfbV = new byte[cipher.BlockSize];
+            this.cfbOutV = new byte[cipher.BlockSize];
         }
 
 		/**
@@ -93,12 +93,12 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         *
         * @return the block size we are operating at (in bytes).
         */
-        public int GetBlockSize()
-        {
-            return blockSize;
+
+        public int BlockSize {
+            get { return blockSize; }
         }
 
-		/**
+        /**
         * Process one block of input from the array in and write it to
         * the out array.
         *
@@ -179,7 +179,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         */
         public CfbBlockCipherMac(
             IBlockCipher cipher)
-			: this(cipher, 8, (cipher.GetBlockSize() * 8) / 2, null)
+			: this(cipher, 8, (cipher.BlockSize * 8) / 2, null)
 		{
 		}
 
@@ -194,7 +194,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         public CfbBlockCipherMac(
             IBlockCipher		cipher,
             IBlockCipherPadding	padding)
-			: this(cipher, 8, (cipher.GetBlockSize() * 8) / 2, padding)
+			: this(cipher, 8, (cipher.BlockSize * 8) / 2, padding)
 		{
 		}
 
@@ -244,13 +244,13 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             if ((macSizeInBits % 8) != 0)
                 throw new ArgumentException("MAC size must be multiple of 8");
 
-			mac = new byte[cipher.GetBlockSize()];
+			mac = new byte[cipher.BlockSize];
 
 			this.cipher = new MacCFBBlockCipher(cipher, cfbBitSize);
             this.padding = padding;
             this.macSize = macSizeInBits / 8;
 
-			Buffer = new byte[this.cipher.GetBlockSize()];
+			Buffer = new byte[this.cipher.BlockSize];
             bufOff = 0;
         }
 
@@ -267,12 +267,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			cipher.Init(true, parameters);
         }
 
-		public int GetMacSize()
-        {
-            return macSize;
-        }
+	    public int MacSize {
+	        get { return macSize; }
+	    }
 
-		public void Update(
+	    public void Update(
             byte input)
         {
             if (bufOff == Buffer.Length)
@@ -292,7 +291,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             if (len < 0)
                 throw new ArgumentException("Can't have a negative input length!");
 
-			int blockSize = cipher.GetBlockSize();
+			int blockSize = cipher.BlockSize;
             int resultLen = 0;
             int gapLen = blockSize - bufOff;
 
@@ -324,7 +323,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             byte[]	output,
             int		outOff)
         {
-            int blockSize = cipher.GetBlockSize();
+            int blockSize = cipher.BlockSize;
 
             // pad with zeroes
             if (this.padding == null)

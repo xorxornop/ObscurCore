@@ -7,25 +7,19 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
 	/// Generates deterministic cryptographically secure pseudorandom number sequence 
 	/// using internal Salsa20 stream cipher.
 	/// </summary>
-	public sealed class SOSEMANUKGenerator : StreamCSPRNG
+	public sealed class SosemanukGenerator : StreamCSPRNG
 	{
-		private readonly SOSEMANUKEngine _engine = new SOSEMANUKEngine();
-
-        public SOSEMANUKGenerator(StreamCipherCSPRNGConfiguration config) : base(config) {
-            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCiphers.SOSEMANUK, Config.Key,
+        public SosemanukGenerator(StreamCipherCSPRNGConfiguration config) : base(new SosemanukEngine(), config) {
+            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCipher.Sosemanuk, Config.Key,
                 Config.Nonce);
-            _engine.Init(true, cp);
+            Cipher.Init(true, cp);
         }
 
-        public SOSEMANUKGenerator(byte[] config) : base(config) {
-            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCiphers.SOSEMANUK, Config.Key,
+        public SosemanukGenerator(byte[] config) : base(new SosemanukEngine(), config) {
+            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCipher.Sosemanuk, Config.Key,
                 Config.Nonce);
-            _engine.Init(true, cp);
+            Cipher.Init(true, cp);
         }
-
-	    public override void NextBytes (byte[] buffer) {
-			_engine.GetRawKeystream (buffer, 0, buffer.Length);
-		}
 	}
 }
 

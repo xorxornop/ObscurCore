@@ -16,7 +16,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	* http://www.ecrypt.eu.org/stream/hcp3.html
 	* </p>
 	*/
-	public class HC128Engine
+	public class Hc128Engine
 		: IStreamCipher
 	{
 		private uint[] p = new uint[512];

@@ -21,10 +21,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
     public sealed class RabbitEngine : IStreamCipher
     {
         // Stores engine state
-        private byte[]          _workingKey     = null,
-                                _workingIV      = null;
+        private byte[]          _workingKey,
+                                _workingIV;
 
-        private bool	        _initialised    = false;
+        private bool	        _initialised;
         private readonly uint[] state              = new uint[8],
                                 counter              = new uint[8];
         private uint counterarry;
@@ -121,6 +121,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             Array.Copy(outTruncated, 0, outBytes, outOff, truncatedLen);
         }
 
+        /*
         /// <summary>
         /// Get raw keystream in a multiple of 16 bytes length.
         /// </summary>
@@ -138,6 +139,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
             return outBytes;
         }
+        */
 
         /// <summary>
         /// Initialise the engine state with key material.

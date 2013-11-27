@@ -176,22 +176,22 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			}
 		}
 
-		private byte lRot8(byte v, int rot)
+		private static byte lRot8(byte v, int rot)
 		{
 			return (byte)(((uint)v << rot) | ((uint)v >> (8 - rot)));
 		}
 
-		private uint sbox2(int x)
+		private static uint sbox2(int x)
 		{
 			return (uint)lRot8(SBOX1[x], 1);
 		}
 
-		private uint sbox3(int x)
+		private static uint sbox3(int x)
 		{
 			return (uint)lRot8(SBOX1[x], 7);
 		}
 
-		private uint sbox4(int x)
+		private static uint sbox4(int x)
 		{
 			return (uint)SBOX1[lRot8((byte)x, 1)];
 		}
@@ -532,12 +532,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			get { return false; }
 		}
 
-		public int GetBlockSize()
-		{
-			return BLOCK_SIZE;
-		}
+	    public int BlockSize {
+	        get { return BLOCK_SIZE; }
+	    }
 
-		public void Init(
+	    public void Init(
 			bool				forEncryption,
 			ICipherParameters	parameters)
 		{

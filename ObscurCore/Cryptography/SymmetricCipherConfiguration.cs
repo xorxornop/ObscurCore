@@ -22,38 +22,33 @@ namespace ObscurCore.Cryptography
 {
     public static class SymmetricCipherConfigurationFactory
     {
-        public static SymmetricCipherConfiguration CreateBlockCipherConfiguration(SymmetricBlockCiphers cipher,
-                                                                                  BlockCipherModes mode,
-                                                                                  BlockCipherPaddings padding,
-                                                                                  int? blockSize = null,
-                                                                                  int? keySize = null)
+        public static SymmetricCipherConfiguration CreateBlockCipherConfigurationWithoutKey(SymmetricBlockCipher cipher,
+            BlockCipherMode mode, BlockCipherPadding padding, int? keySize = null, int? blockSize = null)
+        
         {
-
-            var config = new SymmetricCipherConfiguration {Type = SymmetricCipherType.Block};
+            var config = new SymmetricCipherConfiguration { Type = SymmetricCipherType.Block };
 
             // Set the key size
-            int keySizeNonNull = keySize ?? Athena.Cryptography.BlockCipherDirectory[cipher].DefaultKeySize;
-            if (Athena.Cryptography.BlockCipherDirectory[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
+            var keySizeNonNull = keySize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultKeySize;
+            if (Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
                 config.KeySize = keySizeNonNull;
             } else {
                 throw new KeySizeException(keySizeNonNull,
-                    Athena.Cryptography.BlockCipherDirectory[cipher].DisplayName + " specification");
+                    Athena.Cryptography.BlockCiphers[cipher].DisplayName + " specification");
             }
-            config.Key = new byte[config.KeySize / 8];
 
              // Set the block size
-            var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCipherDirectory[cipher].DefaultBlockSize;
-            // TODO: Add in a section to handle MAC and block sizes seperately.
-            if (Athena.Cryptography.BlockCipherDirectory[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
+            var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize;
+            if (Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
                 config.BlockSize = blockSizeNonNull;
             } else {
                 throw new BlockSizeException(blockSizeNonNull,
-                    Athena.Cryptography.BlockCipherDirectory[cipher].DisplayName + " specification");
+                    Athena.Cryptography.BlockCiphers[cipher].DisplayName + " specification");
             }
 
             // Set the mode
-            if (Athena.Cryptography.BlockCipherModeDirectory[mode].PaddingRequirement == PaddingRequirements.Always &&
-                padding == BlockCipherPaddings.None)
+            if (Athena.Cryptography.BlockCipherModes[mode].PaddingRequirement == PaddingRequirement.Always &&
+                padding == BlockCipherPadding.None)
             {
                 // TODO: Refine my logic!
                 throw new ArgumentException(mode +
@@ -64,65 +59,59 @@ namespace ObscurCore.Cryptography
             config.PaddingName = padding.ToString();
             config.CipherName = cipher.ToString();
 
-            // TODO: Review this code, make more resource efficient.
             config.IV = new byte[config.BlockSize / 8];
             StratCom.EntropySource.NextBytes(config.IV);
 
             return config;
         }
 
-        public static SymmetricCipherConfiguration CreateAEADBlockCipherConfiguration(SymmetricBlockCiphers cipher,
-                                                                                      AEADBlockCipherModes mode,
-                                                                                      BlockCipherPaddings padding =
-                                                                                          BlockCipherPaddings.None,
-                                                                                      int? keySize = null,
-                                                                                      int? blockSize = null,
-                                                                                      int? macSize = null)
+        public static SymmetricCipherConfiguration CreateBlockCipherConfiguration(SymmetricBlockCipher cipher, 
+            BlockCipherMode mode, BlockCipherPadding padding, int? keySize = null, int? blockSize = null)
         {
+            var config = CreateBlockCipherConfigurationWithoutKey(cipher, mode, padding, keySize, blockSize);
+            config.Key = new byte[config.KeySize / 8];
+            StratCom.EntropySource.NextBytes(config.Key);
 
+            return config;
+        }
+
+        public static SymmetricCipherConfiguration CreateAeadBlockCipherConfigurationWithoutKey(SymmetricBlockCipher cipher,
+            AeadBlockCipherMode mode, int? keySize = null, int? blockSize = null, int? macSize = null)
+        {
             var config = new SymmetricCipherConfiguration {Type = SymmetricCipherType.AEAD};
 
             // Set the key size
-            int keySizeNonNull = keySize ?? Athena.Cryptography.BlockCipherDirectory[cipher].DefaultKeySize;
-            if (Athena.Cryptography.BlockCipherDirectory[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
+            int keySizeNonNull = keySize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultKeySize;
+            if (Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
                 config.KeySize = keySizeNonNull;
             } else {
                 throw new KeySizeException(keySizeNonNull,
-                    Athena.Cryptography.BlockCipherDirectory[cipher].DisplayName + " specification");
+                    Athena.Cryptography.BlockCiphers[cipher].DisplayName + " specification");
             }
-            config.Key = new byte[config.KeySize / 8];
 
             // Set the block size
-            var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCipherDirectory[cipher].DefaultBlockSize;
+            var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize;
             // TODO: Add in a section to handle MAC and block sizes seperately.
-            if (Athena.Cryptography.BlockCipherDirectory[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
+            if (Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
                 config.BlockSize = blockSizeNonNull;
             } else {
                 throw new BlockSizeException(blockSizeNonNull,
-                    Athena.Cryptography.BlockCipherDirectory[cipher].DisplayName + " specification");
+                    Athena.Cryptography.BlockCiphers[cipher].DisplayName + " specification");
             }
 
             // Set the mode
-            if (Athena.Cryptography.AEADBlockCipherModeDirectory[mode].PaddingRequirement == PaddingRequirements.Always &&
-                padding == BlockCipherPaddings.None) // TODO: Refine my logic!
-            {
-                throw new ArgumentException(mode +
-                    " mode must be used with padding or errors will occur when plaintext length is not equal to or a multiple of the block size.");
-            }
             // Check if the AEAD mode supports the block size
             int macSizeNonNull = macSize ?? config.BlockSize;
-            if (!Athena.Cryptography.AEADBlockCipherModeDirectory[mode].AllowableBlockSizes.Contains(-1))
-            {
-                if (Athena.Cryptography.AEADBlockCipherModeDirectory[mode].AllowableBlockSizes.Contains(config.BlockSize))
-                    config.MACSize = macSizeNonNull;
+            if (!Athena.Cryptography.AeadBlockCipherModes[mode].AllowableBlockSizes.Contains(-1)) {
+                if (Athena.Cryptography.AeadBlockCipherModes[mode].AllowableBlockSizes.Contains(config.BlockSize))
+                    config.MacSize = macSizeNonNull;
                 else
                     throw new MACSizeException(macSizeNonNull,
-                        Athena.Cryptography.AEADBlockCipherModeDirectory[mode].DisplayName +
+                        Athena.Cryptography.AeadBlockCipherModes[mode].DisplayName +
                             " specification");
             }
 
             config.ModeName = mode.ToString();
-            config.PaddingName = padding.ToString();
             config.CipherName = cipher.ToString();
             // TODO: Review this code, make more resource efficient.
             config.IV = new byte[config.BlockSize / 8]; // Nonce in AEAD
@@ -131,22 +120,36 @@ namespace ObscurCore.Cryptography
             return config;
         }
 
-        public static SymmetricCipherConfiguration CreateStreamCipherConfiguration(SymmetricStreamCiphers cipher,
-                                                                                   int? keySize = null)
+        public static SymmetricCipherConfiguration CreateAeadBlockCipherConfiguration(SymmetricBlockCipher cipher,
+            AeadBlockCipherMode mode, BlockCipherPadding padding, int? keySize = null, int? blockSize = null, int? macSize = null) 
+        {
+            var config = CreateAeadBlockCipherConfigurationWithoutKey(cipher, mode, keySize, blockSize, macSize);
+            config.Key = new byte[config.KeySize / 8];
+            StratCom.EntropySource.NextBytes(config.Key);
+
+            return config;
+        }
+
+        public static SymmetricCipherConfiguration CreateStreamCipherConfiguration(SymmetricStreamCipher cipher) {
+            return CreateStreamCipherConfiguration(cipher, null);
+        }
+
+        public static SymmetricCipherConfiguration CreateStreamCipherConfiguration(SymmetricStreamCipher cipher,
+                                                                                   int? keySize)
         {
             var config = new SymmetricCipherConfiguration {Type = SymmetricCipherType.Stream};
 
-            var keySizeNonNull = keySize ?? Athena.Cryptography.StreamCipherDirectory[cipher].DefaultKeySize;
-            if (Athena.Cryptography.StreamCipherDirectory[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
+            var keySizeNonNull = keySize ?? Athena.Cryptography.StreamCiphers[cipher].DefaultKeySize;
+            if (Athena.Cryptography.StreamCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
                 config.KeySize = keySizeNonNull;
             } else {
                 throw new KeySizeException(keySizeNonNull,
-                    Athena.Cryptography.StreamCipherDirectory[cipher].DisplayName + " specification");
+                    Athena.Cryptography.StreamCiphers[cipher].DisplayName + " specification");
             }
             config.Key = new byte[config.KeySize / 8];
             config.CipherName = cipher.ToString();
-            if(Athena.Cryptography.StreamCipherDirectory[cipher].DefaultIVSize != -1) 
-                config.IV = new byte[Athena.Cryptography.StreamCipherDirectory[cipher].DefaultIVSize / 8];
+            if(Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize != -1) 
+                config.IV = new byte[Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize / 8];
 
             StratCom.EntropySource.NextBytes(config.IV);
 
@@ -156,18 +159,22 @@ namespace ObscurCore.Cryptography
 
     public abstract class SymmetricCipherConfigurationWrapper
     {
-        protected SymmetricCipherConfiguration Config;
+        private SymmetricCipherConfiguration _config;
+
+        protected internal SymmetricCipherConfiguration Config {
+            get { return _config; }
+        }
 
         public int KeySize
         {
-            get { return Config.KeySize; }
-            set { Config.KeySize = value; }
+            get { return _config.KeySize; }
+            set { _config.KeySize = value; }
         }
 
         public byte[] Key
         {
-            get { return Config.Key; }
-            set { Config.Key = value; }
+            get { return _config.Key; }
+            set { _config.Key = value; }
         }
 
         public override string ToString()
@@ -183,18 +190,18 @@ namespace ObscurCore.Cryptography
         /// <summary>
         /// Name of the cryptographic block cipher transform being used e.g. AES, Blowfish, etc.
         /// </summary>
-        public SymmetricBlockCiphers BlockCipher
+        public SymmetricBlockCipher BlockCipher
         {
-            get { return Config.CipherName.ToEnum<SymmetricBlockCiphers>(); }
+            get { return Config.CipherName.ToEnum<SymmetricBlockCipher>(); }
             set { Config.CipherName = value.ToString(); }
         }
 
         /// <summary>
         /// Mode of operation of the block cipher being used, e.g. CBC, CTR, OFB, etc.
         /// </summary>
-        public BlockCipherModes Mode
+        public BlockCipherMode Mode
         {
-            get { return Config.ModeName.ToEnum<BlockCipherModes>(); }
+            get { return Config.ModeName.ToEnum<BlockCipherMode>(); }
             set { Config.ModeName = value.ToString(); }
         }
 
@@ -203,22 +210,22 @@ namespace ObscurCore.Cryptography
         /// What any unused space in a block is filled with. 
         /// Set to empty if using block cipher in streaming mode.
         /// </summary>
-        public BlockCipherPaddings Padding
+        public BlockCipherPadding Padding
         {
-            get { return Config.PaddingName.ToEnum<BlockCipherPaddings>(); }
+            get { return Config.PaddingName.ToEnum<BlockCipherPadding>(); }
             set { Config.PaddingName = value.ToString(); }
         }
 
         public int BlockSize
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get { return Config.BlockSize; }
+            set { Config.BlockSize = value; }
         }
 
         public byte[] IV
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get { return Config.IV; }
+            set { Config.IV = value; }
         }
 
         /// <summary>
@@ -228,11 +235,11 @@ namespace ObscurCore.Cryptography
         /// <returns></returns>
         public override string ToString(bool includeValues)
         {
-            string cipher = Athena.Cryptography.BlockCipherDirectory[BlockCipher].DisplayName;
-            string mode = Athena.Cryptography.BlockCipherModeDirectory[Mode].DisplayName;
-            string padding = Padding == BlockCipherPaddings.None
+            string cipher = Athena.Cryptography.BlockCiphers[BlockCipher].DisplayName;
+            string mode = Athena.Cryptography.BlockCipherModes[Mode].DisplayName;
+            string padding = Padding == BlockCipherPadding.None
                 ? "None"
-                : Athena.Cryptography.BlockCipherPaddingDirectory[Padding].DisplayName;
+                : Athena.Cryptography.BlockCipherPaddings[Padding].DisplayName;
             if (includeValues)
             {
                 string hexIV = IV.ToHexString();
@@ -253,18 +260,18 @@ namespace ObscurCore.Cryptography
         /// <summary>
         /// Name of the cryptographic block cipher transform being used e.g. AES, Blowfish, etc.
         /// </summary>
-        public SymmetricBlockCiphers BlockCipher
+        public SymmetricBlockCipher BlockCipher
         {
-            get { return Config.CipherName.ToEnum<SymmetricBlockCiphers>(); }
+            get { return Config.CipherName.ToEnum<SymmetricBlockCipher>(); }
             set { Config.CipherName = value.ToString(); }
         }
 
         /// <summary>
         /// Mode of the authenticated symmetric cipher mode being used, either GCM or CCM.
         /// </summary>
-        public AEADBlockCipherModes Mode
+        public AeadBlockCipherMode Mode
         {
-            get { return Config.ModeName.ToEnum<AEADBlockCipherModes>(); }
+            get { return Config.ModeName.ToEnum<AeadBlockCipherMode>(); }
             set { Config.ModeName = value.ToString(); }
         }
 
@@ -283,10 +290,10 @@ namespace ObscurCore.Cryptography
             set { Config.IV = value; }
         }
 
-        public int MACSize
+        public int MacSize
         {
-            get { return Config.MACSize; }
-            set { Config.MACSize = value; }
+            get { return Config.MacSize; }
+            set { Config.MacSize = value; }
         }
 
         public byte[] AssociatedData
@@ -297,8 +304,8 @@ namespace ObscurCore.Cryptography
 
         public override string ToString(bool includeValues)
         {
-            string cipher = Athena.Cryptography.BlockCipherDirectory[BlockCipher].DisplayName;
-            string mode = Athena.Cryptography.AEADBlockCipherModeDirectory[Mode].DisplayName;
+            string cipher = Athena.Cryptography.BlockCiphers[BlockCipher].DisplayName;
+            string mode = Athena.Cryptography.AeadBlockCipherModes[Mode].DisplayName;
             //string padding = Padding == BlockCipherPaddings.None ? 
             //"None" : Athena.Cryptography.BlockCipherPaddingDirectory[Padding].DisplayName;
             if (includeValues)
@@ -309,12 +316,12 @@ namespace ObscurCore.Cryptography
                     "Block size, bits: {3}\nMode: {4}\nPadding: {5}\n" +
                     "MAC size: {6}\nNonce, hex: {7}\nAssociated data, hex: {8}",
                     SymmetricCipherType.AEAD, cipher, KeySize, Config.BlockSize, mode, "N/A",
-                    Config.MACSize == 0 ? "n/a" : Config.MACSize.ToString(), hexNonce, hexAD);
+                    Config.MacSize == 0 ? "n/a" : Config.MacSize.ToString(), hexNonce, hexAD);
             }
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                 "Block size, bits: {3}\nMode: {4}\nPadding: {5}\nMAC size: {6}",
                 SymmetricCipherType.AEAD, cipher, KeySize, Config.BlockSize, mode, "N/A",
-                Config.MACSize == 0 ? "n/a" : Config.MACSize.ToString());
+                Config.MacSize == 0 ? "n/a" : Config.MacSize.ToString());
         }
     }
 
@@ -324,9 +331,9 @@ namespace ObscurCore.Cryptography
         /// <summary>
         /// Name of the cryptographic stream cipher transform being used e.g. Salsa20, VMPC, etc.
         /// </summary>
-        public SymmetricStreamCiphers StreamCipherName
+        public SymmetricStreamCipher StreamCipherName
         {
-            get { return Config.CipherName.ToEnum<SymmetricStreamCiphers>(); }
+            get { return Config.CipherName.ToEnum<SymmetricStreamCipher>(); }
             set { Config.CipherName = value.ToString(); }
         }
 

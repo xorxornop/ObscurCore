@@ -22,29 +22,29 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 
 			switch (functionType) {
 			    case VerificationFunctionType.KDF:
-			        validator = (key) => Source.DeriveKeyWithKDF (keyConfirmation.FunctionName.ToEnum<KeyDerivationFunctions> (), 
+			        validator = (key) => Source.DeriveKeyWithKdf (keyConfirmation.FunctionName.ToEnum<KeyDerivationFunction> (), 
 			            key, keyConfirmation.Salt, keyConfirmation.VerifiedOutput.Length, keyConfirmation.FunctionConfiguration);
 			        break;
 			    case VerificationFunctionType.MAC:
 			        validator = (key) => {
-			            var macF = Source.CreateMACPrimitive (keyConfirmation.FunctionName.ToEnum<MACFunctions> (), key, 
+			            var macF = Source.CreateMacPrimitive (keyConfirmation.FunctionName.ToEnum<MacFunction> (), key, 
 			                keyConfirmation.Salt, keyConfirmation.FunctionConfiguration);
 			            if(keyConfirmation.AdditionalData != null) 
 			                macF.BlockUpdate (keyConfirmation.AdditionalData, 0, keyConfirmation.AdditionalData.Length);
-			            var output = new byte[macF.GetMacSize ()];
+			            var output = new byte[macF.MacSize];
 			            macF.DoFinal (output, 0);
 			            return output;
 			        };
 			        break;
 			    case VerificationFunctionType.Digest:
 			        validator = (key) => {
-			            var hashF = Source.CreateHashPrimitive (keyConfirmation.FunctionName.ToEnum<HashFunctions> ());
+			            var hashF = Source.CreateHashPrimitive (keyConfirmation.FunctionName.ToEnum<HashFunction> ());
 			            if(keyConfirmation.Salt != null) 
 			                hashF.BlockUpdate (keyConfirmation.Salt, 0, keyConfirmation.Salt.Length);
 			            if(keyConfirmation.AdditionalData != null) 
 			                hashF.BlockUpdate (keyConfirmation.AdditionalData, 0, keyConfirmation.AdditionalData.Length);
 			            hashF.BlockUpdate (key, 0, key.Length);
-			            var output = new byte[hashF.GetDigestSize ()];
+			            var output = new byte[hashF.DigestSize];
 			            hashF.DoFinal (output, 0);
 			            return output;
 			        };
@@ -77,15 +77,15 @@ namespace ObscurCore.Cryptography.KeyConfirmation
             // See which mode (by-sender / by-recipient) is better to run in parallel
             if (viableSenderKeys.Count > viableRecipientKeys.Count) {
                 Parallel.ForEach(viableSenderKeys, (sKey, state) =>
-                {
-                    foreach (var rKey in viableRecipientKeys) {
-                        var ss = um1SecretFunc(sKey, rKey);
-                        var validationOut = validator(ss);
-                        if (validationOut == null) continue;
-                        preKey = validationOut;
-                        state.Stop();
-                    }
-                });
+                    {
+                        foreach (var rKey in viableRecipientKeys) {
+                            var ss = um1SecretFunc(sKey, rKey);
+                            var validationOut = validator(ss);
+                            if (validationOut == null) continue;
+                            preKey = validationOut;
+                            state.Stop();
+                        }
+                    });
             } else {
                 Parallel.ForEach(viableRecipientKeys, (rKey, state) =>
                 {
@@ -166,7 +166,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 
         public static VerificationFunctionConfiguration CreateDefaultManifestKeyConfirmation(byte[] key) {
             const VerificationFunctionType functionType = VerificationFunctionType.MAC;
-            const MACFunctions macF = MACFunctions.BLAKE2B256;
+            const MacFunction macF = MacFunction.Blake2B256;
             const int saltSize = 16;
 
             var config = new VerificationFunctionConfiguration
@@ -186,25 +186,25 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 
             switch (functionType) {
                 case VerificationFunctionType.Digest:
-                    var hashP = Source.CreateHashPrimitive(config.FunctionName.ToEnum<HashFunctions>());
+                    var hashP = Source.CreateHashPrimitive(config.FunctionName.ToEnum<HashFunction>());
 
                     if (config.Salt != null) hashP.BlockUpdate(config.Salt, 0, config.Salt.Length);
                     if (config.AdditionalData != null) hashP.BlockUpdate(config.AdditionalData, 0, config.AdditionalData.Length);
 
                     hashP.BlockUpdate(key, 0, key.Length);
-                    config.VerifiedOutput = new byte[hashP.GetDigestSize()];
+                    config.VerifiedOutput = new byte[hashP.DigestSize];
                     hashP.DoFinal(config.VerifiedOutput, 0);
                     break;
                 case VerificationFunctionType.MAC:
-                    var macP = Source.CreateMACPrimitive(config.FunctionName.ToEnum<MACFunctions>(), key, config.Salt,
+                    var macP = Source.CreateMacPrimitive(config.FunctionName.ToEnum<MacFunction>(), key, config.Salt,
                         config.FunctionConfiguration);
                     if (config.AdditionalData != null) macP.BlockUpdate(config.AdditionalData, 0, config.AdditionalData.Length);
 
-                    config.VerifiedOutput = new byte[macP.GetMacSize()];
+                    config.VerifiedOutput = new byte[macP.MacSize];
                     macP.DoFinal(config.VerifiedOutput, 0);
                     break;
                 case VerificationFunctionType.KDF:
-                    config.VerifiedOutput = Source.DeriveKeyWithKDF(config.FunctionName.ToEnum<KeyDerivationFunctions>(), key,
+                    config.VerifiedOutput = Source.DeriveKeyWithKdf(config.FunctionName.ToEnum<KeyDerivationFunction>(), key,
                         config.Salt,
                         256, config.FunctionConfiguration);
                     break;

@@ -10,22 +10,16 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
     /// </summary>
     public sealed class Salsa20Generator : StreamCSPRNG
     {
-        private readonly Salsa20Engine _engine = new Salsa20Engine();
-		
-		public Salsa20Generator(StreamCipherCSPRNGConfiguration config) : base(config) {
-            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCiphers.Salsa20, Config.Key,
+		public Salsa20Generator(StreamCipherCSPRNGConfiguration config) : base(new Salsa20Engine(), config) {
+            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCipher.Salsa20, Config.Key,
                 Config.Nonce);
-            _engine.Init(true, cp);
+            Cipher.Init(true, cp);
         }
 
-        public Salsa20Generator(byte[] config) : base(config) {
-            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCiphers.Salsa20, Config.Key,
+        public Salsa20Generator(byte[] config) : base(new Salsa20Engine(), config) {
+            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCipher.Salsa20, Config.Key,
                 Config.Nonce);
-            _engine.Init(true, cp);
-        }
-
-        public override void NextBytes (byte[] buffer) {
-            _engine.ProcessBytes(new byte[buffer.Length], 0, buffer.Length, buffer, 0);
+            Cipher.Init(true, cp);
         }
     }
 }

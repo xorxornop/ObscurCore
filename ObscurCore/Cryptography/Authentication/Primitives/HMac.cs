@@ -26,8 +26,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             IDigest digest)
         {
             this.digest = digest;
-            this.digestSize = digest.GetDigestSize();
-            this.blockLength = digest.GetByteLength();
+            this.digestSize = digest.DigestSize;
+            this.blockLength = digest.ByteLength;
             this.inputPad = new byte[blockLength];
             this.outputPad = new byte[blockLength];
         }
@@ -37,9 +37,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             get { return digest.AlgorithmName + "/HMAC"; }
         }
 
-		public IDigest GetUnderlyingDigest()
-        {
-            return digest;
+        public IDigest UnderlyingDigest {
+            get { return digest; }
         }
 
         public void Init(ICipherParameters parameters)
@@ -71,9 +70,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			digest.BlockUpdate(inputPad, 0, inputPad.Length);
         }
 
-        public int GetMacSize()
-        {
-            return digestSize;
+        public int MacSize {
+            get { return digestSize; }
         }
 
         public void Update(
@@ -94,7 +92,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             byte[] output,
             int outOff)
         {
-            byte[] tmp = new byte[digestSize];
+            var tmp = new byte[digestSize];
             digest.DoFinal(tmp, 0);
 
             digest.BlockUpdate(outputPad, 0, outputPad.Length);

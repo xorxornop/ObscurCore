@@ -23,7 +23,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 		public SicBlockCipher(IBlockCipher cipher)
 		{
 			this.cipher = cipher;
-			this.blockSize = cipher.GetBlockSize();
+			this.blockSize = cipher.BlockSize;
 			this.IV = new byte[blockSize];
 			this.counter = new byte[blockSize];
 			this.counterOut = new byte[blockSize];
@@ -34,12 +34,12 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 		*
 		* @return the underlying block cipher that we are wrapping.
 		*/
-		public IBlockCipher GetUnderlyingCipher()
-		{
-			return cipher;
-		}
 
-		public void Init(
+	    public IBlockCipher UnderlyingCipher {
+	        get { return cipher; }
+	    }
+
+	    public void Init(
 			bool				forEncryption, //ignored by this CTR mode
 			ICipherParameters	parameters)
 		{
@@ -68,12 +68,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 			get { return true; }
 		}
 
-		public int GetBlockSize()
-		{
-			return cipher.GetBlockSize();
-		}
+	    public int BlockSize {
+	        get { return cipher.BlockSize; }
+	    }
 
-		public int ProcessBlock(
+	    public int ProcessBlock(
 			byte[]	input,
 			int		inOff,
 			byte[]	output,

@@ -44,12 +44,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			get { return false; }
 		}
 
-		public virtual int GetBlockSize()
-        {
-            return BLOCK_SIZE;
-        }
+	    public virtual int BlockSize {
+	        get { return BLOCK_SIZE; }
+	    }
 
-        public virtual int ProcessBlock(
+	    public virtual int ProcessBlock(
             byte[]	input,
             int		inOff,
             byte[]	output,

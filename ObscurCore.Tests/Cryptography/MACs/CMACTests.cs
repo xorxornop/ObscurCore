@@ -10,7 +10,7 @@ namespace ObscurCore.Tests.Cryptography.MACs
 {
     class CMACTests : MACTestBase
     {
-        const MACFunctions function = MACFunctions.CMAC;
+        const MacFunction function = MacFunction.Cmac;
 
         public CMACTests() {
             SetRandomFixtureParameters(128);
@@ -18,27 +18,27 @@ namespace ObscurCore.Tests.Cryptography.MACs
 
         [Test]
         public void CMAC_AES () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.AES.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Aes.ToString()));
         }
 
         [Test]
         public void CMAC_Blowfish () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.Blowfish.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Blowfish.ToString()));
         }
 
         [Test]
         public void CMAC_Camellia () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.Camellia.ToString()), null, CreateRandomBytes(256));
+            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Camellia.ToString()), null, CreateRandomBytes(256));
         }
 
         [Test]
         public void CMAC_CAST5 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.CAST5.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Cast5.ToString()));
         }
 
         [Test]
         public void CMAC_CAST6 () {
-             RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.CAST6.ToString()), null, CreateRandomBytes(256));
+             RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Cast6.ToString()), null, CreateRandomBytes(256));
         }
 #if(INCLUDE_GOST28147)
         [Test]
@@ -48,17 +48,17 @@ namespace ObscurCore.Tests.Cryptography.MACs
 #endif
         [Test]
         public void CMAC_IDEA () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.CAST5.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Cast5.ToString()));
         }
 
         [Test]
         public void CMAC_NOEKEON () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.CAST5.ToString()));
+            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Cast5.ToString()));
         }
 
         [Test]
         public void CMAC_RC6 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.CAST5.ToString()), null, CreateRandomBytes(256));
+            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Cast5.ToString()), null, CreateRandomBytes(256));
         }
 #if(INCLUDE_RIJNDAEL)
         [Test]
@@ -68,17 +68,17 @@ namespace ObscurCore.Tests.Cryptography.MACs
 #endif
         [Test]
         public void CMAC_Serpent () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.CAST5.ToString()), null, CreateRandomBytes(256));
+            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Cast5.ToString()), null, CreateRandomBytes(256));
         }
 
         [Test]
         public void CMAC_TripleDES () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.CAST5.ToString()), null, CreateRandomBytes(192));
+            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Cast5.ToString()), null, CreateRandomBytes(192));
         }
 
         [Test]
         public void CMAC_Twofish () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.CAST5.ToString()), null, CreateRandomBytes(256));
+            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Cast5.ToString()), null, CreateRandomBytes(256));
         }
     }
 }

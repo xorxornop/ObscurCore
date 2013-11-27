@@ -40,11 +40,11 @@ namespace ObscurCore
 		}
 
 
-		protected bool Disposed;
+		private bool _disposed;
 
-		protected readonly bool DirectionalityEnforced;
-		protected bool Finished;
-		protected readonly bool CloseOnDispose;
+		private readonly bool _directionalityEnforced;
+        private bool _finished;
+		private readonly bool _closeOnDispose;
 
 		/// <summary>
 		/// Set this field in the constructor of a derived class to indicate how much data the base stream 
@@ -63,8 +63,8 @@ namespace ObscurCore
 
 		protected DecoratingStream (bool writing, bool closeOnDispose, bool enforce = true) {
 			Writing = writing;
-			CloseOnDispose = closeOnDispose;
-			DirectionalityEnforced = enforce;
+			_closeOnDispose = closeOnDispose;
+			_directionalityEnforced = enforce;
 		}
 
 		/// <summary>
@@ -117,11 +117,11 @@ namespace ObscurCore
 		}
 
 		public override bool CanRead {
-			get { return DirectionalityEnforced ? !Writing && Binding.CanRead : Binding.CanRead; }
+			get { return _directionalityEnforced ? !Writing && Binding.CanRead : Binding.CanRead; }
 		}
 
 		public override bool CanWrite {
-			get { return DirectionalityEnforced ? Writing && Binding.CanWrite : Binding.CanWrite; }
+			get { return _directionalityEnforced ? Writing && Binding.CanWrite : Binding.CanWrite; }
 		}
 
 		public override bool CanSeek {
@@ -142,7 +142,11 @@ namespace ObscurCore
 			}
 		}
 
-		public override long Seek (long offset, SeekOrigin origin) {
+        protected internal bool Finished {
+            get { return _finished; }
+        }
+
+        public override long Seek (long offset, SeekOrigin origin) {
 			return Binding.Seek (offset, origin);
 		}
 
@@ -160,10 +164,10 @@ namespace ObscurCore
 		/// Could be done before a close or reset.
 		/// </summary>
 		protected virtual void Finish() {
-			if (Finished)
+			if (_finished)
 				return;
 			// Nothing here
-			Finished = true;
+			_finished = true;
 		}
 
         /// <summary>
@@ -182,15 +186,15 @@ namespace ObscurCore
 			if (finish) Finish ();
 			BytesIn = 0;
 			BytesOut = 0;
-			Finished = false;
+			_finished = false;
 		}
 
 		protected void CheckIfDisposed() {
-			if (Disposed) throw new ObjectDisposedException(GetType().Name);
+			if (_disposed) throw new ObjectDisposedException(GetType().Name);
 		}
 
 		protected void CheckIfAllowed(bool writing) {
-			if (!DirectionalityEnforced) return;
+			if (!_directionalityEnforced) return;
 			if (Writing && !writing) throw new InvalidOperationException(NotInfluxError);
 			else if (!Writing && writing) throw new InvalidOperationException(NotEffluxError);
 		}
@@ -202,17 +206,17 @@ namespace ObscurCore
 
 		protected override void Dispose (bool disposing) {
 			try {
-				if (!Disposed) {
+				if (!_disposed) {
 					if (disposing) {
 						// dispose managed resources
 						Finish ();
-						if(this.Binding != null && CloseOnDispose) {
+						if(this.Binding != null && _closeOnDispose) {
 							this.Binding.Close ();
 						}
 						this.Binding = null;
 					}
 				}
-				Disposed = true;
+				_disposed = true;
 			}
 			finally {
 				if(this.Binding != null) {

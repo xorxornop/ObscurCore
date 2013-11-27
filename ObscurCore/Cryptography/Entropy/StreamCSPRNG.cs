@@ -13,6 +13,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System;
 using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.DTO;
 
@@ -20,27 +21,49 @@ namespace ObscurCore.Cryptography.Entropy
 {
     public abstract class StreamCSPRNG : CSPRNG
     {
-        protected IStreamCipher Cipher;
-        protected StreamCipherCSPRNGConfiguration Config;
+        protected readonly ICsprngCompatible Csprng;
+        private readonly StreamCipherCSPRNGConfiguration _config;
 
-        protected StreamCSPRNG(StreamCipherCSPRNGConfiguration config) {
-            Config = config;
+        protected StreamCSPRNG(IStreamCipher cipher, StreamCipherCSPRNGConfiguration config) {
+            Csprng = cipher as ICsprngCompatible;
+            if (Csprng == null) {
+                throw new ArgumentException();
+            }
+            _config = config;
         }
 
-        protected StreamCSPRNG(byte[] configBytes) {
-            var config = StratCom.DeserialiseDTO<StreamCipherCSPRNGConfiguration>(configBytes);
-            Config = config;
+        protected StreamCSPRNG(IStreamCipher cipher, byte[] configBytes) {
+            Csprng = cipher as ICsprngCompatible;
+            if (Csprng == null) {
+                throw new ArgumentException();
+            }
+
+            _config = StratCom.DeserialiseDTO<StreamCipherCSPRNGConfiguration>(configBytes);
         }
 
-        public static StreamCipherCSPRNGConfiguration CreateRandomConfiguration(CSPRNumberGenerators csprng) {
-            var cipherEnum = csprng.ToString().ToEnum<SymmetricStreamCiphers>();
+        protected internal IStreamCipher Cipher {
+            get { return Csprng as IStreamCipher; }
+        }
+
+        protected internal StreamCipherCSPRNGConfiguration Config {
+            get { return _config; }
+        }
+
+        public static StreamCipherCSPRNGConfiguration CreateRandomConfiguration(CsPseudorandomNumberGenerator csprng) {
+            var cipherEnum = csprng.ToString().ToEnum<SymmetricStreamCipher>();
             var config = new StreamCipherCSPRNGConfiguration()
                 {
                     CipherName = csprng.ToString(),
-                    Key = new byte[Athena.Cryptography.StreamCipherDirectory[cipherEnum].DefaultKeySize / 8],
-                    Nonce = new byte[Athena.Cryptography.StreamCipherDirectory[cipherEnum].DefaultIVSize / 8]
+                    Key = new byte[Athena.Cryptography.StreamCiphers[cipherEnum].DefaultKeySize / 8],
+                    Nonce = new byte[Athena.Cryptography.StreamCiphers[cipherEnum].DefaultIvSize / 8]
                 };
+            StratCom.EntropySource.NextBytes(config.Key);
+            StratCom.EntropySource.NextBytes(config.Nonce);
             return config;
         }
+
+        public override void NextBytes (byte[] buffer) {
+			Csprng.GetKeystream (buffer, 0, buffer.Length);
+		}
     }
 }

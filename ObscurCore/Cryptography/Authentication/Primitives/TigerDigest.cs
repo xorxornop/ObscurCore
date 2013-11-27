@@ -588,17 +588,15 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			get { return "Tiger"; }
 		}
 
-		public int GetDigestSize()
-		{
-			return DigestLength;
-		}
+        public int DigestSize {
+            get { return DigestLength; }
+        }
 
-		public int GetByteLength()
-		{
-			return MyByteLength;
-		}
+        public int ByteLength {
+            get { return MyByteLength; }
+        }
 
-		private void ProcessWord(
+        private void ProcessWord(
             byte[]  b,
             int     off)
         {
@@ -788,7 +786,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             }
         }
 
-        private void UnpackWord(
+        private static void UnpackWord(
             long    r,
             byte[]  output,
             int     outOff)

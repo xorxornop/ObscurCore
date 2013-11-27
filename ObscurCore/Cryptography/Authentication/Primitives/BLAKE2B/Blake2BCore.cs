@@ -4,13 +4,13 @@ namespace ObscurCore.Cryptography.Authentication.Primitives.BLAKE2B
 {
 	public sealed partial class Blake2BCore
 	{
-		private bool _isInitialized = false;
+		private bool _isInitialized;
 		
 		private int _bufferFilled;
-		private byte[] _buf = new byte[128];
+		private readonly byte[] _buf = new byte[128];
 		
-		private ulong[] _m = new ulong[16];
-		private ulong[] _h = new ulong[8];
+		private readonly ulong[] _m = new ulong[16];
+		private readonly ulong[] _h = new ulong[8];
 		private ulong _counter0;
 		private ulong _counter1;
 		private ulong _finalizationFlag0;

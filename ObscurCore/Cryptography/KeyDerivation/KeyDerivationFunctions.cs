@@ -19,52 +19,11 @@ using ObscurCore.Cryptography.KeyDerivation.Primitives;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.KeyDerivation
-{	
-	public interface IKDFModule
-	{
-		/// <summary>
-		/// Derives a key using the object instance configuration.
-		/// </summary>
-		/// <returns>The derived key.</returns>
-		/// <param name="key">Pre-key material to derive working key from.</param>
-		/// <param name="salt">Salt to apply in the derivation process.</param>
-		byte[] DeriveKey(byte[] key, byte[] salt);
-		
-		/// <summary>
-		/// Derives a key using the object instance configuration, but with output size override.
-		/// </summary>
-		/// <returns>The derived key.</returns>
-		/// <param name="key">Pre-key material to derive working key from.</param>
-		/// <param name="salt">Salt to apply in the derivation process.</param>
-		/// <param name="outputSize">Size/length of the derived key in bits.</param>
-		byte[] DeriveKey(byte[] key, byte[] salt, int outputSize);
-		
-		/// <summary>
-		/// Derives a key using the object instance configuration, but with output size override.
-		/// </summary>
-		/// <returns>The derived key.</returns>
-		/// <param name="key">Pre-key material to derive working key from.</param>
-		/// <param name="salt">Salt to apply in the derivation process.</param>
-		/// <param name="config">Configuration to use in the KDF instance.</param>
-		byte[] DeriveKey(byte[] key, byte[] salt, byte[] config);
-		
-		/// <summary>
-		/// Derives a key using a specified configuration and output size.
-		/// </summary>
-		/// <returns>The derived key.</returns>
-		/// <param name="key">Pre-key material to derive working key from.</param>
-		/// <param name="salt">Salt to apply in the derivation process.</param>
-		/// <param name="outputSize">Size/length of the derived key in bits.</param>
-		/// <param name="config">Configuration to use in the KDF instance.</param>
-		byte[] DeriveKey(byte[] key, byte[] salt, int outputSize, byte[] config);
-
-        byte[] DeriveKey(byte[] key, int outputSize, KeyDerivationConfiguration config);
-	}
-	
-	/// <summary>
+{
+    /// <summary>
 	/// Derives cryptographic keys using the scrypt key derivation function. 
 	/// </summary>
-	public sealed class ScryptModule : IKDFModule
+	public sealed class ScryptModule : IKdfFunction
 	{
 		private readonly int _outputSize, _iterationPower, _blocks, _parallelisation;
 
@@ -130,7 +89,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 	/// <summary>
 	/// Derives cryptographic keys using the PBKDF2 function.
 	/// </summary>
-	public sealed class PBKDF2Module : IKDFModule
+	public sealed class Pbkdf2Module : IKdfFunction
 	{
 		private readonly int _outputSize, _iterations;
 	    private string _algorithm;
@@ -138,7 +97,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
         public const int DefaultIterations = 32768, MinimumIterations = 512, MaximumIterations = 1048576;
 		internal const string DefaultAlgorithm = "HMACSHA256";
 		
-		public PBKDF2Module (int outputSize, byte[] config) {
+		public Pbkdf2Module (int outputSize, byte[] config) {
 			_outputSize = outputSize;
             var pbkdf2Config = StratCom.DeserialiseDTO<PBKDF2Configuration>(config);
 		    _iterations = pbkdf2Config.Iterations;

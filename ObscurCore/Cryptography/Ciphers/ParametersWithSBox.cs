@@ -1,5 +1,8 @@
 namespace ObscurCore.Cryptography.Ciphers
 {
+    /// <summary>
+    /// Parameters that include a S-Box.
+    /// </summary>
 	public class ParametersWithSBox : ICipherParameters
 	{
 		private ICipherParameters parameters;

@@ -125,9 +125,13 @@ namespace ObscurCore.Cryptography.Authentication.Primitives.SHA3
 
         public string AlgorithmName {  get { return "Keccak" + HashSizeValue; } }
 
-        public int GetByteLength () { return KeccakR / 8; }
+        public int ByteLength {
+            get { return KeccakR/8; }
+        }
 
-        public int GetDigestSize () { return HashSizeValue / 8; }
+        public int DigestSize {
+            get { return HashSizeValue/8; }
+        }
 
         public abstract void Update(byte input);
 

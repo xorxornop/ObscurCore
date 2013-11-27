@@ -27,7 +27,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         */
         public CbcBlockCipherMac(
 			IBlockCipher cipher)
-			: this(cipher, (cipher.GetBlockSize() * 8) / 2, null)
+			: this(cipher, (cipher.BlockSize * 8) / 2, null)
 		{
 		}
 
@@ -41,7 +41,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         public CbcBlockCipherMac(
             IBlockCipher		cipher,
             IBlockCipherPadding	padding)
-        : this(cipher, (cipher.GetBlockSize() * 8) / 2, padding)
+        : this(cipher, (cipher.BlockSize * 8) / 2, padding)
 		{
 		}
 
@@ -91,7 +91,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             this.padding = padding;
             this.macSize = macSizeInBits / 8;
 
-			buf = new byte[cipher.GetBlockSize()];
+			buf = new byte[cipher.BlockSize];
             bufOff = 0;
         }
 
@@ -108,12 +108,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			cipher.Init(true, parameters);
         }
 
-		public int GetMacSize()
-        {
-            return macSize;
+        public int MacSize {
+            get { return macSize; }
         }
 
-		public void Update(
+        public void Update(
             byte input)
         {
 			if (bufOff == buf.Length)
@@ -133,7 +132,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             if (len < 0)
                 throw new ArgumentException("Can't have a negative input length!");
 
-			int blockSize = cipher.GetBlockSize();
+			int blockSize = cipher.BlockSize;
             int gapLen = blockSize - bufOff;
 
             if (len > gapLen)
@@ -164,7 +163,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             byte[]	output,
             int		outOff)
         {
-            int blockSize = cipher.GetBlockSize();
+            int blockSize = cipher.BlockSize;
 
             if (padding == null)
             {

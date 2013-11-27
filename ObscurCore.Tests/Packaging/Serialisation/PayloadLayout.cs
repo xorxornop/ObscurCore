@@ -30,9 +30,9 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Minimum = FrameshiftMux.DefaultFixedPaddingLength,
 			            Maximum = FrameshiftMux.DefaultFixedPaddingLength
 			        }.SerialiseDTO(),
-                PrimaryPRNGName = CSPRNumberGenerators.SOSEMANUK.ToString(),
-                PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    CSPRNumberGenerators.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+                PrimaryPRNGName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
+                PrimaryPRNGConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
             };
 
             var stream = SerialiseToMemory(inputObj);
@@ -52,9 +52,9 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Minimum = FrameshiftMux.MinimumPaddingLength,
 			            Maximum = FrameshiftMux.MaximumPaddingLength
 			        }.SerialiseDTO(),
-                PrimaryPRNGName = CSPRNumberGenerators.SOSEMANUK.ToString(),
-                PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    CSPRNumberGenerators.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+                PrimaryPRNGName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
+                PrimaryPRNGConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
             };
 
             var stream = SerialiseToMemory(inputObj);

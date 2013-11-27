@@ -5,16 +5,16 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
     /**
     * An RC6 engine.
     */
-    public class RC6Engine
+    public class Rc6Engine
 		: IBlockCipher
     {
-        private static readonly int wordSize = 32;
-        private static readonly int bytesPerWord = wordSize / 8;
+        private const int wordSize = 32;
+        private const int bytesPerWord = wordSize/8;
 
         /*
         * the number of rounds to perform
         */
-        private static readonly int _noRounds = 20;
+        private const int _noRounds = 20;
 
         /*
         * the expanded key array of size 2*(rounds + 1)
@@ -30,21 +30,12 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         * where e is the base of natural logarithms (2.718281828...)
         * and o is the golden ratio (1.61803398...)
         */
-        private static readonly int    P32 = unchecked((int) 0xb7e15163);
-        private static readonly int    Q32 = unchecked((int) 0x9e3779b9);
+        private const int P32 = unchecked((int) 0xb7e15163);
+        private const int Q32 = unchecked((int) 0x9e3779b9);
 
-        private static readonly int    LGW = 5;        // log2(32)
+        private const int LGW = 5; // log2(32)
 
         private bool forEncryption;
-
-        /**
-        * Create an instance of the RC6 encryption algorithm
-        * and set some defaults
-        */
-        public RC6Engine()
-        {
-//            _S            = null;
-        }
 
         public string AlgorithmName
         {
@@ -56,9 +47,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			get { return false; }
 		}
 
-		public int GetBlockSize()
-        {
-            return 4 * bytesPerWord;
+        public int BlockSize {
+            get { return 4*bytesPerWord; }
         }
 
         /**
@@ -88,7 +78,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             byte[]	output,
             int		outOff)
         {
-			int blockSize = GetBlockSize();
+			int blockSize = BlockSize;
 			if (_S == null)
 				throw new InvalidOperationException("RC6 engine not initialised");
 			if ((inOff + blockSize) > input.Length)
@@ -308,7 +298,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         * @param x word to rotate
         * @param y number of bits to rotate % wordSize
         */
-        private int RotateLeft(int x, int y)
+        private static int RotateLeft(int x, int y)
         {
             return ((int)((uint)(x << (y & (wordSize-1)))
 				| ((uint) x >> (wordSize - (y & (wordSize-1))))));
@@ -324,13 +314,13 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         * @param x word to rotate
         * @param y number of bits to rotate % wordSize
         */
-        private int RotateRight(int x, int y) 
+        private static int RotateRight(int x, int y) 
 		{
             return ((int)(((uint) x >> (y & (wordSize-1)))
 				| (uint)(x << (wordSize - (y & (wordSize-1))))));
         }
 
-        private int BytesToWord(
+        private static int BytesToWord(
             byte[]	src,
             int		srcOff)
         {
@@ -344,7 +334,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return word;
         }
 
-        private void WordToBytes(
+        private static void WordToBytes(
             int		word,
             byte[]	dst,
             int		dstOff)

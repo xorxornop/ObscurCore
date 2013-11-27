@@ -33,12 +33,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
 			cipher.Init(forEncryption, parameters);
 		}
 
-		public override int GetBlockSize()
-		{
-			return 0;
-		}
+	    public override int BlockSize {
+	        get { return 0; }
+	    }
 
-		public override int GetOutputSize(
+	    public override int GetOutputSize(
 			int inputLen)
 		{
 			return inputLen;

@@ -89,12 +89,12 @@ namespace ObscurCore.Tests.Cryptography
 
     public abstract class BlockCipherTestBase : CipherTestBase
     {
-        protected SymmetricBlockCiphers _blockCipher;
+        protected SymmetricBlockCipher BlockCipher;
         protected int _defaultBlockSize, _defaultKeySize;
 
-        protected BlockCipherTestBase(SymmetricBlockCiphers cipher, int blockSize, int keySize) 
+        protected BlockCipherTestBase(SymmetricBlockCipher cipher, int blockSize, int keySize) 
         { 
-            _blockCipher = cipher;
+            BlockCipher = cipher;
             _defaultBlockSize = blockSize;
             _defaultKeySize = keySize;
 			SetRandomFixtureKey(_defaultKeySize);
@@ -104,24 +104,24 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void CTR () {
             // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CTR,
-                                                      BlockCipherPaddings.None, _defaultBlockSize, _defaultKeySize);
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.Ctr,
+                                                      BlockCipherPadding.None, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
             RunEqualityTest(config);
         }
 
         [Test]
         public virtual void CFB () {
             // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CFB,
-                                                      BlockCipherPaddings.None, _defaultBlockSize, _defaultKeySize);
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.Cfb,
+                                                      BlockCipherPadding.None, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
             RunEqualityTest(config);
         }
 
         [Test]
         public virtual void OFB () {
             // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.OFB,
-                                                      BlockCipherPaddings.None, _defaultBlockSize, _defaultKeySize);
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.Ofb,
+                                                      BlockCipherPadding.None, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
             RunEqualityTest(config);
         }
         #endregion
@@ -129,8 +129,8 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void CTS () {
             // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CTS_CBC,
-                                                      BlockCipherPaddings.None, _defaultBlockSize, _defaultKeySize);
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.CtsCbc,
+                                                      BlockCipherPadding.None, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
             RunEqualityTest(config);
         }
 
@@ -138,40 +138,40 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void CBC_ISO10126D2 () {
             // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
-                                                      BlockCipherPaddings.ISO10126D2, _defaultBlockSize, _defaultKeySize);
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.Cbc,
+                                                      BlockCipherPadding.Iso10126D2, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
             RunEqualityTest(config);
         }
 
         [Test]
         public virtual void CBC_ISO7816D4 () {
             // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
-                                                      BlockCipherPaddings.ISO7816D4, _defaultBlockSize, _defaultKeySize);
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.Cbc,
+                                                      BlockCipherPadding.Iso7816D4, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
             RunEqualityTest(config);
         }
 
         [Test]
         public virtual void CBC_PKCS7 () {
             // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
-                                                      BlockCipherPaddings.PKCS7, _defaultBlockSize, _defaultKeySize);
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.Cbc,
+                                                      BlockCipherPadding.Pkcs7, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
             RunEqualityTest(config);
         }
 
         [Test]
         public virtual void CBC_TBC () {
             // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
-                                                      BlockCipherPaddings.TBC, _defaultBlockSize, _defaultKeySize);
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.Cbc,
+                                                      BlockCipherPadding.Tbc, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
             RunEqualityTest(config);
         }
 
         [Test]
         public virtual void CBC_X923 () {
             // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(_blockCipher, BlockCipherModes.CBC,
-                                                      BlockCipherPaddings.X923, _defaultBlockSize, _defaultKeySize);
+            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.Cbc,
+                                                      BlockCipherPadding.X923, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
             RunEqualityTest(config);
         }
         #endregion
@@ -180,16 +180,16 @@ namespace ObscurCore.Tests.Cryptography
         [Test]
         public virtual void GCM () {
             // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateAEADBlockCipherConfiguration(_blockCipher, AEADBlockCipherModes.GCM, BlockCipherPaddings.None, 
-                _defaultKeySize, _defaultBlockSize);
+            var config = SymmetricCipherConfigurationFactory.CreateAeadBlockCipherConfiguration(BlockCipher, AeadBlockCipherMode.Gcm, BlockCipherPadding.None, 
+                _defaultKeySize, _defaultBlockSize, null);
             RunEqualityTest(config);
         }
 
         [Test]
         public virtual void EAX () {
             // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateAEADBlockCipherConfiguration(_blockCipher, AEADBlockCipherModes.EAX, BlockCipherPaddings.None, 
-                _defaultKeySize, _defaultBlockSize);
+            var config = SymmetricCipherConfigurationFactory.CreateAeadBlockCipherConfiguration(BlockCipher, AeadBlockCipherMode.Eax, BlockCipherPadding.None, 
+                _defaultKeySize, _defaultBlockSize, null);
             RunEqualityTest(config);
         }
         #endregion

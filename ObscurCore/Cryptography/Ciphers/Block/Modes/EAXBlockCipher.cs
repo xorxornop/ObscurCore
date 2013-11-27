@@ -22,21 +22,21 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 	{
 		private enum Tag : byte { N, H, C };
 
-		private SicBlockCipher cipher;
+		private readonly SicBlockCipher _cipher;
 
-		private bool forEncryption;
+		private bool _forEncryption;
 
-		private int blockSize;
+		private readonly int _blockSize;
 
-		private IMac mac;
+		private readonly IMac _mac;
 
-		private byte[] nonceMac;
-		private byte[] associatedTextMac;
-		private byte[] macBlock;
+		private readonly byte[] _nonceMac;
+		private readonly byte[] _associatedTextMac;
+		private readonly byte[] _macBlock;
 
-		private int macSize;
-		private byte[] bufBlock;
-		private int bufOff;
+		private int _macSize;
+		private readonly byte[] _bufBlock;
+		private int _bufOff;
 
 		/**
 		* Constructor that accepts an instance of a block cipher engine.
@@ -46,84 +46,83 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 		public EaxBlockCipher(
 			IBlockCipher cipher)
 		{
-			blockSize = cipher.GetBlockSize();
-			mac = new CMac(cipher);
-			macBlock = new byte[blockSize];
-			bufBlock = new byte[blockSize * 2];
-			associatedTextMac = new byte[mac.GetMacSize()];
-			nonceMac = new byte[mac.GetMacSize()];
-			this.cipher = new SicBlockCipher(cipher);
+			_blockSize = cipher.BlockSize;
+			_mac = new CMac(cipher);
+			_macBlock = new byte[_blockSize];
+			_bufBlock = new byte[_blockSize * 2];
+			_associatedTextMac = new byte[_mac.MacSize];
+			_nonceMac = new byte[_mac.MacSize];
+			this._cipher = new SicBlockCipher(cipher);
 		}
 
 		public virtual string AlgorithmName
 		{
-			get { return cipher.GetUnderlyingCipher().AlgorithmName + "/EAX"; }
+			get { return _cipher.UnderlyingCipher.AlgorithmName + "/EAX"; }
 		}
 
-		public virtual int GetBlockSize()
-		{
-			return cipher.GetBlockSize();
-		}
+	    public virtual int BlockSize {
+	        get { return _cipher.BlockSize; }
+	    }
 
-		public virtual void Init(
+	    public virtual void Init(
 			bool				forEncryption,
 			ICipherParameters	parameters)
 		{
-			this.forEncryption = forEncryption;
+			this._forEncryption = forEncryption;
 
 			byte[] nonce, associatedText;
 			ICipherParameters keyParam;
 
-			if (parameters is AeadParameters)
+	        var aeadParameters = parameters as AeadParameters;
+	        if (aeadParameters != null)
 			{
-				AeadParameters param = (AeadParameters) parameters;
-
-				nonce = param.GetNonce();
-				associatedText = param.GetAssociatedText();
-				macSize = param.MacSize / 8;
-				keyParam = param.Key;
+				nonce = aeadParameters.GetNonce();
+				associatedText = aeadParameters.GetAssociatedText();
+				_macSize = aeadParameters.MacSize / 8;
+				keyParam = aeadParameters.Key;
 			}
-			else if (parameters is ParametersWithIV)
-			{
-				ParametersWithIV param = (ParametersWithIV) parameters;
+			else {
+	            var iv = parameters as ParametersWithIV;
+	            if (iv != null)
+	            {
+	                nonce = iv.GetIV();
+	                associatedText = new byte[0];
+	                _macSize = _mac.MacSize / 2;
+	                keyParam = iv.Parameters;
+	            }
+	            else
+	            {
+	                throw new ArgumentException("invalid parameters passed to EAX");
+	            }
+	        }
 
-				nonce = param.GetIV();
-				associatedText = new byte[0];
-				macSize = mac.GetMacSize() / 2;
-				keyParam = param.Parameters;
-			}
-			else
-			{
-				throw new ArgumentException("invalid parameters passed to EAX");
-			}
+	        byte[] tag = new byte[_blockSize];
 
-			byte[] tag = new byte[blockSize];
+			_mac.Init(keyParam);
+			tag[_blockSize - 1] = (byte) Tag.H;
+			_mac.BlockUpdate(tag, 0, _blockSize);
+			_mac.BlockUpdate(associatedText, 0, associatedText.Length);
+			_mac.DoFinal(_associatedTextMac, 0);
 
-			mac.Init(keyParam);
-			tag[blockSize - 1] = (byte) Tag.H;
-			mac.BlockUpdate(tag, 0, blockSize);
-			mac.BlockUpdate(associatedText, 0, associatedText.Length);
-			mac.DoFinal(associatedTextMac, 0);
+			tag[_blockSize - 1] = (byte) Tag.N;
+			_mac.BlockUpdate(tag, 0, _blockSize);
+			_mac.BlockUpdate(nonce, 0, nonce.Length);
+			_mac.DoFinal(_nonceMac, 0);
 
-			tag[blockSize - 1] = (byte) Tag.N;
-			mac.BlockUpdate(tag, 0, blockSize);
-			mac.BlockUpdate(nonce, 0, nonce.Length);
-			mac.DoFinal(nonceMac, 0);
+			tag[_blockSize - 1] = (byte) Tag.C;
+			_mac.BlockUpdate(tag, 0, _blockSize);
 
-			tag[blockSize - 1] = (byte) Tag.C;
-			mac.BlockUpdate(tag, 0, blockSize);
-
-			cipher.Init(true, new ParametersWithIV(keyParam, nonceMac));
+			_cipher.Init(true, new ParametersWithIV(keyParam, _nonceMac));
 		}
 
 		private void calculateMac()
 		{
-			byte[] outC = new byte[blockSize];
-			mac.DoFinal(outC, 0);
+			byte[] outC = new byte[_blockSize];
+			_mac.DoFinal(outC, 0);
 
-			for (int i = 0; i < macBlock.Length; i++)
+			for (int i = 0; i < _macBlock.Length; i++)
 			{
-				macBlock[i] = (byte)(nonceMac[i] ^ associatedTextMac[i] ^ outC[i]);
+				_macBlock[i] = (byte)(_nonceMac[i] ^ _associatedTextMac[i] ^ outC[i]);
 			}
 		}
 
@@ -135,20 +134,20 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 		private void Reset(
 			bool clearMac)
 		{
-			cipher.Reset();
-			mac.Reset();
+			_cipher.Reset();
+			_mac.Reset();
 
-			bufOff = 0;
-			Array.Clear(bufBlock, 0, bufBlock.Length);
+			_bufOff = 0;
+			Array.Clear(_bufBlock, 0, _bufBlock.Length);
 
 			if (clearMac)
 			{
-				Array.Clear(macBlock, 0, macBlock.Length);
+				Array.Clear(_macBlock, 0, _macBlock.Length);
 			}
 
-			byte[] tag = new byte[blockSize];
-			tag[blockSize - 1] = (byte) Tag.C;
-			mac.BlockUpdate(tag, 0, blockSize);
+			byte[] tag = new byte[_blockSize];
+			tag[_blockSize - 1] = (byte) Tag.C;
+			_mac.BlockUpdate(tag, 0, _blockSize);
 		}
 
 		public virtual int ProcessByte(
@@ -180,56 +179,56 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 			byte[]	outBytes,
 			int		outOff)
 		{
-			int extra = bufOff;
-			byte[] tmp = new byte[bufBlock.Length];
+			int extra = _bufOff;
+			byte[] tmp = new byte[_bufBlock.Length];
 
-			bufOff = 0;
+			_bufOff = 0;
 
-			if (forEncryption)
+			if (_forEncryption)
 			{
-				cipher.ProcessBlock(bufBlock, 0, tmp, 0);
-				cipher.ProcessBlock(bufBlock, blockSize, tmp, blockSize);
+				_cipher.ProcessBlock(_bufBlock, 0, tmp, 0);
+				_cipher.ProcessBlock(_bufBlock, _blockSize, tmp, _blockSize);
 
 				Array.Copy(tmp, 0, outBytes, outOff, extra);
 
-				mac.BlockUpdate(tmp, 0, extra);
+				_mac.BlockUpdate(tmp, 0, extra);
 
 				calculateMac();
 
-				Array.Copy(macBlock, 0, outBytes, outOff + extra, macSize);
+				Array.Copy(_macBlock, 0, outBytes, outOff + extra, _macSize);
 
 				Reset(false);
 
-				return extra + macSize;
+				return extra + _macSize;
 			}
 			else
 			{
-				if (extra > macSize)
+				if (extra > _macSize)
 				{
-					mac.BlockUpdate(bufBlock, 0, extra - macSize);
+					_mac.BlockUpdate(_bufBlock, 0, extra - _macSize);
 
-					cipher.ProcessBlock(bufBlock, 0, tmp, 0);
-					cipher.ProcessBlock(bufBlock, blockSize, tmp, blockSize);
+					_cipher.ProcessBlock(_bufBlock, 0, tmp, 0);
+					_cipher.ProcessBlock(_bufBlock, _blockSize, tmp, _blockSize);
 
-					Array.Copy(tmp, 0, outBytes, outOff, extra - macSize);
+					Array.Copy(tmp, 0, outBytes, outOff, extra - _macSize);
 				}
 
 				calculateMac();
 
-				if (!verifyMac(bufBlock, extra - macSize))
+				if (!verifyMac(_bufBlock, extra - _macSize))
 					throw new InvalidCipherTextException("mac check in EAX failed");
 
 				Reset(false);
 
-				return extra - macSize;
+				return extra - _macSize;
 			}
 		}
 
 		public virtual byte[] GetMac()
 		{
-			byte[] mac = new byte[macSize];
+			byte[] mac = new byte[_macSize];
 
-			Array.Copy(macBlock, 0, mac, 0, macSize);
+			Array.Copy(_macBlock, 0, mac, 0, _macSize);
 
 			return mac;
 		}
@@ -237,18 +236,18 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 		public virtual int GetUpdateOutputSize(
 			int len)
 		{
-			return ((len + bufOff) / blockSize) * blockSize;
+			return ((len + _bufOff) / _blockSize) * _blockSize;
 		}
 
 		public virtual int GetOutputSize(
 			int len)
 		{
-			if (forEncryption)
+			if (_forEncryption)
 			{
-				return len + bufOff + macSize;
+				return len + _bufOff + _macSize;
 			}
 
-			return len + bufOff - macSize;
+			return len + _bufOff - _macSize;
 		}
 
 		private int process(
@@ -256,27 +255,27 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 			byte[]	outBytes,
 			int		outOff)
 		{
-			bufBlock[bufOff++] = b;
+			_bufBlock[_bufOff++] = b;
 
-			if (bufOff == bufBlock.Length)
+			if (_bufOff == _bufBlock.Length)
 			{
 				int size;
 
-				if (forEncryption)
+				if (_forEncryption)
 				{
-					size = cipher.ProcessBlock(bufBlock, 0, outBytes, outOff);
+					size = _cipher.ProcessBlock(_bufBlock, 0, outBytes, outOff);
 
-					mac.BlockUpdate(outBytes, outOff, blockSize);
+					_mac.BlockUpdate(outBytes, outOff, _blockSize);
 				}
 				else
 				{
-					mac.BlockUpdate(bufBlock, 0, blockSize);
+					_mac.BlockUpdate(_bufBlock, 0, _blockSize);
 
-					size = cipher.ProcessBlock(bufBlock, 0, outBytes, outOff);
+					size = _cipher.ProcessBlock(_bufBlock, 0, outBytes, outOff);
 				}
 
-				bufOff = blockSize;
-				Array.Copy(bufBlock, blockSize, bufBlock, 0, blockSize);
+				_bufOff = _blockSize;
+				Array.Copy(_bufBlock, _blockSize, _bufBlock, 0, _blockSize);
 
 				return size;
 			}
@@ -286,9 +285,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 
 		private bool verifyMac(byte[] mac, int off)
 		{
-			for (int i = 0; i < macSize; i++)
+			for (int i = 0; i < _macSize; i++)
 			{
-				if (macBlock[i] != mac[off + i])
+				if (_macBlock[i] != mac[off + i])
 				{
 					return false;
 				}

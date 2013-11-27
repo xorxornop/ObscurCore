@@ -92,12 +92,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			hasher = new Blake2BHasher (config);
 		}
 
-		public int GetMacSize ()
-		{
-			return this.GetDigestSize();
-		}
+	    public int MacSize {
+	        get { return this.DigestSize; }
+	    }
 
-		#endregion
+	    #endregion
 
         public void Init (byte[] key, byte[] salt) {
             this.Init(key, salt, null);

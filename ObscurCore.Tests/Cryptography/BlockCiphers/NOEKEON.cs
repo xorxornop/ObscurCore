@@ -5,7 +5,7 @@ namespace ObscurCore.Tests.Cryptography.BlockCiphers
     class NOEKEON : BlockCipherTestBase
     {
         public NOEKEON ()
-            : base(SymmetricBlockCiphers.NOEKEON, 128, 128) {
+            : base(SymmetricBlockCipher.Noekeon, 128, 128) {
         }
 
 

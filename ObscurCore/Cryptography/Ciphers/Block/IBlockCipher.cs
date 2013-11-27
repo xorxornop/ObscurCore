@@ -1,9 +1,11 @@
 namespace ObscurCore.Cryptography.Ciphers.Block
 {
-	/// <remarks>Base interface for a symmetric key block cipher.</remarks>
+	/// <summary>
+	/// Interface that block ciphers conform to.
+	/// </summary>
     public interface IBlockCipher
     {
-		/// <summary>The name of the algorithm this cipher implements.</summary>
+		/// <summary>Name of the algorithm that the cipher implements.</summary>
 		string AlgorithmName { get; }
 
 		/// <summary>Initialise the cipher.</summary>
@@ -11,10 +13,10 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 		/// <param name="parameters">The key or other data required by the cipher.</param>
 		void Init(bool forEncryption, ICipherParameters parameters);
 
-		/// <returns>The block size for this cipher, in bytes.</returns>
-		int GetBlockSize();
+	    /// <value>Block size for this cipher, in bytes.</value>
+	    int BlockSize { get; }
 
-		/// <summary>Indicates whether this cipher can handle partial blocks.</summary>
+	    /// <summary>Indicates whether this cipher can handle partial blocks.</summary>
 		bool IsPartialBlockOkay { get; }
 
 		/// <summary>Process a block.</summary>

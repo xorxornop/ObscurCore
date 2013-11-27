@@ -34,11 +34,15 @@ namespace ObscurCore
             EntropySource.SetSeed(Encoding.UTF8.GetBytes(Thread.CurrentThread.Name));
         }
 
+        public static MemoryStream SerialiseDTO(object obj) {
+            return SerialiseDTO(obj, false);
+        }
+
         /// <summary>
         /// Provides serialisation capabilities for any object that has a ProtoContract attribute (e.g. from ObscurCore.DTO namespace).
         /// </summary>
         /// <returns>The DTO object serialised to binary data wrapped in a MemoryStream.</returns>
-        public static MemoryStream SerialiseDTO(object obj, bool lengthPrefix = false) {
+        public static MemoryStream SerialiseDTO(object obj, bool lengthPrefix) {
             var type = obj.GetType();
             if (!Serialiser.CanSerializeContractType(type)) {
                 throw new ArgumentException(
@@ -53,11 +57,15 @@ namespace ObscurCore
             return ms;
         }
 
+        public static T DeserialiseDTO<T>(byte[] objectBytes) {
+            return DeserialiseDTO<T>(objectBytes, false);
+        }
+
         /// <summary>
         /// Provides serialisation capabilities for any object that has a ProtoContract attribute (e.g. from ObscurCore.DTO namespace).
         /// </summary>
         /// <returns>The DTO object serialised to binary data wrapped in a MemoryStream.</returns>
-        public static T DeserialiseDTO<T>(byte[] objectBytes, bool lengthPrefix = false) {
+        public static T DeserialiseDTO<T>(byte[] objectBytes, bool lengthPrefix) {
             if (!Serialiser.CanSerializeContractType(typeof (T))) {
                 throw new ArgumentException(
                     "Cannot deserialise - requested type does not have a serialisation contract.");

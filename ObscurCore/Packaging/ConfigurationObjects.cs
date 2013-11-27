@@ -18,22 +18,22 @@ using ObscurCore.DTO;
 
 namespace ObscurCore.Packaging
 {	
-	public class PayloadLayoutConfigurationFactory
+	public static class PayloadLayoutConfigurationFactory
 	{
 		/// <summary>
 		/// Initialises the configuration for the specified module type with default settings. 
 		/// If fine-tuning is desired, use the specialised constructors.
 		/// </summary>
-		/// <param name="scheme">Desired payload layout scheme.</param>
-		public static PayloadConfiguration CreateDefault(PayloadLayoutSchemes scheme) {
+		/// <param name="schemeEnum">Desired payload layout scheme.</param>
+		public static PayloadConfiguration CreateDefault(PayloadLayoutSchemes schemeEnum) {
 			var config = new PayloadConfiguration {
-                SchemeName = scheme.ToString(),
-				PrimaryPRNGName = "SOSEMANUK",
-				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    CSPRNumberGenerators.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+                SchemeName = schemeEnum.ToString(),
+				PrimaryPRNGName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
+				PrimaryPRNGConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
 			};
 			
-			switch (scheme) {
+			switch (schemeEnum) {
 			case PayloadLayoutSchemes.Simple:
 				break;
 			case PayloadLayoutSchemes.Frameshift:
@@ -58,31 +58,39 @@ namespace ObscurCore.Packaging
 			
 			return config;
 		}
+
+        public static PayloadConfiguration CreateFrameshiftFixed(CsPseudorandomNumberGenerator csprngEnum) {
+            return CreateFrameshiftFixed(csprngEnum, null);
+        }
 		
-		public static PayloadConfiguration CreateFrameshiftFixed(CSPRNumberGenerators generator, int? stripeSize = null) {
+		public static PayloadConfiguration CreateFrameshiftFixed(CsPseudorandomNumberGenerator csprngEnum, int? stripeSize) {
             var config = new PayloadConfiguration {
                 SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
                 SchemeConfiguration = new PayloadSchemeConfiguration() {
 			            Minimum = (stripeSize == null ? FrameshiftMux.DefaultFixedPaddingLength : stripeSize.Value),
 			            Maximum = (stripeSize == null ? FrameshiftMux.DefaultFixedPaddingLength : stripeSize.Value),
 			        }.SerialiseDTO(),
-				PrimaryPRNGName = generator.ToString(),
-				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    generator).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+				PrimaryPRNGName = csprngEnum.ToString(),
+				PrimaryPRNGConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    csprngEnum).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
 			};
 		    return config;
 		}
 
-	    public static PayloadConfiguration CreateFrameshiftVariable(CSPRNumberGenerators generator, int? minStripe = null, int? maxStripe = null) {
+        public static PayloadConfiguration CreateFrameshiftVariable(CsPseudorandomNumberGenerator csprngEnum) {
+            return CreateFrameshiftVariable(csprngEnum, null, null);
+        }
+
+	    public static PayloadConfiguration CreateFrameshiftVariable(CsPseudorandomNumberGenerator csprngEnum, int? minStripe, int? maxStripe) {
             var config = new PayloadConfiguration {
                 SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
                 SchemeConfiguration = new PayloadSchemeConfiguration() {
 			            Minimum = (minStripe == null ? FrameshiftMux.MinimumPaddingLength : minStripe.Value),
 			            Maximum = (maxStripe == null ? FrameshiftMux.MaximumPaddingLength : maxStripe.Value)
 			        }.SerialiseDTO(),
-				PrimaryPRNGName = generator.ToString(),
-				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    generator).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+				PrimaryPRNGName = csprngEnum.ToString(),
+				PrimaryPRNGConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    csprngEnum).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
 			};
             return config;
 	    }

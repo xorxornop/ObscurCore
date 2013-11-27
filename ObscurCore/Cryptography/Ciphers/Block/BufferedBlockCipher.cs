@@ -39,7 +39,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 				throw new ArgumentNullException("cipher");
 
 			this.cipher = cipher;
-			buf = new byte[cipher.GetBlockSize()];
+			buf = new byte[cipher.BlockSize];
 			bufOff = 0;
 		}
 
@@ -71,7 +71,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 
 			Reset();
 
-			cipher.Init(forEncryption, parameters);
+			cipher.Init(this.forEncryption, parameters);
 		}
 
 		/**
@@ -79,12 +79,12 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 		*
 		* @return the blocksize for the underlying cipher.
 		*/
-		public override int GetBlockSize()
-		{
-			return cipher.GetBlockSize();
-		}
 
-		/**
+	    public override int BlockSize {
+	        get { return cipher.BlockSize; }
+	    }
+
+	    /**
 		* return the size of the output buffer required for an update
 		* an input of len bytes.
 		*
@@ -216,7 +216,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 				return 0;
 			}
 
-			int blockSize = GetBlockSize();
+			int blockSize = BlockSize;
 			int outLength = GetUpdateOutputSize(length);
 
 			if (outLength > 0)

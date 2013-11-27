@@ -17,44 +17,44 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	* http://www.ecrypt.eu.org/stream/hcp3.html
 	* </p>
 	*/
-	public class HC256Engine
+	public class Hc256Engine
 		: IStreamCipher
 	{
-		private uint[] p = new uint[1024];
-		private uint[] q = new uint[1024];
-		private uint cnt = 0;
+		private readonly uint[] _p = new uint[1024];
+		private readonly uint[] _q = new uint[1024];
+		private uint _cnt;
 
 		private uint Step()
 		{
-			uint j = cnt & 0x3FF;
+			uint j = _cnt & 0x3FF;
 			uint ret;
-			if (cnt < 1024)
+			if (_cnt < 1024)
 			{
-				uint x = p[(j - 3 & 0x3FF)];
-				uint y = p[(j - 1023 & 0x3FF)];
-				p[j] += p[(j - 10 & 0x3FF)]
+				uint x = _p[(j - 3 & 0x3FF)];
+				uint y = _p[(j - 1023 & 0x3FF)];
+				_p[j] += _p[(j - 10 & 0x3FF)]
 					+ (RotateRight(x, 10) ^ RotateRight(y, 23))
-					+ q[((x ^ y) & 0x3FF)];
+					+ _q[((x ^ y) & 0x3FF)];
 
-				x = p[(j - 12 & 0x3FF)];
-				ret = (q[x & 0xFF] + q[((x >> 8) & 0xFF) + 256]
-					+ q[((x >> 16) & 0xFF) + 512] + q[((x >> 24) & 0xFF) + 768])
-					^ p[j];
+				x = _p[(j - 12 & 0x3FF)];
+				ret = (_q[x & 0xFF] + _q[((x >> 8) & 0xFF) + 256]
+					+ _q[((x >> 16) & 0xFF) + 512] + _q[((x >> 24) & 0xFF) + 768])
+					^ _p[j];
 			}
 			else
 			{
-				uint x = q[(j - 3 & 0x3FF)];
-				uint y = q[(j - 1023 & 0x3FF)];
-				q[j] += q[(j - 10 & 0x3FF)]
+				uint x = _q[(j - 3 & 0x3FF)];
+				uint y = _q[(j - 1023 & 0x3FF)];
+				_q[j] += _q[(j - 10 & 0x3FF)]
 					+ (RotateRight(x, 10) ^ RotateRight(y, 23))
-					+ p[((x ^ y) & 0x3FF)];
+					+ _p[((x ^ y) & 0x3FF)];
 
-				x = q[(j - 12 & 0x3FF)];
-				ret = (p[x & 0xFF] + p[((x >> 8) & 0xFF) + 256]
-					+ p[((x >> 16) & 0xFF) + 512] + p[((x >> 24) & 0xFF) + 768])
-					^ q[j];
+				x = _q[(j - 12 & 0x3FF)];
+				ret = (_p[x & 0xFF] + _p[((x >> 8) & 0xFF) + 256]
+					+ _p[((x >> 16) & 0xFF) + 512] + _p[((x >> 24) & 0xFF) + 768])
+					^ _q[j];
 			}
-			cnt = cnt + 1 & 0x7FF;
+			_cnt = _cnt + 1 & 0x7FF;
 			return ret;
 		}
 
@@ -89,7 +89,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				iv = newIV;
 			}
 
-			cnt = 0;
+			_cnt = 0;
 
 			uint[] w = new uint[2560];
 
@@ -113,15 +113,15 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 					+ w[i - 16] + i;
 			}
 
-			Array.Copy(w, 512, p, 0, 1024);
-			Array.Copy(w, 1536, q, 0, 1024);
+			Array.Copy(w, 512, _p, 0, 1024);
+			Array.Copy(w, 1536, _q, 0, 1024);
 
 			for (int i = 0; i < 4096; i++)
 			{
 				Step();
 			}
 
-			cnt = 0;
+			_cnt = 0;
 		}
 
 		public string AlgorithmName
@@ -170,7 +170,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		}
 
 		private byte[] buf = new byte[4];
-		private int idx = 0;
+		private int idx;
 
 		private byte GetByte()
 		{

@@ -103,16 +103,15 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			Array.Clear(xBuf, 0, xBuf.Length);
         }
 
-		public int GetByteLength()
-		{
-			return BYTE_LENGTH;
-		}
+        public int ByteLength {
+            get { return BYTE_LENGTH; }
+        }
 
-		internal abstract void ProcessWord(byte[] input, int inOff);
+        internal abstract void ProcessWord(byte[] input, int inOff);
         internal abstract void ProcessLength(long bitLength);
         internal abstract void ProcessBlock();
         public abstract string AlgorithmName { get; }
-		public abstract int GetDigestSize();
+        public abstract int DigestSize { get; }
         public abstract int DoFinal(byte[] output, int outOff);
     }
 }

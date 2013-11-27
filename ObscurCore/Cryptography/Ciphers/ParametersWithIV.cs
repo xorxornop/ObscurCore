@@ -2,6 +2,9 @@ using System;
 
 namespace ObscurCore.Cryptography.Ciphers
 {
+    /// <summary>
+    /// Parameters that include an initialisation vector.
+    /// </summary>
     public class ParametersWithIV
 		: ICipherParameters
     {

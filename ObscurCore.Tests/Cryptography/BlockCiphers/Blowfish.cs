@@ -6,7 +6,7 @@ namespace ObscurCore.Tests.Cryptography.BlockCiphers
 {
     public class Blowfish : BlockCipherTestBase
     {
-        public Blowfish () : base(SymmetricBlockCiphers.Blowfish, 64, 128) { }
+        public Blowfish () : base(SymmetricBlockCipher.Blowfish, 64, 128) { }
 
         [Test]
         public override void GCM () {
@@ -14,7 +14,7 @@ namespace ObscurCore.Tests.Cryptography.BlockCiphers
             SymmetricCipherConfiguration config = null;
 
             Assert.Throws<MACSizeException>(() => config =
-                SymmetricCipherConfigurationFactory.CreateAEADBlockCipherConfiguration(_blockCipher, AEADBlockCipherModes.GCM, BlockCipherPaddings.None, _defaultKeySize, _defaultBlockSize), 
+                SymmetricCipherConfigurationFactory.CreateAeadBlockCipherConfiguration(BlockCipher, AeadBlockCipherMode.Gcm, BlockCipherPadding.None, _defaultKeySize, _defaultBlockSize, null), 
                 "GCM mode incompatible with " + _defaultBlockSize + " bit block size!");
             //RunEqualityTest(config);
         }
