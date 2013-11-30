@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ObscurCore.Cryptography;
 using ObscurCore.DTO;
+using ObscurCore.Extensions.ByteArrays;
+using ObscurCore.Extensions.DTO;
+using ObscurCore.Extensions.Streams;
+using ObscurCore.Packaging;
+using ProtoBuf;
 
 namespace ObscurCore
 {
@@ -27,6 +33,9 @@ namespace ObscurCore
 
 
         private int _startStreamOffset, _payloadStreamOffset;
+
+
+        private SymmetricCipherConfiguration _manifestCipherConfig;
 
         private Manifest _manifest;
         private ManifestHeader _manifestHeader;
@@ -138,7 +147,7 @@ namespace ObscurCore
         //}
 
         /// <summary>
-        /// Read a package from a file.
+        /// Read a package from a stream.
         /// </summary>
         /// <returns></returns>
         //public static Package FromStream() {
@@ -159,10 +168,108 @@ namespace ObscurCore
             
         }
 
-
+        /// <summary>
+        /// Write package out to bound stream.
+        /// </summary>
         public void Write() {
-            
+
+            Debug.Print(DebugUtility.CreateReportString("Package", "Write", "[*PACKAGE START*] Header offset (absolute)",
+                _stream.Position.ToString()));
+
+            // Write the header tag
+            var headerTag = Athena.Packaging.GetHeaderTag();
+            _stream.Write(headerTag, 0, headerTag.Length);
+
+            Debug.Print(DebugUtility.CreateReportString("Package", "Write", "Manifest header offset (absolute)",
+                _stream.Position.ToString()));
+
+            // Serialise and write ManifestHeader (this part is written as plaintext, otherwise INCEPTION!)
+            StratCom.Serialiser.SerializeWithLengthPrefix(_stream, _manifestHeader, typeof (ManifestHeader),
+                PrefixStyle.Base128, 0);
+
+            /* Prepare for writing payload */
+
+            // Check all payload items have associated key data for their encryption, supplied either in item Key field or 'payloadKeys' param.
+            if (_manifest.PayloadItems.Any(item => item.Encryption.Key == null || item.Encryption.Key.Length == 0)) {
+                //throw new ItemKeyMissingException(item);
+                throw new Exception("At least one item is missing a key.");
+            }
+
+            // Create and bind transform functions (compression, encryption, etc) defined by items' configurations to those items
+            var transformFunctions = _manifest.PayloadItems.Select(item => (Func<Stream, DecoratingStream>) (binding =>
+                item.BindTransformStream(true, binding))).ToList();
+
+            /* Write the payload to temporary storage (payloadTemp) */
+            PayloadLayoutSchemes payloadScheme;
+            try {
+                payloadScheme = _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutSchemes>();
+            } catch (Exception) {
+                throw new PackageConfigurationException(
+                    "Package payload schema specified is unsupported/unknown or missing.");
+            }
+            // Bind the multiplexer to the temp stream
+            var mux = Source.CreatePayloadMultiplexer(payloadScheme, true, _tempStream,
+                _manifest.PayloadItems.ToList<IStreamBinding>(),
+                transformFunctions, _manifest.PayloadConfiguration);
+
+            mux.ExecuteAll();
+
+            // Get internal lengths of the written items from the muxer and commit them to the manifest
+	        for (var i = 0; i < _manifest.PayloadItems.Count; i++) {
+	            _manifest.PayloadItems[i].InternalLength = mux.GetItemIO(i, source: false);
+	        }
+
+            Debug.Print(DebugUtility.CreateReportString("Package", "Write", "Manifest working key",
+                _manifestCipherConfig.Key.ToHexString()));
+
+            using (var manifestTemp = new MemoryStream()) {
+                /* Write the manifest in encrypted form */
+                using (var cs = new SymmetricCryptoStream(manifestTemp, true, _manifestCipherConfig, null, false)) {
+                    var manifestMS = StratCom.SerialiseDTO(_manifest);
+                    manifestMS.WriteTo(cs);
+                    manifestMS.Close();
+                }
+                Debug.Print(DebugUtility.CreateReportString("Package", "Write", "Manifest length prefix offset (absolute)",
+                    _stream.Position.ToString()));
+                _stream.WritePrimitive((UInt32)manifestTemp.Length); // Manifest length is written as uint32
+                Debug.Print(DebugUtility.CreateReportString("Package", "Write", "Manifest offset (absolute)",
+                    _stream.Position.ToString()));
+
+                manifestTemp.WriteTo(_stream);
+            }
+
+            // Clear manifest key from memory
+            Array.Clear(_manifestCipherConfig.Key, 0, _manifestCipherConfig.Key.Length);
+
+            // Write payload offset filler, where applicable
+            if (_manifest.PayloadConfiguration.Offset > 0) {
+                var paddingBytes = new byte[_manifest.PayloadConfiguration.Offset];
+                StratCom.EntropySource.NextBytes(paddingBytes);
+                _stream.Write(paddingBytes, 0, paddingBytes.Length);
+            }
+
+            Debug.Print(DebugUtility.CreateReportString("Package", "Write", "Payload offset (absolute)",
+                    _stream.Position.ToString()));
+
+            /* Write out payloadTemp to real destination */
+            _tempStream.Seek(0, SeekOrigin.Begin);
+            _tempStream.CopyTo(_stream);
+
+            Debug.Print(DebugUtility.CreateReportString("Package", "Write", "Trailer offset (absolute)",
+                    _stream.Position.ToString()));
+
+            // Write the trailer tag
+            var trailerTag = Athena.Packaging.GetTrailerTag();
+            _stream.Write(trailerTag, 0, trailerTag.Length);
+
+            Debug.Print(DebugUtility.CreateReportString("Package", "Write", "[* PACKAGE END *] Offset (absolute)",
+                    _stream.Position.ToString()));
+
+            // All done! HAPPY DAYS.
+            //destination.Close();
         }
+
+        
 
         public void ReadOutTo() {
             
