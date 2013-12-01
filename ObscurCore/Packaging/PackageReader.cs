@@ -251,56 +251,6 @@ namespace ObscurCore.Packaging
             return manifest;
         }
 
-		/// <summary>
-		/// Reads a package manifest header (only) from a stream.
-		/// </summary>
-		/// <param name="source">Stream to read the header from.</param>
-		/// <param name="mCryptoConfig">Manifest cryptography configuration deserialised from the header.</param>
-		/// <param name="mCryptoScheme">Manifest cryptography scheme parsed from the header.</param>
-		/// <returns>Package manifest header object.</returns>
-        public static ManifestHeader ReadPackageManifestHeader(Stream source, out IManifestCryptographySchemeConfiguration mCryptoConfig,
-            out ManifestCryptographySchemes mCryptoScheme)
-        {
-            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPackageManifestHeader", "[* PACKAGE START* ] Header offset (absolute)",
-                    source.Position.ToString()));
 
-		    var referenceHeaderTag = Athena.Packaging.GetHeaderTag();
-            var readHeaderTag = new byte[referenceHeaderTag.Length];
-            source.Read(readHeaderTag, 0, readHeaderTag.Length);
-            if (!readHeaderTag.SequenceEqual(referenceHeaderTag)) {
-                throw new InvalidDataException("Package is malformed. Expected header tag is either absent or malformed.");
-            }
-
-            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPackageManifestHeader", "Manifest header offset (absolute)",
-                    source.Position.ToString()));
-
-            var mHeader = (ManifestHeader) StratCom.Serialiser.DeserializeWithLengthPrefix(source, null, typeof (ManifestHeader),
-                PrefixStyle.Base128, 0);
-
-            if (mHeader.FormatVersion > Athena.Packaging.HeaderVersion) {
-				throw new NotSupportedException(String.Format("Package version {0} as specified by the manifest header is unsupported/unknown.\n" +
-					"The local version of ObscurCore supports up to version {1}.", mHeader.FormatVersion, Athena.Packaging.HeaderVersion));
-                // In later versions, can redirect to diff. behaviour (and DTO objects) for diff. versions.
-            }
-
-            mCryptoScheme = mHeader.CryptographySchemeName.ToEnum<ManifestCryptographySchemes>();
-            switch (mHeader.CryptographySchemeName.ToEnum<ManifestCryptographySchemes>()) {
-                case ManifestCryptographySchemes.UniversalSymmetric:
-                    mCryptoConfig = StratCom.DeserialiseDTO<SymmetricManifestCryptographyConfiguration>(mHeader.CryptographySchemeConfiguration);
-                    break;
-                case ManifestCryptographySchemes.UM1Hybrid:
-                    mCryptoConfig = StratCom.DeserialiseDTO<UM1ManifestCryptographyConfiguration>(mHeader.CryptographySchemeConfiguration);
-                    break;
-                case ManifestCryptographySchemes.Curve25519UM1Hybrid:
-                    mCryptoConfig = StratCom.DeserialiseDTO<Curve25519UM1ManifestCryptographyConfiguration>(mHeader.CryptographySchemeConfiguration);
-                    break;
-                default:
-					throw new NotSupportedException(String.Format(
-						"Package manifest cryptography scheme \"{0}\" as specified by the manifest header is unsupported/unknown.", 
-				        	mHeader.CryptographySchemeName));
-            }
-
-            return mHeader;
-        }
     }
 }

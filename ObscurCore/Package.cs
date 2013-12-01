@@ -50,8 +50,28 @@ namespace ObscurCore
             set { _manifest = value; }
         }
 
-        
+		public int FormatVersion
+		{
+			get { return _manifestHeader.FormatVersion; }
+			set { throw new NotImplementedException (); }
+		}
 
+        
+		/// <summary>
+		/// Add a text payload item (encoded in UTF-8) to the package with a relative path 
+		/// of root (/) in the manifest. Default encryption is used.
+		/// </summary>
+		/// <param name="name">Name of the item. Subject of the text is suggested.</param>
+		/// <param name="text">Content of the item.</param>
+		public void AddText(string name, string text) {
+			if(String.IsNullOrEmpty(name) || String.IsNullOrWhiteSpace) {
+				throw new ArgumentException ();
+			}
+			var stream = new MemoryStream(Encoding.UTF8.GetBytes(text));
+			var newItem = CreateItem (stream, PayloadItemTypes.Utf8, stream.Length, name, false);
+
+			_manifest.PayloadItems.Add(newItem);
+		}
 
         /// <summary>
         /// Add a file-type payload item to the package with a relative path of root (/) in the manifest. 
@@ -64,40 +84,60 @@ namespace ObscurCore
             if (fileInfo.Exists) {
                 throw new FileNotFoundException();
             }
+			var itemStream = File.OpenRead (filePath);
+			var newItem = CreateItem (itemStream, PayloadItemTypes.Binary, fileInfo.Length, fileInfo.Name, false);
 
-            var newItem = new PayloadItem
-                    {
-                        ExternalLength = fileInfo.Length,
-                        Type = PayloadItemTypes.Utf8,
-                        RelativePath = String.IsNullOrEmpty(fileInfo.Extension) ? fileInfo.Name 
-                            : String.Format("{0}.{1}", fileInfo.Name, fileInfo.Extension),
-                        Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration
-                            (SymmetricBlockCipher.Aes, BlockCipherMode.Ctr, BlockCipherPadding.None)
-                    };
-            newItem.SetStreamBinding(() => File.OpenRead(filePath));
             _manifest.PayloadItems.Add(newItem);
         }
 
-        /// <summary>
-        /// Add a text payload item (encoded in UTF-8) to the package with a relative path 
-        /// of root (/) in the manifest. Default encryption is used.
-        /// </summary>
-        /// <remarks>Default encryption is AES-256/CTR with random key and IV.</remarks>
-        /// <param name="name">Name of the item. Subject of the text is suggested.</param>
-        /// <param name="text">Content of the item.</param>
-        public void AddText(string name, string text) {
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(text));
-            var newItem = new PayloadItem
-                    {
-                        ExternalLength = stream.Length,
-                        Type = PayloadItemTypes.Utf8,
-                        RelativePath = name,
-                        Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration
-                            (SymmetricBlockCipher.Aes, BlockCipherMode.Ctr, BlockCipherPadding.None)
-                    };
-            newItem.SetStreamBinding(() => stream);
-            _manifest.PayloadItems.Add(newItem);
-        }
+		/// <summary>
+		/// Creates a new PayloadItem DTO object, but does not add it to the manifest, returning it instead.
+		/// </summary>
+		/// <returns>A payload item.</returns>
+		/// <remarks>Default encryption is AES-256/CTR with random IV and key.</remarks>
+		/// <param name="itemData">Item data.</param>
+		/// <param name="itemType">Type of the item, e.g., Utf8 (text) or Binary (data/file).</param>
+		/// <param name="extLength">External length (outside the payload) of the item.</param>
+		/// <param name="relPath">Relative path of the item.</param>
+		/// <param name="skipCrypto">If set to <c>true</c>, leaves Encryption property set to null - for post-method-modification.</param>
+		private PayloadItem CreateItem(Stream itemData, PayloadItemTypes itemType, long extLength, string relPath, bool skipCrypto = false) {
+			var newItem = new PayloadItem {
+				ExternalLength = extLength,
+				Type = itemType,
+				RelativePath = relPath,
+				Encryption = !skipCrypto ? SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration
+				             (SymmetricBlockCipher.Aes, BlockCipherMode.Ctr, BlockCipherPadding.None) : null
+			};
+
+			newItem.SetStreamBinding (() => itemData);
+			return newItem;
+		}
+
+        
+		private static SymmetricCipherConfiguration CreateDefaultBlockCipherConfiguration() {
+
+		}
+
+		/// <summary>
+		/// Creates a default manifest key derivation configuration.
+		/// </summary>
+		/// <remarks>Default KDF configuration is scrypt</remarks>
+		/// <returns>The default manifest key derivation.</returns>
+		/// <param name="keyLengthBytes">Key length bytes.</param>
+		private static KeyDerivationConfiguration CreateDefaultManifestKeyDerivation(int keyLengthBytes) {
+			var schemeConfig = new ScryptConfiguration {
+				IterationPower = 18,
+				Blocks = 8,
+				Parallelism = 2
+			};
+			var config = new KeyDerivationConfiguration {
+				SchemeName = KeyDerivationFunction.Scrypt.ToString(),
+				SchemeConfiguration = schemeConfig.SerialiseDTO(),
+				Salt = new byte[keyLengthBytes]
+			};
+			StratCom.EntropySource.NextBytes(config.Salt);
+			return config;
+		}
 
         /// <summary>
         /// Add a directory of files as payload items to the package with a relative path 
@@ -108,25 +148,24 @@ namespace ObscurCore
         /// <param name="search">Search for files in subdirectories (default) or not.</param>
         public void AddDirectory(string path, SearchOption search = SearchOption.AllDirectories) {
             var dir = new DirectoryInfo(path);
+
+			if(Path.HasExtension(path)) {
+				throw new ArgumentException ("Path is not a directory.");
+			} else if (!dir.Exists) {
+				throw new ArgumentException ("Directory does not exist.");
+			}
+
             var rootPathLength = dir.FullName.Length;
             var files = dir.EnumerateFiles("*", search);
-
             foreach (var file in files) {
-                var newItem = new PayloadItem
-                    {
-                        ExternalLength = file.Length,
-                        Type = PayloadItemTypes.Binary,
-                        RelativePath = search == SearchOption.AllDirectories
-                                ? file.FullName.Remove(0, rootPathLength + 1)
-                                : file.Name,
-                        Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration
-                            (SymmetricBlockCipher.Aes, BlockCipherMode.Ctr, BlockCipherPadding.None)
-                    };
-                var filePath = file.FullName; // provide consistent behaviour i.r.t. closure variable
-                newItem.SetStreamBinding(() => File.OpenRead(filePath));
-                if (Path.DirectorySeparatorChar != Athena.Packaging.PathDirectorySeperator) {
-                    newItem.RelativePath = newItem.RelativePath.Replace(Path.DirectorySeparatorChar, Athena.Packaging.PathDirectorySeperator);
-                }
+				var filePath = file.FullName; // provide consistent behaviour i.r.t. closure variable
+				var itemStream = File.OpenRead (filePath);
+				var itemRelPath = search == SearchOption.TopDirectoryOnly
+				                  ? file.Name : file.FullName.Remove(0, rootPathLength + 1);
+				if (Path.DirectorySeparatorChar != Athena.Packaging.PathDirectorySeperator) {
+					itemRelPath = itemRelPath.Replace(Path.DirectorySeparatorChar, Athena.Packaging.PathDirectorySeperator);
+				}
+				var newItem = CreateItem (itemStream, PayloadItemTypes.Binary, file.Length, itemRelPath, false);
 
                 _manifest.PayloadItems.Add(newItem);
             }
@@ -134,7 +173,57 @@ namespace ObscurCore
 
 
 
+		/// <summary>
+		/// Reads a package manifest header (only) from a stream.
+		/// </summary>
+		/// <param name="source">Stream to read the header from.</param>
+		/// <param name="mCryptoConfig">Manifest cryptography configuration deserialised from the header.</param>
+		/// <param name="mCryptoScheme">Manifest cryptography scheme parsed from the header.</param>
+		/// <returns>Package manifest header object.</returns>
+		public static ManifestHeader ReadPackageManifestHeader(Stream source, out IManifestCryptographySchemeConfiguration mCryptoConfig,
+			out ManifestCryptographySchemes mCryptoScheme)
+		{
+			Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPackageManifestHeader", "[* PACKAGE START* ] Header offset (absolute)",
+				source.Position.ToString()));
 
+			var referenceHeaderTag = Athena.Packaging.GetHeaderTag();
+			var readHeaderTag = new byte[referenceHeaderTag.Length];
+			source.Read(readHeaderTag, 0, readHeaderTag.Length);
+			if (!readHeaderTag.SequenceEqual(referenceHeaderTag)) {
+				throw new InvalidDataException("Package is malformed. Expected header tag is either absent or malformed.");
+			}
+
+			Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPackageManifestHeader", "Manifest header offset (absolute)",
+				source.Position.ToString()));
+
+			var mHeader = (ManifestHeader) StratCom.Serialiser.DeserializeWithLengthPrefix(source, null, typeof (ManifestHeader),
+				PrefixStyle.Base128, 0);
+
+			if (mHeader.FormatVersion > Athena.Packaging.HeaderVersion) {
+				throw new NotSupportedException(String.Format("Package version {0} as specified by the manifest header is unsupported/unknown.\n" +
+					"The local version of ObscurCore supports up to version {1}.", mHeader.FormatVersion, Athena.Packaging.HeaderVersion));
+				// In later versions, can redirect to diff. behaviour (and DTO objects) for diff. versions.
+			}
+
+			mCryptoScheme = mHeader.CryptographySchemeName.ToEnum<ManifestCryptographySchemes>();
+			switch (mHeader.CryptographySchemeName.ToEnum<ManifestCryptographySchemes>()) {
+			case ManifestCryptographySchemes.UniversalSymmetric:
+				mCryptoConfig = StratCom.DeserialiseDTO<SymmetricManifestCryptographyConfiguration>(mHeader.CryptographySchemeConfiguration);
+				break;
+			case ManifestCryptographySchemes.UM1Hybrid:
+				mCryptoConfig = StratCom.DeserialiseDTO<UM1ManifestCryptographyConfiguration>(mHeader.CryptographySchemeConfiguration);
+				break;
+			case ManifestCryptographySchemes.Curve25519UM1Hybrid:
+				mCryptoConfig = StratCom.DeserialiseDTO<Curve25519UM1ManifestCryptographyConfiguration>(mHeader.CryptographySchemeConfiguration);
+				break;
+			default:
+				throw new NotSupportedException(String.Format(
+					"Package manifest cryptography scheme \"{0}\" as specified by the manifest header is unsupported/unknown.", 
+					mHeader.CryptographySchemeName));
+			}
+
+			return mHeader;
+		}
 
 
 
@@ -142,9 +231,9 @@ namespace ObscurCore
         /// Read a package from a file.
         /// </summary>
         /// <returns></returns>
-        //public static Package FromFile(string filePath) {
+		public static Package FromFile(string filePath) {
             
-        //}
+        }
 
         /// <summary>
         /// Read a package from a stream.
@@ -274,5 +363,36 @@ namespace ObscurCore
         public void ReadOutTo() {
             
         }
+
+
+		/// <summary>
+		/// Determines the offsets and read lengths of each individual item by simulating a demux
+		/// </summary>
+		private void BuildPayloadItemLayoutMap() {
+			var remaining = new long[_manifest.PayloadItems.Count];
+
+			var map = new List<MapSegment>();
+
+
+			var itemSelector = Source.CreateCsprng(_manifest.PayloadConfiguration.PrimaryPRNGName.ToEnum<CsPseudorandomNumberGenerator>(),
+				_manifest.PayloadConfiguration.PrimaryPRNGConfiguration);
+
+
+
+
+		}
+
+		struct MapSegment
+		{
+			Guid Item;
+			long Offset;
+			long Length;
+		}
+
+
+
+
+
+
     }
 }

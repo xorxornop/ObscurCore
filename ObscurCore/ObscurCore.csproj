@@ -181,7 +181,6 @@
     <Compile Include="Cryptography\KeyAgreement\Primitives\UM1Exchange.cs" />
     <Compile Include="Cryptography\KeyAgreement\Utilities.cs" />
     <None Include="Cryptography\Entropy\Primitives\MersenneTwister.cs" />
-    <Compile Include="Cryptography\KeyDerivation\KeyDerivationFunctions.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Helper.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Pbkdf2.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Salsa20Core.cs" />
@@ -241,6 +240,8 @@
     <Compile Include="RingByteBuffer.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Cryptography\HashStream.cs" />
+    <Compile Include="Cryptography\KeyDerivation\ScryptModule.cs" />
+    <Compile Include="Cryptography\KeyDerivation\Pbkdf2Module.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />
