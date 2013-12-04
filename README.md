@@ -70,16 +70,23 @@ Fabric is currently disabled in the build as it's unpredictably buggy. Work is o
 
 Here's an example using the packager:
 
-	var mCipher = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCiphers.HC256);
-
-    var preKey = new byte[mCipher.KeySize / 8];
-    StratCom.EntropySource.NextBytes(preKey);
-    using (var temp = new MemoryStream()) {
-    	PackageWriter.WritePackageSymmetric(outStream, temp, manifest, mCipher, preKey);
+    using (var output = new MemoryStream()) {
+    	var package = new Package(key);
+    	package.AddFile(filePath);
+    	package.Write(ms);
     }
 
+The above...
+*	Creates the package with frameshifting payload layout (default)
+*	Sets up key confirmation for the manifest with BLAKE2B-256 (default)
+*	Adds a file to a package with AES-256/CTR encryption (random key, default)
+*	Derives a package/manifest key (from the supplied one) with scrypt KDF
+*	Writes it out to the output stream
 
-All schemes offer key confirmation capability with a choice of algorithms (e.g. MAC or KDF, etc.)
+Pretty easy huh?
+
+
+All schemes offer key confirmation capability with a choice of algorithms (e.g. MAC, KDF, etc.)
 If a package is recieived from a sender for which you hold multiple keys on file for (whatever kind they may be), all them will be verified with the key confirmation data (if present, which it is by default - generated automatically) to determine the correct one to proceed with.
 
 Packages include the capability to communicate new keys (of any kind), or request invalidation of keys for subsequent communications. For example, you could send a symmetric key for manifests, so as to reduce overhead incurred by public key schemes.
