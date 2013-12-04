@@ -31,53 +31,63 @@ namespace ObscurCore
 
         static StratCom() {
             EntropySource.SetSeed(SecureRandom.GetSeed(InitialSeedSize));
-            EntropySource.SetSeed(Encoding.UTF8.GetBytes(Thread.CurrentThread.Name));
-        }
-
-        public static MemoryStream SerialiseDTO(object obj) {
-            return SerialiseDTO(obj, false);
+            EntropySource.SetSeed(Thread.CurrentThread.ManagedThreadId);
         }
 
         /// <summary>
         /// Provides serialisation capabilities for any object that has a ProtoContract attribute (e.g. from ObscurCore.DTO namespace).
         /// </summary>
         /// <returns>The DTO object serialised to binary data wrapped in a MemoryStream.</returns>
-        public static MemoryStream SerialiseDTO(object obj, bool lengthPrefix) {
-            var type = obj.GetType();
-            if (!Serialiser.CanSerializeContractType(type)) {
-                throw new ArgumentException(
-                    "Cannot serialise - requested object does not have a serialisation contract for its type.", "obj");
-            }
+        public static MemoryStream SerialiseDataTransferObject(object obj, bool prefixLength = false) {
             var ms = new MemoryStream();
-            if (lengthPrefix) {
-                Serialiser.SerializeWithLengthPrefix(ms, obj, type, PrefixStyle.Base128, 0);
-            } else {
-                Serialiser.Serialize(ms, obj);
-            }
+            SerialiseDataTransferObject(obj, ms, prefixLength);
             return ms;
         }
 
-        public static T DeserialiseDTO<T>(byte[] objectBytes) {
-            return DeserialiseDTO<T>(objectBytes, false);
+        public static void SerialiseDataTransferObject(object obj, Stream output, bool prefixLength = false) {
+            var type = obj.GetType();
+            if (!Serialiser.CanSerializeContractType(type)) {
+                throw new ArgumentException(
+                    "Cannot serialise - object type does not have a serialisation contract.", "obj");
+            }
+            if (prefixLength) {
+                Serialiser.SerializeWithLengthPrefix(output, obj, type, PrefixStyle.Base128, 0);
+            } else {
+                Serialiser.Serialize(output, obj);
+            }
         }
 
         /// <summary>
         /// Provides serialisation capabilities for any object that has a ProtoContract attribute (e.g. from ObscurCore.DTO namespace).
         /// </summary>
         /// <returns>The DTO object serialised to binary data wrapped in a MemoryStream.</returns>
-        public static T DeserialiseDTO<T>(byte[] objectBytes, bool lengthPrefix) {
+        public static T DeserialiseDataTransferObject<T>(byte[] objectBytes, bool prefixLength = false) {
             if (!Serialiser.CanSerializeContractType(typeof (T))) {
                 throw new ArgumentException(
                     "Cannot deserialise - requested type does not have a serialisation contract.");
             }
             var ms = new MemoryStream(objectBytes);
             var outputObj = default(T);
-            if (lengthPrefix) {
-                outputObj =
-                    (T) Serialiser.DeserializeWithLengthPrefix(ms, outputObj, typeof (T), PrefixStyle.Base128, 0);
+            if (prefixLength) {
+                outputObj = (T) Serialiser.DeserializeWithLengthPrefix(ms, outputObj, typeof (T), PrefixStyle.Base128, 0);
             } else {
                 outputObj = (T) Serialiser.Deserialize(ms, outputObj, typeof (T));
             }
+            return outputObj;
+        }
+
+        /// <summary>
+        /// Reads a serialiser-length-prefixed DTO object from a stream.
+        /// </summary>
+        /// <typeparam name="T">Type of the DTO object.</typeparam>
+        /// <param name="input">Stream to read the serialised object from.</param>
+        /// <returns>Deserialised DTO object</returns>
+        public static T DeserialiseDataTransferObject<T>(Stream input) {
+            if (!Serialiser.CanSerializeContractType(typeof (T))) {
+                throw new ArgumentException(
+                    "Cannot deserialise - requested type does not have a serialisation contract.");
+            }
+            var outputObj = (T) Serialiser.DeserializeWithLengthPrefix(input, default(T), typeof (T), PrefixStyle.Base128, 0);
             return outputObj;
         }
     }

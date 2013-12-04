@@ -13,18 +13,16 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore.Information
-{
-    public sealed class SymmetricCipherPaddingDescription
-    {
-        /// <summary>
-        /// Name of the block cipher padding scheme (must be a member of BlockCipherPaddingTypes).
-        /// </summary>
-        public string Name { get; internal set; }
+using ProtoBuf;
 
-        /// <summary>
-        /// Name to show a user or for a detailed specification.
-        /// </summary>
-        public string DisplayName { get; internal set; }
-    }
+namespace ObscurCore.DTO
+{
+    [ProtoContract]
+	public enum VerificationFunctionType
+	{
+		None,
+		Digest,
+		Mac,
+		Kdf
+	}
 }

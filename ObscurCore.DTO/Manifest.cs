@@ -26,6 +26,14 @@ namespace ObscurCore.DTO
     public sealed class Manifest : IManifest, IDataTransferObject, IEquatable<Manifest>
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// </summary>
+        public Manifest() {
+            PayloadItems = new List<PayloadItem>();
+            PayloadConfiguration = new PayloadConfiguration();
+        }
+
+        /// <summary>
         /// Sequence of payload item descriptors. Order must be preserved for data integrity. 
         /// </summary>
         /// <remarks>
@@ -34,13 +42,13 @@ namespace ObscurCore.DTO
         /// <para>WARNING: Ordering of this list of items MUST be maintained!
         /// Failure to ensure this will result in most probably total, non-recoverable loss of package contents at unpackaging stage.</para>
         /// </remarks>
-        [ProtoMember(1)]
+        [ProtoMember(1, IsRequired = true)]
         public List<PayloadItem> PayloadItems { get; set; }
 		
         /// <summary>
         /// Configuration of the payload packaging.
         /// </summary>
-        [ProtoMember(2)]
+        [ProtoMember(2, IsRequired = true)]
         public PayloadConfiguration PayloadConfiguration { get; set; }
 
         public override bool Equals (object obj) {

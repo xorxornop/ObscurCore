@@ -7,9 +7,9 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
 	/// Generates deterministic cryptographically secure pseudorandom number sequence 
 	/// using internal Salsa20 stream cipher.
 	/// </summary>
-	public sealed class SosemanukGenerator : StreamCSPRNG
+	public sealed class SosemanukGenerator : StreamCsprng
 	{
-        public SosemanukGenerator(StreamCipherCSPRNGConfiguration config) : base(new SosemanukEngine(), config) {
+        public SosemanukGenerator(StreamCipherCsprngConfiguration config) : base(new SosemanukEngine(), config) {
             var cp = Source.CreateStreamCipherParameters(SymmetricStreamCipher.Sosemanuk, Config.Key,
                 Config.Nonce);
             Cipher.Init(true, cp);

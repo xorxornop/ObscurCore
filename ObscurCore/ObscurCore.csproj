@@ -43,6 +43,7 @@
     <Reference Include="protobuf-net">
       <HintPath>..\ObscurCore.DTO\lib\protobuf-net\net30\protobuf-net.dll</HintPath>
     </Reference>
+    <Reference Include="System.Security" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Athena.cs" />
@@ -97,8 +98,8 @@
     <Compile Include="Cryptography\Ciphers\Block\Modes\OfbBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\SicBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\IBlockCipherPadding.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Padding\ISO10126d2Padding.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Padding\ISO7816d4Padding.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\Padding\Iso10126D2Padding.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\Padding\Iso7816D4Padding.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\PaddedBufferedBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\Pkcs7Padding.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\TbcPadding.cs" />
@@ -129,16 +130,18 @@
     <Compile Include="Cryptography\MacFunction.cs" />
     <Compile Include="Cryptography\SymmetricBlockCipher.cs" />
     <Compile Include="Cryptography\SymmetricStreamCipher.cs" />
+    <Compile Include="IKeyProvider.cs" />
     <Compile Include="Information\CsprngDescription.cs" />
     <Compile Include="DebugUtility.cs" />
     <Compile Include="Information\HashFunctionDescription.cs" />
     <Compile Include="Information\KdfDescription.cs" />
     <Compile Include="Information\MacFunctionDescription.cs" />
     <Compile Include="Information\NonceReusePolicies.cs" />
+    <Compile Include="ItemStreamBindingAbsentException.cs" />
     <Compile Include="Package.cs" />
     <Compile Include="Packaging\Exceptions.cs" />
-    <Compile Include="Packaging\PackageReader.cs" />
-    <Compile Include="Packaging\PackageWriter.cs" />
+    <Compile Include="Packaging\FabricStripeMode.cs" />
+    <Compile Include="Packaging\FrameshiftPaddingMode.cs" />
     <Compile Include="Information\SymmetricCipherDescription.cs" />
     <Compile Include="Information\SymmetricCipherModeDescription.cs" />
     <Compile Include="Information\SymmetricCipherPaddingDescription.cs" />
@@ -156,7 +159,7 @@
     <Compile Include="Cryptography\Ciphers\IBufferedCipher.cs" />
     <Compile Include="Cryptography\Ciphers\ICipherParameters.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\IStreamCipher.cs" />
-    <None Include="Cryptography\Ciphers\Stream\Primitives\HC128Engine.cs" />
+    <None Include="Cryptography\Ciphers\Stream\Primitives\Hc128Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Hc128EngineOptimised.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Hc256Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\IsaacEngine.cs" />
@@ -171,13 +174,13 @@
     <Compile Include="Cryptography\Entropy\Primitives\ReversedWindowGenerator.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\ThreadedSeedGenerator.cs" />
     <Compile Include="Cryptography\Entropy\SecureRandom.cs" />
-    <Compile Include="Cryptography\Entropy\StreamCSPRNG.cs" />
+    <Compile Include="Cryptography\Entropy\StreamCsprng.cs" />
     <Compile Include="Cryptography\EcFpCurves.cs" />
     <Compile Include="Cryptography\Exceptions.cs" />
     <Compile Include="Cryptography\MacStream.cs" />
     <Compile Include="Cryptography\KeyAgreement\IBasicAgreement.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Primitives\ECDHBasicAgreement.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Primitives\ECDHCBasicAgreement.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Primitives\EcdhBasicAgreement.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Primitives\EcdhcBasicAgreement.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\UM1Exchange.cs" />
     <Compile Include="Cryptography\KeyAgreement\Utilities.cs" />
     <None Include="Cryptography\Entropy\Primitives\MersenneTwister.cs" />
@@ -193,11 +196,11 @@
     <None Include="Packaging\AsyncCryptoMux.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Packaging\ConfigurationObjects.cs" />
-    <Compile Include="Packaging\Enums.cs" />
-    <Compile Include="Packaging\FabricMux.cs" />
-    <Compile Include="Packaging\FrameshiftMux.cs" />
-    <Compile Include="Packaging\SimpleMux.cs" />
-    <Compile Include="Packaging\PayloadMultiplexer.cs" />
+    <Compile Include="Packaging\PayloadLayoutScheme.cs" />
+    <Compile Include="Packaging\FabricPayloadMux.cs" />
+    <Compile Include="Packaging\FrameshiftPayloadMux.cs" />
+    <Compile Include="Packaging\SimplePayloadMux.cs" />
+    <Compile Include="Packaging\PayloadMux.cs" />
     <Compile Include="Packaging\Utilities.cs" />
     <Compile Include="Information\PaddingRequirement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -206,7 +209,7 @@
     <Compile Include="StratCom.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\Salsa20Generator.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\SOSEMANUKGenerator.cs" />
-    <Compile Include="Cryptography\Entropy\CSPRNG.cs" />
+    <Compile Include="Cryptography\Entropy\Csprng.cs" />
     <Compile Include="Cryptography\Support\Arrays.cs" />
     <Compile Include="Cryptography\Support\AsymmetricCipherKeyPair.cs" />
     <Compile Include="Cryptography\Support\AsymmetricKeyParameter.cs" />

@@ -19,7 +19,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
      * DL/ECKAS-DH2. It assumes that the input keys are valid (see also
      * Section 7.2.2).
      */
-    public class ECDHBasicAgreement
+    public class EcdhBasicAgreement
 		: IBasicAgreement
     {
         protected internal ECPrivateKeyParameters privKey;

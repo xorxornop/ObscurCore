@@ -24,7 +24,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
      * (if you want that just use ECDHBasicAgreement and note they both implement
      * BasicAgreement!).</p>
      */
-    public class ECDHCBasicAgreement
+    public class EcdhcBasicAgreement
 		: IBasicAgreement
     {
         private ECPrivateKeyParameters key;

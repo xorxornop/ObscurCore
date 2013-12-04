@@ -25,31 +25,31 @@ namespace ObscurCore.Packaging
 		/// If fine-tuning is desired, use the specialised constructors.
 		/// </summary>
 		/// <param name="schemeEnum">Desired payload layout scheme.</param>
-		public static PayloadConfiguration CreateDefault(PayloadLayoutSchemes schemeEnum) {
+		public static PayloadConfiguration CreateDefault(PayloadLayoutScheme schemeEnum) {
 			var config = new PayloadConfiguration {
                 SchemeName = schemeEnum.ToString(),
-				PrimaryPRNGName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-				PrimaryPRNGConfiguration = Source.CreateStreamCipherCsprngConfiguration(
-                    CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+				PrimaryPrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
+				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto<StreamCipherCsprngConfiguration>()
 			};
 			
 			switch (schemeEnum) {
-			case PayloadLayoutSchemes.Simple:
+			case PayloadLayoutScheme.Simple:
 				break;
-			case PayloadLayoutSchemes.Frameshift:
+			case PayloadLayoutScheme.Frameshift:
 				// Padding length is variable by default.
 			    var frameshiftConfig = new PayloadSchemeConfiguration() {
-			            Minimum = FrameshiftMux.MinimumPaddingLength,
-			            Maximum = FrameshiftMux.MaximumPaddingLength
+			            Minimum = FrameshiftPayloadMux.MinimumPaddingLength,
+			            Maximum = FrameshiftPayloadMux.MaximumPaddingLength
 			        };
-			    config.SchemeConfiguration = frameshiftConfig.SerialiseDTO();
+			    config.SchemeConfiguration = frameshiftConfig.SerialiseDto();
 				break;
 #if(INCLUDE_FABRIC)
             case PayloadLayoutSchemes.Fabric:
 				// Stripe length is variable by default.
 				var fabricConfig = new PayloadSchemeConfiguration() {
-			            Minimum = FabricMux.MinimumStripeLength,
-			            Maximum = FabricMux.MaximumStripeLength
+			            Minimum = FabricPayloadMux.MinimumStripeLength,
+			            Maximum = FabricPayloadMux.MaximumStripeLength
 			        };
 			    config.SchemeConfiguration = fabricConfig.SerialiseDTO();
 				break;
@@ -65,14 +65,14 @@ namespace ObscurCore.Packaging
 		
 		public static PayloadConfiguration CreateFrameshiftFixed(CsPseudorandomNumberGenerator csprngEnum, int? stripeSize) {
             var config = new PayloadConfiguration {
-                SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
+                SchemeName = PayloadLayoutScheme.Frameshift.ToString(),
                 SchemeConfiguration = new PayloadSchemeConfiguration() {
-			            Minimum = (stripeSize == null ? FrameshiftMux.DefaultFixedPaddingLength : stripeSize.Value),
-			            Maximum = (stripeSize == null ? FrameshiftMux.DefaultFixedPaddingLength : stripeSize.Value),
-			        }.SerialiseDTO(),
-				PrimaryPRNGName = csprngEnum.ToString(),
-				PrimaryPRNGConfiguration = Source.CreateStreamCipherCsprngConfiguration(
-                    csprngEnum).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+			            Minimum = (stripeSize == null ? FrameshiftPayloadMux.DefaultFixedPaddingLength : stripeSize.Value),
+			            Maximum = (stripeSize == null ? FrameshiftPayloadMux.DefaultFixedPaddingLength : stripeSize.Value),
+			        }.SerialiseDto(),
+				PrimaryPrngName = csprngEnum.ToString(),
+				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    csprngEnum).SerialiseDto<StreamCipherCsprngConfiguration>()
 			};
 		    return config;
 		}
@@ -83,14 +83,14 @@ namespace ObscurCore.Packaging
 
 	    public static PayloadConfiguration CreateFrameshiftVariable(CsPseudorandomNumberGenerator csprngEnum, int? minStripe, int? maxStripe) {
             var config = new PayloadConfiguration {
-                SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
+                SchemeName = PayloadLayoutScheme.Frameshift.ToString(),
                 SchemeConfiguration = new PayloadSchemeConfiguration() {
-			            Minimum = (minStripe == null ? FrameshiftMux.MinimumPaddingLength : minStripe.Value),
-			            Maximum = (maxStripe == null ? FrameshiftMux.MaximumPaddingLength : maxStripe.Value)
-			        }.SerialiseDTO(),
-				PrimaryPRNGName = csprngEnum.ToString(),
-				PrimaryPRNGConfiguration = Source.CreateStreamCipherCsprngConfiguration(
-                    csprngEnum).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+			            Minimum = (minStripe == null ? FrameshiftPayloadMux.MinimumPaddingLength : minStripe.Value),
+			            Maximum = (maxStripe == null ? FrameshiftPayloadMux.MaximumPaddingLength : maxStripe.Value)
+			        }.SerialiseDto(),
+				PrimaryPrngName = csprngEnum.ToString(),
+				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    csprngEnum).SerialiseDto<StreamCipherCsprngConfiguration>()
 			};
             return config;
 	    }
@@ -113,7 +113,7 @@ namespace ObscurCore.Packaging
             var config = new PayloadConfiguration {
                 SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
                 SchemeConfiguration = new PayloadSchemeConfiguration() {
-			            Minimum = (minStripe == null ? FabricMux.MinimumStripeLength : minStripe.Value),
+			            Minimum = (minStripe == null ? FabricPayloadMux.MinimumStripeLength : minStripe.Value),
 			            Maximum = (maxStripe == null ? FrameshiftMux.MaximumStripeLength : maxStripe.Value)
 			        }.SerialiseDTO(),
 				PrimaryPRNGName = generator.ToString(),

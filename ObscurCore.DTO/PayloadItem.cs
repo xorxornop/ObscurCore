@@ -81,7 +81,7 @@ namespace ObscurCore.DTO
         /// Key actions should be handled differently from the others.
         /// </summary>
         [ProtoMember(1, IsRequired = true)]
-        public PayloadItemTypes Type { get; set; }
+        public PayloadItemType Type { get; set; }
 		
         /// <summary>
         /// Path of the stored data. 'Path' syntax may correspond to a key-value collection, filesystem, or other hierarchal schema. 
@@ -148,7 +148,7 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(this, other)) return true;
             return Type.Equals(other.Type) &&
                    string.Equals(RelativePath, other.RelativePath, 
-                   Type == PayloadItemTypes.Binary ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) &&
+                   Type == PayloadItemType.Binary ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) &&
                    InternalLength == other.InternalLength && ExternalLength == other.ExternalLength && Encryption.Equals(other.Encryption) && 
                    /*Compression.Equals(other.Compression) && */
                    (KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) &&
@@ -165,7 +165,7 @@ namespace ObscurCore.DTO
         public override int GetHashCode () {
             unchecked {
                 int hashCode = Type.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Type == PayloadItemTypes.Binary ? 
+                hashCode = (hashCode * 397) ^ (Type == PayloadItemType.Binary ? 
                     StringComparer.OrdinalIgnoreCase.GetHashCode(RelativePath) : StringComparer.Ordinal.GetHashCode(RelativePath));
                 hashCode = (hashCode * 397) ^ InternalLength.GetHashCode();
                 hashCode = (hashCode * 397) ^ ExternalLength.GetHashCode();
@@ -216,7 +216,7 @@ namespace ObscurCore.DTO
         /// Item handling behaviour category. 
         /// Key actions should be handled differently from the others.
         /// </summary>
-        PayloadItemTypes Type { get; set; }
+        PayloadItemType Type { get; set; }
 
         /// <summary>
         /// Path of the stored data. 'Path' syntax may correspond to a key-value collection, filesystem, or other hierarchal schema. 

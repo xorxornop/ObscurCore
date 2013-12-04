@@ -16,6 +16,7 @@
 using System.Collections.Generic;
 using System.Text;
 using ObscurCore.Cryptography;
+using ObscurCore.Information;
 
 namespace ObscurCore
 {

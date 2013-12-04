@@ -7,7 +7,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Padding
     /**
     * A padder that adds ISO10126-2 padding to a block.
     */
-    public class ISO10126d2Padding: IBlockCipherPadding
+    public class Iso10126D2Padding: IBlockCipherPadding
     {
         private SecureRandom random;
 

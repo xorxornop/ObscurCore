@@ -20,13 +20,13 @@ namespace ObscurCore.Tests.Packaging
                     {
                         RelativePath = t.Name,
                         ExternalLength = t.Length,
-                        Type = PayloadItemTypes.Binary,
+                        Type = PayloadItemType.Binary,
                         //Compression = new CompressionConfiguration () { AlgorithmName = CompressionAlgorithms.LZ4.ToString() },
                         //Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCiphers.AES, BlockCipherModes.CTR, BlockCipherPaddings.None),
                         Encryption = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Sosemanuk)
                     };
 
-                payloadItem.Encryption.Key = new byte[payloadItem.Encryption.KeySize / 8];
+                payloadItem.Encryption.Key = new byte[payloadItem.Encryption.KeySizeBits / 8];
                 StratCom.EntropySource.NextBytes(payloadItem.Encryption.Key);
                 payloadItem.SetStreamBinding(fileInfo.OpenRead);
 
@@ -45,13 +45,13 @@ namespace ObscurCore.Tests.Packaging
                     {
                         RelativePath = t.Name,
                         ExternalLength = t.Length,
-                        Type = PayloadItemTypes.Binary,
+                        Type = PayloadItemType.Binary,
                         //Compression = new CompressionConfiguration () { AlgorithmName = CompressionAlgorithms.LZ4.ToString() },
                         Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCipher.Serpent, 
                             BlockCipherMode.Ctr, BlockCipherPadding.None)
                     };
 
-                payloadItem.Encryption.Key = new byte[payloadItem.Encryption.KeySize / 8];
+                payloadItem.Encryption.Key = new byte[payloadItem.Encryption.KeySizeBits / 8];
                 StratCom.EntropySource.NextBytes(payloadItem.Encryption.Key);
                 payloadItem.SetStreamBinding(fileInfo.OpenRead);
 

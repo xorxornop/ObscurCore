@@ -12,10 +12,10 @@ namespace ObscurCore.Tests.Packaging.Serialisation
             var inputObj = new SymmetricCipherConfiguration() {
                 Type = SymmetricCipherType.Block,
                 CipherName = "AES",
-                KeySize = 128,
+                KeySizeBits = 128,
                 IV = new byte[] { 0x01, 0x02, 0x03 },
                 ModeName = BlockCipherMode.Ctr.ToString(),
-                BlockSize = 128,
+                BlockSizeBits = 128,
                 PaddingName = BlockCipherPadding.None.ToString()
             };
 
@@ -31,15 +31,15 @@ namespace ObscurCore.Tests.Packaging.Serialisation
         [Test]
         public void AEADBlockCipher () {
             var inputObj = new SymmetricCipherConfiguration() {
-                Type = SymmetricCipherType.AEAD,
+                Type = SymmetricCipherType.Aead,
                 CipherName = "AES",
-                KeySize = 128,
+                KeySizeBits = 128,
                 IV = new byte[] { 0x01, 0x02, 0x03 },
                 ModeName = AeadBlockCipherMode.Gcm.ToString(),
-                BlockSize = 128,
+                BlockSizeBits = 128,
                 PaddingName = BlockCipherPadding.None.ToString(),
                 AssociatedData = new byte[] { 0x03, 0x01, 0x04 },
-                MacSize = 128,
+                MacSizeBits = 128,
 
             };
 
@@ -57,7 +57,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
             var inputObj = new SymmetricCipherConfiguration() {
                 Type = SymmetricCipherType.Stream,
                 CipherName = "Salsa20",
-                KeySize = 256,
+                KeySizeBits = 256,
                 IV = new byte[] { 0x01, 0x02, 0x03 }
             };
 

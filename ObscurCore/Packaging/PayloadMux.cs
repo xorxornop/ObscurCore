@@ -29,18 +29,19 @@ namespace ObscurCore.Packaging
     /// Supports extensions for control of operation size (partial/split item writes), ordering, 
     /// and item headers & trailers. Records I/O history itemwise and total.
     /// </remarks>
-    public class PayloadMultiplexer
+    public abstract class PayloadMux
     {
         /// <summary>
         /// Initializes a new instance of a stream multiplexer.
         /// </summary>
-        /// <param name="writing">If set to <c>true</c> writing.</param>
-        /// <param name="multiplexedStream">Multiplexed stream.</param>
-        /// <param name="streams">Streams.</param>
+        /// <param name="writing">If set to <c>true</c>, writing a multiplexed stream.</param>
+        /// <param name="multiplexedStream">Stream being written to (destination; multiplexing) or read from (source; demultiplexing).</param>
+        /// <param name="streams">Streams being read from (sources; multiplexing), or written to (destinations; demultiplexing).</param>
         /// <param name="transformFuncs">Transform funcs.</param>
         /// <param name="maxOpSize">Maximum size that any single operation will be. Used to size copy buffer.</param>
-        public PayloadMultiplexer(bool writing, Stream multiplexedStream, IList<IStreamBinding> streams,
-                         IList<Func<Stream, DecoratingStream>> transformFuncs, int maxOpSize = 16384) {
+        protected PayloadMux(bool writing, Stream multiplexedStream, IList<IStreamBinding> streams,
+            IList<Func<Stream, DecoratingStream>> transformFuncs, int maxOpSize = 16384)
+        {
             if (streams.Count == 0 || transformFuncs.Count == 0)
                 throw new ArgumentException("No streams and/or transforms supplied for multiplexing operations.");
             else if (streams.Count != transformFuncs.Count)
@@ -55,7 +56,7 @@ namespace ObscurCore.Packaging
             _copyBuffer = new byte[maxOpSize];
 
             // Set up lazy-initialised transforms using Func value factories
-            for (int i = 0; i < transformFuncs.Count; i++) {
+            for (var i = 0; i < transformFuncs.Count; i++) {
                 /* Make the buffer big enough to satisfy the transform stack's requirements, 
                  * but not bigger than the item, or transform+copybuffer requirements. */
                 var relevantItemLength = Writing ? _items[i].ExternalLength : _items[i].InternalLength;
@@ -206,8 +207,8 @@ namespace ObscurCore.Packaging
             var nextOpLen = NextOperationLength();
             var targetPosition = Math.Min(SourceAccumulator + nextOpLen, Writing ? CurrentItem.ExternalLength : CurrentItem.InternalLength);
 
-            Debug.Print(DebugUtility.CreateReportString("StreamMux", "ExecuteSingle", "Target position (item-relative)",
-                    targetPosition.ToString()));
+            Debug.Print(DebugUtility.CreateReportString("PayloadMux", "ExecuteSingle", "Target position (item-relative)",
+                    targetPosition));
 
             bool sourceDepleted = false;
             while (SourceAccumulator < targetPosition) {
@@ -257,8 +258,8 @@ namespace ObscurCore.Packaging
                 ItemsCompleted++;
                 if(Writing) CurrentSource.Close();
 
-                Debug.Print(DebugUtility.CreateReportString("StreamMux", "ExecuteSingle", "[* END OF ITEM *]",
-                    CurrentIndex.ToString()));
+                Debug.Print(DebugUtility.CreateReportString("PayloadMux", "ExecuteSingle", "[*** END OF ITEM ***]",
+                    CurrentIndex));
             }
         }
 
@@ -285,8 +286,8 @@ namespace ObscurCore.Packaging
                     NextSource();
                 } while (SourceAccumulator < 0);
 
-                Debug.Print(DebugUtility.CreateReportString("StreamMux", "AdvanceSource", "Selected stream index",
-                    CurrentIndex.ToString()));
+                Debug.Print(DebugUtility.CreateReportString("PayloadMux", "AdvanceSource", "Selected stream index",
+                    CurrentIndex));
 
                 return true;
             }

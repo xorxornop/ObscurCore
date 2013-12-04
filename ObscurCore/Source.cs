@@ -65,8 +65,8 @@ namespace ObscurCore
 		private readonly static IDictionary<KeyDerivationFunction, Func<byte[], byte[], int, byte[], byte[]>> KdfStatics =
 			new Dictionary<KeyDerivationFunction, Func<byte[], byte[], int, byte[], byte[]>>();
 
-        private readonly static IDictionary<CsPseudorandomNumberGenerator, Func<byte[], CSPRNG>> PrngInstantiators =
-			new Dictionary<CsPseudorandomNumberGenerator, Func<byte[], CSPRNG>>();
+        private readonly static IDictionary<CsPseudorandomNumberGenerator, Func<byte[], Csprng>> PrngInstantiators =
+			new Dictionary<CsPseudorandomNumberGenerator, Func<byte[], Csprng>>();
 
         private readonly static IDictionary<HashFunction, Func<IDigest>> DigestInstantiators =
 			new Dictionary<HashFunction, Func<IDigest>>();
@@ -79,9 +79,9 @@ namespace ObscurCore
 
         // Packaging related
 
-        private readonly static IDictionary<PayloadLayoutSchemes, Func<bool, Stream, IList<IStreamBinding>, IList<Func<Stream, DecoratingStream>>, 
-			IPayloadConfiguration, PayloadMultiplexer>> PayloadLayoutModuleInstantiators = new Dictionary<PayloadLayoutSchemes, 
-		    Func<bool, Stream, IList<IStreamBinding>, IList<Func<Stream, DecoratingStream>>, IPayloadConfiguration, PayloadMultiplexer>>();
+        private readonly static IDictionary<PayloadLayoutScheme, Func<bool, Stream, IList<IStreamBinding>, IList<Func<Stream, DecoratingStream>>, 
+			IPayloadConfiguration, PayloadMux>> PayloadLayoutModuleInstantiators = new Dictionary<PayloadLayoutScheme, 
+		    Func<bool, Stream, IList<IStreamBinding>, IList<Func<Stream, DecoratingStream>>, IPayloadConfiguration, PayloadMux>>();
 
         static Source() {
             // ######################################## ENGINES ########################################
@@ -138,11 +138,11 @@ namespace ObscurCore
 
             // ######################################## PADDING ########################################
 
-            PaddingInstantiators.Add(BlockCipherPadding.Iso10126D2, () => new ISO10126d2Padding());
-            PaddingInstantiators.Add(BlockCipherPadding.Iso7816D4, () => new ISO7816d4Padding());
-            PaddingInstantiators.Add(BlockCipherPadding.Pkcs7, () => new ISO10126d2Padding());
-            PaddingInstantiators.Add(BlockCipherPadding.Tbc, () => new ISO10126d2Padding());
-            PaddingInstantiators.Add(BlockCipherPadding.X923, () => new ISO10126d2Padding());
+            PaddingInstantiators.Add(BlockCipherPadding.Iso10126D2, () => new Iso10126D2Padding());
+            PaddingInstantiators.Add(BlockCipherPadding.Iso7816D4, () => new Iso7816D4Padding());
+            PaddingInstantiators.Add(BlockCipherPadding.Pkcs7, () => new Iso10126D2Padding());
+            PaddingInstantiators.Add(BlockCipherPadding.Tbc, () => new Iso10126D2Padding());
+            PaddingInstantiators.Add(BlockCipherPadding.X923, () => new Iso10126D2Padding());
 
             // ######################################## KEY DERIVATION ########################################
 
@@ -266,13 +266,13 @@ namespace ObscurCore
 
             // ######################################## PACKAGING ########################################
 
-            PayloadLayoutModuleInstantiators.Add(PayloadLayoutSchemes.Simple, (writing, multiplexedStream, streams, transforms, config) => 
-			                         new SimpleMux(writing, multiplexedStream, streams, transforms, config));
-			PayloadLayoutModuleInstantiators.Add(PayloadLayoutSchemes.Frameshift, (writing, multiplexedStream, streams, transforms, config) => 
-			                         new FrameshiftMux(writing, multiplexedStream, streams, transforms, config));
+            PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Simple, (writing, multiplexedStream, streams, transforms, config) => 
+			                         new SimplePayloadMux(writing, multiplexedStream, streams, transforms, config));
+			PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Frameshift, (writing, multiplexedStream, streams, transforms, config) => 
+			                         new FrameshiftPayloadMux(writing, multiplexedStream, streams, transforms, config));
 #if(INCLUDE_FABRIC)
             PayloadLayoutModuleInstantiators.Add(PayloadLayoutSchemes.Fabric, (writing, multiplexedStream, streams, transforms, config) => 
-			                                     new FabricMux(writing, multiplexedStream, streams, transforms, config));
+			                                     new FabricPayloadMux(writing, multiplexedStream, streams, transforms, config));
 #endif
             // ######################################## INIT END ########################################
         }
@@ -359,8 +359,8 @@ namespace ObscurCore
             return cipherParams;
         }
 
-        public static ICipherParameters CreateBlockCipherParameters(ISymmetricCipherConfiguration config) {
-            return CreateBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCipher>(), config.Key, config.IV);
+        public static ICipherParameters CreateBlockCipherParameters(ISymmetricCipherConfiguration config, byte[] key = null) {
+            return CreateBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCipher>(), key ?? config.Key, config.IV);
         }
 
         public static ICipherParameters CreateBlockCipherParameters(SymmetricBlockCipher cipherEnum, byte[] key, byte[] iv) {
@@ -432,7 +432,7 @@ namespace ObscurCore
 #if(INCLUDE_ISAAC)
             if (cipherEnum == SymmetricStreamCiphers.ISAAC) return CreateKeyParameter(cipherEnum, key);
 #endif
-            if (iv == null || iv.Length == 0) throw new InvalidDataException("IV is null or zero-length.");
+            if (iv.IsNullOrZeroLength()) throw new InvalidDataException("IV is null or zero-length.");
             if (!Athena.Cryptography.StreamCiphers[cipherEnum].AllowableIvSizes.Contains(iv.Length * 8)) {
                 throw new InvalidDataException("IV size is unsupported/incompatible.");
             }
@@ -488,7 +488,7 @@ namespace ObscurCore
 					return macObj;
 				}
 				macObj.Init (new KeyParameter (key));
-				if(salt != null && salt.Length > 0) macObj.BlockUpdate(salt, 0, salt.Length);
+				if(!salt.IsNullOrZeroLength()) macObj.BlockUpdate(salt, 0, salt.Length);
 			}
 
 			return macObj;
@@ -530,20 +530,21 @@ namespace ObscurCore
 			var macObj = new HMac (DigestInstantiators [hashEnum]());
 			var keyParam = new KeyParameter (key);
 			macObj.Init (keyParam);
-			if(salt != null && salt.Length > 0) macObj.BlockUpdate(salt, 0, salt.Length);
+			if(!salt.IsNullOrZeroLength()) macObj.BlockUpdate(salt, 0, salt.Length);
 
 			return macObj;
 		}
 
         /// <summary>
-		/// Derives a working key with the KDF module.
-		/// </summary>
-		/// <returns>The working key.</returns>
-		/// <param name="key">Pre-key to use as input material.</param>
-		/// <param name="salt">Salt to use in derivation to increase entropy.</param>
-		/// <param name="outputSize">Output key size in bits.</param>
-		/// <param name="config">Configuration of the KDF in byte-array encoded form.</param>
-		public static byte[] DeriveKeyWithKdf (KeyDerivationFunction kdfEnum, byte[] key, byte[] salt, int outputSize, byte[] config) {
+        /// Derives a working key with the KDF module.
+        /// </summary>
+        /// <returns>The working key.</returns>
+        /// <param name="kdfEnum">Key derivation function to use.</param>
+        /// <param name="key">Pre-key to use as input material.</param>
+        /// <param name="salt">Salt to use in derivation to increase entropy.</param>
+        /// <param name="outputSize">Output key size in bits.</param>
+        /// <param name="config">Serialised configuration of the KDF.</param>
+        public static byte[] DeriveKeyWithKdf (KeyDerivationFunction kdfEnum, byte[] key, byte[] salt, int outputSize, byte[] config) {
 			return KdfStatics[kdfEnum](key, salt, outputSize, config);
 		}
 		
@@ -556,25 +557,25 @@ namespace ObscurCore
         }
 
         /// <summary>
-		/// Instantiates and returns a CSPRNG implementing the mode of generation that the
-		/// instance this method was called from describes.
-		/// </summary>
-		/// <param name="config">Configuration of the PRNG in byte-array encoded form.</param>
-		/// <returns>
-		/// An PRNG object deriving from Random.
-		/// </returns>
-        public static CSPRNG CreateCsprng (CsPseudorandomNumberGenerator csprngEnum, byte[] config) {
+        /// Instantiates and returns a CSPRNG implementing a generator function.
+        /// </summary>
+        /// <param name="csprngEnum">CSPRNG function to use.</param>
+        /// <param name="config">Serialised configuration of the CSPRNG.</param>
+        /// <returns>
+        /// An CSPRNG object deriving from CSPRNG.
+        /// </returns>
+        public static Csprng CreateCsprng (CsPseudorandomNumberGenerator csprngEnum, byte[] config) {
 			return PrngInstantiators[csprngEnum](config);
 		}
 
-        public static CSPRNG CreateCsprng (string csprngName, byte[] config) {
+        public static Csprng CreateCsprng (string csprngName, byte[] config) {
             return CreateCsprng(csprngName.ToEnum<CsPseudorandomNumberGenerator>(), config);
         }
 
-        public static StreamCipherCSPRNGConfiguration CreateStreamCipherCsprngConfiguration
+        public static StreamCipherCsprngConfiguration CreateStreamCipherCsprngConfiguration
             (CsPseudorandomNumberGenerator cipherEnum)
         {
-            return StreamCSPRNG.CreateRandomConfiguration(cipherEnum);
+            return StreamCsprng.CreateRandomConfiguration(cipherEnum);
         }
 
         public static ECDomainParameters GetEcDomainParameters(EcFpCurves curveEnum) {
@@ -595,14 +596,19 @@ namespace ObscurCore
         // Packaging related
 
         /// <summary>
-		/// Instantiates and returns a payload I/O module implementing the mode of operation that the
-		/// instance this method was called from describes.
-		/// </summary>
-		/// <param name="config">Configuration of the module.</param>
-		/// <returns>
-		/// An module object deriving from IPayloadModule.
-		/// </returns>
-		public static PayloadMultiplexer CreatePayloadMultiplexer (PayloadLayoutSchemes schemeEnum, bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, 
+        /// Instantiates and returns a payload I/O module implementing the mode of operation that the
+        /// instance this method was called from describes.
+        /// </summary>
+        /// <param name="schemeEnum">Payload layout scheme to choose the correspknding multiplexer.</param>
+        /// <param name="writing">Whether the multiplexer will be multiplexing or demultiplexing.</param>
+        /// <param name="multiplexedStream">Stream to multiplex/demultiplex to/from.</param>
+        /// <param name="streams">Streams to multiplex/demultiplex to/from.</param>
+        /// <param name="transforms">Transforms to apply to the payload items (e.g. encryption).</param>
+        /// <param name="config">Configuration of the layout module/multiplexer.</param>
+        /// <returns>
+        /// An module object deriving from PayloadMultiplexer.
+        /// </returns>
+        public static PayloadMux CreatePayloadMultiplexer (PayloadLayoutScheme schemeEnum, bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, 
 		                                            IList<Func<Stream, DecoratingStream>> transforms, IPayloadConfiguration config)
 		{
 			return PayloadLayoutModuleInstantiators[schemeEnum](writing, multiplexedStream, streams, transforms, config);

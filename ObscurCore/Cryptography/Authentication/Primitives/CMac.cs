@@ -202,7 +202,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			}
 			else
 			{
-				new ISO7816d4Padding().AddPadding(_buf, _bufOff);
+				new Iso7816D4Padding().AddPadding(_buf, _bufOff);
 				lu = Lu2;
 			}
 

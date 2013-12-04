@@ -23,7 +23,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
             manifest.PayloadItems.Add(new PayloadItem() { Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration
                                 (SymmetricBlockCipher.AES, BlockCipherModes.CTR, BlockCipherPaddings.None) });
 
-		    var stream = StratCom.SerialiseDTO(manifest);
+		    var stream = StratCom.SerialiseDto(manifest);
             stream.Seek(0, SeekOrigin.Begin);
 		    var outputObj = StratCom.DeserialiseDTO<Manifest>(stream.ToArray());
 

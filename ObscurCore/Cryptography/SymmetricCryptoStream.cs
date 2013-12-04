@@ -14,7 +14,6 @@
 //    limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using ObscurCore.Cryptography.Ciphers;
@@ -23,6 +22,7 @@ using ObscurCore.Cryptography.Ciphers.Block.Modes;
 using ObscurCore.Cryptography.Ciphers.Block.Padding;
 using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.DTO;
+using ObscurCore.Information;
 
 namespace ObscurCore.Cryptography
 {
@@ -50,7 +50,7 @@ namespace ObscurCore.Cryptography
 		private const string UnknownFinaliseError = "An unknown type of error occured while transforming the final block of ciphertext.";
 		private const string UnexpectedLengthError = "The data in the ciphertext is not the expected length.";
 		private const string WritingError = "Could not write transformed block bytes to output stream.";
-		private const string ShortCTSError = "Insufficient input length. CTS mode block ciphers require at least one block.";
+		private const string ShortCtsError = "Insufficient input length. CTS mode block ciphers require at least one block.";
 
 
 	    public SymmetricCryptoStream(Stream target, bool isEncrypting, ISymmetricCipherConfiguration config)
@@ -65,7 +65,7 @@ namespace ObscurCore.Cryptography
 		public SymmetricCryptoStream (Stream target, bool isEncrypting, ISymmetricCipherConfiguration config, 
 		                              byte[] key, bool closeOnDispose) : base(target, isEncrypting, closeOnDispose, true)
 		{
-            if ((config.Key == null || config.Key.Length == 0) && (key == null || key.Length == 0)) 
+            if ((config.Key.IsNullOrZeroLength()) && (key.IsNullOrZeroLength())) 
                 throw new ArgumentException("No key provided in field in configuration object or as parameter.");
 
 			ICipherParameters cipherParams = null;
@@ -76,7 +76,7 @@ namespace ObscurCore.Cryptography
                 case SymmetricCipherType.None:
 		            throw new ConfigurationException("Type: None/null value is never set in a valid cipher configuration.");
 		        case SymmetricCipherType.Block:
-                case SymmetricCipherType.AEAD:
+                case SymmetricCipherType.Aead:
 
                     SymmetricBlockCipher blockCipherEnum;
 		            try {
@@ -85,14 +85,14 @@ namespace ObscurCore.Cryptography
 		                throw new ConfigurationException(e);
 		            }
 
-                    if(!workingKey.Length.Equals(config.KeySize / 8))
+                    if(!workingKey.Length.Equals(config.KeySizeBits / 8))
                         throw new InvalidDataException("Key is not of the declared length.");
-                    if(!Athena.Cryptography.BlockCiphers[blockCipherEnum].AllowableBlockSizes.Contains(config.BlockSize)) 
+                    if(!Athena.Cryptography.BlockCiphers[blockCipherEnum].AllowableBlockSizes.Contains(config.BlockSizeBits)) 
                         throw new NotSupportedException("Specified block size is unsupported.");
 
-                    base.BufferRequirementOverride = (config.BlockSize / 8) * 2;
+                    base.BufferRequirementOverride = (config.BlockSizeBits / 8) * 2;
 
-                    var blockCipher = Source.CreateBlockCipher(blockCipherEnum, config.BlockSize);
+                    var blockCipher = Source.CreateBlockCipher(blockCipherEnum, config.BlockSizeBits);
 
 		            switch (config.Type) {
                         case SymmetricCipherType.Block:
@@ -104,13 +104,13 @@ namespace ObscurCore.Cryptography
 		                        throw new ConfigurationException(e);
 		                    }
 
-                            if(config.IV.Length != config.BlockSize / 8)
+                            if(config.IV.Length != config.BlockSizeBits / 8)
                                 throw new NotSupportedException("IV length does not match block length.");
 
-                            cipherParams = Source.CreateBlockCipherParameters(config);
+                            cipherParams = Source.CreateBlockCipherParameters(config, workingKey);
                             // Overlay the cipher with the mode of operation
                             blockCipher = Source.OverlayBlockCipherWithMode(blockCipher, blockModeEnum,
-				                config.BlockSize);
+				                config.BlockSizeBits);
 
                             BlockCipherPadding paddingEnum;
 		                    try {
@@ -140,7 +140,7 @@ namespace ObscurCore.Cryptography
 		                    }
 
 		                    break;
-		                case SymmetricCipherType.AEAD:
+		                case SymmetricCipherType.Aead:
 
                             AeadBlockCipherMode aeadModeEnum;
 		                    try {
@@ -150,7 +150,7 @@ namespace ObscurCore.Cryptography
 		                    }
 
                             cipherParams = Source.CreateAeadBlockCipherParameters(blockCipherEnum,
-				                workingKey, config.IV, config.MacSize, config.AssociatedData);
+				                workingKey, config.IV, config.MacSizeBits, config.AssociatedData);
                             // Overlay the cipher with the mode of operation
 					        var aeadCipher = Source.OverlayBlockCipherWithAeadMode(blockCipher, aeadModeEnum);
 
@@ -164,7 +164,7 @@ namespace ObscurCore.Cryptography
 		            break;
 		        case SymmetricCipherType.Stream:
 
-                    base.BufferRequirementOverride = config.IV != null && config.IV.Length > 0 ? (config.IV.Length) * 2 : (config.KeySize / 8) * 2;
+                    base.BufferRequirementOverride = !config.IV.IsNullOrZeroLength() ? (config.IV.Length) * 2 : (config.KeySizeBits / 8) * 2;
 
                     var streamCipherEnum = SymmetricStreamCipher.None;
 		            try {
@@ -317,11 +317,7 @@ namespace ObscurCore.Cryptography
 
 			BytesIn += bytesRead;
 
-			if (_inStreamEnded) {
-				return FinishReading (bytesRead);
-			} else {
-				return _cipher.ProcessBytes (_inBuffer, 0, bytesRead, _outBuffer, 0);
-			}
+			return _inStreamEnded ? FinishReading (bytesRead) : _cipher.ProcessBytes (_inBuffer, 0, bytesRead, _outBuffer, 0);
 		}
 
 		/// <summary>
@@ -337,7 +333,7 @@ namespace ObscurCore.Cryptography
 				if(String.Equals(dlEx.Message, "output buffer too short")) {
 					throw new DataLengthException(WritingError);
 				} else if(String.Equals(dlEx.Message, "need at least one block of input for CTS")) {
-					throw new DataLengthException(ShortCTSError);
+					throw new DataLengthException(ShortCtsError);
 				} else {
 					throw new DataLengthException (UnknownFinaliseError, dlEx);
 				}
@@ -435,16 +431,14 @@ namespace ObscurCore.Cryptography
 		}
 
 		protected override void Dispose (bool disposing) {
-			if (!_disposed) {
-				if (disposing) {
-					// dispose managed resources
-					Finish ();
-					_cipher.Reset();
-					this._cipher = null;
-					base.Dispose (disposing);
-					_disposed = true;
-				}
-			}
+		    if (_disposed) return;
+		    if (!disposing) return;
+		    // dispose managed resources
+		    Finish ();
+		    _cipher.Reset();
+		    this._cipher = null;
+		    base.Dispose (true);
+		    _disposed = true;
 		}
 	}
 }

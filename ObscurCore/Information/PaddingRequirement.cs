@@ -13,7 +13,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore
+namespace ObscurCore.Information
 {
     /// <summary>
     /// Requirements for padding in a block cipher mode of operation.

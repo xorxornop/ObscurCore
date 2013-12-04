@@ -8,13 +8,13 @@
         None,
 
         /// <summary>
-        /// Stream cipher designed for fast operation in software.
+        /// Stream cipher designed for fast operation in software. Simplified version of <seealso cref="Hc256"/>.
         /// </summary>
         Hc128,
 
         /// <summary>
-        /// Same as HC-128, but 256-bit key.
-        /// </summary><seealso cref="Hc128"/>
+        /// Same as <seealso cref="Hc128"/>, but 256-bit key.
+        /// </summary>
         Hc256,
 #if INCLUDE_ISAAC
     /// <summary>

@@ -34,7 +34,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		
 		public Pbkdf2Module (int outputSize, byte[] config) {
 			_outputSize = outputSize;
-            var pbkdf2Config = StratCom.DeserialiseDTO<PBKDF2Configuration>(config);
+            var pbkdf2Config = StratCom.DeserialiseDataTransferObject<PBKDF2Configuration>(config);
 		    _iterations = pbkdf2Config.Iterations;
 		    _algorithm = pbkdf2Config.AlgorithmName;
 		}
@@ -68,7 +68,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		}
 		
 		public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, byte[] config) {
-			var pbkdf2Config = StratCom.DeserialiseDTO<PBKDF2Configuration>(config);
+			var pbkdf2Config = StratCom.DeserialiseDataTransferObject<PBKDF2Configuration>(config);
             if(!pbkdf2Config.AlgorithmName.Equals("HMACSHA256")) throw new ArgumentException();
 			var output = new byte[outputSize];
 			Pbkdf2.ComputeKey(key, salt, pbkdf2Config.Iterations, Pbkdf2.CallbackFromHmac<HMACSHA256>(), outputSize / 8, output);

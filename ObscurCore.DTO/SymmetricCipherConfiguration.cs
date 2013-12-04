@@ -47,7 +47,7 @@ namespace ObscurCore.DTO
         /// Size of the key being used, in bits.
         /// </summary>
         [ProtoMember(3)]
-        public int KeySize { get; set; }
+        public int KeySizeBits { get; set; }
 		
         /// <summary>
         /// One-time key to use in place of one derived using a supplied KDF configuration using the supplied 
@@ -74,7 +74,7 @@ namespace ObscurCore.DTO
         /// Size of each block of data in bits.
         /// </summary>
         [ProtoMember(7)]
-        public int BlockSize { get; set; }
+        public int BlockSizeBits { get; set; }
 
         /// <summary>
         /// Scheme utillised to 'pad' blocks to full size where required. 
@@ -88,10 +88,10 @@ namespace ObscurCore.DTO
         /// Size of the Message Authentication Code (MAC) hash in bits.
         /// </summary>
         [ProtoMember(9)]
-        public int MacSize { get; set; }
+        public int MacSizeBits { get; set; }
 
         /// <summary>
-        /// Data concatenated with the ciphertext that is authenticated, but not encrypted (authenticity without privacy).
+        /// Data included with the ciphertext that is authenticated, but not encrypted.
         /// </summary>
         [ProtoMember(10, IsRequired = false)]
         public byte[] AssociatedData { get; set; }
@@ -116,11 +116,11 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(this, other)) return true;
             return Type.Equals(other.Type) &&
                    string.Equals(CipherName, other.CipherName) &&
-                   KeySize == other.KeySize &&
+                   KeySizeBits == other.KeySizeBits &&
 					(Key == null ? other.Key == null : Key.SequenceEqual(other.Key)) &&
                    (IV == null ? other.IV == null : IV.SequenceEqual(other.IV)) &&
-                   string.Equals(ModeName, other.ModeName) && BlockSize == other.BlockSize && string.Equals(PaddingName, other.PaddingName) &&
-                   MacSize == other.MacSize &&
+                   string.Equals(ModeName, other.ModeName) && BlockSizeBits == other.BlockSizeBits && string.Equals(PaddingName, other.PaddingName) &&
+                   MacSizeBits == other.MacSizeBits &&
                    (AssociatedData == null ? other.AssociatedData == null : AssociatedData.SequenceEqual(other.AssociatedData));
         }
 
@@ -135,13 +135,13 @@ namespace ObscurCore.DTO
             unchecked {
                 int hashCode = Type.GetHashCode();
                 hashCode = (hashCode * 397) ^ CipherName.GetHashCode(); // Must not be null!
-                hashCode = (hashCode * 397) ^ KeySize;
+                hashCode = (hashCode * 397) ^ KeySizeBits;
 				hashCode = (hashCode * 397) ^ (Key != null ? Key.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (IV != null ? IV.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (ModeName != null ? ModeName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ BlockSize;
+                hashCode = (hashCode * 397) ^ BlockSizeBits;
                 hashCode = (hashCode * 397) ^ (PaddingName != null ? PaddingName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ MacSize;
+                hashCode = (hashCode * 397) ^ MacSizeBits;
                 hashCode = (hashCode * 397) ^ (AssociatedData != null ? AssociatedData.GetHashCode() : 0);
                 return hashCode;
             }
@@ -152,7 +152,7 @@ namespace ObscurCore.DTO
         /// </summary>
         public override string ToString () {
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}",
-                                 Type, CipherName, KeySize);
+                                 Type, CipherName, KeySizeBits);
         }
 		
         
@@ -174,7 +174,7 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Size of the key being used, in bits.
         /// </summary>
-        int KeySize { get; }
+        int KeySizeBits { get; }
 
         /// <summary>
         /// One-time key to use in place of one derived using a supplied KDF configuration 
@@ -196,7 +196,7 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Size of each block of data in bits.
         /// </summary>
-        int BlockSize { get; }
+        int BlockSizeBits { get; }
 
         /// <summary>
         /// Scheme utillised to 'pad' blocks to full size where required. 
@@ -206,7 +206,7 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Size of the Message Authentication Code (MAC) hash in bits.
         /// </summary>
-        int MacSize { get; }
+        int MacSizeBits { get; }
 
         /// <summary>
         /// Data concatenated with the ciphertext that is authenticated, but not encrypted (authenticity without privacy).

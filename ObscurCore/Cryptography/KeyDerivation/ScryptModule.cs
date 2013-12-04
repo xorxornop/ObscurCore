@@ -31,7 +31,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 
 	    public ScryptModule (int outputSize, byte[] config) {
 			_outputSize = outputSize;
-	        var configObj = StratCom.DeserialiseDTO<ScryptConfiguration>(config);
+	        var configObj = StratCom.DeserialiseDataTransferObject<ScryptConfiguration>(config);
 	        _iterationPower = configObj.IterationPower;
 	        _blocks = configObj.Blocks;
 	        _parallelisation = configObj.Parallelism;
@@ -73,7 +73,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		}
 		
 		public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, byte[] config) {
-		    var scConfig = StratCom.DeserialiseDTO<ScryptConfiguration>(config);
+		    var scConfig = StratCom.DeserialiseDataTransferObject<ScryptConfiguration>(config);
 			var output = new byte[outputSize / 8];
 			SCrypt.ComputeKey(key, salt, scConfig.IterationPower, scConfig.Blocks, scConfig.Parallelism, null, output);
 			return output;

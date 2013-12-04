@@ -23,7 +23,7 @@ namespace ObscurCore.DTO
     /// Configuration object for a CSPRNG based on a stream cipher.
     /// </summary>
     [ProtoContract]
-    public class StreamCipherCSPRNGConfiguration : IDataTransferObject, IEquatable<StreamCipherCSPRNGConfiguration>
+    public class StreamCipherCsprngConfiguration : IDataTransferObject, IEquatable<StreamCipherCsprngConfiguration>
     {
         /// <summary>
         /// Name of the stream cipher primitive, e.g. Salsa20.
@@ -50,7 +50,7 @@ namespace ObscurCore.DTO
         /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
-        public bool Equals (StreamCipherCSPRNGConfiguration other) {
+        public bool Equals (StreamCipherCsprngConfiguration other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return string.Equals(CipherName, other.CipherName) &&

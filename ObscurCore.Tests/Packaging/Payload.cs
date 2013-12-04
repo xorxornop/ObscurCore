@@ -41,14 +41,14 @@ namespace ObscurCore.Tests.Packaging
 		[Test]
 		public void Simple () {
 			var items = Utilities.GetItemsStreamExample(SourceFiles);
-			var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Simple);
+			var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutScheme.Simple);
 			DoMux (payloadConfig, items, SourceFiles, true);
 		}
 
 		[Test]
 		public void Frameshift () {
 			var items = Utilities.GetItemsBlockExample(SourceFiles);
-			var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Frameshift);
+			var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutScheme.Frameshift);
 			DoMux (payloadConfig, items, SourceFiles, true);
 		}
 
@@ -77,7 +77,7 @@ namespace ObscurCore.Tests.Packaging
 	        }
 
 	        var transforms = GetTransforms(items, true);
-			var mux = Source.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutSchemes>(), true, ms, 
+			var mux = Source.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutScheme>(), true, ms, 
                 items.ToList<IStreamBinding>(), transforms, payloadConfig);
 			
 			Assert.DoesNotThrow (mux.ExecuteAll);
@@ -118,7 +118,7 @@ namespace ObscurCore.Tests.Packaging
 	        transforms = GetTransforms(items, false);
 
 	        ms.Seek(0, SeekOrigin.Begin);
-            mux = Source.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutSchemes>(), false, ms, 
+            mux = Source.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutScheme>(), false, ms, 
                 items.ToList<IStreamBinding>(), transforms, payloadConfig);
 
             Assert.DoesNotThrow(mux.ExecuteAll);
@@ -131,7 +131,7 @@ namespace ObscurCore.Tests.Packaging
                 item.StreamBinding.Close();
             }
 
-            if (mux is FrameshiftMux) {
+            if (mux is FrameshiftPayloadMux) {
                 Assert.Pass("MuxOut: {0}, Overhead: {1:P4} ({2} bytes) ; MuxIn: {3}",
                     muxOut, ((double) mux.Overhead/(double) muxOut), mux.Overhead, muxIn);
             } else {

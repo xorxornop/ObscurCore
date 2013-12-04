@@ -36,20 +36,26 @@ namespace ObscurCore
             return value.CompareTo(low) >= 0 && value.CompareTo(high) <= 0;
         }
 
-        public static byte[] SerialiseDTO<T>(this T obj, bool prefixLength = false) where T : IDataTransferObject
+        public static bool IsNullOrZeroLength(this byte[] array) {
+            return array == null || array.Length == 0;
+        }
+
+        public static byte[] SerialiseDto<T>(this T obj, bool prefixLength = false) where T : IDataTransferObject
         {
-            return StratCom.SerialiseDTO(obj, prefixLength).ToArray();
+            return StratCom.SerialiseDataTransferObject(obj, prefixLength).ToArray();
+        }
+
+        public static void SerialiseDto<T>(this T obj, Stream output, bool prefixLength = false) where T : IDataTransferObject {
+            StratCom.SerialiseDataTransferObject(obj, output, prefixLength);
         }
 
         public static T FromString<T>(this T type, string value) where T : struct, IConvertible
         {
             if (!typeof(T).IsEnum) throw new InvalidOperationException("T must be an enumerated type.");
             T outputType;
-            try
-            {
+            try {
                 outputType = (T)Enum.Parse(typeof(T), value);
-            } catch (ArgumentException)
-            {
+            } catch (ArgumentException) {
                 throw new ArgumentException("Enumeration member is unknown / invalid.");
             }
             return outputType;
@@ -65,14 +71,40 @@ namespace ObscurCore
         {
             if (!typeof(T).IsEnum) throw new InvalidOperationException("T must be an enumeration type.");
             T value;
-            try
-            {
+            try {
                 value = (T)Enum.Parse(typeof(T), stringValue, ignoreCase);
-            } catch (ArgumentException)
-            {
+            } catch (ArgumentException) {
                 throw new EnumerationValueUnknownException(stringValue, typeof(T));
             }
             return value;
+        }
+
+        /// <summary>
+        /// Converts a byte array into a hex-encoded string.
+        /// </summary>
+        /// <returns>Hex-encoded string, lowercase.</returns>
+        public static string ToHexString (this byte[] bytes) {
+            var hexBuilder = new StringBuilder(bytes.Length * 2);
+            foreach (byte b in bytes)
+                hexBuilder.AppendFormat("{0:x2}", b);
+            return hexBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Converts a hex-encoded string to a byte array
+        /// </summary>
+        /// <param name="hexSrc">Hex-encoded data</param>
+        /// <remarks>
+        /// Adapted from http://stackoverflow.com/questions/321370/convert-hex-string-to-byte-array
+        /// </remarks>
+        public static byte[] HexToBinary(string hexSrc) {
+            if (hexSrc.Length % 2 == 1) throw new ArgumentException("The binary key cannot have an odd number of digits");
+            var arr = new byte[hexSrc.Length >> 1];
+            var h2i = new Func<char, int>(c => (int) c - ((int) c < 58 ? 48 : 87));
+            for (var i = 0; i < (hexSrc.Length >> 1); ++i) {
+                arr[i] = (byte)((h2i(hexSrc[i << 1]) << 4) + (h2i(hexSrc[(i << 1) + 1])));
+            }
+            return arr;
         }
     }
 }
@@ -86,7 +118,7 @@ namespace ObscurCore.Extensions
                 public static DecoratingStream BindTransformStream(this PayloadItem item, bool writing, Stream binding = null) {
                     DecoratingStream stream = null;
 
-                    if (item.Encryption.Key == null || item.Encryption.Key.Length == 0) {
+                    if (item.Encryption.Key.IsNullOrZeroLength()) {
                         throw new ItemKeyMissingException(item);
                     }
 
@@ -103,10 +135,10 @@ namespace ObscurCore.Extensions
                     segment = withExtension ? segment : segment.Substring(0, segment.LastIndexOf('.') - 1);
 
                     switch (item.Type) {
-                        case PayloadItemTypes.Binary:
+                        case PayloadItemType.Binary:
                             return (defaultExtension && withExtension && extensionStartIndex == -1) ? segment + ".bin" : segment;
-                        case PayloadItemTypes.Utf32:
-                        case PayloadItemTypes.Utf8:
+                        case PayloadItemType.Utf32:
+                        case PayloadItemType.Utf8:
                             return (defaultExtension && withExtension && extensionStartIndex == -1) ? segment + ".txt" : segment;
                         default:
                             throw new NotSupportedException("Item is a key agreement. It is not intended to be emitted as a file.");
@@ -124,7 +156,7 @@ namespace ObscurCore.Extensions
         {
             public static class ECKeyConfigurationExtensions
             {
-                public static ECPublicKeyParameters DecodeToPublicKey(this ECKeyConfiguration config) {
+                public static ECPublicKeyParameters DecodeToPublicKey(this EcKeyConfiguration config) {
                     if (!config.CurveProviderName.Equals ("Brainpool"))
                         throw new InvalidDataException ("Curve providers other than \"Brainpool\" are not currently supported.");
 
@@ -142,7 +174,7 @@ namespace ObscurCore.Extensions
                     return publicKey;
                 }
 
-                public static ECPrivateKeyParameters DecodeToPrivateKey(this ECKeyConfiguration config) {
+                public static ECPrivateKeyParameters DecodeToPrivateKey(this EcKeyConfiguration config) {
                     if (!config.CurveProviderName.Equals ("Brainpool"))
                         throw new InvalidDataException ("Curve providers other than \"Brainpool\" are not currently supported.");
 
@@ -161,7 +193,7 @@ namespace ObscurCore.Extensions
                     return privateKey;
                 }
 
-                public static void EncodePublicKey(this ECKeyConfiguration config, string curveProvider, string curveName, ECPoint key) {
+                public static void EncodePublicKey(this EcKeyConfiguration config, string curveProvider, string curveName, ECPoint key) {
                     if (!curveProvider.Equals ("Brainpool"))
                         throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
@@ -172,7 +204,7 @@ namespace ObscurCore.Extensions
                     config.EncodedKey = ECKeyUtility.Write (key);
                 }
 
-                public static void EncodePrivateKey(this ECKeyConfiguration config, string curveProvider, string curveName, BigInteger key) {
+                public static void EncodePrivateKey(this EcKeyConfiguration config, string curveProvider, string curveName, BigInteger key) {
                     if (!curveProvider.Equals ("Brainpool"))
                         throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
@@ -181,42 +213,6 @@ namespace ObscurCore.Extensions
                         throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
                     config.CurveName = curveName;
                     config.EncodedKey = key.ToByteArray ();
-                }
-            }
-        }
-
-        namespace ByteArrays
-        {
-            public static class ByteArrayExtensionMethods
-            {
-                /// <summary>
-                /// Converts a byte array into a hex-encoded string.
-                /// </summary>
-                /// <returns>Hex-encoded string, lowercase.</returns>
-                public static string ToHexString (this byte[] bytes) {
-                    var hexBuilder = new StringBuilder(bytes.Length * 2);
-                    foreach (byte b in bytes)
-                        hexBuilder.AppendFormat("{0:x2}", b);
-                    return hexBuilder.ToString();
-                }
-
-                /// <summary>
-                /// Converts a hex-encoded string to a byte array
-                /// </summary>
-                /// <param name="hexSrc">Hex-encoded data</param>
-                /// <remarks>
-                /// Adapted from http://stackoverflow.com/questions/321370/convert-hex-string-to-byte-array
-                /// </remarks>
-                public static byte[] HexToBinary(string hexSrc) {
-                    if (hexSrc.Length % 2 == 1) throw new ArgumentException("The binary key cannot have an odd number of digits");
-
-                    var arr = new byte[hexSrc.Length >> 1];
-                    var h2i = new Func<char, int>(c => (int) c - ((int) c < 58 ? 48 : 87));
-                    for (var i = 0; i < (hexSrc.Length >> 1); ++i) {
-                        arr[i] = (byte)((h2i(hexSrc[i << 1]) << 4) + (h2i(hexSrc[(i << 1) + 1])));
-                    }
-
-                    return arr;
                 }
             }
         }

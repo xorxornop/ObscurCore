@@ -19,12 +19,12 @@ using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.Entropy
 {
-    public abstract class StreamCSPRNG : CSPRNG
+    public abstract class StreamCsprng : Csprng
     {
         protected readonly ICsprngCompatible Csprng;
-        private readonly StreamCipherCSPRNGConfiguration _config;
+        private readonly StreamCipherCsprngConfiguration _config;
 
-        protected StreamCSPRNG(IStreamCipher cipher, StreamCipherCSPRNGConfiguration config) {
+        protected StreamCsprng(IStreamCipher cipher, StreamCipherCsprngConfiguration config) {
             Csprng = cipher as ICsprngCompatible;
             if (Csprng == null) {
                 throw new ArgumentException();
@@ -32,26 +32,26 @@ namespace ObscurCore.Cryptography.Entropy
             _config = config;
         }
 
-        protected StreamCSPRNG(IStreamCipher cipher, byte[] configBytes) {
+        protected StreamCsprng(IStreamCipher cipher, byte[] configBytes) {
             Csprng = cipher as ICsprngCompatible;
             if (Csprng == null) {
                 throw new ArgumentException();
             }
 
-            _config = StratCom.DeserialiseDTO<StreamCipherCSPRNGConfiguration>(configBytes);
+            _config = StratCom.DeserialiseDataTransferObject<StreamCipherCsprngConfiguration>(configBytes);
         }
 
         protected internal IStreamCipher Cipher {
             get { return Csprng as IStreamCipher; }
         }
 
-        protected internal StreamCipherCSPRNGConfiguration Config {
+        protected internal StreamCipherCsprngConfiguration Config {
             get { return _config; }
         }
 
-        public static StreamCipherCSPRNGConfiguration CreateRandomConfiguration(CsPseudorandomNumberGenerator csprng) {
+        public static StreamCipherCsprngConfiguration CreateRandomConfiguration(CsPseudorandomNumberGenerator csprng) {
             var cipherEnum = csprng.ToString().ToEnum<SymmetricStreamCipher>();
-            var config = new StreamCipherCSPRNGConfiguration()
+            var config = new StreamCipherCsprngConfiguration()
                 {
                     CipherName = csprng.ToString(),
                     Key = new byte[Athena.Cryptography.StreamCiphers[cipherEnum].DefaultKeySize / 8],

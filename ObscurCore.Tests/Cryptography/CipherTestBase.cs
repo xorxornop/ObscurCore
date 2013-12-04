@@ -48,7 +48,7 @@ namespace ObscurCore.Tests.Cryptography
                     keyBackup = new byte[config.Key.Length];
                     Array.Copy(config.Key, keyBackup, config.Key.Length);
                     config.Key = overrideKey;
-                    config.KeySize = overrideKey.Length * 8;
+                    config.KeySizeBits = overrideKey.Length * 8;
                     backupRequired = true;
                 }
                 Assert.IsTrue(OutputNonMalformed(LargeBinaryFile, config, out enc, out dec));

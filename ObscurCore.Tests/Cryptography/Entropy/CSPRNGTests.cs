@@ -24,9 +24,9 @@ using ObscurCore.Cryptography.Entropy.Primitives;
 namespace ObscurCore.Tests.Cryptography.Entropy
 {
     [TestFixture]
-    class CSPRNGTests
+    class CsprngTests
     {
-        private const int iterations = 1000000; // 1,000,000 (1 million)
+        private const int Iterations = 1000000; // 1,000,000 (1 million)
 
         [Test]
         public void SOSEMANUK_Int32 () {
@@ -98,11 +98,11 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         private static void DisplayResult(double average, long range, TimeSpan timeSpan, string type) {
             Assert.Pass("<> {0:P4} @ {1:N2} {2}/sec.", Math.Abs(1 - ((decimal)(range / 2.0) / (decimal)average)), 
-                ((double)iterations / timeSpan.Milliseconds) * 1000, type);
+                ((double)Iterations / timeSpan.Milliseconds) * 1000, type);
         }
 
-        private void RunTestInt32(CSPRNG csprng, Action<CSPRNG, Int32[]> core, out double average, out TimeSpan timeSpan) {
-            var output = new Int32[iterations];
+        private void RunTestInt32(Csprng csprng, Action<Csprng, Int32[]> core, out double average, out TimeSpan timeSpan) {
+            var output = new Int32[Iterations];
             var sw = new Stopwatch();
 
             sw.Start();
@@ -113,8 +113,8 @@ namespace ObscurCore.Tests.Cryptography.Entropy
             average = output.Average();
         }
 
-        private void RunTestUInt32(CSPRNG csprng, Action<CSPRNG, UInt32[]> core, out double average, out TimeSpan timeSpan) {
-            var output = new UInt32[iterations];
+        private void RunTestUInt32(Csprng csprng, Action<Csprng, UInt32[]> core, out double average, out TimeSpan timeSpan) {
+            var output = new UInt32[Iterations];
             var sw = new Stopwatch();
 
             sw.Start();

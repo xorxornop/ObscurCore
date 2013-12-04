@@ -22,7 +22,7 @@ namespace ObscurCore.Cryptography
 	public sealed class HashStream : DecoratingStream
 	{
 		/// <summary>
-		/// The output/digest of the internal hash function. Null if function is not finished.
+		/// The output/digest of the internal hash function. Zeroed if function is not finished.
 		/// </summary>
 		public byte[] Hash { get { return _outputRef; } }
 
@@ -60,7 +60,7 @@ namespace ObscurCore.Cryptography
 		} 
 
 		public override int ReadByte () {
-			int readByte = base.ReadByte();
+			var readByte = base.ReadByte();
 			if (readByte >= 0) {
 				_digest.Update((byte)readByte);
 			}

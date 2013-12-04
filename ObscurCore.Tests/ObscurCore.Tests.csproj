@@ -65,6 +65,7 @@
     <Compile Include="Cryptography\MACs\MACTests.cs" />
     <Compile Include="Cryptography\MACTestBase.cs" />
     <Compile Include="Cryptography\StreamCiphers\StreamCipherTests.cs" />
+    <Compile Include="Packaging\KeyProvider.cs" />
     <Compile Include="Packaging\Packages.cs" />
     <Compile Include="Packaging\Payload.cs" />
     <Compile Include="Packaging\Serialisation\CSPRNG.cs" />

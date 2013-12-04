@@ -18,7 +18,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             var stream = SerialiseToMemory(inputObj);
             stream.Seek(0, SeekOrigin.Begin);
-            var outputObj = DeserialiseFromMemory<StreamCipherCSPRNGConfiguration>(stream);
+            var outputObj = DeserialiseFromMemory<StreamCipherCsprngConfiguration>(stream);
 
             bool equal = inputObj.Equals(outputObj);
 
