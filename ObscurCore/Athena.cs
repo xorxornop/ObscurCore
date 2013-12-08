@@ -317,7 +317,7 @@ namespace ObscurCore
                     DisplayName = "Synthetic Initialisation Vector (SIV)",
                     PaddingRequirement = PaddingRequirements.None,
                     AllowableBlockSizes = new[] { 128, 192, 256 },
-                    IsAEADMode = true,
+                    IsAeadMode = true,
                     NonceReusePolicy = NonceReusePolicies.Allowed
                 });
                 */
@@ -364,22 +364,22 @@ namespace ObscurCore
 				});
 				_hashFunctionDirectory.Add(HashFunction.Keccak224, new HashFunctionDescription {
 					Name = HashFunction.Keccak224.ToString(),
-					DisplayName = "Keccak-224 / SHA-3-224",
+					DisplayName = "Keccak-224 (SHA-3-224)",
 					OutputSize = 224
 				});
 				_hashFunctionDirectory.Add(HashFunction.Keccak256, new HashFunctionDescription {
 					Name = HashFunction.Keccak256.ToString(),
-					DisplayName = "Keccak-256 / SHA-3-256",
+					DisplayName = "Keccak-256 (SHA-3-256)",
 					OutputSize = 256
 				});
 				_hashFunctionDirectory.Add(HashFunction.Keccak384, new HashFunctionDescription {
 					Name = HashFunction.Keccak384.ToString(),
-					DisplayName = "Keccak-384 / SHA-3-384",
+					DisplayName = "Keccak-384 (SHA-3-384)",
 					OutputSize = 384
 				});
 				_hashFunctionDirectory.Add(HashFunction.Keccak512, new HashFunctionDescription {
 					Name = HashFunction.Keccak512.ToString(),
-					DisplayName = "Keccak-512 / SHA-3-512",
+					DisplayName = "Keccak-512 (SHA-3-512)",
 					OutputSize = 512
 				});
 				_hashFunctionDirectory.Add(HashFunction.Ripemd160, new HashFunctionDescription {
@@ -437,31 +437,31 @@ namespace ObscurCore
 				});
 				_macFunctionDirectory.Add(MacFunction.Keccak224, new MacFunctionDescription {
 					Name = MacFunction.Keccak224.ToString(),
-					DisplayName = "Keccak-224 / SHA-3-224",
+					DisplayName = "Keccak-224 (SHA-3-224)",
 					OutputSize = 224,
 					SaltSupported = true
 				});
 				_macFunctionDirectory.Add(MacFunction.Keccak256, new MacFunctionDescription {
 					Name = MacFunction.Keccak256.ToString(),
-					DisplayName = "Keccak-256 / SHA-3-256",
+					DisplayName = "Keccak-256 (SHA-3-256)",
 					OutputSize = 256,
 					SaltSupported = true
 				});
 				_macFunctionDirectory.Add(MacFunction.Keccak384, new MacFunctionDescription {
 					Name = MacFunction.Keccak384.ToString(),
-					DisplayName = "Keccak-384 / SHA-3-384",
+					DisplayName = "Keccak-384 (SHA-3-384)",
 					OutputSize = 384,
 					SaltSupported = true
 				});
 				_macFunctionDirectory.Add(MacFunction.Keccak512, new MacFunctionDescription {
 					Name = MacFunction.Keccak512.ToString(),
-					DisplayName = "Keccak-512 / SHA-3-512",
+					DisplayName = "Keccak-512 (SHA-3-512)",
 					OutputSize = 512,
 					SaltSupported = true
 				});
 				_macFunctionDirectory.Add(MacFunction.Cmac, new MacFunctionDescription {
 					Name = MacFunction.Cmac.ToString(),
-					DisplayName = "CMAC / OMAC1 construction",
+					DisplayName = "CMAC/OMAC1 construction",
 					OutputSize = null,
 					SaltSupported = false
 				});
@@ -480,18 +480,18 @@ namespace ObscurCore
                 });
 				_kdfDirectory.Add(KeyDerivationFunction.Scrypt, new KdfDescription {
 					Name = KeyDerivationFunction.Scrypt.ToString(),
-                    DisplayName = "scrypt"
+                    DisplayName = "Scrypt"
                 });
 
                 // Add CSPRNG functions
 
                 _csprngDirectory.Add(CsPseudorandomNumberGenerator.Salsa20, new CsprngDescription {
                     Name = CsPseudorandomNumberGenerator.Salsa20.ToString(),
-                    DisplayName = "Salsa20 cipher based CSPRNG"
+                    DisplayName = "Salsa20 cipher-based CSPRNG"
                 });
 				_csprngDirectory.Add(CsPseudorandomNumberGenerator.Sosemanuk, new CsprngDescription {
 					Name = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-					DisplayName = "SOSEMANUK cipher based CSPRNG"
+					DisplayName = "SOSEMANUK cipher-based CSPRNG"
 				});
             }
 

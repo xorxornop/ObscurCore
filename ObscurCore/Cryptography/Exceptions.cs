@@ -14,8 +14,6 @@
 //    limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ObscurCore.DTO;
@@ -149,43 +147,4 @@ namespace ObscurCore.Cryptography
 		{
 		}
 	}
-
-    public class KeySizeException : Exception
-    {
-        public KeySizeException(int size, string restriction)
-            : base(String.Format("The key size {0} is not supported in the {1}.", size, restriction))
-        {
-            SelectedSize = size;
-            CipherRestriction = restriction;
-        }
-
-        public int SelectedSize { get; private set; }
-        public string CipherRestriction { get; private set; }
-    }
-
-    public class BlockSizeException : Exception
-    {
-        public BlockSizeException(int size, string restriction)
-            : base(String.Format("The block size {0} is not supported in the {1}.", size, restriction))
-        {
-            SelectedSize = size;
-            CipherRestriction = restriction;
-        }
-
-        public int SelectedSize { get; private set; }
-        public string CipherRestriction { get; private set; }
-    }
-
-    public class MACSizeException : Exception
-    {
-        public MACSizeException(int size, string restriction)
-            : base(String.Format("The MAC size {0} is not supported in the {1}.", size, restriction))
-        {
-            SelectedSize = size;
-            CipherRestriction = restriction;
-        }
-
-        public int SelectedSize { get; private set; }
-        public string CipherRestriction { get; private set; }
-    }
 }

@@ -23,7 +23,8 @@ namespace ObscurCore.Packaging
 {
 #if(INCLUDE_FABRIC)
     /// <summary>
-	/// Fabric mux.
+    /// Derived payload multiplexer implementing item layout in stripes of either 
+	/// constant or PRNG-varied length.
 	/// </summary>
 	public sealed class FabricPayloadMux : SimplePayloadMux
 	{
@@ -71,7 +72,7 @@ namespace ObscurCore.Packaging
 		protected override long NextOperationLength() {
 		    var opLen = _mode == FabricStripeMode.VariableLength ? SelectionSource.Next(_minStripe, _maxStripe) : _maxStripe;
 
-            Debug.Print(DebugUtility.CreateReportString("FrameshiftMux", "NextOperationLength", "Generated stripe length",
+            Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "NextOperationLength", "Generated stripe length",
                     opLen));
 
 		    return opLen;

@@ -15,7 +15,7 @@ namespace ObscurCore.Tests.Cryptography.BlockCiphers
             // Using default block & key size
             SymmetricCipherConfiguration config = null;
 
-            Assert.Throws<MACSizeException>(() => config =
+            Assert.Throws<MacSizeException>(() => config =
                 SymmetricCipherConfigurationFactory.CreateAeadBlockCipherConfiguration(BlockCipher, AeadBlockCipherMode.Gcm, BlockCipherPadding.None, _defaultKeySize, _defaultBlockSize, null),
                 "GCM mode incompatible with " + _defaultBlockSize + " bit block size!");
             //RunEqualityTest(config);

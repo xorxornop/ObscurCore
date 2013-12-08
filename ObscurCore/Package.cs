@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.KeyAgreement;
@@ -223,13 +222,15 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="name">Name of the item. Subject of the text is suggested.</param>
 		/// <param name="text">Content of the item.</param>
+		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
+		/// <exception cref="ArgumentException">Supplied null or empty string.</exception>
 		public void AddText(string name, string text) {
             if (_reading) {
                 throw new InvalidOperationException("Cannot modify state of the package.");
             }
 
 			if(String.IsNullOrEmpty(name) || String.IsNullOrWhiteSpace(name)) {
-				throw new ArgumentException ();
+				throw new ArgumentException ("Item name is null or empty string.");
 			}
 			var stream = new MemoryStream(Encoding.UTF8.GetBytes(text));
 			var newItem = CreateItem (() => stream, PayloadItemType.Utf8, stream.Length, name);
@@ -242,6 +243,7 @@ namespace ObscurCore
         /// Default encryption is used.
         /// </summary>
         /// <param name="filePath">Path of the file to add.</param>
+        /// <exception cref="FileNotFoundException">File does not exist.</exception>
         public void AddFile(string filePath) {
             var fileInfo = new FileInfo(filePath);
             if (!fileInfo.Exists) {
@@ -258,13 +260,14 @@ namespace ObscurCore
         /// </summary>
         /// <param name="path">Path of the directory to search for and add files from.</param>
         /// <param name="search">Search for files in subdirectories (default) or not.</param>
+        /// <exception cref="ArgumentException">Path supplied is not a directory.</exception>
         public void AddDirectory(string path, SearchOption search = SearchOption.AllDirectories) {
             var dir = new DirectoryInfo(path);
 
 			if(Path.HasExtension(path)) {
 				throw new ArgumentException ("Path is not a directory.");
 			} else if (!dir.Exists) {
-				throw new ArgumentException ("Directory does not exist.");
+			    throw new DirectoryNotFoundException();
 			}
 
             var rootPathLength = dir.FullName.Length;
@@ -287,7 +290,7 @@ namespace ObscurCore
 		/// </summary>
 		/// <returns>A payload item.</returns>
 		/// <remarks>Default encryption is AES-256/CTR with random IV and key.</remarks>
-		/// <param name="itemData">Item data.</param>
+		/// <param name="itemData">Function supplying a stream of the item data.</param>
 		/// <param name="itemType">Type of the item, e.g., Utf8 (text) or Binary (data/file).</param>
 		/// <param name="externalLength">External length (outside the payload) of the item.</param>
 		/// <param name="relativePath">Relative path of the item.</param>
@@ -311,24 +314,40 @@ namespace ObscurCore
 		}
 
         /// <summary>
-        /// Advanced method. Manually set a symmetric-only manifest cryptography configuration.
+        /// Advanced method. Manually set a symmetric-only manifest cryptography configuration. 
+        /// Misuse will likely result in unreadable package.
         /// </summary>
         /// <param name="configuration">Configuration to apply.</param>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="ArgumentException">Object not a recognised type.</exception>
+        /// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
         public void SetManifestCryptography(IManifestCryptographySchemeConfiguration configuration) {
             if (_reading) {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("Cannot change manifest cryptography of package being read.");
             }
-            _manifestCryptoConfig = configuration;
+
+            if (configuration is IDataTransferObject && (configuration is SymmetricManifestCryptographyConfiguration ||
+                configuration is UM1ManifestCryptographyConfiguration || configuration is Curve25519UM1ManifestCryptographyConfiguration))
+            {
+                _manifestCryptoConfig = configuration;
+            } else {
+                throw new ArgumentException("Object is not a valid configuration within the ObscurCore package format specification.", "configuration");
+            }
         }
 
         /// <summary>
         /// Set the manifest to use symmetric-only security.
         /// </summary>
         /// <param name="key">Key known to the receiver of the package.</param>
+        /// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
+        /// <exception cref="ArgumentException">Array is null or zero-length.</exception>
         public void SetManifestCryptoSymmetric(byte[] key) {
             if (_reading) {
                 throw new InvalidOperationException("Cannot change manifest cryptography of package being read.");
+            } else if (key.IsNullOrZeroLength()) {
+                throw new ArgumentException("Key is null or zero-length.", "key");
             }
+
             if (_writingPreManifestKey != null) {
                 Array.Clear(_writingPreManifestKey, 0, _writingPreManifestKey.Length);
             }
@@ -357,7 +376,7 @@ namespace ObscurCore
         /// Set a specific block cipher configuration to be used for the cipher used for manifest encryption.
         /// </summary>
         /// <exception cref="InvalidOperationException">Package is being written, not read.</exception>
-        /// <exception cref="ArgumentException">Cipher was set to None.</exception>
+        /// <exception cref="ArgumentException">Enum was set to None.</exception>
         public void ConfigureManifestSymmetricCrypto(SymmetricBlockCipher cipher, BlockCipherMode mode, 
             BlockCipherPadding padding)
         {
@@ -365,6 +384,10 @@ namespace ObscurCore
                 throw new InvalidOperationException("Cannot change manifest cryptography of package being read.");
             }
             if (cipher == SymmetricBlockCipher.None) {
+                throw new ArgumentException("Cipher cannot be set to none.", "cipher");
+            } else if (mode == BlockCipherMode.None) {
+                throw new ArgumentException("Mode cannot be set to none.", "mode");
+            } else if (cipher == SymmetricBlockCipher.None) {
                 throw new ArgumentException();
             }
             ManifestCipher = SymmetricCipherConfigurationFactory.CreateBlockCipherConfigurationWithoutKey(cipher, mode, padding);
@@ -769,7 +792,7 @@ namespace ObscurCore
         /// <exception cref="ArgumentException">Key provider absent or did not supply any keys.</exception>
         /// <exception cref="NotSupportedException">Manifest cryptography scheme unsupported/unknown or missing.</exception>
         /// <exception cref="KeyConfirmationException">Key confirmation failed to determine a key, or failed unexpectedly.</exception>
-        /// <exception cref="SerializationException">Deserialisation of manifest failed unexpectedly.</exception>
+        /// <exception cref="InvalidDataException">Deserialisation of manifest failed unexpectedly.</exception>
         private Manifest ReadManifest(IKeyProvider keyProvider, ManifestCryptographyScheme manifestScheme) {
             // Determine the pre-key for the package manifest decryption (different schemes use different approaches)
             byte[] preMKey;
@@ -889,7 +912,7 @@ namespace ObscurCore
                 try {
                     manifest = (Manifest)StratCom.Serialiser.Deserialize(decryptedManifestStream, null, typeof (Manifest));
                 } catch (Exception e) {
-                    throw new SerializationException("Manifest failed to deserialise.");
+                    throw new InvalidDataException("Manifest failed to deserialise.");
                 }
             }
             

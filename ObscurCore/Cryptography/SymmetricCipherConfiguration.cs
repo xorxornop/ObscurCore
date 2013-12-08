@@ -32,8 +32,7 @@ namespace ObscurCore.Cryptography
             if (Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
                 config.KeySizeBits = keySizeNonNull;
             } else {
-                throw new KeySizeException(keySizeNonNull,
-                    Athena.Cryptography.BlockCiphers[cipher].DisplayName + " specification");
+                throw new KeySizeException(cipher, keySizeNonNull);
             }
 
              // Set the block size
@@ -41,8 +40,7 @@ namespace ObscurCore.Cryptography
             if (Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
                 config.BlockSizeBits = blockSizeNonNull;
             } else {
-                throw new BlockSizeException(blockSizeNonNull,
-                    Athena.Cryptography.BlockCiphers[cipher].DisplayName + " specification");
+                throw new BlockSizeException(cipher, blockSizeNonNull);
             }
 
             // Set the mode
@@ -84,8 +82,7 @@ namespace ObscurCore.Cryptography
             if (Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
                 config.KeySizeBits = keySizeNonNull;
             } else {
-                throw new KeySizeException(keySizeNonNull,
-                    Athena.Cryptography.BlockCiphers[cipher].DisplayName + " specification");
+                throw new KeySizeException(cipher, keySizeNonNull);
             }
 
             // Set the block size
@@ -94,8 +91,7 @@ namespace ObscurCore.Cryptography
             if (Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
                 config.BlockSizeBits = blockSizeNonNull;
             } else {
-                throw new BlockSizeException(blockSizeNonNull,
-                    Athena.Cryptography.BlockCiphers[cipher].DisplayName + " specification");
+                throw new BlockSizeException(cipher, blockSizeNonNull);
             }
 
             // Set the mode
@@ -105,9 +101,7 @@ namespace ObscurCore.Cryptography
                 if (Athena.Cryptography.AeadBlockCipherModes[mode].AllowableBlockSizes.Contains(config.BlockSizeBits))
                     config.MacSizeBits = macSizeNonNull;
                 else
-                    throw new MACSizeException(macSizeNonNull,
-                        Athena.Cryptography.AeadBlockCipherModes[mode].DisplayName +
-                            " specification");
+                    throw new MacSizeException(mode, macSizeNonNull);
             }
 
             config.ModeName = mode.ToString();
@@ -147,8 +141,7 @@ namespace ObscurCore.Cryptography
             if (Athena.Cryptography.StreamCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
                 config.KeySizeBits = keySizeNonNull;
             } else {
-                throw new KeySizeException(keySizeNonNull,
-                    Athena.Cryptography.StreamCiphers[cipher].DisplayName + " specification");
+                throw new KeySizeException(cipher, keySizeNonNull);
             }
             config.Key = new byte[config.KeySizeBits / 8];
             config.CipherName = cipher.ToString();

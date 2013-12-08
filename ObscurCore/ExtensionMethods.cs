@@ -97,7 +97,8 @@ namespace ObscurCore
         /// <remarks>
         /// Adapted from http://stackoverflow.com/questions/321370/convert-hex-string-to-byte-array
         /// </remarks>
-        public static byte[] HexToBinary(string hexSrc) {
+        public static byte[] HexToBinary(this string hexSrc) {
+            if (hexSrc == null) return null;
             if (hexSrc.Length % 2 == 1) throw new ArgumentException("The binary key cannot have an odd number of digits");
             var arr = new byte[hexSrc.Length >> 1];
             var h2i = new Func<char, int>(c => (int) c - ((int) c < 58 ? 48 : 87));
@@ -197,7 +198,7 @@ namespace ObscurCore.Extensions
                     if (!curveProvider.Equals ("Brainpool"))
                         throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
-                    EcFpCurves curveEnum;
+                    EllipticCurveFpCurves curveEnum;
                     if(!Enum.TryParse(curveName, out curveEnum)) 
                         throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
                     config.CurveName = curveName;
@@ -208,7 +209,7 @@ namespace ObscurCore.Extensions
                     if (!curveProvider.Equals ("Brainpool"))
                         throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
-                    EcFpCurves curveEnum;
+                    EllipticCurveFpCurves curveEnum;
                     if(!Enum.TryParse(curveName, out curveEnum)) 
                         throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
                     config.CurveName = curveName;

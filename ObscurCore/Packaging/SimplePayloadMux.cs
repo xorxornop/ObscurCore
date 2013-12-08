@@ -24,7 +24,7 @@ using ObscurCore.DTO;
 namespace ObscurCore.Packaging
 {
 	/// <summary>
-	/// Derived stream mux implementing stream selection with PRNG initialised with seed parameters.
+	/// Payload multiplexer implementing stream selection order by PRNG.
 	/// </summary>
 	public class SimplePayloadMux : PayloadMux
 	{
@@ -59,7 +59,7 @@ namespace ObscurCore.Packaging
 		protected override sealed int NextSource() {
 		    CurrentIndex = _selectionSource.Next(0, ItemCount - 1);
 
-            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMultiplexer", "NextSource", "Generated index",
+            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "NextSource", "Generated index",
                     CurrentIndex));
 
 			return CurrentIndex;
