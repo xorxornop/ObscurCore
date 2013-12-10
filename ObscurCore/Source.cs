@@ -210,7 +210,7 @@ namespace ObscurCore
 
             // Add curves over GF(p)
 
-            EcParameters.Add(EllipticCurveFpCurves.BrainpoolP160r1.ToString(), () => domainFuncGxy(
+            EcParameters.Add(BrainpoolEllipticCurve.BrainpoolP160r1.ToString(), () => domainFuncGxy(
                 new BigInteger("E95E4A5F737059DC60DFC7AD95B3D8139515620F", 16), // q
                 new BigInteger("340E7BE2A280EB74E2BE61BADA745D97E8F7C300", 16), // a
                 new BigInteger("1E589A8595423412134FAA2DBDEC95C8D8675E58", 16), // b
@@ -221,7 +221,7 @@ namespace ObscurCore
                 null
                 ));
 
-            EcParameters.Add(EllipticCurveFpCurves.BrainpoolP160t1.ToString(), () => domainFuncGxy(
+            EcParameters.Add(BrainpoolEllipticCurve.BrainpoolP160t1.ToString(), () => domainFuncGxy(
                 new BigInteger("E95E4A5F737059DC60DFC7AD95B3D8139515620F", 16), // q
                 new BigInteger("E95E4A5F737059DC60DFC7AD95B3D8139515620C", 16), // a
                 new BigInteger("7A556B6DAE535B7B51ED2C4D7DAA7A0B5C55F380", 16), // b
@@ -232,7 +232,7 @@ namespace ObscurCore
                 null
                 ));
 
-            EcParameters.Add(EllipticCurveFpCurves.BrainpoolP192r1.ToString(), () => domainFuncGxy(
+            EcParameters.Add(BrainpoolEllipticCurve.BrainpoolP192r1.ToString(), () => domainFuncGxy(
                 new BigInteger("C302F41D932A36CDA7A3463093D18DB78FCE476DE1A86297", 16), // q
                 new BigInteger("6A91174076B1E0E19C39C031FE8685C1CAE040E5C69A28EF", 16), // a
                 new BigInteger("469A28EF7C28CCA3DC721D044F4496BCCA7EF4146FBF25C9", 16), // b
@@ -243,7 +243,7 @@ namespace ObscurCore
                 null
                 ));
 
-            EcParameters.Add(EllipticCurveFpCurves.BrainpoolP192t1.ToString(), () => domainFuncGxy(
+            EcParameters.Add(BrainpoolEllipticCurve.BrainpoolP192t1.ToString(), () => domainFuncGxy(
                 new BigInteger("C302F41D932A36CDA7A3463093D18DB78FCE476DE1A86297", 16), // q
                 new BigInteger("C302F41D932A36CDA7A3463093D18DB78FCE476DE1A86294", 16), // a
                 new BigInteger("13D56FFAEC78681E68F9DEB43B35BEC2FB68542E27897B79", 16), // b
@@ -254,7 +254,7 @@ namespace ObscurCore
                 null
                 ));
 
-            EcParameters.Add(EllipticCurveFpCurves.BrainpoolP224r1.ToString(), () => domainFuncGxy(
+            EcParameters.Add(BrainpoolEllipticCurve.BrainpoolP224r1.ToString(), () => domainFuncGxy(
                 new BigInteger("D7C134AA264366862A18302575D1D787B09F075797DA89F57EC8C0FF", 16), // q
                 new BigInteger("68A5E62CA9CE6C1C299803A6C1530B514E182AD8B0042A59CAD29F43", 16), // a
                 new BigInteger("2580F63CCFE44138870713B1A92369E33E2135D266DBB372386C400B", 16), // b
@@ -265,7 +265,7 @@ namespace ObscurCore
                 null
                 ));
 
-            EcParameters.Add(EllipticCurveFpCurves.BrainpoolP224t1.ToString(), () => domainFuncGxy(
+            EcParameters.Add(BrainpoolEllipticCurve.BrainpoolP224t1.ToString(), () => domainFuncGxy(
                 new BigInteger("D7C134AA264366862A18302575D1D787B09F075797DA89F57EC8C0FF", 16), // q
                 new BigInteger("D7C134AA264366862A18302575D1D787B09F075797DA89F57EC8C0FC", 16), // a
                 new BigInteger("4B337D934104CD7BEF271BF60CED1ED20DA14C08B3BB64F18A60888D", 16), // b
@@ -276,7 +276,7 @@ namespace ObscurCore
                 null
                 ));
 
-			EcParameters.Add(EllipticCurveFpCurves.BrainpoolP256r1.ToString(), () => domainFuncGxy(
+			EcParameters.Add(BrainpoolEllipticCurve.BrainpoolP256r1.ToString(), () => domainFuncGxy(
                 new BigInteger("A9FB57DBA1EEA9BC3E660A909D838D726E3BF623D52620282013481D1F6E5377", 16), // q
                 new BigInteger("7D5A0975FC2C3057EEF67530417AFFE7FB8055C126DC5C6CE94A4B44F330B5D9", 16), // a
                 new BigInteger("26DC5C6CE94A4B44F330B5D9BBD77CBF958416295CF7E1CE6BCCDC18FF8C07B6", 16), // b
@@ -287,7 +287,7 @@ namespace ObscurCore
                 null
                 ));
 
-            EcParameters.Add(EllipticCurveFpCurves.BrainpoolP256t1.ToString(), () => domainFuncGxy(
+            EcParameters.Add(BrainpoolEllipticCurve.BrainpoolP256t1.ToString(), () => domainFuncGxy(
                 new BigInteger("A9FB57DBA1EEA9BC3E660A909D838D726E3BF623D52620282013481D1F6E5377", 16), // q
                 new BigInteger("A9FB57DBA1EEA9BC3E660A909D838D726E3BF623D52620282013481D1F6E5374", 16), // a
                 new BigInteger("662C61C430D84EA4FE66A7733D0B76B7BF93EBC4AF2F49256AE58101FEE92B04", 16), // b
@@ -298,7 +298,7 @@ namespace ObscurCore
                 null
                 ));
 			
-			EcParameters.Add(EllipticCurveFpCurves.BrainpoolP320r1.ToString(), () => domainFuncGxy(
+			EcParameters.Add(BrainpoolEllipticCurve.BrainpoolP320r1.ToString(), () => domainFuncGxy(
                 new BigInteger("D35E472036BC4FB7E13C785ED201E065F98FCFA6F6F40DEF4F92B9EC7893EC28FCD412B1F1B32E27", 16), // q
                 new BigInteger("3EE30B568FBAB0F883CCEBD46D3F3BB8A2A73513F5EB79DA66190EB085FFA9F492F375A97D860EB4", 16), // a
                 new BigInteger("520883949DFDBC42D3AD198640688A6FE13F41349554B49ACC31DCCD884539816F5EB4AC8FB1F1A6", 16), // b
@@ -309,7 +309,7 @@ namespace ObscurCore
                 null
                 ));
 
-            EcParameters.Add(EllipticCurveFpCurves.BrainpoolP384r1.ToString(), () => domainFuncGxy(
+            EcParameters.Add(BrainpoolEllipticCurve.BrainpoolP384r1.ToString(), () => domainFuncGxy(
                 new BigInteger("8CB91E82A3386D280F5D6F7E50E641DF152F7109ED5456B412B1DA197FB71123ACD3A729901D1A71874700133107EC53", 16), // q
                 new BigInteger("7BC382C63D8C150C3C72080ACE05AFA0C2BEA28E4FB22787139165EFBA91F90F8AA5814A503AD4EB04A8C7DD22CE2826", 16), // a
                 new BigInteger("4A8C7DD22CE28268B39B55416F0447C2FB77DE107DCD2A62E880EA53EEB62D57CB4390295DBC9943AB78696FA504C11", 16), // b
@@ -320,7 +320,7 @@ namespace ObscurCore
                 null
                 ));
 			
-			EcParameters.Add(EllipticCurveFpCurves.BrainpoolP512r1.ToString(), () => domainFuncGxy(
+			EcParameters.Add(BrainpoolEllipticCurve.BrainpoolP512r1.ToString(), () => domainFuncGxy(
                 new BigInteger("AADD9DB8DBE9C48B3FD4E6AE33C9FC07CB308DB3B3C9D20ED6639CCA703308717D4D9B009BC66842AECDA12AE6A380E62881FF2F2D82C68528AA6056583A48F3", 16), // q
                 new BigInteger("7830A3318B603B89E2327145AC234CC594CBDD8D3DF91610A83441CAEA9863BC2DED5D5AA8253AA10A2EF1C98B9AC8B57F1117A72BF2C7B9E7C1AC4D77FC94CA", 16), // a
                 new BigInteger("3DF91610A83441CAEA9863BC2DED5D5AA8253AA10A2EF1C98B9AC8B57F1117A72BF2C7B9E7C1AC4D77FC94CADC083E67984050B75EBAE5DD2809BD638016F723", 16), // b
@@ -331,7 +331,7 @@ namespace ObscurCore
                 null
                 ));
 
-            EcParameters.Add(EllipticCurveFpCurves.Secp192k1.ToString(), () => domainFuncG(
+            EcParameters.Add(Sec2EllipticCurve.Secp192k1.ToString(), () => domainFuncG(
                 new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFEE37", 16), // q
                 BigInteger.Zero, // a
                 BigInteger.Three, // b
@@ -340,7 +340,7 @@ namespace ObscurCore
                 BigInteger.One, // h
                 null));
 
-            EcParameters.Add(EllipticCurveFpCurves.Secp192r1.ToString(), () => domainFuncG(
+            EcParameters.Add(Sec2EllipticCurve.Secp192r1.ToString(), () => domainFuncG(
                 new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF", 16), // q
                 new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFC", 16), // a
                 new BigInteger("64210519E59C80E70FA7E9AB72243049FEB8DEECC146B9B1", 16), // b
@@ -349,7 +349,7 @@ namespace ObscurCore
                 BigInteger.One, // h
                 "3045AE6FC8422F64ED579528D38120EAE12196D5"));
 
-            EcParameters.Add(EllipticCurveFpCurves.Secp224k1.ToString(), () => domainFuncG(
+            EcParameters.Add(Sec2EllipticCurve.Secp224k1.ToString(), () => domainFuncG(
                 new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFE56D", 16), // q
                 BigInteger.Zero, // a
                 BigInteger.ValueOf(5), // b
@@ -358,7 +358,7 @@ namespace ObscurCore
                 BigInteger.One, // h
                 null));
 
-            EcParameters.Add(EllipticCurveFpCurves.Secp224r1.ToString(), () => domainFuncG(
+            EcParameters.Add(Sec2EllipticCurve.Secp224r1.ToString(), () => domainFuncG(
                 new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000001", 16), // q
                 new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFE", 16), // a
                 new BigInteger("B4050A850C04B3ABF54132565044B0B7D7BFD8BA270B39432355FFB4", 16), // b
@@ -367,7 +367,7 @@ namespace ObscurCore
                 BigInteger.One, // h
                 "BD71344799D5C7FCDC45B59FA3B9AB8F6A948BC5")); // s
 
-            EcParameters.Add(EllipticCurveFpCurves.Secp256k1.ToString(), () => domainFuncG(
+            EcParameters.Add(Sec2EllipticCurve.Secp256k1.ToString(), () => domainFuncG(
                 new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16), // q
                 BigInteger.Zero, // a
                 BigInteger.ValueOf(7), // b
@@ -376,7 +376,7 @@ namespace ObscurCore
                 BigInteger.One, // h
                 null));
 
-            EcParameters.Add(EllipticCurveFpCurves.Secp256r1.ToString(), () => domainFuncG(
+            EcParameters.Add(Sec2EllipticCurve.Secp256r1.ToString(), () => domainFuncG(
                 new BigInteger("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF", 16), // q
                 new BigInteger("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC", 16), // a
                 new BigInteger("5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B", 16), // b
@@ -386,7 +386,7 @@ namespace ObscurCore
                 "C49D360886E704936A6678E1139D26B7819F7E90")); // s
 
 
-            EcParameters.Add(EllipticCurveFpCurves.Secp384r1.ToString(), () => domainFuncG(
+            EcParameters.Add(Sec2EllipticCurve.Secp384r1.ToString(), () => domainFuncG(
                 new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF", 16), // q
                 new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFC", 16), // a
                 new BigInteger("B3312FA7E23EE7E4988E056BE3F82D19181D9C6EFE8141120314088F5013875AC656398D8A2ED19D2A85C8EDD3EC2AEF", 16), // b
@@ -395,7 +395,7 @@ namespace ObscurCore
                 BigInteger.One, // h
                 "A335926AA319A27A1D00896A6773A4827ACDAC73")); // s
 
-            EcParameters.Add(EllipticCurveFpCurves.Secp521r1.ToString(), () => domainFuncG(
+            EcParameters.Add(Sec2EllipticCurve.Secp521r1.ToString(), () => domainFuncG(
                 new BigInteger("01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16),
                 new BigInteger("01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC", 16),
                 new BigInteger("0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00", 16),
@@ -419,17 +419,17 @@ namespace ObscurCore
                         return new ECDomainParameters(curve, curve.DecodePoint(G.HexToBinary()), n, h, S.HexToBinary());
                     });
 
-            EcParameters.Add(EllipticCurveF2mCurves.Sect163k1.ToString(), () => domainFuncF2mK123(
-                163,
-                3, 6, 7,
-                BigInteger.One,
-                BigInteger.Two,
-                "0402FE13C0537BBC11ACAA07D793DE4E6D5E5C94EEE80289070FB05D38FF58321F2E800536D538CCDAA3D9",
-                new BigInteger("04000000000000000000020108A2E0CC0D99F8A5EF", 16),
-                BigInteger.One, 
-                null));
+            //EcParameters.Add(Sec2EllipticCurve.Sect163k1.ToString(), () => domainFuncF2mK123(
+            //    163,
+            //    3, 6, 7,
+            //    BigInteger.One,
+            //    BigInteger.Two,
+            //    "0402FE13C0537BBC11ACAA07D793DE4E6D5E5C94EEE80289070FB05D38FF58321F2E800536D538CCDAA3D9",
+            //    new BigInteger("04000000000000000000020108A2E0CC0D99F8A5EF", 16),
+            //    BigInteger.One, 
+            //    null));
 
-            EcParameters.Add(EllipticCurveF2mCurves.Sect163r2.ToString(), () => domainFuncF2mK123(
+            EcParameters.Add(Sec2EllipticCurve.Sect163r2.ToString(), () => domainFuncF2mK123(
                 163,
                 3, 6, 7,
                 BigInteger.One,
@@ -439,17 +439,17 @@ namespace ObscurCore
                 BigInteger.One, 
                 "85E25BFE5C86226CDB12016F7553F9D0E693A268"));
 
-            EcParameters.Add(EllipticCurveF2mCurves.Sect233k1.ToString(), () => domainFuncF2m(
-                233,
-                74,
-                BigInteger.Zero,
-                BigInteger.One,
-                "04017232BA853A7E731AF129F22FF4149563A419C26BF50A4C9D6EEFAD612601DB537DECE819B7F70F555A67C427A8CD9BF18AEB9B56E0C11056FAE6A3",
-                new BigInteger("8000000000000000000000000000069D5BB915BCD46EFB1AD5F173ABDF", 16),
-                BigInteger.ValueOf(4), 
-                null));
+            //EcParameters.Add(Sec2EllipticCurve.Sect233k1.ToString(), () => domainFuncF2m(
+            //    233,
+            //    74,
+            //    BigInteger.Zero,
+            //    BigInteger.One,
+            //    "04017232BA853A7E731AF129F22FF4149563A419C26BF50A4C9D6EEFAD612601DB537DECE819B7F70F555A67C427A8CD9BF18AEB9B56E0C11056FAE6A3",
+            //    new BigInteger("8000000000000000000000000000069D5BB915BCD46EFB1AD5F173ABDF", 16),
+            //    BigInteger.ValueOf(4), 
+            //    null));
 
-            EcParameters.Add(EllipticCurveF2mCurves.Sect233r1.ToString(), () => domainFuncF2m(
+            EcParameters.Add(Sec2EllipticCurve.Sect233r1.ToString(), () => domainFuncF2m(
                 233,
                 74,
                 BigInteger.One,
@@ -459,17 +459,17 @@ namespace ObscurCore
                 BigInteger.Two, 
                 "74D59FF07F6B413D0EA14B344B20A2DB049B50C3"));
 
-            EcParameters.Add(EllipticCurveF2mCurves.Sect283k1.ToString(), () => domainFuncF2mK123(
-                283,
-                5, 7, 12,
-                BigInteger.Zero,
-                BigInteger.One,
-                "040503213F78CA44883F1A3B8162F188E553CD265F23C1567A16876913B0C2AC245849283601CCDA380F1C9E318D90F95D07E5426FE87E45C0E8184698E45962364E34116177DD2259",
-                new BigInteger("01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE9AE2ED07577265DFF7F94451E061E163C61", 16),
-                BigInteger.ValueOf(4), 
-                null));
+            //EcParameters.Add(Sec2EllipticCurve.Sect283k1.ToString(), () => domainFuncF2mK123(
+            //    283,
+            //    5, 7, 12,
+            //    BigInteger.Zero,
+            //    BigInteger.One,
+            //    "040503213F78CA44883F1A3B8162F188E553CD265F23C1567A16876913B0C2AC245849283601CCDA380F1C9E318D90F95D07E5426FE87E45C0E8184698E45962364E34116177DD2259",
+            //    new BigInteger("01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE9AE2ED07577265DFF7F94451E061E163C61", 16),
+            //    BigInteger.ValueOf(4), 
+            //    null));
 
-            EcParameters.Add(EllipticCurveF2mCurves.Sect283r1.ToString(), () => domainFuncF2mK123(
+            EcParameters.Add(Sec2EllipticCurve.Sect283r1.ToString(), () => domainFuncF2mK123(
                 283,
                 5, 7, 12,
                 BigInteger.One,
@@ -479,17 +479,17 @@ namespace ObscurCore
                 BigInteger.Two, 
                 "77E2B07370EB0F832A6DD5B62DFC88CD06BB84BE"));
 
-            EcParameters.Add(EllipticCurveF2mCurves.Sect409k1.ToString(), () => domainFuncF2m(
-                409,
-                87,
-                BigInteger.Zero,
-                BigInteger.One,
-                "040060F05F658F49C1AD3AB1890F7184210EFD0987E307C84C27ACCFB8F9F67CC2C460189EB5AAAA62EE222EB1B35540CFE902374601E369050B7C4E42ACBA1DACBF04299C3460782F918EA427E6325165E9EA10E3DA5F6C42E9C55215AA9CA27A5863EC48D8E0286B",
-                new BigInteger("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE5F83B2D4EA20400EC4557D5ED3E3E7CA5B4B5C83B8E01E5FCF", 16),
-                BigInteger.ValueOf(4), 
-                null));
+            //EcParameters.Add(Sec2EllipticCurve.Sect409k1.ToString(), () => domainFuncF2m(
+            //    409,
+            //    87,
+            //    BigInteger.Zero,
+            //    BigInteger.One,
+            //    "040060F05F658F49C1AD3AB1890F7184210EFD0987E307C84C27ACCFB8F9F67CC2C460189EB5AAAA62EE222EB1B35540CFE902374601E369050B7C4E42ACBA1DACBF04299C3460782F918EA427E6325165E9EA10E3DA5F6C42E9C55215AA9CA27A5863EC48D8E0286B",
+            //    new BigInteger("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE5F83B2D4EA20400EC4557D5ED3E3E7CA5B4B5C83B8E01E5FCF", 16),
+            //    BigInteger.ValueOf(4), 
+            //    null));
 
-            EcParameters.Add(EllipticCurveF2mCurves.Sect409r1.ToString(), () => domainFuncF2m(
+            EcParameters.Add(Sec2EllipticCurve.Sect409r1.ToString(), () => domainFuncF2m(
                 409,
                 87,
                 BigInteger.One,
@@ -499,17 +499,17 @@ namespace ObscurCore
                 BigInteger.Two, 
                 "4099B5A457F9D69F79213D094C4BCD4D4262210B"));
 
-            EcParameters.Add(EllipticCurveF2mCurves.Sect571k1.ToString(), () => domainFuncF2mK123(
-                571,
-                2, 5, 10,
-                BigInteger.Zero,
-                BigInteger.One,
-                "04026EB7A859923FBC82189631F8103FE4AC9CA2970012D5D46024804801841CA44370958493B205E647DA304DB4CEB08CBBD1BA39494776FB988B47174DCA88C7E2945283A01C89720349DC807F4FBF374F4AEADE3BCA95314DD58CEC9F307A54FFC61EFC006D8A2C9D4979C0AC44AEA74FBEBBB9F772AEDCB620B01A7BA7AF1B320430C8591984F601CD4C143EF1C7A3",
-                new BigInteger("020000000000000000000000000000000000000000000000000000000000000000000000131850E1F19A63E4B391A8DB917F4138B630D84BE5D639381E91DEB45CFE778F637C1001", 16),
-                BigInteger.ValueOf(4), 
-                null));
+            //EcParameters.Add(Sec2EllipticCurve.Sect571k1.ToString(), () => domainFuncF2mK123(
+            //    571,
+            //    2, 5, 10,
+            //    BigInteger.Zero,
+            //    BigInteger.One,
+            //    "04026EB7A859923FBC82189631F8103FE4AC9CA2970012D5D46024804801841CA44370958493B205E647DA304DB4CEB08CBBD1BA39494776FB988B47174DCA88C7E2945283A01C89720349DC807F4FBF374F4AEADE3BCA95314DD58CEC9F307A54FFC61EFC006D8A2C9D4979C0AC44AEA74FBEBBB9F772AEDCB620B01A7BA7AF1B320430C8591984F601CD4C143EF1C7A3",
+            //    new BigInteger("020000000000000000000000000000000000000000000000000000000000000000000000131850E1F19A63E4B391A8DB917F4138B630D84BE5D639381E91DEB45CFE778F637C1001", 16),
+            //    BigInteger.ValueOf(4), 
+            //    null));
 
-            EcParameters.Add(EllipticCurveF2mCurves.Sect571r1.ToString(), () => domainFuncF2mK123(
+            EcParameters.Add(Sec2EllipticCurve.Sect571r1.ToString(), () => domainFuncF2mK123(
                 571,
                 2, 5, 10,
                 BigInteger.One,
@@ -834,15 +834,15 @@ namespace ObscurCore
             return StreamCsprng.CreateRandomConfiguration(cipherEnum);
         }
 
-        public static ECDomainParameters GetEcDomainParameters(EllipticCurveFpCurves curveEnum) {
-            if (curveEnum == EllipticCurveFpCurves.None) {
+        public static ECDomainParameters GetEcDomainParameters(BrainpoolEllipticCurve curveEnum) {
+            if (curveEnum == BrainpoolEllipticCurve.None) {
                 throw new ArgumentException();
             }
             return GetEcDomainParameters(curveEnum.ToString());
         }
 
-        public static ECDomainParameters GetEcDomainParameters(EllipticCurveF2mCurves curveEnum) {
-            if (curveEnum == EllipticCurveF2mCurves.None) {
+        public static ECDomainParameters GetEcDomainParameters(Sec2EllipticCurve curveEnum) {
+            if (curveEnum == Sec2EllipticCurve.None) {
                 throw new ArgumentException();
             }
             return GetEcDomainParameters(curveEnum.ToString());

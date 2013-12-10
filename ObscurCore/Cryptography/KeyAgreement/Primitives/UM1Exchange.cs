@@ -54,12 +54,12 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 
 		    // Calculate shared static secret 'Zs'
 			var Zs = ECAgreementUtility.CalculateDHCSecret(domain, Q_static_V, d_static_U); // EC-DHC
-			byte[] Zs_encoded = Zs.GetEncoded();
+			byte[] Zs_encoded = Zs.ToByteArrayUnsigned();
 			
 			// Calculate shared ephemeral secret 'Ze'
 			ECPrivateKeyParameters d_ephemeral_U = (ECPrivateKeyParameters) pair.Private;
 			var Ze = ECAgreementUtility.CalculateDHCSecret(domain, Q_static_V, d_ephemeral_U); // EC-DHC
-			byte[] Ze_encoded = Ze.GetEncoded();
+			byte[] Ze_encoded = Ze.ToByteArrayUnsigned();
 			
 			// Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
 			var Z = new byte[Ze_encoded.Length + Zs_encoded.Length];
@@ -81,11 +81,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 
 		    // Calculate shared static secret 'Zs'
 			var Zs = ECAgreementUtility.CalculateDHCSecret(domain, Q_static_U, d_static_V); // EC-DHC
-			byte[] Zs_encoded = Zs.GetEncoded();
+			byte[] Zs_encoded = Zs.ToByteArrayUnsigned();
 			
 			// Calculate shared ephemeral secret 'Ze'
 			var Ze = ECAgreementUtility.CalculateDHCSecret(domain, Q_ephemeral_U, d_static_V); // EC-DHC
-			byte[] Ze_encoded = Ze.GetEncoded();
+			byte[] Ze_encoded = Ze.ToByteArrayUnsigned();
 			
 			// Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
 			var Z = new byte[Ze_encoded.Length + Zs_encoded.Length];

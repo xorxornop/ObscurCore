@@ -165,7 +165,8 @@ namespace ObscurCore.Extensions
                     try {
                         var domain = Source.GetEcDomainParameters(config.CurveName);
                         ECPoint point;
-                        ECKeyUtility.Read (config.EncodedKey, domain, out point);
+                        //ECKeyUtility.Read (config.EncodedKey, domain, out point);
+                        point = domain.Curve.DecodePoint(config.EncodedKey);
                         publicKey = new ECPublicKeyParameters("ECDHC", point, domain);
                     } catch (NotSupportedException) {
                         throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
@@ -183,7 +184,8 @@ namespace ObscurCore.Extensions
                     try {
                         var domain = Source.GetEcDomainParameters(config.CurveName);
                         ECPoint point;
-                        ECKeyUtility.Read (config.EncodedKey, domain, out point);
+                        //ECKeyUtility.Read (config.EncodedKey, domain, out point);
+                        point = domain.Curve.DecodePoint(config.EncodedKey);
                         privateKey = new ECPrivateKeyParameters("ECDHC", new BigInteger(config.EncodedKey), domain);
 
                     } catch (NotSupportedException) {
@@ -198,20 +200,15 @@ namespace ObscurCore.Extensions
                     if (!curveProvider.Equals ("Brainpool"))
                         throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
-                    EllipticCurveFpCurves curveEnum;
-                    if(!Enum.TryParse(curveName, out curveEnum)) 
-                        throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
                     config.CurveName = curveName;
-                    config.EncodedKey = ECKeyUtility.Write (key);
+                    //config.EncodedKey = ECKeyUtility.Write (key);
+                    config.EncodedKey = key.GetEncoded();
                 }
 
                 public static void EncodePrivateKey(this EcKeyConfiguration config, string curveProvider, string curveName, BigInteger key) {
                     if (!curveProvider.Equals ("Brainpool"))
                         throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
-                    EllipticCurveFpCurves curveEnum;
-                    if(!Enum.TryParse(curveName, out curveEnum)) 
-                        throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
                     config.CurveName = curveName;
                     config.EncodedKey = key.ToByteArray ();
                 }

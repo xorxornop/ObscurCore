@@ -23,7 +23,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		
 		[TestFixtureSetUp]
 		public void Init () {		
-			var curves = Enum.GetNames (typeof(EllipticCurveFpCurves));
+			var curves = Enum.GetNames (typeof(BrainpoolEllipticCurve));
 			for (var i = 1; i < curves.Length; i++) {
 			    var domain = Source.GetEcDomainParameters(curves[i]);
 				var kpInitiator = ECAgreementUtility.GenerateKeyPair (domain);
@@ -37,7 +37,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 				_ecKeypairs.Add (curves [i], kpStore);
 			}
 
-            curves = Enum.GetNames (typeof(EllipticCurveF2mCurves));
+            curves = Enum.GetNames (typeof(Sec2EllipticCurve));
             for (var i = 1; i < curves.Length; i++) {
 			    var domain = Source.GetEcDomainParameters(curves[i]);
 				var kpInitiator = ECAgreementUtility.GenerateKeyPair (domain);
@@ -55,7 +55,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_BrainpoolP160r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.BrainpoolP160r1.ToString()];
+			var context = _ecKeypairs[BrainpoolEllipticCurve.BrainpoolP160r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -64,7 +64,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_BrainpoolP160t1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.BrainpoolP160t1.ToString()];
+			var context = _ecKeypairs[BrainpoolEllipticCurve.BrainpoolP160t1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -73,7 +73,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_BrainpoolP192r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.BrainpoolP192r1.ToString()];
+			var context = _ecKeypairs[BrainpoolEllipticCurve.BrainpoolP192r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -82,7 +82,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_BrainpoolP192t1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.BrainpoolP192t1.ToString()];
+			var context = _ecKeypairs[BrainpoolEllipticCurve.BrainpoolP192t1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -91,7 +91,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
         public void UM1Exchange_BrainpoolP224r1 () {
             byte[] initiatorSS, responderSS;
-            var context = _ecKeypairs[EllipticCurveFpCurves.BrainpoolP224r1.ToString()];
+            var context = _ecKeypairs[BrainpoolEllipticCurve.BrainpoolP224r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
             // Compare the shared secret byte sequences
             Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -100,7 +100,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_BrainpoolP224t1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.BrainpoolP224t1.ToString()];
+			var context = _ecKeypairs[BrainpoolEllipticCurve.BrainpoolP224t1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -109,7 +109,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_BrainpoolP256r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.BrainpoolP256r1.ToString()];
+			var context = _ecKeypairs[BrainpoolEllipticCurve.BrainpoolP256r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -118,7 +118,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_BrainpoolP256t1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.BrainpoolP256t1.ToString()];
+			var context = _ecKeypairs[BrainpoolEllipticCurve.BrainpoolP256t1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -127,7 +127,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_BrainpoolP320r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.BrainpoolP320r1.ToString()];
+			var context = _ecKeypairs[BrainpoolEllipticCurve.BrainpoolP320r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -136,7 +136,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
         public void UM1Exchange_BrainpoolP384r1 () {
             byte[] initiatorSS, responderSS;
-            var context = _ecKeypairs[EllipticCurveFpCurves.BrainpoolP384r1.ToString()];
+            var context = _ecKeypairs[BrainpoolEllipticCurve.BrainpoolP384r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
             // Compare the shared secret byte sequences
             Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -145,7 +145,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[Test()]
 		public void UM1Exchange_BrainpoolP512r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.BrainpoolP512r1.ToString()];
+			var context = _ecKeypairs[BrainpoolEllipticCurve.BrainpoolP512r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -154,7 +154,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_Secp192k1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.Secp192k1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Secp192k1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -163,7 +163,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_Secp192r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.Secp192r1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Secp192r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -172,7 +172,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_Secp224k1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.Secp224k1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Secp224k1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -181,7 +181,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_Secp224r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.Secp224r1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Secp224r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -190,7 +190,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_Secp256k1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.Secp256k1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Secp256k1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -199,7 +199,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_Secp256r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.Secp256r1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Secp256r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -208,7 +208,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_Secp384r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.Secp384r1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Secp384r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
@@ -217,98 +217,98 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         [Test()]
 		public void UM1Exchange_Secp521r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveFpCurves.Secp521r1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Secp521r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
 		}
 
 
-        [Test()]
-		public void UM1Exchange_Sect163k1 () {
-			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveF2mCurves.Sect163k1.ToString()];
-            DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
-			// Compare the shared secret byte sequences
-			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
-		}
+        //[Test()]
+        //public void UM1Exchange_Sect163k1 () {
+        //    byte[] initiatorSS, responderSS;
+        //    var context = _ecKeypairs[EllipticCurveF2mCurves.Sect163k1.ToString()];
+        //    DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
+        //    // Compare the shared secret byte sequences
+        //    Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
+        //}
 
         [Test()]
 		public void UM1Exchange_Sect163r2 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveF2mCurves.Sect163r2.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Sect163r2.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
 		}
 
-        [Test()]
-		public void UM1Exchange_Sect233k1 () {
-			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveF2mCurves.Sect233k1.ToString()];
-            DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
-			// Compare the shared secret byte sequences
-			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
-		}
+        //[Test()]
+        //public void UM1Exchange_Sect233k1 () {
+        //    byte[] initiatorSS, responderSS;
+        //    var context = _ecKeypairs[EllipticCurveF2mCurves.Sect233k1.ToString()];
+        //    DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
+        //    // Compare the shared secret byte sequences
+        //    Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
+        //}
 
         [Test()]
 		public void UM1Exchange_Sect233r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveF2mCurves.Sect233r1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Sect233r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
 		}
 
-        [Test()]
-		public void UM1Exchange_Sect283k1 () {
-			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveF2mCurves.Sect283k1.ToString()];
-            DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
-			// Compare the shared secret byte sequences
-			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
-		}
+        //[Test()]
+        //public void UM1Exchange_Sect283k1 () {
+        //    byte[] initiatorSS, responderSS;
+        //    var context = _ecKeypairs[EllipticCurveF2mCurves.Sect283k1.ToString()];
+        //    DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
+        //     Compare the shared secret byte sequences
+        //    Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
+        //}
 
         [Test()]
 		public void UM1Exchange_Sect283r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveF2mCurves.Sect283r1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Sect283r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
 		}
 
-        [Test()]
-		public void UM1Exchange_Sect409k1 () {
-			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveF2mCurves.Sect409k1.ToString()];
-            DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
-			// Compare the shared secret byte sequences
-			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
-		}
+        //[Test()]
+        //public void UM1Exchange_Sect409k1 () {
+        //    byte[] initiatorSS, responderSS;
+        //    var context = _ecKeypairs[EllipticCurveF2mCurves.Sect409k1.ToString()];
+        //    DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
+        //    // Compare the shared secret byte sequences
+        //    Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
+        //}
 
         [Test()]
 		public void UM1Exchange_Sect409r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveF2mCurves.Sect409r1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Sect409r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
 		}
 
-        [Test()]
-		public void UM1Exchange_Sect571k1 () {
-			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveF2mCurves.Sect571k1.ToString()];
-            DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
-			// Compare the shared secret byte sequences
-			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
-		}
+        //[Test()]
+        //public void UM1Exchange_Sect571k1 () {
+        //    byte[] initiatorSS, responderSS;
+        //    var context = _ecKeypairs[EllipticCurveF2mCurves.Sect571k1.ToString()];
+        //    DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
+        //    // Compare the shared secret byte sequences
+        //    Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
+        //}
 
         [Test()]
 		public void UM1Exchange_Sect571r1 () {
 			byte[] initiatorSS, responderSS;
-			var context = _ecKeypairs[EllipticCurveF2mCurves.Sect571r1.ToString()];
+			var context = _ecKeypairs[Sec2EllipticCurve.Sect571r1.ToString()];
             DoUM1Exchange(context.Initiator, context.Responder, out initiatorSS, out responderSS);
 			// Compare the shared secret byte sequences
 			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));

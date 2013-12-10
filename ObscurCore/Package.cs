@@ -441,7 +441,7 @@ namespace ObscurCore
                             CurveProviderName = receiverKey.CurveProviderName,
                             CurveName = receiverKey.CurveName,
                             // Store the ephemeral public key in the manifest cryptography configuration
-                            EncodedKey = ECKeyUtility.Write(ephemeral.Q)
+                            EncodedKey = ephemeral.Q.GetEncoded()
                         }
                 };
             _manifestHeader.CryptographySchemeName = ManifestCryptographyScheme.UM1Hybrid.ToString();
