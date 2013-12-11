@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System;
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.DTO;
 

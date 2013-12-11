@@ -1,4 +1,4 @@
-﻿namespace ObscurCore.Cryptography
+﻿namespace ObscurCore.Cryptography.Authentication
 {
     /// <summary>
     /// Symmetric authenticated encryption authenticated decryption (AEAD) block cipher modes able to be used in an ObscurCore CryptoStream.

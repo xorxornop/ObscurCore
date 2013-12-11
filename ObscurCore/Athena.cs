@@ -16,6 +16,10 @@
 using System.Collections.Generic;
 using System.Text;
 using ObscurCore.Cryptography;
+using ObscurCore.Cryptography.Authentication;
+using ObscurCore.Cryptography.Ciphers;
+using ObscurCore.Cryptography.Entropy;
+using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.Information;
 
 namespace ObscurCore

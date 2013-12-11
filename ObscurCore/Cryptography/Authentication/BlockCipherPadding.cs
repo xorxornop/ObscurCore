@@ -1,4 +1,4 @@
-﻿namespace ObscurCore.Cryptography
+﻿namespace ObscurCore.Cryptography.Authentication
 {
     /// <summary>
     /// Symmetric block cipher padding types able to be used in an ObscurCore CryptoStream.

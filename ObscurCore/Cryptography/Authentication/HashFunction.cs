@@ -1,4 +1,4 @@
-﻿namespace ObscurCore.Cryptography
+﻿namespace ObscurCore.Cryptography.Authentication
 {
     /// <summary>
     /// Hash derivation functions able to be used in an ObscurCore HashStream. Used to verify data integrity.

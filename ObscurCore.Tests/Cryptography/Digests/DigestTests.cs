@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using ObscurCore.Cryptography;
+using ObscurCore.Cryptography.Authentication;
 
 namespace ObscurCore.Tests.Cryptography.Digests
 {

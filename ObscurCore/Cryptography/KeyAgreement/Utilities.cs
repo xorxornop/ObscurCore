@@ -41,7 +41,6 @@ namespace ObscurCore.Cryptography.KeyAgreement
 		/// <summary>
 		/// Calculates the shared secret in a Diffie-Hellman scheme.
 		/// </summary>
-        /// <param name="domain">Domain parameters for the public and private ECPoints (keys) provided.</param>
         /// <param name="Q">Public component of an EC keypair.</param>
         /// <param name="d">Private component of an EC keypair.</param>
 		public static BigInteger CalculateDHSecret(ECPublicKeyParameters Q, ECPrivateKeyParameters d) {

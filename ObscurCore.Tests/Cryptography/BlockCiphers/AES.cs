@@ -1,4 +1,5 @@
 ﻿using ObscurCore.Cryptography;
+using ObscurCore.Cryptography.Ciphers;
 
 namespace ObscurCore.Tests.Cryptography.BlockCiphers
 {

@@ -20,9 +20,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using ObscurCore.Cryptography;
+using ObscurCore.Cryptography.Authentication;
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.KeyAgreement;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.KeyConfirmation;
+using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.DTO;
 using ObscurCore.Extensions.DTO;
@@ -825,32 +828,36 @@ namespace ObscurCore
                 
                     if (_manifestCryptoConfig.KeyConfirmation != null) {
                         try {
+                            // Project the keypairs to only private keys
+                            var um1ReceiverKeys = keyProvider.EcKeypairs.Select(keypair => keypair.GetPrivateKey());
                             preMKey = ConfirmationUtility.ConfirmUM1HybridKey(_manifestCryptoConfig.KeyConfirmation,
-                                um1EphemeralKey, keyProvider.EcSenderKeys, keyProvider.EcReceiverKeys);
+                                um1EphemeralKey, keyProvider.ForeignEcKeys, um1ReceiverKeys);
                         } catch (Exception e) {
                             throw new KeyConfirmationException("Key confirmation failed in an unexpected way.", e);
                         }
                     } else {
 						// No key confirmation capability available
-						if (keyProvider.EcSenderKeys.Any() || keyProvider.EcReceiverKeys.Any()) {
+						if (keyProvider.ForeignEcKeys.Count() > 1 || keyProvider.EcKeypairs.Count() > 1) {
 							throw new KeyConfirmationException("Multiple EC keys have been provided where the package provides no key confirmation capability.");
 						}
-                        preMKey = UM1Exchange.Respond(keyProvider.EcSenderKeys.First().DecodeToPublicKey(),
-                            keyProvider.EcReceiverKeys.First().DecodeToPrivateKey(),
+                        preMKey = UM1Exchange.Respond(keyProvider.ForeignEcKeys.First().DecodeToPublicKey(),
+                            keyProvider.EcKeypairs.First().PrivateKeyParameter,
                             um1EphemeralKey.DecodeToPublicKey());
                     }
                     break;
                 case ManifestCryptographyScheme.Curve25519UM1Hybrid:
                     var c25519Um1EphemeralKey = ((Curve25519UM1ManifestCryptographyConfiguration) _manifestCryptoConfig).EphemeralKey;
                     if (_manifestCryptoConfig.KeyConfirmation != null) {
+                        // Project the keypairs to only private keys
+                        var c25519ReceiverKeys = keyProvider.Curve25519Keypairs.Select(keypair => keypair.Private);
                         preMKey = ConfirmationUtility.ConfirmCurve25519UM1HybridKey(_manifestCryptoConfig.KeyConfirmation,
-                            c25519Um1EphemeralKey, keyProvider.Curve25519SenderKeys, keyProvider.Curve25519ReceiverKeys);
+                            c25519Um1EphemeralKey, keyProvider.ForeignCurve25519Keys, c25519ReceiverKeys);
                     } else {
 						// No key confirmation capability available
-						if (keyProvider.Curve25519SenderKeys.Any() || keyProvider.Curve25519ReceiverKeys.Any()) {
+						if (keyProvider.ForeignCurve25519Keys.Count() > 1 || keyProvider.Curve25519Keypairs.Count() > 1) {
 							throw new KeyConfirmationException("Multiple Curve25519 keys have been provided where the package provides no key confirmation capability.");
 						}
-						preMKey = Curve25519UM1Exchange.Respond(keyProvider.Curve25519SenderKeys.First(), keyProvider.Curve25519ReceiverKeys.First(), 
+						preMKey = Curve25519UM1Exchange.Respond(keyProvider.ForeignCurve25519Keys.First(), keyProvider.Curve25519Keypairs.First().Private, 
                             c25519Um1EphemeralKey);
 					}
                     break;

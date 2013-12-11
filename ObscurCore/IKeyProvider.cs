@@ -19,33 +19,34 @@ using ObscurCore.DTO;
 namespace ObscurCore
 {
     /// <summary>
-    /// API for manifest key providers to conform to.
+    /// API for key providers to conform to. 
+    /// Key providers supply keys & keypairs for cryptographic operations.
     /// </summary>
     public interface IKeyProvider
     {
         /// <summary>
-        /// Symmetric key(s) to decrypt a manifest with.
+        /// Symmetric key(s) that the local user owns.
         /// </summary>
         IEnumerable<byte[]> SymmetricKeys { get; }
 
         /// <summary>
-        /// EC key(s) to decrypt the manifest with.
+        /// Elliptic curve key(s) that the local user owns.
         /// </summary>
-        IEnumerable<EcKeyConfiguration> EcSenderKeys { get; }
+        IEnumerable<EcKeypair> EcKeypairs { get; }
 
         /// <summary>
-        /// EC key(s) to decrypt the manifest with.
+        /// Elliptic curve public key(s) of foreign entities.
         /// </summary>
-        IEnumerable<EcKeyConfiguration> EcReceiverKeys { get; }
+        IEnumerable<EcKeyConfiguration> ForeignEcKeys { get; }
 
         /// <summary>
-        /// Curve25519 key(s) to decrypt a manifest with.
+        /// Curve25519 keypairs that the local user owns.
         /// </summary>
-        IEnumerable<byte[]> Curve25519SenderKeys { get; }
+        IEnumerable<Curve25519Keypair> Curve25519Keypairs { get; }
 
         /// <summary>
-        /// Curve25519 EC public key(s) to decrypt the manifest with.
+        /// Curve25519 public key(s) of foreign entities.
         /// </summary>
-        IEnumerable<byte[]> Curve25519ReceiverKeys { get; }
+        IEnumerable<byte[]> ForeignCurve25519Keys { get; }
     }
 }

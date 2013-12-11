@@ -16,77 +16,14 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
-using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography
 {
-    /// <summary>
-	/// Represents the error that occurs when, during package I/O, 
-	/// cryptographic key material associated with a payload item cannot be found. 
-	/// </summary>
-	public class ItemKeyMissingException : Exception
-	{
-		public ItemKeyMissingException (PayloadItem item) : base 
-			(String.Format("A cryptographic key for item GUID {0} and relative path \"{1}\" could not be found.", 
-			                item.Identifier.ToString(), item.RelativePath))
-		{}
-	}
-
-    public class KeyConfirmationException : Exception
-    {
-        public KeyConfirmationException() {}
-        public KeyConfirmationException(string message) : base(message) {}
-        public KeyConfirmationException(string message, Exception inner) : base(message, inner) {}
-    }
-
-    public class PaddingException : Exception
-	{
-		public PaddingException () : base("The ciphertext padding is corrupt.") { }
-		public PaddingException (string message) : base("The ciphertext padding is corrupt.\n" + message) { }
-	}
-	
-	public class AuthenticationException : Exception
-	{
-	    private const string ExceptionAttention = "WARNING: Possible security issue!";
-
-	    public AuthenticationException (Exception innerException = null) 
-            : base(ExceptionAttention, innerException) { }
-
-		public AuthenticationException (string message, Exception innerException = null) 
-            : base(ExceptionAttention + "\n" + message, innerException) { }
-	}
-	
-	/*public class DataLengthException : Exception
+    /*public class DataLengthException : Exception
     {
         public DataLengthException(string message) : base(message) { }
     }*/
-	
-	public class IncompleteBlockException : Exception
-	{
-		public IncompleteBlockException () : base("The ciphertext data is not the expected length for the block size.") { }
-		public IncompleteBlockException (string message) : base("The ciphertext data is not the expected length for the block size.\n" + message) { }
-	}
 
-    public class CryptoException
-		: Exception
-    {
-        public CryptoException()
-        {
-        }
-
-		public CryptoException(
-            string message)
-			: base(message)
-        {
-        }
-
-		public CryptoException(
-            string		message,
-            Exception	exception)
-			: base(message, exception)
-        {
-        }
-    }
 
     /**
      * this exception is thrown if a buffer that is meant to have output
@@ -121,30 +58,5 @@ namespace ObscurCore.Cryptography
 			: base(message, exception)
         {
         }
-	}
-
-    /// <summary>
-	/// This exception is thrown whenever a cipher requires a change of key, iv
-	/// or similar after x amount of bytes enciphered
-	/// </summary>
-	public class MaxBytesExceededException
-		: CryptoException
-	{
-		public MaxBytesExceededException()
-		{
-		}
-
-		public MaxBytesExceededException(
-			string message)
-			: base(message)
-		{
-		}
-
-		public MaxBytesExceededException(
-			string		message,
-			Exception	e)
-			: base(message, e)
-		{
-		}
 	}
 }

@@ -1,4 +1,4 @@
-﻿namespace ObscurCore.Cryptography
+﻿namespace ObscurCore.Cryptography.Ciphers
 {
     /// <summary>
     /// Symmetric block ciphers able to be used in an ObscurCore CryptoStream.

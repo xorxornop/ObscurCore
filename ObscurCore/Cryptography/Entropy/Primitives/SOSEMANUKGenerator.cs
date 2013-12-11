@@ -1,3 +1,4 @@
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
 using ObscurCore.DTO;
 

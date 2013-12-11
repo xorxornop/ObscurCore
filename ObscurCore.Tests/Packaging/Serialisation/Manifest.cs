@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.DTO;
 using ObscurCore.Cryptography;
 using ObscurCore.Packaging;

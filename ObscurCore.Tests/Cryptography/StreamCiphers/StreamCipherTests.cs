@@ -1,5 +1,6 @@
 ﻿using ObscurCore.Cryptography;
 using NUnit.Framework;
+using ObscurCore.Cryptography.Ciphers;
 
 namespace ObscurCore.Tests.Cryptography.StreamCiphers
 {

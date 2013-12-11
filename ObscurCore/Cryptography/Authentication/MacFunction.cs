@@ -1,4 +1,4 @@
-﻿namespace ObscurCore.Cryptography
+﻿namespace ObscurCore.Cryptography.Authentication
 {
     /// <summary>
     /// MAC functions supported for use in a MACStream. Used to verify data integrity and authenticity.

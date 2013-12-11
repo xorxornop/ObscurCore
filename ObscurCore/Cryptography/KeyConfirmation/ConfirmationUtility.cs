@@ -18,7 +18,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
+using ObscurCore.Cryptography.KeyDerivation;
+using ObscurCore.Cryptography.Support;
 using ObscurCore.DTO;
 using ObscurCore.Extensions.EllipticCurve;
 
@@ -72,22 +75,24 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                         foreach (var rKey in viableRecipientKeys) {
                             var ss = um1SecretFunc(sKey, rKey);
                             var validationOut = validator(ss);
-                            if (validationOut == null) continue;
-                            preKey = validationOut;
-                            state.Stop();
+                            if (validationOut.SequenceEqual(keyConfirmation.VerifiedOutput)) {
+                                preKey = ss;
+                                state.Stop();
+                            }
                         }
                     });
             } else {
                 Parallel.ForEach(viableRecipientKeys, (rKey, state) =>
-                {
-                    foreach (var sKey in viableSenderKeys) {
-                        var ss = um1SecretFunc(sKey, rKey);
-						var validationOut = validator(ss);
-                        if (validationOut == null) continue;
-                        preKey = validationOut;
-                        state.Stop();
-                    }
-                });
+                    {
+                        foreach (var sKey in viableSenderKeys) {
+                            var ss = um1SecretFunc(sKey, rKey);
+                            var validationOut = validator(ss);
+                            if (validationOut.SequenceEqual(keyConfirmation.VerifiedOutput)) {
+                                preKey = ss;
+                                state.Stop();
+                            }
+                        }
+                    });
             }
 
             Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "ConfirmUM1HybridKey", "Key output", 
@@ -123,26 +128,28 @@ namespace ObscurCore.Cryptography.KeyConfirmation
             var keysCurve25519Recipient = manifestKeysCurve25519Receiver as IList<byte[]> ?? manifestKeysCurve25519Receiver.ToList();
             if (keysCurve25519Sender.Count() > keysCurve25519Recipient.Count()) {
                 Parallel.ForEach(keysCurve25519Sender, (sKey, state) =>
-                {
-                    foreach (var rKey in keysCurve25519Recipient) {
-                        var ss = Curve25519UM1Exchange.Respond(sKey, rKey, ephemeralKey);
-                        var validationOut = validator(ss);
-                        if (validationOut == null) continue;
-                        preKey = validationOut;
-                        state.Stop();
-                    }
-                });
+                    {
+                        foreach (var rKey in keysCurve25519Recipient) {
+                            var ss = Curve25519UM1Exchange.Respond(sKey, rKey, ephemeralKey);
+                            var validationOut = validator(ss);
+                            if (validationOut.SequenceEqual(keyConfirmation.VerifiedOutput)) {
+                                preKey = ss;
+                                state.Stop();
+                            }
+                        }
+                    });
             } else {
                 Parallel.ForEach(keysCurve25519Recipient, (rKey, state) =>
-                {
-                    foreach (var sKey in keysCurve25519Sender) {
-                        var ss = Curve25519UM1Exchange.Respond(sKey, rKey, ephemeralKey);
-						var validationOut = validator(ss);
-                        if (validationOut == null) continue;
-                        preKey = validationOut;
-                        state.Stop();
-                    }
-                });
+                    {
+                        foreach (var sKey in keysCurve25519Sender) {
+                            var ss = Curve25519UM1Exchange.Respond(sKey, rKey, ephemeralKey);
+                            var validationOut = validator(ss);
+                            if (validationOut.SequenceEqual(keyConfirmation.VerifiedOutput)) {
+                                preKey = ss;
+                                state.Stop();
+                            }
+                        }
+                    });
             }
 
             Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "ConfirmCurve25519UM1HybridKey", "Key output", 
@@ -233,11 +240,13 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                     FunctionName = macF.ToString(),
                     FunctionConfiguration = null
                 };
-            if (functionType != VerificationFunctionType.Digest) {
+
+            // Add entropy
+            // if (functionType != VerificationFunctionType.Digest) {
+            if (true) {
                 config.Salt = new byte[saltSize];
                 StratCom.EntropySource.NextBytes(config.Salt);
-            }
-            if (functionType != VerificationFunctionType.Digest) {
+                // And some additional data...
                 config.AdditionalData = new byte[key.Length];
                 StratCom.EntropySource.NextBytes(config.AdditionalData);
             }

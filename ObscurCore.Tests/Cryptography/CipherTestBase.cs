@@ -19,6 +19,8 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using ObscurCore.Cryptography;
+using ObscurCore.Cryptography.Authentication;
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Tests.Cryptography
@@ -60,7 +62,7 @@ namespace ObscurCore.Tests.Cryptography
             Assert.Pass("{0:N0} ms ({1:N2} MB/s) : {2:N0} ms ({3:N2} MB/s)", enc.TotalMilliseconds, encSpeed, dec.TotalMilliseconds, decSpeed);
         }
 
-        protected bool OutputNonMalformed (MemoryStream input, ISymmetricCipherConfiguration config, out TimeSpan encryptTime, out TimeSpan decryptTime) {
+        protected bool OutputNonMalformed (MemoryStream input, SymmetricCipherConfiguration config, out TimeSpan encryptTime, out TimeSpan decryptTime) {
             var crypted = new MemoryStream();
 
             var sw = new Stopwatch();

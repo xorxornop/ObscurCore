@@ -1,4 +1,4 @@
-﻿namespace ObscurCore.Cryptography
+﻿namespace ObscurCore.Cryptography.KeyAgreement
 {
 	/// <summary>
 	/// Named elliptic curves over F(p) from the Brainpool consortium.

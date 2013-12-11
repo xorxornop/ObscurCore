@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using ObscurCore.Cryptography.Ciphers;
 
 namespace ObscurCore.Cryptography
 {
@@ -42,7 +43,7 @@ namespace ObscurCore.Cryptography
         }
 
         /// <summary>
-        /// Size of block in bits requested that triggered the exception. 
+        /// Size of key in bits requested that triggered the exception. 
         /// Null if caller has not supplied this data.
         /// </summary>
         public int? RequestedSize { get; private set; }

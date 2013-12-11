@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using ObscurCore.Cryptography;
+using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Packaging

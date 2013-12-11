@@ -158,15 +158,13 @@ namespace ObscurCore.Extensions
             public static class ECKeyConfigurationExtensions
             {
                 public static ECPublicKeyParameters DecodeToPublicKey(this EcKeyConfiguration config) {
-                    if (!config.CurveProviderName.Equals ("Brainpool"))
-                        throw new InvalidDataException ("Curve providers other than \"Brainpool\" are not currently supported.");
+                    //if (!config.CurveProviderName.Equals ("Brainpool"))
+                    //    throw new InvalidDataException ("Curve providers other than \"Brainpool\" are not currently supported.");
 
                     ECPublicKeyParameters publicKey;
                     try {
                         var domain = Source.GetEcDomainParameters(config.CurveName);
-                        ECPoint point;
-                        //ECKeyUtility.Read (config.EncodedKey, domain, out point);
-                        point = domain.Curve.DecodePoint(config.EncodedKey);
+                        ECPoint point = domain.Curve.DecodePoint(config.EncodedKey);
                         publicKey = new ECPublicKeyParameters("ECDHC", point, domain);
                     } catch (NotSupportedException) {
                         throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
@@ -177,15 +175,12 @@ namespace ObscurCore.Extensions
                 }
 
                 public static ECPrivateKeyParameters DecodeToPrivateKey(this EcKeyConfiguration config) {
-                    if (!config.CurveProviderName.Equals ("Brainpool"))
-                        throw new InvalidDataException ("Curve providers other than \"Brainpool\" are not currently supported.");
+                    //if (!config.CurveProviderName.Equals ("Brainpool"))
+                    //    throw new InvalidDataException ("Curve providers other than \"Brainpool\" are not currently supported.");
 
                     ECPrivateKeyParameters privateKey;
                     try {
                         var domain = Source.GetEcDomainParameters(config.CurveName);
-                        ECPoint point;
-                        //ECKeyUtility.Read (config.EncodedKey, domain, out point);
-                        point = domain.Curve.DecodePoint(config.EncodedKey);
                         privateKey = new ECPrivateKeyParameters("ECDHC", new BigInteger(config.EncodedKey), domain);
 
                     } catch (NotSupportedException) {
@@ -197,8 +192,8 @@ namespace ObscurCore.Extensions
                 }
 
                 public static void EncodePublicKey(this EcKeyConfiguration config, string curveProvider, string curveName, ECPoint key) {
-                    if (!curveProvider.Equals ("Brainpool"))
-                        throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
+                    //if (!curveProvider.Equals ("Brainpool"))
+                    //    throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
                     config.CurveName = curveName;
                     //config.EncodedKey = ECKeyUtility.Write (key);
@@ -206,8 +201,8 @@ namespace ObscurCore.Extensions
                 }
 
                 public static void EncodePrivateKey(this EcKeyConfiguration config, string curveProvider, string curveName, BigInteger key) {
-                    if (!curveProvider.Equals ("Brainpool"))
-                        throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
+                    //if (!curveProvider.Equals ("Brainpool"))
+                    //    throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
                     config.CurveProviderName = curveProvider;
                     config.CurveName = curveName;
                     config.EncodedKey = key.ToByteArray ();

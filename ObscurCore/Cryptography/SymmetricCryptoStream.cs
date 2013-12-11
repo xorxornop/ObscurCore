@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using System.IO;
+using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Block.Modes;
@@ -53,7 +54,7 @@ namespace ObscurCore.Cryptography
 		private const string ShortCtsError = "Insufficient input length. CTS mode block ciphers require at least one block.";
 
 
-	    public SymmetricCryptoStream(Stream target, bool isEncrypting, ISymmetricCipherConfiguration config)
+	    public SymmetricCryptoStream(Stream target, bool isEncrypting, SymmetricCipherConfiguration config)
 	        : this(target, isEncrypting, config, null, true) {}
 
 	    /// <summary>Initialises the stream and its associated cipher for operation automatically from provided configuration object.</summary>
@@ -62,7 +63,7 @@ namespace ObscurCore.Cryptography
 		/// <param name="config">Configuration object describing how to set up the internal cipher and associated services.</param>
 		/// <param name="key">Derived cryptographic key for the internal cipher to operate with. Overrides key in configuration.</param>
 		/// <param name="closeOnDispose">Set to <c>true</c> to also close the base stream when closing, or vice-versa.</param>
-		public SymmetricCryptoStream (Stream target, bool isEncrypting, ISymmetricCipherConfiguration config, 
+		public SymmetricCryptoStream (Stream target, bool isEncrypting, SymmetricCipherConfiguration config, 
 		                              byte[] key, bool closeOnDispose) : base(target, isEncrypting, closeOnDispose, true)
 		{
             if ((config.Key.IsNullOrZeroLength()) && (key.IsNullOrZeroLength())) 
@@ -82,7 +83,7 @@ namespace ObscurCore.Cryptography
 		            try {
 		                blockCipherEnum = config.CipherName.ToEnum<SymmetricBlockCipher>();
 		            } catch (EnumerationValueUnknownException e) {
-		                throw new ConfigurationException(e);
+		                throw new ConfigurationException("Cipher unknown/unsupported.", e);
 		            }
 
                     if(!workingKey.Length.Equals(config.KeySizeBits / 8))
@@ -97,14 +98,13 @@ namespace ObscurCore.Cryptography
 		            switch (config.Type) {
                         case SymmetricCipherType.Block:
 
-		                    BlockCipherMode blockModeEnum;
-		                    try {
-		                        blockModeEnum = config.ModeName.ToEnum<BlockCipherMode>();
-		                    } catch (EnumerationValueUnknownException e) {
-		                        throw new ConfigurationException(e);
-		                    }
+		                    var blockWrapper = new BlockCipherConfigurationWrapper(config);
 
-                            if(config.IV.Length != config.BlockSizeBits / 8)
+		                    BlockCipherMode blockModeEnum = blockWrapper.Mode;
+
+		                    byte[] blockIV = blockWrapper.IV;
+
+                            if(blockIV.Length != blockWrapper.BlockSize / 8)
                                 throw new NotSupportedException("IV length does not match block length.");
 
                             cipherParams = Source.CreateBlockCipherParameters(config, workingKey);
@@ -112,12 +112,7 @@ namespace ObscurCore.Cryptography
                             blockCipher = Source.OverlayBlockCipherWithMode(blockCipher, blockModeEnum,
 				                config.BlockSizeBits);
 
-                            BlockCipherPadding paddingEnum;
-		                    try {
-		                        paddingEnum = config.PaddingName.ToEnum<BlockCipherPadding>();
-		                    } catch (EnumerationValueUnknownException e) {
-		                        throw new ConfigurationException(e);
-		                    }
+                            BlockCipherPadding paddingEnum = blockWrapper.Padding;
 
 		                    if (blockModeEnum == BlockCipherMode.CtsCbc) {
 		                        if (paddingEnum == BlockCipherPadding.None) {
@@ -155,8 +150,8 @@ namespace ObscurCore.Cryptography
 					        var aeadCipher = Source.OverlayBlockCipherWithAeadMode(blockCipher, aeadModeEnum);
 
 					        // Create the I/O-enabled transform object
-					        if (!config.PaddingName.Equals(BlockCipherPadding.None.ToString()) && !String.IsNullOrEmpty(config.PaddingName))
-						        throw new NotSupportedException("Padding specified for use with AEAD mode (not allowed/unnecessary).");
+					        if (!String.IsNullOrEmpty(config.PaddingName) && !config.PaddingName.Equals(BlockCipherPadding.None.ToString()))
+						        throw new NotSupportedException("Padding was specified for use in AEAD mode - it is not allowed and unnecessary.");
 					        _cipher = new BufferedAeadBlockCipher(aeadCipher);
 
 		                    break;
@@ -164,17 +159,14 @@ namespace ObscurCore.Cryptography
 		            break;
 		        case SymmetricCipherType.Stream:
 
-                    base.BufferRequirementOverride = !config.IV.IsNullOrZeroLength() ? (config.IV.Length) * 2 : (config.KeySizeBits / 8) * 2;
+		            var streamWrapper = new StreamCipherConfigurationWrapper(config);
 
-                    var streamCipherEnum = SymmetricStreamCipher.None;
-		            try {
-		                streamCipherEnum = config.CipherName.ToEnum<SymmetricStreamCipher>();
-		            } catch (EnumerationValueUnknownException e) {
-		                throw new ConfigurationException(e);
-		            }
+		            var streamCipherEnum = streamWrapper.StreamCipher;
+		            var streamNonce = streamWrapper.Nonce;
+                    base.BufferRequirementOverride = !streamNonce.IsNullOrZeroLength() ? (streamNonce.Length) * 2 : streamWrapper.KeySizeBytes * 2;
 
 				    // Requested a stream cipher.
-                    cipherParams = Source.CreateStreamCipherParameters(streamCipherEnum, workingKey, config.IV);
+                    cipherParams = Source.CreateStreamCipherParameters(streamCipherEnum, workingKey, streamNonce);
 				    // Instantiate the cipher
 				    var streamCipher = Source.CreateStreamCipher(streamCipherEnum);
 				    // Create the I/O-enabled transform object
@@ -351,9 +343,9 @@ namespace ObscurCore.Cryptography
 		/// Majority of integrity checking happens here.
 		/// </summary>
 		/// <returns>The number of bytes in the final block/stride.</returns>
-		/// <exception cref="PaddingException">Thrown when no padding, malformed padding, or misaligned padding is found.</exception>
+		/// <exception cref="PaddingDataException">Thrown when no padding, malformed padding, or misaligned padding is found.</exception>
 		/// <exception cref="IncompleteBlockException">Thrown when ciphertext is not a multiple of block size (unexpected length).</exception>
-		/// <exception cref="AuthenticationException">Thrown when MAC/authentication check fails to match with expected value. AEAD-relevant.</exception>
+		/// <exception cref="CiphertextAuthenticationException">Thrown when MAC/authentication check fails to match with expected value. AEAD-relevant.</exception>
 		/// <exception cref=""></exception>
 		private int FinishReading(int length) {
 			var finalBytes = 0;
@@ -366,9 +358,9 @@ namespace ObscurCore.Cryptography
 				} else if (_cipher is PaddedBufferedBlockCipher) {
 					switch (dlEx.Message) {
 					case "last block incomplete in decryption":
-						throw new PaddingException (UnexpectedLengthError);
+						throw new PaddingDataException (UnexpectedLengthError);
 					default:
-						throw new PaddingException ("The ciphertext padding is corrupt.");
+						throw new PaddingDataException ("The ciphertext padding is corrupt.");
 					}
 				//} else if (_cipher is CtsBlockCipher) {
 
@@ -389,12 +381,12 @@ namespace ObscurCore.Cryptography
 						throw new IncompleteBlockException ();
 					case "mac check in GCM failed":
 					case "mac check in EAX failed":
-						throw new AuthenticationException ("The calculated MAC for the ciphertext is different to the supplied MAC.");
+						throw new CiphertextAuthenticationException ("The calculated MAC for the ciphertext is different to the supplied MAC.");
 					}
 				} else if(_cipher is PaddedBufferedBlockCipher) {
 					switch (ctEx.Message) {
 					case "pad block corrupted":
-						throw new PaddingException ();
+						throw new PaddingDataException ();
 					default:
 						throw new InvalidCipherTextException (UnknownFinaliseError, ctEx);
 					}

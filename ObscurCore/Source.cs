@@ -32,6 +32,7 @@ using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Entropy.Primitives;
+using ObscurCore.Cryptography.KeyAgreement;
 using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.Support.Math;

@@ -1,4 +1,4 @@
-﻿namespace ObscurCore.Cryptography
+﻿namespace ObscurCore.Cryptography.Entropy
 {
     /// <summary>
     /// Number generators that generate deterministic, cryptographically 

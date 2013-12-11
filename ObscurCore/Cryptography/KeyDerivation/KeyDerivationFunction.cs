@@ -1,4 +1,4 @@
-﻿namespace ObscurCore.Cryptography
+﻿namespace ObscurCore.Cryptography.KeyDerivation
 {
     /// <summary>
     /// Key derivation functions that transform key input material with added salt to increase attack difficulty.

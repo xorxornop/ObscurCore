@@ -1,4 +1,4 @@
-﻿namespace ObscurCore.Cryptography
+﻿namespace ObscurCore.Cryptography.KeyAgreement
 {
     /// <summary>
     /// Named elliptic curves from SEC2 (Standards for Efficient Cryptography 2)

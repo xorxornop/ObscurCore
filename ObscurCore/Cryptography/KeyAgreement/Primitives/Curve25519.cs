@@ -26,6 +26,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// Creates a private key from an array of random bytes.
         /// </summary>
         /// <param name="bytes">Source entropy. Must be 32 bytes (256 bits) long.</param>
+        /// <returns>Private key as bytes.</returns>
         public static byte[] CreatePrivateKey(byte[] bytes) {
             if(bytes.Length != 32) throw new ArgumentException();
             var privKey = new byte[32];
@@ -37,11 +38,12 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         }
 
         /// <summary>
-        /// 
+        /// Creates a public key from a private key.
         /// </summary>
-        /// <param name="privKey"></param>
-        /// <returns></returns>
+        /// <param name="privKey">Existing private key. 32 bytes in length.</param>
+        /// <returns>Public key as bytes.</returns>
         public static byte[] CreatePublicKey(byte[] privKey) {
+             if(privKey.Length != 32) throw new ArgumentException();
             return CalculateSharedSecret(privKey, BaseP);
         }
 
