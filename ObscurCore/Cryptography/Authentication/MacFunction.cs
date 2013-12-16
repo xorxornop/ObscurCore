@@ -41,6 +41,8 @@
         /// </summary>
         Keccak512,
 
+		Poly1305,
+
         /// <summary>
         /// Also called OMAC1. 
         /// As the name suggests, uses a (configurable) symmetric block cipher as the core of the primitive.

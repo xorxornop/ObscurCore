@@ -49,5 +49,10 @@ namespace ObscurCore.Tests.Cryptography.MACs
         public void Keccak512 () {
             RunMACTest(MacFunction.Keccak512);
         }
+
+		[Test]
+		public void Poly1305 () {
+			RunMACTest(MacFunction.Poly1305);
+		}
     }
 }

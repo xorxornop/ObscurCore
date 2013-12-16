@@ -42,7 +42,7 @@ namespace ObscurCore.Cryptography
                 try {
                     blockCipherEnum = Configuration.CipherName.ToEnum<SymmetricBlockCipher>();
                 } catch (EnumerationValueUnknownException e) {
-                    throw new ConfigurationException("Cipher unknown/unsupported.", e);
+					throw new ConfigurationValueInvalidException("Cipher unknown/unsupported.", e);
                 }
                 return blockCipherEnum;
             }
@@ -68,7 +68,7 @@ namespace ObscurCore.Cryptography
             get {
                 var paddingEnum = RawConfiguration.PaddingName.ToEnum<BlockCipherPadding>();
                 if (!Athena.Cryptography.BlockCipherModes[Mode].PaddingRequirement.Equals(PaddingRequirement.None) && paddingEnum == BlockCipherPadding.None && Mode != BlockCipherMode.CtsCbc) {
-                    throw new ConfigurationException("Block cipher mode requires padding."); // TODO: make new custom exception
+					throw new ConfigurationInvalidException("Block cipher mode requires padding."); // TODO: make new custom exception
                 }
                 return paddingEnum;
             }
@@ -79,7 +79,7 @@ namespace ObscurCore.Cryptography
         {
             get {
                 if (Configuration.BlockSizeBits == 0) {
-                    throw new ConfigurationException("Block cipher cannot have a block size of 0 (zero).");
+					throw new ConfigurationValueInvalidException("Block cipher cannot have a block size of 0 (zero).");
                 }
                 ThrowIfBlockSizeIncompatible();
                 return RawConfiguration.BlockSizeBits;
@@ -97,10 +97,10 @@ namespace ObscurCore.Cryptography
         {
             get {
                 if (Configuration.IV.IsNullOrZeroLength()) {
-                    throw new ConfigurationException("Block cipher cannot have an initalisation vector (IV) of null or zero length.");
+					throw new ConfigurationValueInvalidException("Block cipher cannot have an initalisation vector (IV) of null or zero length.");
                 }
                 if (Configuration.IV.Length != BlockSize / 8) {
-                    throw new ConfigurationException("Initialisation vector should not be a different length to the block size.");
+					throw new ConfigurationInvalidException("Initialisation vector should not be a different length to the block size.");
                 }
                 var retVal = new byte[Configuration.IV.Length];
                 Buffer.BlockCopy(Configuration.IV, 0, retVal, 0, Configuration.IV.Length);

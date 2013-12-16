@@ -13,3 +13,28 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System;
+using System.Runtime.Serialization;
+
+namespace ObscurCore
+{
+	[Serializable]
+	public class ConfigurationInvalidException : Exception
+	{
+		private const string AttentionString =
+			"Configuration is invalid/malformed.";
+
+		public ConfigurationInvalidException() : base(AttentionString) {}
+		public ConfigurationInvalidException(string message) : base(message) {}
+
+		public ConfigurationInvalidException (string message, Exception inner) 
+			: base(message, inner) { }
+
+		public ConfigurationInvalidException (Exception innerException) 
+			: base(AttentionString, innerException) { }
+
+		protected ConfigurationInvalidException(
+			SerializationInfo info,
+			StreamingContext context) : base(info, context) {}
+	}
+}

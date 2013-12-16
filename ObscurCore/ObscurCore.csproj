@@ -25,7 +25,6 @@
     <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CodeAnalysisRuleSet>BasicCorrectnessRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
@@ -35,7 +34,6 @@
     <DefineConstants>TRACE;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
@@ -212,7 +210,6 @@
     <Compile Include="DecoratingStream.cs" />
     <Compile Include="EventArgs.cs" />
     <None Include="Packaging\AsyncCryptoMux.cs" />
-    <Compile Include="Exceptions.cs" />
     <Compile Include="Packaging\PayloadLayoutConfigurationFactory.cs" />
     <Compile Include="Packaging\PayloadLayoutScheme.cs" />
     <Compile Include="Packaging\FabricPayloadMux.cs" />
@@ -263,6 +260,12 @@
     <Compile Include="Cryptography\HashStream.cs" />
     <Compile Include="Cryptography\KeyDerivation\ScryptModule.cs" />
     <Compile Include="Cryptography\KeyDerivation\Pbkdf2Module.cs" />
+    <Compile Include="ConfigurationInvalidException.cs" />
+    <Compile Include="ConfigurationValueInvalidException.cs" />
+    <Compile Include="EnumerationValueUnknownException.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519Donna.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519HansWolff.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\Poly1305Mac.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />

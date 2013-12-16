@@ -75,7 +75,7 @@ namespace ObscurCore.Cryptography
 
 		    switch (config.Type) {
                 case SymmetricCipherType.None:
-		            throw new ConfigurationException("Type: None/null value is never set in a valid cipher configuration.");
+					throw new ConfigurationInvalidException("Type: None/null value is never set in a valid cipher configuration.");
 		        case SymmetricCipherType.Block:
                 case SymmetricCipherType.Aead:
 
@@ -83,7 +83,7 @@ namespace ObscurCore.Cryptography
 		            try {
 		                blockCipherEnum = config.CipherName.ToEnum<SymmetricBlockCipher>();
 		            } catch (EnumerationValueUnknownException e) {
-		                throw new ConfigurationException("Cipher unknown/unsupported.", e);
+						throw new ConfigurationValueInvalidException("Cipher unknown/unsupported.", e);
 		            }
 
                     if(!workingKey.Length.Equals(config.KeySizeBits / 8))
@@ -118,7 +118,7 @@ namespace ObscurCore.Cryptography
 		                        if (paddingEnum == BlockCipherPadding.None) {
                                     _cipher = new CtsBlockCipher(blockCipher);
                                 } else {
-                                    throw new ConfigurationException("CTS mode is inappropriate for use with padding.");
+									throw new ConfigurationInvalidException("CTS mode is inappropriate for use with padding.");
                                 }
 		                    } else if (paddingEnum == BlockCipherPadding.None) {
 		                        if (Athena.Cryptography.BlockCipherModes[
@@ -141,7 +141,7 @@ namespace ObscurCore.Cryptography
 		                    try {
 		                        aeadModeEnum = config.ModeName.ToEnum<AeadBlockCipherMode>();
 		                    } catch (EnumerationValueUnknownException e) {
-		                        throw new ConfigurationException(e);
+								throw new ConfigurationValueInvalidException("AEAD mode unknown/unsupported.", e);
 		                    }
 
                             cipherParams = Source.CreateAeadBlockCipherParameters(blockCipherEnum,

@@ -463,6 +463,12 @@ namespace ObscurCore
 					OutputSize = 512,
 					SaltSupported = true
 				});
+				_macFunctionDirectory.Add(MacFunction.Poly1305, new MacFunctionDescription {
+					Name = MacFunction.Poly1305.ToString(),
+					DisplayName = "Poly1305",
+					OutputSize = 128,
+					SaltSupported = false
+				});
 				_macFunctionDirectory.Add(MacFunction.Cmac, new MacFunctionDescription {
 					Name = MacFunction.Cmac.ToString(),
 					DisplayName = "CMAC/OMAC1 construction",

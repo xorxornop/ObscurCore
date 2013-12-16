@@ -192,6 +192,8 @@ namespace ObscurCore
 			MacInstantiators.Add(MacFunction.Keccak384, () => new KeccakMac(384, true));
 			MacInstantiators.Add(MacFunction.Keccak512, () => new KeccakMac(512, true));
 
+			MacInstantiators.Add(MacFunction.Poly1305, () => new Poly1305Mac());
+
             // ######################################## EC ########################################
 
             // Domain parameter function: p/q, A, B, G, n, h/i (cofactor), S (seed)

@@ -35,7 +35,7 @@ namespace ObscurCore.Tests.Packaging
             var senderKeyEnumerated = KeyProviders.Alice.Curve25519Keypairs.First().Private;
             var senderKey = new byte[senderKeyEnumerated.Length];
             Array.Copy(senderKeyEnumerated, senderKey, senderKey.Length);
-            var receiverKeyEnumerated = KeyProviders.Bob.Curve25519Keypairs.First().Public;
+			var receiverKeyEnumerated = KeyProviders.Bob.Curve25519Keypairs.Last().Public;
             var receiverKey = new byte[receiverKeyEnumerated.Length];
             Array.Copy(receiverKeyEnumerated, receiverKey, receiverKey.Length);
 

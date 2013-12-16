@@ -13,3 +13,28 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System;
+using System.Runtime.Serialization;
+
+namespace ObscurCore
+{
+	[Serializable]
+	public class ConfigurationValueInvalidException : ConfigurationInvalidException
+	{
+		private const string AttentionString =
+			"Value is invalid for object state (relative) or for object specification (absolute).";
+
+		public ConfigurationValueInvalidException() : base(AttentionString) {}
+		public ConfigurationValueInvalidException(string message) : base(message) {}
+
+		public ConfigurationValueInvalidException (string message, Exception inner) 
+			: base(message, inner) { }
+
+		public ConfigurationValueInvalidException (Exception innerException) 
+			: base(AttentionString, innerException) { }
+
+		protected ConfigurationValueInvalidException(
+			SerializationInfo info,
+			StreamingContext context) : base(info, context) {}
+	}
+}

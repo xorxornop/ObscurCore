@@ -55,7 +55,7 @@ namespace ObscurCore.Cryptography
                 try {
                     streamCipherEnum = Configuration.CipherName.ToEnum<SymmetricStreamCipher>();
                 } catch (EnumerationValueUnknownException e) {
-                    throw new ConfigurationException("Cipher unknown/unsupported.", e);
+					throw new ConfigurationValueInvalidException("Cipher unknown/unsupported.", e);
                 }
                 return streamCipherEnum;
             }

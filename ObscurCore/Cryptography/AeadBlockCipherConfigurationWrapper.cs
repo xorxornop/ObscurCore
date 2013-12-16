@@ -41,7 +41,7 @@ namespace ObscurCore.Cryptography
                 try {
                     blockCipherEnum = Configuration.CipherName.ToEnum<SymmetricBlockCipher>();
                 } catch (EnumerationValueUnknownException e) {
-                    throw new ConfigurationException("Cipher unknown/unsupported.", e);
+					throw new ConfigurationValueInvalidException("Cipher unknown/unsupported.", e);
                 }
                 return blockCipherEnum;
             }
@@ -61,7 +61,7 @@ namespace ObscurCore.Cryptography
         {
             get {
                 if (Configuration.BlockSizeBits == 0) {
-                    throw new ConfigurationException("Block cipher cannot have a block size of 0 (zero).");
+					throw new ConfigurationValueInvalidException("Block cipher cannot have a block size of 0 (zero).");
                 }
                 ThrowIfBlockSizeIncompatible();
                 return RawConfiguration.BlockSizeBits;
@@ -82,7 +82,7 @@ namespace ObscurCore.Cryptography
         {
             get {
                 if (Configuration.IV.IsNullOrZeroLength()) {
-                    throw new ConfigurationException("AEAD cipher cannot have a nonce (IV) of null or zero length.");
+					throw new ConfigurationValueInvalidException("AEAD cipher cannot have a nonce (IV) of null or zero length.");
                 }
                 var retVal = new byte[RawConfiguration.IV.Length];
                 Buffer.BlockCopy(RawConfiguration.IV, 0, retVal, 0, RawConfiguration.IV.Length);

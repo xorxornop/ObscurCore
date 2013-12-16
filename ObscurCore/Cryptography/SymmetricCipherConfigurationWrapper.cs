@@ -37,7 +37,7 @@ namespace ObscurCore.Cryptography
         {
             get {
                 if (Configuration.KeySizeBits == 0) {
-                    throw new ConfigurationException("Cipher cannot have a key size of 0 (zero).");
+					throw new ConfigurationValueInvalidException("Cipher cannot have a key size of 0 (zero).");
                 }
                 if (!Configuration.Key.IsNullOrZeroLength() &&
                     Configuration.Key.Length != Configuration.KeySizeBits/8) {

@@ -13,3 +13,29 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System;
+using System.Runtime.Serialization;
+
+namespace ObscurCore
+{
+	[Serializable]
+	public class EnumerationValueUnknownException : Exception
+	{
+		public EnumerationValueUnknownException() {}
+		public EnumerationValueUnknownException(string message) : base(message) {}
+		public EnumerationValueUnknownException(string message, Exception inner) : base(message, inner) {}
+
+		/// <summary>
+		/// Initialises a new instance of the EnumerationValueUnknownException class with diagnostic information.
+		/// </summary>
+		/// <param name="requested">Value of the enumeration type that parsing was attempted on.</param>
+		/// <param name="eType">Enumeration type.</param>
+		public EnumerationValueUnknownException(string requested, Type eType) 
+			: base("Enumeration member "+ requested + " is unknown in " + eType.Name) {
+		}
+
+		protected EnumerationValueUnknownException(
+			SerializationInfo info,
+			StreamingContext context) : base(info, context) {}
+	}
+}
