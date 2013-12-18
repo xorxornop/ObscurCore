@@ -61,9 +61,15 @@ namespace ObscurCore.Packaging
                  * but not bigger than the item, or transform+copybuffer requirements. */
                 var relevantItemLength = Writing ? _items[i].ExternalLength : _items[i].InternalLength;
                 var decoratingStream = transformFuncs[i](Stream.Null); // TODO: Fix this nasty hack
-                var buffer = new RingByteBufferStream((int) Math.Min(relevantItemLength, Math.Max(Math.Min
-                    (decoratingStream.BufferSizeRequirement, relevantItemLength),
-                    decoratingStream.BufferSizeRequirement + maxOpSize)));
+
+                var ringBufferSize = (int) Math.Min(relevantItemLength, decoratingStream.BufferSizeRequirement + maxOpSize);
+
+                //var buffer = new RingByteBufferStream((int) Math.Min(relevantItemLength, Math.Max(Math.Min
+                //    (decoratingStream.BufferSizeRequirement, relevantItemLength),
+                //    decoratingStream.BufferSizeRequirement + maxOpSize)));
+
+                var buffer = new RingByteBufferStream(ringBufferSize);
+
                 _buffers.Add(buffer);
                 decoratingStream.SetStreamBinding(buffer, false); // TODO: Fix this nasty hack
 
@@ -185,7 +191,7 @@ namespace ObscurCore.Packaging
         /// How many bytes the buffer must contain before operations are performed with it.
         /// </summary>
         protected virtual int CurrentItemBufferThreshold {
-            get { return CurrentItemTransform.BufferSizeRequirement + _copyBuffer.Length; }
+            get { return CurrentItemTransform.BufferSizeRequirement; }
         }
 
         #endregion
@@ -234,9 +240,10 @@ namespace ObscurCore.Packaging
 
                 // Write the data in buffers out to destination if there's enough there or the item is finished.
                 while (CurrentItemBuffer.Length >= CurrentItemBufferThreshold || (sourceDepleted && CurrentItemBuffer.Length > 0)) {
+                    //var readAmount = (int) Math.Min(CurrentItemBuffer.Length, _copyBuffer.Length);
                     var bufferBytesRead = Writing
-                        ? CurrentItemBuffer.Read(_copyBuffer, 0, _copyBuffer.Length)
-                        : CurrentItemTransform.Read(_copyBuffer, 0, _copyBuffer.Length);
+                        ? CurrentItemBuffer.Read(_copyBuffer, 0, CurrentItemBufferThreshold)
+                        : CurrentItemTransform.Read(_copyBuffer, 0, CurrentItemBufferThreshold);
                     var startPos = CurrentDestination.Position;
                     CurrentDestination.Write(_copyBuffer, 0, bufferBytesRead);
                     DestinationAccumulator += CurrentDestination.Position - startPos;

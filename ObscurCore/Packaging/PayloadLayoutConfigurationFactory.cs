@@ -31,7 +31,7 @@ namespace ObscurCore.Packaging
                 SchemeName = schemeEnum.ToString(),
 				PrimaryPrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
 				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
-                    CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto<StreamCipherCsprngConfiguration>()
+                    CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto()
 			};
 			
 			switch (schemeEnum) {
@@ -39,91 +39,88 @@ namespace ObscurCore.Packaging
 				break;
 			case PayloadLayoutScheme.Frameshift:
 				// Padding length is variable by default.
-			    var frameshiftConfig = new PayloadSchemeConfiguration() {
+			    var frameshiftConfig = new PayloadSchemeConfiguration {
 			            Minimum = FrameshiftPayloadMux.MinimumPaddingLength,
 			            Maximum = FrameshiftPayloadMux.MaximumPaddingLength
 			        };
 			    config.SchemeConfiguration = frameshiftConfig.SerialiseDto();
 				break;
 #if(INCLUDE_FABRIC)
-            case PayloadLayoutSchemes.Fabric:
+            case PayloadLayoutScheme.Fabric:
 				// Stripe length is variable by default.
-				var fabricConfig = new PayloadSchemeConfiguration() {
+				var fabricConfig = new PayloadSchemeConfiguration {
 			            Minimum = FabricPayloadMux.MinimumStripeLength,
 			            Maximum = FabricPayloadMux.MaximumStripeLength
 			        };
-			    config.SchemeConfiguration = fabricConfig.SerialiseDTO();
+			    config.SchemeConfiguration = fabricConfig.SerialiseDto();
 				break;
 #endif
 			}
 			
 			return config;
 		}
-
-        public static PayloadConfiguration CreateFrameshiftFixed(CsPseudorandomNumberGenerator csprngEnum) {
-            return CreateFrameshiftFixed(csprngEnum, null);
-        }
 		
-		public static PayloadConfiguration CreateFrameshiftFixed(CsPseudorandomNumberGenerator csprngEnum, int? stripeSize) {
+		public static PayloadConfiguration CreateFrameshiftFixed(CsPseudorandomNumberGenerator csprngEnum, int? paddingSize = null) {
+            var fixedSize = paddingSize == null ? FabricPayloadMux.DefaultFixedStripeLength : paddingSize.Value;
             var config = new PayloadConfiguration {
                 SchemeName = PayloadLayoutScheme.Frameshift.ToString(),
-                SchemeConfiguration = new PayloadSchemeConfiguration() {
-			            Minimum = (stripeSize == null ? FrameshiftPayloadMux.DefaultFixedPaddingLength : stripeSize.Value),
-			            Maximum = (stripeSize == null ? FrameshiftPayloadMux.DefaultFixedPaddingLength : stripeSize.Value),
+                SchemeConfiguration = new PayloadSchemeConfiguration {
+			            Minimum = fixedSize,
+			            Maximum = fixedSize,
 			        }.SerialiseDto(),
 				PrimaryPrngName = csprngEnum.ToString(),
 				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
-                    csprngEnum).SerialiseDto<StreamCipherCsprngConfiguration>()
+                    csprngEnum).SerialiseDto()
 			};
 		    return config;
 		}
 
-        public static PayloadConfiguration CreateFrameshiftVariable(CsPseudorandomNumberGenerator csprngEnum) {
-            return CreateFrameshiftVariable(csprngEnum, null, null);
-        }
-
-	    public static PayloadConfiguration CreateFrameshiftVariable(CsPseudorandomNumberGenerator csprngEnum, int? minStripe, int? maxStripe) {
+	    public static PayloadConfiguration CreateFrameshiftVariable(CsPseudorandomNumberGenerator csprngEnum, int? minPadding = null,
+            int? maxPadding = null)
+        {
             var config = new PayloadConfiguration {
                 SchemeName = PayloadLayoutScheme.Frameshift.ToString(),
-                SchemeConfiguration = new PayloadSchemeConfiguration() {
-			            Minimum = (minStripe == null ? FrameshiftPayloadMux.MinimumPaddingLength : minStripe.Value),
-			            Maximum = (maxStripe == null ? FrameshiftPayloadMux.MaximumPaddingLength : maxStripe.Value)
+                SchemeConfiguration = new PayloadSchemeConfiguration {
+			            Minimum = (minPadding == null ? FrameshiftPayloadMux.MinimumPaddingLength : minPadding.Value),
+			            Maximum = (maxPadding == null ? FrameshiftPayloadMux.MaximumPaddingLength : maxPadding.Value)
 			        }.SerialiseDto(),
 				PrimaryPrngName = csprngEnum.ToString(),
 				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
-                    csprngEnum).SerialiseDto<StreamCipherCsprngConfiguration>()
+                    csprngEnum).SerialiseDto()
 			};
             return config;
 	    }
 #if INCLUDE_FABRIC
-	    public static PayloadConfiguration CreateFabricFixed(CSPRNumberGenerators generator, int? stripeSize = null) {
+	    public static PayloadConfiguration CreateFabricFixed(CsPseudorandomNumberGenerator csprngEnum, int? stripeSize = null) {
+	        var fixedSize = stripeSize == null ? FabricPayloadMux.DefaultFixedStripeLength : stripeSize.Value;
             var config = new PayloadConfiguration {
-                SchemeName = PayloadLayoutSchemes.Frameshift.ToString(),
-                SchemeConfiguration = new PayloadSchemeConfiguration() {
-			            Minimum = (stripeSize == null ? FrameshiftMux.DefaultFixedPaddingLength : stripeSize.Value),
-			            Maximum = (stripeSize == null ? FrameshiftMux.DefaultFixedPaddingLength : stripeSize.Value),
-			        }.SerialiseDTO(),
-				PrimaryPRNGName = generator.ToString(),
-				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    generator).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+                SchemeName = PayloadLayoutScheme.Frameshift.ToString(),
+                SchemeConfiguration = new PayloadSchemeConfiguration {
+			            Minimum = fixedSize,
+			            Maximum = fixedSize,
+			        }.SerialiseDto(),
+				PrimaryPrngName = csprngEnum.ToString(),
+				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    csprngEnum).SerialiseDto()
 			};
 		    return config;
 		}
 
-	    public static PayloadConfiguration CreateFabricVariable(CSPRNumberGenerators generator, int? minStripe = null, int? maxStripe = null) {
+	    public static PayloadConfiguration CreateFabricVariable(CsPseudorandomNumberGenerator csprngEnum, int? minStripe = null, 
+            int? maxStripe = null)
+        {
             var config = new PayloadConfiguration {
-                SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
+                SchemeName = PayloadLayoutScheme.Fabric.ToString(),
                 SchemeConfiguration = new PayloadSchemeConfiguration() {
 			            Minimum = (minStripe == null ? FabricPayloadMux.MinimumStripeLength : minStripe.Value),
-			            Maximum = (maxStripe == null ? FrameshiftMux.MaximumStripeLength : maxStripe.Value)
-			        }.SerialiseDTO(),
-				PrimaryPRNGName = generator.ToString(),
-				PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    generator).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+			            Maximum = (maxStripe == null ? FabricPayloadMux.MaximumStripeLength : maxStripe.Value)
+			        }.SerialiseDto(),
+				PrimaryPrngName = csprngEnum.ToString(),
+				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    csprngEnum).SerialiseDto()
 			};
             return config;
 	    }
 #endif
 	}
-
 }

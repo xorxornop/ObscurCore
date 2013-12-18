@@ -6,10 +6,10 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 	/// <summary>
 	/// Keccak (SHA3) algorithm implemented as a Message Authentication Code (MAC). Variable output size.
 	/// </summary>
-	public class KeccakMac : KeccakManaged, IMac, IMacWithSalt
+    public class KeccakMac : KeccakDigest, IMac, IMacWithSalt
 	{
 		/// <summary>
-		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.MACs.KeccakMac"/> class.
+		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.Authentication.Primitives.KeccakMac"/> class.
 		/// </summary>
 		/// <param name="size">Size of the MAC produced in bytes. Supported sizes are 28, 32, 48, and 64.</param>
 		/// <param name="bits">Whether <paramref name="size"/> is interpreted as bits or bytes. If true, bits.</param>

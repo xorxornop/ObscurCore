@@ -15,6 +15,7 @@
 
 using System;
 using ObscurCore.Cryptography.Support;
+using ObscurCore.Extensions.BitPacking;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
@@ -101,23 +102,37 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             var blocks = Math.DivRem(len, 16, out truncatedLen);
             for (var i = 0; i < blocks; i++) {
                 NextState();
-                Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff) ^ state[0] ^ (state[5] >> 16) ^ (state[3] << 16), outBytes, outOff);
-                Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ state[2] ^ (state[7] >> 16) ^ (state[5] << 16), outBytes, outOff + 4);
-                Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ state[4] ^ (state[1] >> 16) ^ (state[7] << 16), outBytes, outOff + 8);
-                Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ state[6] ^ (state[3] >> 16) ^ (state[1] << 16), outBytes, outOff + 12);
+
+                if (BitConverter.IsLittleEndian) {
+                    // Output/input is in little endian, so we can just do a memcpy
+                    //uint[] tempMap = new uint[4];
+                    //Buffer.BlockCopy(inBytes, inOff, tempMap, 0, sizeof (uint)*4);
+                    //tempMap[0] ^= state[0] ^ (state[5] >> 16) ^ (state[3] << 16);
+                    //tempMap[1] ^= state[2] ^ (state[7] >> 16) ^ (state[5] << 16);
+                    //tempMap[2] ^= state[4] ^ (state[1] >> 16) ^ (state[7] << 16);
+                    //tempMap[3] ^= state[6] ^ (state[3] >> 16) ^ (state[1] << 16);
+                    //Buffer.BlockCopy(tempMap, 0, outBytes, outOff, sizeof (uint)*4);
+
+                    Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff) ^ state[0] ^ (state[5] >> 16) ^ (state[3] << 16), outBytes, outOff);
+                    Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ state[2] ^ (state[7] >> 16) ^ (state[5] << 16), outBytes, outOff + 4);
+                    Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ state[4] ^ (state[1] >> 16) ^ (state[7] << 16), outBytes, outOff + 8);
+                    Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ state[6] ^ (state[3] >> 16) ^ (state[1] << 16), outBytes, outOff + 12);
+                } else {
+                    throw new NotImplementedException(); //TODO: figure out implications of little endianness
+                }
+
                 inOff += 16;
                 outOff += 16;
             }
             if (truncatedLen == 0) return;
 
-            var inTruncated = new byte[16];
-            var outTruncated = new byte[16];
-            Array.Copy(inBytes, inOff, inTruncated, 0, truncatedLen);
             NextState();
-            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inTruncated, 0) ^ state[0] ^ (state[5] >> 16) ^ (state[3] << 16), outTruncated, 0);
-            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inTruncated, 4) ^ state[2] ^ (state[7] >> 16) ^ (state[5] << 16), outTruncated, 4);
-            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inTruncated, 8) ^ state[4] ^ (state[1] >> 16) ^ (state[7] << 16), outTruncated, 8);
-            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inTruncated, 12) ^ state[6] ^ (state[3] >> 16) ^ (state[1] << 16), outTruncated, 12);
+
+            var outTruncated = new byte[16];
+            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff) ^ state[0] ^ (state[5] >> 16) ^ (state[3] << 16), outTruncated, 0);
+            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ state[2] ^ (state[7] >> 16) ^ (state[5] << 16), outTruncated, 4);
+            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ state[4] ^ (state[1] >> 16) ^ (state[7] << 16), outTruncated, 8);
+            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ state[6] ^ (state[3] >> 16) ^ (state[1] << 16), outTruncated, 12);
             Array.Copy(outTruncated, 0, outBytes, outOff, truncatedLen);
         }
 

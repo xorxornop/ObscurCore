@@ -164,10 +164,10 @@ namespace ObscurCore
 			DigestInstantiators.Add(HashFunction.Blake2B384, () => new Blake2BDigest(384, true));
 			DigestInstantiators.Add(HashFunction.Blake2B512, () => new Blake2BDigest(512, true));
 
-			DigestInstantiators.Add(HashFunction.Keccak224, () => new KeccakManaged(224, true));
-			DigestInstantiators.Add(HashFunction.Keccak256, () => new KeccakManaged(256, true));
-			DigestInstantiators.Add(HashFunction.Keccak384, () => new KeccakManaged(384, true));
-			DigestInstantiators.Add(HashFunction.Keccak512, () => new KeccakManaged(512, true));
+			DigestInstantiators.Add(HashFunction.Keccak224, () => new KeccakDigest(224, true));
+			DigestInstantiators.Add(HashFunction.Keccak256, () => new KeccakDigest(256, true));
+			DigestInstantiators.Add(HashFunction.Keccak384, () => new KeccakDigest(384, true));
+			DigestInstantiators.Add(HashFunction.Keccak512, () => new KeccakDigest(512, true));
 
 #if INCLUDE_SHA1
             DigestInstantiators.Add(HashFunction.Sha1, () => new Sha1Digest());
@@ -530,7 +530,7 @@ namespace ObscurCore
 			PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Frameshift, (writing, multiplexedStream, streams, transforms, config) => 
 			                         new FrameshiftPayloadMux(writing, multiplexedStream, streams, transforms, config));
 #if(INCLUDE_FABRIC)
-            PayloadLayoutModuleInstantiators.Add(PayloadLayoutSchemes.Fabric, (writing, multiplexedStream, streams, transforms, config) => 
+            PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Fabric, (writing, multiplexedStream, streams, transforms, config) => 
 			                                     new FabricPayloadMux(writing, multiplexedStream, streams, transforms, config));
 #endif
             // ######################################## INIT END ########################################

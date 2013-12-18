@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System;
+using ObscurCore.Cryptography.Authentication.Primitives;
 
 namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 {
@@ -40,13 +41,13 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <summary>
         /// Creates a public key from a private key.
         /// </summary>
-        /// <param name="privKey">Existing private key. 32 bytes in length.</param>
+        /// <param name="privateKey">Existing private key. 32 bytes in length.</param>
         /// <returns>Public key as bytes.</returns>
 		public static byte[] CreatePublicKey(byte[] privateKey) {
 			if (privateKey == null) throw new ArgumentNullException();
 			if (privateKey.Length != 32) throw new ArgumentException();
 			// Use a different primitive depending on whether unsafe code is allowed
-			#if UNSAFE
+			#if INCLUDE_UNSAFE
 			var publicKey = new byte[32];
 			byte[] BaseP = new byte[32] { 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 			unsafe {
@@ -62,7 +63,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 
         public static byte[] CalculateSharedSecret(byte[] privKey, byte[] pubKey) {
 			// Use a different primitive depending on whether unsafe code is allowed
-			#if UNSAFE
+			#if INCLUDE_UNSAFE
 			var ss = new byte[32];
 			unsafe {
 				fixed (byte* q = ss, n = privKey, p = pubKey) {

@@ -1,9 +1,9 @@
-using System;
-using limb = System.Int64;
+#if INCLUDE_UNSAFE
 
-namespace ObscurCore
+using System;
+
+namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 {
-#if UNSAFE
 	/* C# port by CodesInChaos
 	* ported from https://github.com/agl/curve25519-donna
 	* The original c code is BSD licensed (original license reproduced below)
@@ -70,7 +70,7 @@ namespace ObscurCore
              */
 
 		/* Sum two numbers: output += in */
-		private static void fsum(limb* output, limb* input)
+		private static void fsum(Int64* output, Int64* input)
 		{
 			for (int i = 0; i < 10; i += 2)
 			{
@@ -82,7 +82,7 @@ namespace ObscurCore
 		/*		 Find the difference of two numbers: output = in - output
              * (note the order of the arguments!)
              */
-		static void fdifference(limb* output, limb* input)
+		static void fdifference(Int64* output, Int64* input)
 		{
 			for (int i = 0; i < 10; ++i)
 			{
@@ -91,7 +91,7 @@ namespace ObscurCore
 		}
 
 		/*		 Multiply a number by a scalar: output = in * scalar */
-		static void fscalar_product(limb* output, limb* input, limb scalar)
+		static void fscalar_product(Int64* output, Int64* input, Int64 scalar)
 		{
 			for (int i = 0; i < 10; ++i)
 			{
@@ -104,112 +104,112 @@ namespace ObscurCore
              * output must be distinct to both inputs. The inputs are reduced coefficient
              * form, the output is not.
              */
-		static void fproduct(limb* output, limb* in2, limb* input)
+		static void fproduct(Int64* output, Int64* in2, Int64* input)
 		{
-			output[0] = ((limb)((int)in2[0])) * ((int)input[0]);
-			output[1] = ((limb)((int)in2[0])) * ((int)input[1]) +
-			                ((limb)((int)in2[1])) * ((int)input[0]);
-			output[2] = 2 * ((limb)((int)in2[1])) * ((int)input[1]) +
-			                ((limb)((int)in2[0])) * ((int)input[2]) +
-			                ((limb)((int)in2[2])) * ((int)input[0]);
-			output[3] = ((limb)((int)in2[1])) * ((int)input[2]) +
-			                ((limb)((int)in2[2])) * ((int)input[1]) +
-			                ((limb)((int)in2[0])) * ((int)input[3]) +
-			                ((limb)((int)in2[3])) * ((int)input[0]);
-			output[4] = ((limb)((int)in2[2])) * ((int)input[2]) +
-			                2 * (((limb)((int)in2[1])) * ((int)input[3]) +
-				                ((limb)((int)in2[3])) * ((int)input[1])) +
-			                ((limb)((int)in2[0])) * ((int)input[4]) +
-			                ((limb)((int)in2[4])) * ((int)input[0]);
-			output[5] = ((limb)((int)in2[2])) * ((int)input[3]) +
-			                ((limb)((int)in2[3])) * ((int)input[2]) +
-			                ((limb)((int)in2[1])) * ((int)input[4]) +
-			                ((limb)((int)in2[4])) * ((int)input[1]) +
-			                ((limb)((int)in2[0])) * ((int)input[5]) +
-			                ((limb)((int)in2[5])) * ((int)input[0]);
-			output[6] = 2 * (((limb)((int)in2[3])) * ((int)input[3]) +
-				((limb)((int)in2[1])) * ((int)input[5]) +
-				((limb)((int)in2[5])) * ((int)input[1])) +
-			                ((limb)((int)in2[2])) * ((int)input[4]) +
-			                ((limb)((int)in2[4])) * ((int)input[2]) +
-			                ((limb)((int)in2[0])) * ((int)input[6]) +
-			                ((limb)((int)in2[6])) * ((int)input[0]);
-			output[7] = ((limb)((int)in2[3])) * ((int)input[4]) +
-			                ((limb)((int)in2[4])) * ((int)input[3]) +
-			                ((limb)((int)in2[2])) * ((int)input[5]) +
-			                ((limb)((int)in2[5])) * ((int)input[2]) +
-			                ((limb)((int)in2[1])) * ((int)input[6]) +
-			                ((limb)((int)in2[6])) * ((int)input[1]) +
-			                ((limb)((int)in2[0])) * ((int)input[7]) +
-			                ((limb)((int)in2[7])) * ((int)input[0]);
-			output[8] = ((limb)((int)in2[4])) * ((int)input[4]) +
-			                2 * (((limb)((int)in2[3])) * ((int)input[5]) +
-				                ((limb)((int)in2[5])) * ((int)input[3]) +
-				                ((limb)((int)in2[1])) * ((int)input[7]) +
-				                ((limb)((int)in2[7])) * ((int)input[1])) +
-			                ((limb)((int)in2[2])) * ((int)input[6]) +
-			                ((limb)((int)in2[6])) * ((int)input[2]) +
-			                ((limb)((int)in2[0])) * ((int)input[8]) +
-			                ((limb)((int)in2[8])) * ((int)input[0]);
-			output[9] = ((limb)((int)in2[4])) * ((int)input[5]) +
-			                ((limb)((int)in2[5])) * ((int)input[4]) +
-			                ((limb)((int)in2[3])) * ((int)input[6]) +
-			                ((limb)((int)in2[6])) * ((int)input[3]) +
-			                ((limb)((int)in2[2])) * ((int)input[7]) +
-			                ((limb)((int)in2[7])) * ((int)input[2]) +
-			                ((limb)((int)in2[1])) * ((int)input[8]) +
-			                ((limb)((int)in2[8])) * ((int)input[1]) +
-			                ((limb)((int)in2[0])) * ((int)input[9]) +
-			                ((limb)((int)in2[9])) * ((int)input[0]);
-			output[10] = 2 * (((limb)((int)in2[5])) * ((int)input[5]) +
-				((limb)((int)in2[3])) * ((int)input[7]) +
-				((limb)((int)in2[7])) * ((int)input[3]) +
-				((limb)((int)in2[1])) * ((int)input[9]) +
-				((limb)((int)in2[9])) * ((int)input[1])) +
-			                 ((limb)((int)in2[4])) * ((int)input[6]) +
-			                 ((limb)((int)in2[6])) * ((int)input[4]) +
-			                 ((limb)((int)in2[2])) * ((int)input[8]) +
-			                 ((limb)((int)in2[8])) * ((int)input[2]);
-			output[11] = ((limb)((int)in2[5])) * ((int)input[6]) +
-			                 ((limb)((int)in2[6])) * ((int)input[5]) +
-			                 ((limb)((int)in2[4])) * ((int)input[7]) +
-			                 ((limb)((int)in2[7])) * ((int)input[4]) +
-			                 ((limb)((int)in2[3])) * ((int)input[8]) +
-			                 ((limb)((int)in2[8])) * ((int)input[3]) +
-			                 ((limb)((int)in2[2])) * ((int)input[9]) +
-			                 ((limb)((int)in2[9])) * ((int)input[2]);
-			output[12] = ((limb)((int)in2[6])) * ((int)input[6]) +
-			                 2 * (((limb)((int)in2[5])) * ((int)input[7]) +
-				                 ((limb)((int)in2[7])) * ((int)input[5]) +
-				                 ((limb)((int)in2[3])) * ((int)input[9]) +
-				                 ((limb)((int)in2[9])) * ((int)input[3])) +
-			                 ((limb)((int)in2[4])) * ((int)input[8]) +
-			                 ((limb)((int)in2[8])) * ((int)input[4]);
-			output[13] = ((limb)((int)in2[6])) * ((int)input[7]) +
-			                 ((limb)((int)in2[7])) * ((int)input[6]) +
-			                 ((limb)((int)in2[5])) * ((int)input[8]) +
-			                 ((limb)((int)in2[8])) * ((int)input[5]) +
-			                 ((limb)((int)in2[4])) * ((int)input[9]) +
-			                 ((limb)((int)in2[9])) * ((int)input[4]);
-			output[14] = 2 * (((limb)((int)in2[7])) * ((int)input[7]) +
-				((limb)((int)in2[5])) * ((int)input[9]) +
-				((limb)((int)in2[9])) * ((int)input[5])) +
-			                 ((limb)((int)in2[6])) * ((int)input[8]) +
-			                 ((limb)((int)in2[8])) * ((int)input[6]);
-			output[15] = ((limb)((int)in2[7])) * ((int)input[8]) +
-			                 ((limb)((int)in2[8])) * ((int)input[7]) +
-			                 ((limb)((int)in2[6])) * ((int)input[9]) +
-			                 ((limb)((int)in2[9])) * ((int)input[6]);
-			output[16] = ((limb)((int)in2[8])) * ((int)input[8]) +
-			                 2 * (((limb)((int)in2[7])) * ((int)input[9]) +
-				                 ((limb)((int)in2[9])) * ((int)input[7]));
-			output[17] = ((limb)((int)in2[8])) * ((int)input[9]) +
-			                 ((limb)((int)in2[9])) * ((int)input[8]);
-			output[18] = 2 * ((limb)((int)in2[9])) * ((int)input[9]);
+			output[0] = ((Int64)((int)in2[0])) * ((int)input[0]);
+			output[1] = ((Int64)((int)in2[0])) * ((int)input[1]) +
+			                ((Int64)((int)in2[1])) * ((int)input[0]);
+			output[2] = 2 * ((Int64)((int)in2[1])) * ((int)input[1]) +
+			                ((Int64)((int)in2[0])) * ((int)input[2]) +
+			                ((Int64)((int)in2[2])) * ((int)input[0]);
+			output[3] = ((Int64)((int)in2[1])) * ((int)input[2]) +
+			                ((Int64)((int)in2[2])) * ((int)input[1]) +
+			                ((Int64)((int)in2[0])) * ((int)input[3]) +
+			                ((Int64)((int)in2[3])) * ((int)input[0]);
+			output[4] = ((Int64)((int)in2[2])) * ((int)input[2]) +
+			                2 * (((Int64)((int)in2[1])) * ((int)input[3]) +
+				                ((Int64)((int)in2[3])) * ((int)input[1])) +
+			                ((Int64)((int)in2[0])) * ((int)input[4]) +
+			                ((Int64)((int)in2[4])) * ((int)input[0]);
+			output[5] = ((Int64)((int)in2[2])) * ((int)input[3]) +
+			                ((Int64)((int)in2[3])) * ((int)input[2]) +
+			                ((Int64)((int)in2[1])) * ((int)input[4]) +
+			                ((Int64)((int)in2[4])) * ((int)input[1]) +
+			                ((Int64)((int)in2[0])) * ((int)input[5]) +
+			                ((Int64)((int)in2[5])) * ((int)input[0]);
+			output[6] = 2 * (((Int64)((int)in2[3])) * ((int)input[3]) +
+				((Int64)((int)in2[1])) * ((int)input[5]) +
+				((Int64)((int)in2[5])) * ((int)input[1])) +
+			                ((Int64)((int)in2[2])) * ((int)input[4]) +
+			                ((Int64)((int)in2[4])) * ((int)input[2]) +
+			                ((Int64)((int)in2[0])) * ((int)input[6]) +
+			                ((Int64)((int)in2[6])) * ((int)input[0]);
+			output[7] = ((Int64)((int)in2[3])) * ((int)input[4]) +
+			                ((Int64)((int)in2[4])) * ((int)input[3]) +
+			                ((Int64)((int)in2[2])) * ((int)input[5]) +
+			                ((Int64)((int)in2[5])) * ((int)input[2]) +
+			                ((Int64)((int)in2[1])) * ((int)input[6]) +
+			                ((Int64)((int)in2[6])) * ((int)input[1]) +
+			                ((Int64)((int)in2[0])) * ((int)input[7]) +
+			                ((Int64)((int)in2[7])) * ((int)input[0]);
+			output[8] = ((Int64)((int)in2[4])) * ((int)input[4]) +
+			                2 * (((Int64)((int)in2[3])) * ((int)input[5]) +
+				                ((Int64)((int)in2[5])) * ((int)input[3]) +
+				                ((Int64)((int)in2[1])) * ((int)input[7]) +
+				                ((Int64)((int)in2[7])) * ((int)input[1])) +
+			                ((Int64)((int)in2[2])) * ((int)input[6]) +
+			                ((Int64)((int)in2[6])) * ((int)input[2]) +
+			                ((Int64)((int)in2[0])) * ((int)input[8]) +
+			                ((Int64)((int)in2[8])) * ((int)input[0]);
+			output[9] = ((Int64)((int)in2[4])) * ((int)input[5]) +
+			                ((Int64)((int)in2[5])) * ((int)input[4]) +
+			                ((Int64)((int)in2[3])) * ((int)input[6]) +
+			                ((Int64)((int)in2[6])) * ((int)input[3]) +
+			                ((Int64)((int)in2[2])) * ((int)input[7]) +
+			                ((Int64)((int)in2[7])) * ((int)input[2]) +
+			                ((Int64)((int)in2[1])) * ((int)input[8]) +
+			                ((Int64)((int)in2[8])) * ((int)input[1]) +
+			                ((Int64)((int)in2[0])) * ((int)input[9]) +
+			                ((Int64)((int)in2[9])) * ((int)input[0]);
+			output[10] = 2 * (((Int64)((int)in2[5])) * ((int)input[5]) +
+				((Int64)((int)in2[3])) * ((int)input[7]) +
+				((Int64)((int)in2[7])) * ((int)input[3]) +
+				((Int64)((int)in2[1])) * ((int)input[9]) +
+				((Int64)((int)in2[9])) * ((int)input[1])) +
+			                 ((Int64)((int)in2[4])) * ((int)input[6]) +
+			                 ((Int64)((int)in2[6])) * ((int)input[4]) +
+			                 ((Int64)((int)in2[2])) * ((int)input[8]) +
+			                 ((Int64)((int)in2[8])) * ((int)input[2]);
+			output[11] = ((Int64)((int)in2[5])) * ((int)input[6]) +
+			                 ((Int64)((int)in2[6])) * ((int)input[5]) +
+			                 ((Int64)((int)in2[4])) * ((int)input[7]) +
+			                 ((Int64)((int)in2[7])) * ((int)input[4]) +
+			                 ((Int64)((int)in2[3])) * ((int)input[8]) +
+			                 ((Int64)((int)in2[8])) * ((int)input[3]) +
+			                 ((Int64)((int)in2[2])) * ((int)input[9]) +
+			                 ((Int64)((int)in2[9])) * ((int)input[2]);
+			output[12] = ((Int64)((int)in2[6])) * ((int)input[6]) +
+			                 2 * (((Int64)((int)in2[5])) * ((int)input[7]) +
+				                 ((Int64)((int)in2[7])) * ((int)input[5]) +
+				                 ((Int64)((int)in2[3])) * ((int)input[9]) +
+				                 ((Int64)((int)in2[9])) * ((int)input[3])) +
+			                 ((Int64)((int)in2[4])) * ((int)input[8]) +
+			                 ((Int64)((int)in2[8])) * ((int)input[4]);
+			output[13] = ((Int64)((int)in2[6])) * ((int)input[7]) +
+			                 ((Int64)((int)in2[7])) * ((int)input[6]) +
+			                 ((Int64)((int)in2[5])) * ((int)input[8]) +
+			                 ((Int64)((int)in2[8])) * ((int)input[5]) +
+			                 ((Int64)((int)in2[4])) * ((int)input[9]) +
+			                 ((Int64)((int)in2[9])) * ((int)input[4]);
+			output[14] = 2 * (((Int64)((int)in2[7])) * ((int)input[7]) +
+				((Int64)((int)in2[5])) * ((int)input[9]) +
+				((Int64)((int)in2[9])) * ((int)input[5])) +
+			                 ((Int64)((int)in2[6])) * ((int)input[8]) +
+			                 ((Int64)((int)in2[8])) * ((int)input[6]);
+			output[15] = ((Int64)((int)in2[7])) * ((int)input[8]) +
+			                 ((Int64)((int)in2[8])) * ((int)input[7]) +
+			                 ((Int64)((int)in2[6])) * ((int)input[9]) +
+			                 ((Int64)((int)in2[9])) * ((int)input[6]);
+			output[16] = ((Int64)((int)in2[8])) * ((int)input[8]) +
+			                 2 * (((Int64)((int)in2[7])) * ((int)input[9]) +
+				                 ((Int64)((int)in2[9])) * ((int)input[7]));
+			output[17] = ((Int64)((int)in2[8])) * ((int)input[9]) +
+			                 ((Int64)((int)in2[9])) * ((int)input[8]);
+			output[18] = 2 * ((Int64)((int)in2[9])) * ((int)input[9]);
 		}
 
 		/*		 Reduce a long form to a short form by taking the input mod 2^255 - 19. */
-		static void freduce_degree(limb* output)
+		static void freduce_degree(Int64* output)
 		{
 			/*			 Each of these shifts and adds ends up multiplying the value by 19. */
 			output[8] += output[18] << 4;
@@ -243,7 +243,7 @@ namespace ObscurCore
 
 
 		/*		 return v / 2^26, using only shifts and adds. */
-		static limb div_by_2_26(limb v)
+		static Int64 div_by_2_26(Int64 v)
 		{
 			/*			 High word of v; no shift needed*/
 			UInt32 highword = (UInt32)(((UInt64)v) >> 32);
@@ -256,7 +256,7 @@ namespace ObscurCore
 		}
 
 		/*		 return v / (2^25), using only shifts and adds. */
-		static limb div_by_2_25(limb v)
+		static Int64 div_by_2_25(Int64 v)
 		{
 			/*			 High word of v; no shift needed*/
 			UInt32 highword = (UInt32)(((UInt64)v) >> 32);
@@ -278,14 +278,14 @@ namespace ObscurCore
              *
              * On entry: |output[i]| < 2^62
              */
-		static void freduce_coefficients(limb* output)
+		static void freduce_coefficients(Int64* output)
 		{
 
 			output[10] = 0;
 
 			for (int i = 0; i < 10; i += 2)
 			{
-				limb over = div_by_2_26(output[i]);
+				Int64 over = div_by_2_26(output[i]);
 				output[i] -= over << 26;
 				output[i + 1] += over;
 
@@ -303,7 +303,7 @@ namespace ObscurCore
 			/*			 Now output[1..9] are reduced, and |output[0]| < 2^26 + 19 * 2^38
                  * So |over| will be no more than 77825  */
 			{
-				limb over = div_by_2_26(output[0]);
+				Int64 over = div_by_2_26(output[0]);
 				output[0] -= over << 26;
 				output[1] += over;
 			}
@@ -327,86 +327,86 @@ namespace ObscurCore
              * output must be distinct to both inputs. The output is reduced degree and
              * reduced coefficient.
              */
-		static void fmul(limb* output, limb* input, limb* in2)
+		static void fmul(Int64* output, Int64* input, Int64* in2)
 		{
 			Long19 t = new Long19();
 			fproduct(t.Items, input, in2);
 			freduce_degree(t.Items);
 			freduce_coefficients(t.Items);
-			memcpy(output, t.Items, sizeof(limb) * 10);
+			memcpy(output, t.Items, sizeof(Int64) * 10);
 		}
 
-		static void fsquare_inner(limb* output, limb* input)
+		static void fsquare_inner(Int64* output, Int64* input)
 		{
-			output[0] = ((limb)((int)input[0])) * ((int)input[0]);
-			output[1] = 2 * ((limb)((int)input[0])) * ((int)input[1]);
-			output[2] = 2 * (((limb)((int)input[1])) * ((int)input[1]) +
-				((limb)((int)input[0])) * ((int)input[2]));
-			output[3] = 2 * (((limb)((int)input[1])) * ((int)input[2]) +
-				((limb)((int)input[0])) * ((int)input[3]));
-			output[4] = ((limb)((int)input[2])) * ((int)input[2]) +
-			                4 * ((limb)((int)input[1])) * ((int)input[3]) +
-			                2 * ((limb)((int)input[0])) * ((int)input[4]);
-			output[5] = 2 * (((limb)((int)input[2])) * ((int)input[3]) +
-				((limb)((int)input[1])) * ((int)input[4]) +
-				((limb)((int)input[0])) * ((int)input[5]));
-			output[6] = 2 * (((limb)((int)input[3])) * ((int)input[3]) +
-				((limb)((int)input[2])) * ((int)input[4]) +
-				((limb)((int)input[0])) * ((int)input[6]) +
-				2 * ((limb)((int)input[1])) * ((int)input[5]));
-			output[7] = 2 * (((limb)((int)input[3])) * ((int)input[4]) +
-				((limb)((int)input[2])) * ((int)input[5]) +
-				((limb)((int)input[1])) * ((int)input[6]) +
-				((limb)((int)input[0])) * ((int)input[7]));
-			output[8] = ((limb)((int)input[4])) * ((int)input[4]) +
-			                2 * (((limb)((int)input[2])) * ((int)input[6]) +
-				                ((limb)((int)input[0])) * ((int)input[8]) +
-				                2 * (((limb)((int)input[1])) * ((int)input[7]) +
-					                ((limb)((int)input[3])) * ((int)input[5])));
-			output[9] = 2 * (((limb)((int)input[4])) * ((int)input[5]) +
-				((limb)((int)input[3])) * ((int)input[6]) +
-				((limb)((int)input[2])) * ((int)input[7]) +
-				((limb)((int)input[1])) * ((int)input[8]) +
-				((limb)((int)input[0])) * ((int)input[9]));
-			output[10] = 2 * (((limb)((int)input[5])) * ((int)input[5]) +
-				((limb)((int)input[4])) * ((int)input[6]) +
-				((limb)((int)input[2])) * ((int)input[8]) +
-				2 * (((limb)((int)input[3])) * ((int)input[7]) +
-					((limb)((int)input[1])) * ((int)input[9])));
-			output[11] = 2 * (((limb)((int)input[5])) * ((int)input[6]) +
-				((limb)((int)input[4])) * ((int)input[7]) +
-				((limb)((int)input[3])) * ((int)input[8]) +
-				((limb)((int)input[2])) * ((int)input[9]));
-			output[12] = ((limb)((int)input[6])) * ((int)input[6]) +
-			                 2 * (((limb)((int)input[4])) * ((int)input[8]) +
-				                 2 * (((limb)((int)input[5])) * ((int)input[7]) +
-					                 ((limb)((int)input[3])) * ((int)input[9])));
-			output[13] = 2 * (((limb)((int)input[6])) * ((int)input[7]) +
-				((limb)((int)input[5])) * ((int)input[8]) +
-				((limb)((int)input[4])) * ((int)input[9]));
-			output[14] = 2 * (((limb)((int)input[7])) * ((int)input[7]) +
-				((limb)((int)input[6])) * ((int)input[8]) +
-				2 * ((limb)((int)input[5])) * ((int)input[9]));
-			output[15] = 2 * (((limb)((int)input[7])) * ((int)input[8]) +
-				((limb)((int)input[6])) * ((int)input[9]));
-			output[16] = ((limb)((int)input[8])) * ((int)input[8]) +
-			                 4 * ((limb)((int)input[7])) * ((int)input[9]);
-			output[17] = 2 * ((limb)((int)input[8])) * ((int)input[9]);
-			output[18] = 2 * ((limb)((int)input[9])) * ((int)input[9]);
+			output[0] = ((Int64)((int)input[0])) * ((int)input[0]);
+			output[1] = 2 * ((Int64)((int)input[0])) * ((int)input[1]);
+			output[2] = 2 * (((Int64)((int)input[1])) * ((int)input[1]) +
+				((Int64)((int)input[0])) * ((int)input[2]));
+			output[3] = 2 * (((Int64)((int)input[1])) * ((int)input[2]) +
+				((Int64)((int)input[0])) * ((int)input[3]));
+			output[4] = ((Int64)((int)input[2])) * ((int)input[2]) +
+			                4 * ((Int64)((int)input[1])) * ((int)input[3]) +
+			                2 * ((Int64)((int)input[0])) * ((int)input[4]);
+			output[5] = 2 * (((Int64)((int)input[2])) * ((int)input[3]) +
+				((Int64)((int)input[1])) * ((int)input[4]) +
+				((Int64)((int)input[0])) * ((int)input[5]));
+			output[6] = 2 * (((Int64)((int)input[3])) * ((int)input[3]) +
+				((Int64)((int)input[2])) * ((int)input[4]) +
+				((Int64)((int)input[0])) * ((int)input[6]) +
+				2 * ((Int64)((int)input[1])) * ((int)input[5]));
+			output[7] = 2 * (((Int64)((int)input[3])) * ((int)input[4]) +
+				((Int64)((int)input[2])) * ((int)input[5]) +
+				((Int64)((int)input[1])) * ((int)input[6]) +
+				((Int64)((int)input[0])) * ((int)input[7]));
+			output[8] = ((Int64)((int)input[4])) * ((int)input[4]) +
+			                2 * (((Int64)((int)input[2])) * ((int)input[6]) +
+				                ((Int64)((int)input[0])) * ((int)input[8]) +
+				                2 * (((Int64)((int)input[1])) * ((int)input[7]) +
+					                ((Int64)((int)input[3])) * ((int)input[5])));
+			output[9] = 2 * (((Int64)((int)input[4])) * ((int)input[5]) +
+				((Int64)((int)input[3])) * ((int)input[6]) +
+				((Int64)((int)input[2])) * ((int)input[7]) +
+				((Int64)((int)input[1])) * ((int)input[8]) +
+				((Int64)((int)input[0])) * ((int)input[9]));
+			output[10] = 2 * (((Int64)((int)input[5])) * ((int)input[5]) +
+				((Int64)((int)input[4])) * ((int)input[6]) +
+				((Int64)((int)input[2])) * ((int)input[8]) +
+				2 * (((Int64)((int)input[3])) * ((int)input[7]) +
+					((Int64)((int)input[1])) * ((int)input[9])));
+			output[11] = 2 * (((Int64)((int)input[5])) * ((int)input[6]) +
+				((Int64)((int)input[4])) * ((int)input[7]) +
+				((Int64)((int)input[3])) * ((int)input[8]) +
+				((Int64)((int)input[2])) * ((int)input[9]));
+			output[12] = ((Int64)((int)input[6])) * ((int)input[6]) +
+			                 2 * (((Int64)((int)input[4])) * ((int)input[8]) +
+				                 2 * (((Int64)((int)input[5])) * ((int)input[7]) +
+					                 ((Int64)((int)input[3])) * ((int)input[9])));
+			output[13] = 2 * (((Int64)((int)input[6])) * ((int)input[7]) +
+				((Int64)((int)input[5])) * ((int)input[8]) +
+				((Int64)((int)input[4])) * ((int)input[9]));
+			output[14] = 2 * (((Int64)((int)input[7])) * ((int)input[7]) +
+				((Int64)((int)input[6])) * ((int)input[8]) +
+				2 * ((Int64)((int)input[5])) * ((int)input[9]));
+			output[15] = 2 * (((Int64)((int)input[7])) * ((int)input[8]) +
+				((Int64)((int)input[6])) * ((int)input[9]));
+			output[16] = ((Int64)((int)input[8])) * ((int)input[8]) +
+			                 4 * ((Int64)((int)input[7])) * ((int)input[9]);
+			output[17] = 2 * ((Int64)((int)input[8])) * ((int)input[9]);
+			output[18] = 2 * ((Int64)((int)input[9])) * ((int)input[9]);
 		}
 
 		internal unsafe struct Long19
 		{
-			public fixed limb Items[19];
+			public fixed Int64 Items[19];
 		}
 
-		static void fsquare(limb* output, limb* input)
+		static void fsquare(Int64* output, Int64* input)
 		{
 			Long19 t = new Long19();
 			fsquare_inner(t.Items, input);
 			freduce_degree(t.Items);
 			freduce_coefficients(t.Items);
-			memcpy(output, t.Items, sizeof(limb) * 10);
+			memcpy(output, t.Items, sizeof(Int64) * 10);
 		}
 
 		static int ReadLittleEndianInt32(byte* p)
@@ -415,7 +415,7 @@ namespace ObscurCore
 		}
 
 		/*		 Take a little-endian, 32-byte number and expand it into polynomial form */
-		static void fexpand(limb* output, byte* input)
+		static void fexpand(Int64* output, byte* input)
 		{
 			output[0] = (ReadLittleEndianInt32(input + 0) >> 0) & 0x3ffffff;
 			output[1] = (ReadLittleEndianInt32(input + 3) >> 2) & 0x1ffffff;
@@ -432,7 +432,7 @@ namespace ObscurCore
 		/*		 Take a fully reduced polynomial form number and contract it into a
              * little-endian, 32-byte array
              */
-		static void fcontract(byte* output, limb* input)
+		static void fcontract(byte* output, Int64* input)
 		{
 			int i;
 			int j;
@@ -494,25 +494,26 @@ namespace ObscurCore
 			input[7] <<= 3;
 			input[8] <<= 4;
 			input[9] <<= 6;
-			/*			
-            #define F(i, s) \
-              output[s+0] |=  input[i] & 0xff; \
-              output[s+1]  = (input[i] >> 8) & 0xff; \
-              output[s+2]  = (input[i] >> 16) & 0xff; \
-              output[s+3]  = (input[i] >> 24) & 0xff;
-              output[0] = 0;
-              output[16] = 0;
-              F(0,0);
-              F(1,3);
-              F(2,6);
-              F(3,9);
-              F(4,12);
-              F(5,16);
-              F(6,19);
-              F(7,22);
-              F(8,25);
-              F(9,28);
-            #undef F*/
+						
+            //#define F(i, s) \
+            //  output[s+0] |=  input[i] & 0xff; \
+            //  output[s+1]  = (input[i] >> 8) & 0xff; \
+            //  output[s+2]  = (input[i] >> 16) & 0xff; \
+            //  output[s+3]  = (input[i] >> 24) & 0xff;
+            //  output[0] = 0;
+            //  output[16] = 0;
+            //  F(0,0);
+            //  F(1,3);
+            //  F(2,6);
+            //  F(3,9);
+            //  F(4,12);
+            //  F(5,16);
+            //  F(6,19);
+            //  F(7,22);
+            //  F(8,25);
+            //  F(9,28);
+            //#undef F
+            
 			output[0] = (byte)input[0];
 
 			output[1] = (byte)(input[0] >> 8);
@@ -567,11 +568,11 @@ namespace ObscurCore
              *   xprime zprime: short form, destroyed
              *   qmqp: short form, preserved
              */
-		static void fmonty(limb* x2, limb* z2,  /*		 output 2Q */
-			limb* x3, limb* z3,  /*			 output Q + Q' */
-			limb* x, limb* z,    /*			 input Q */
-			limb* xprime, limb* zprime,  /*			 input Q' */
-			limb* qmqp /*			 input Q - Q' */)
+		static void fmonty(Int64* x2, Int64* z2,  /*		 output 2Q */
+			Int64* x3, Int64* z3,  /*			 output Q + Q' */
+			Int64* x, Int64* z,    /*			 input Q */
+			Int64* xprime, Int64* zprime,  /*			 input Q' */
+			Int64* qmqp /*			 input Q - Q' */)
 		{
 			Long19 origx = new Long19();
 			Long19 origxprime = new Long19();
@@ -583,11 +584,11 @@ namespace ObscurCore
 			Long19 zzzprime = new Long19();
 			Long19 xxxprime = new Long19();
 
-			memcpy(origx.Items, x, 10 * sizeof(limb));
+			memcpy(origx.Items, x, 10 * sizeof(Int64));
 			fsum(x, z);
 			fdifference(z, origx.Items);  // does x - z
 
-			memcpy(origxprime.Items, xprime, sizeof(limb) * 10);
+			memcpy(origxprime.Items, xprime, sizeof(Int64) * 10);
 			fsum(xprime, zprime);
 			fdifference(zprime, origxprime.Items);
 			fproduct(xxprime.Items, xprime, z);
@@ -596,7 +597,7 @@ namespace ObscurCore
 			freduce_coefficients(xxprime.Items);
 			freduce_degree(zzprime.Items);
 			freduce_coefficients(zzprime.Items);
-			memcpy(origxprime.Items, xxprime.Items, sizeof(limb) * 10);
+			memcpy(origxprime.Items, xxprime.Items, sizeof(Int64) * 10);
 			fsum(xxprime.Items, zzprime.Items);
 			fdifference(zzprime.Items, origxprime.Items);
 			fsquare(xxxprime.Items, xxprime.Items);
@@ -604,8 +605,8 @@ namespace ObscurCore
 			fproduct(zzprime.Items, zzzprime.Items, qmqp);
 			freduce_degree(zzprime.Items);
 			freduce_coefficients(zzprime.Items);
-			memcpy(x3, xxxprime.Items, sizeof(limb) * 10);
-			memcpy(z3, zzprime.Items, sizeof(limb) * 10);
+			memcpy(x3, xxxprime.Items, sizeof(Int64) * 10);
+			memcpy(z3, zzprime.Items, sizeof(Int64) * 10);
 
 			fsquare(xx.Items, x);
 			fsquare(zz.Items, z);
@@ -642,7 +643,7 @@ namespace ObscurCore
              * and all all values in a[0..9],b[0..9] must have magnitude less than
              * INT32_MAX.
              */
-		static void swap_conditional(limb* a, limb* b, limb iswap)
+		static void swap_conditional(Int64* a, Int64* b, Int64 iswap)
 		{
 			int swap = (int)-iswap;
 
@@ -661,7 +662,7 @@ namespace ObscurCore
              *   q: a point of the curve (short form)
              */
 		static void
-		cmult(limb* resultx, limb* resultz, byte* n, limb* q)
+		cmult(Int64* resultx, Int64* resultz, byte* n, Int64* q)
 		{
 			Long19 a = new Long19();
 			Long19 b = new Long19();
@@ -669,7 +670,7 @@ namespace ObscurCore
 			Long19 d = new Long19();
 			b.Items[0] = 1;
 			c.Items[0] = 1;
-			limb* nqpqx = a.Items,
+			Int64* nqpqx = a.Items,
 			nqpqz = b.Items,
 			nqx = c.Items,
 			nqz = d.Items,
@@ -680,19 +681,19 @@ namespace ObscurCore
 			Long19 h = new Long19();
 			f.Items[0] = 1;
 			h.Items[0] = 1;
-			limb* nqpqx2 = e.Items,
+			Int64* nqpqx2 = e.Items,
 			nqpqz2 = f.Items,
 			nqx2 = g.Items,
 			nqz2 = h.Items;
 
-			memcpy(nqpqx, q, sizeof(limb) * 10);
+			memcpy(nqpqx, q, sizeof(Int64) * 10);
 
 			for (int i = 0; i < 32; ++i)
 			{
 				byte @byte = n[31 - i];
 				for (int j = 0; j < 8; ++j)
 				{
-					limb bit = @byte >> 7;
+					Int64 bit = @byte >> 7;
 
 					swap_conditional(nqx, nqpqx, bit);
 					swap_conditional(nqz, nqpqz, bit);
@@ -721,15 +722,15 @@ namespace ObscurCore
 				}
 			}
 
-			memcpy(resultx, nqx, sizeof(limb) * 10);
-			memcpy(resultz, nqz, sizeof(limb) * 10);
+			memcpy(resultx, nqx, sizeof(Int64) * 10);
+			memcpy(resultz, nqz, sizeof(Int64) * 10);
 		}
 
 		// -----------------------------------------------------------------------------
 		// Shamelessly copied from djb's code
 		// -----------------------------------------------------------------------------
 		static void
-		crecip(limb* output, limb* z)
+		crecip(Int64* output, Int64* z)
 		{
 			Long19 z2 = new Long19();
 			Long19 z9 = new Long19();
@@ -891,6 +892,6 @@ namespace ObscurCore
 			fcontract(mypublic, z.Items);
 		}
 	}
-#endif
 }
 
+#endif

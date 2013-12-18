@@ -45,7 +45,7 @@ namespace ObscurCore.Packaging
 	    /// <param name="transforms">Transform funcs.</param>
 	    /// <param name="config">Configuration of stream selection and stripe scheme.</param>
         public FabricPayloadMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, IList<Func<Stream, DecoratingStream>> transforms, 
-			IPayloadConfiguration config) : base(writing, multiplexedStream, streams, transforms, config, MaximumStripeLength)
+			IPayloadConfiguration config) : base(writing, multiplexedStream, streams, transforms, config)
         {
 		    var fabricConfig = StratCom.DeserialiseDataTransferObject<PayloadSchemeConfiguration>(config.SchemeConfiguration);
 		    _minStripe = fabricConfig.Minimum;

@@ -72,14 +72,14 @@ namespace ObscurCore.Tests.Packaging.Serialisation
         public void Fabric_Fixed () {
 
             var inputObj = new PayloadConfiguration() {
-                SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
+                SchemeName = PayloadLayoutScheme.Fabric.ToString(),
                 SchemeConfiguration = new PayloadSchemeConfiguration {
 			            Minimum = FabricPayloadMux.DefaultFixedStripeLength,
 			            Maximum = FabricPayloadMux.DefaultFixedStripeLength
-			        }.SerialiseDTO(),
-                PrimaryPRNGName = CSPRNumberGenerators.SOSEMANUK.ToString(),
-                PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+			        }.SerialiseDto(),
+                PrimaryPrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
+                PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto()
             };
 
             var stream = SerialiseToMemory(inputObj);
@@ -94,14 +94,14 @@ namespace ObscurCore.Tests.Packaging.Serialisation
         [Test]
         public void Fabric_Variable () {
             var inputObj = new PayloadConfiguration() {                                        
-                SchemeName = PayloadLayoutSchemes.Fabric.ToString(),
+                SchemeName = PayloadLayoutScheme.Fabric.ToString(),
                 SchemeConfiguration = new PayloadSchemeConfiguration {
 			            Minimum = FabricPayloadMux.MinimumStripeLength,
 			            Maximum = FabricPayloadMux.MaximumStripeLength
-			        }.SerialiseDTO(),
-                PrimaryPRNGName = CSPRNumberGenerators.Salsa20.ToString(),
-                PrimaryPRNGConfiguration = Source.CreateStreamCipherCSPRNGConfiguration(
-                    SymmetricStreamCiphers.SOSEMANUK).SerialiseDTO<StreamCipherCSPRNGConfiguration>()
+			        }.SerialiseDto(),
+                PrimaryPrngName = CsPseudorandomNumberGenerator.Salsa20.ToString(),
+                PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                    CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto()
             };
 
             var stream = SerialiseToMemory(inputObj);

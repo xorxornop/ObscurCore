@@ -60,13 +60,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         //    return (RotateLeft(x, 10) ^ RotateLeft(z, 23)) + RotateLeft(y, 8);
         //}
 
-		private static uint RotateLeft(uint	x, int bits)
-		{
+		private static uint RotateLeft(uint	x, int bits) {
 			return (x << bits) | (x >> -bits);
 		}
 
-		private static uint RotateRight(uint x, int bits)
-		{
+		private static uint RotateRight(uint x, int bits) {
 			return (x >> bits) | (x << -bits);
 		}
 
@@ -100,8 +98,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             //Mod512(cnt);
 			uint j = _cnt & 0x1FF; 
 			uint ret;
-			if (_cnt < 512)
-			{
+			if (_cnt < 512) {
 				//p[j] += G1(p[Dim(j, 3)], p[Dim(j, 10)], p[Dim(j, 511)]);
                 // ## G1 = RotateRight((j - 3) & 0x1FF, 10) ^ RotateRight((j - 10) & 0x1FF, 23)) + RotateRight((j - 511) & 0x1FF, 8);
 
@@ -113,9 +110,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                 uint x = _p[(j - 12) & 0x1FF];
 			    ret = _q[x & 0xFF] + _q[((x >> 16) & 0xFF) + 256];
 
-			}
-			else
-			{
+			} else {
 				// q[j] += G2(q[Dim(j, 3)], q[Dim(j, 10)], q[Dim(j, 511)]);
                 // ## G2 = (RotateLeft(x, 10) ^ RotateLeft(z, 23)) + RotateLeft(y, 8)
 
@@ -147,20 +142,17 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 			uint[] w = new uint[1280];
 
-			for (int i = 0; i < 16; i++)
-			{
+			for (int i = 0; i < 16; i++) {
 				w[i >> 2] |= ((uint)key[i] << (8 * (i & 0x3)));
 			}
 			Array.Copy(w, 0, w, 4, 4);
 
-			for (int i = 0; i < iv.Length && i < 16; i++)
-			{
+			for (int i = 0; i < iv.Length && i < 16; i++) {
 				w[(i >> 2) + 8] |= ((uint)iv[i] << (8 * (i & 0x3)));
 			}
 			Array.Copy(w, 8, w, 12, 4);
 
-			for (uint i = 16; i < 1280; i++)
-			{
+			for (uint i = 16; i < 1280; i++) {
                 //w[i] = F2(w[i - 2]) + w[i - 7] + F1(w[i - 15]) + w[i - 16] + i;
 
                 // ## F1 = RotateRight(x, 7) ^ RotateRight(x, 18) ^ (x >> 3);
@@ -176,12 +168,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			Array.Copy(w, 256, _p, 0, 512);
 			Array.Copy(w, 768, _q, 0, 512);
 
-			for (int i = 0; i < 512; i++)
-			{
+			for (int i = 0; i < 512; i++) {
 				_p[i] = Step();
 			}
-			for (int i = 0; i < 512; i++)
-			{
+			for (int i = 0; i < 512; i++) {
 				_q[i] = Step();
 			}
 
@@ -208,23 +198,17 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		{
 			ICipherParameters keyParam = parameters;
 
-			if (parameters is ParametersWithIV)
-			{
+			if (parameters is ParametersWithIV) {
 				iv = ((ParametersWithIV)parameters).GetIV();
 				keyParam = ((ParametersWithIV)parameters).Parameters;
-			}
-			else
-			{
+			} else {
 				iv = new byte[0];
 			}
 
-			if (keyParam is KeyParameter)
-			{
+			if (keyParam is KeyParameter) {
 				key = ((KeyParameter)keyParam).GetKey();
 				Init();
-			}
-			else
-			{
+			} else {
 				throw new ArgumentException(
 					"Invalid parameter passed to HC128 init - " + parameters.GetType().Name,
 					"parameters");
@@ -236,10 +220,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		private byte[] buf = new byte[4];
 		private int idx;
 
-		private byte GetByte()
-		{
-			if (idx == 0)
-			{
+		private byte GetByte() {
+			if (idx == 0) {
 				Pack.UInt32_To_LE(Step(), buf);				
 			}
 			byte ret = buf[idx];
@@ -261,20 +243,17 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			if ((outOff + len) > output.Length)
 				throw new DataLengthException("output buffer too short");
 
-			for (int i = 0; i < len; i++)
-			{
+			for (int i = 0; i < len; i++) {
 				output[outOff + i] = (byte)(input[inOff + i] ^ GetByte());
 			}
 		}
 
-		public void Reset()
-		{
+		public void Reset() {
 			idx = 0;
 			Init();
 		}
 
-		public byte ReturnByte(byte input)
-		{
+		public byte ReturnByte(byte input) {
 			return (byte)(input ^ GetByte());
 		}
 	}

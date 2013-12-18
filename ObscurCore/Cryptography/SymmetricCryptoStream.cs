@@ -28,7 +28,7 @@ using ObscurCore.Information;
 namespace ObscurCore.Cryptography
 {
 	/// <summary>
-	/// Decorating stream encapsulating and implementing encryption/decryption operations transparently.
+	/// Decorating stream implementing encryption/decryption operations by a symmetric cipher.
 	/// </summary>
 	public sealed class SymmetricCryptoStream : DecoratingStream
 	{
@@ -39,32 +39,38 @@ namespace ObscurCore.Cryptography
 			get { return base.Writing; }
 		}
 
-		private IBufferedCipher _cipher;
-		private readonly RingByteBuffer _procBuffer;
+		private ICipherWrapper _cipher;
+	    private readonly RingByteBuffer _writeBuffer, _readBuffer;
 		private readonly byte[] _inBuffer;
 		private byte[] _outBuffer; // non-readonly allows for on-the-fly reassignment for CTS compat. during finalisation.
+
+	    private byte[] _operationBuffer;
+	    private int _operationBufferOffset;
+
+	    private int _operationSize;
+
 		private bool _inStreamEnded;
 		private bool _disposed;
-
-		private const int StreamStride = 64;
 
 		private const string UnknownFinaliseError = "An unknown type of error occured while transforming the final block of ciphertext.";
 		private const string UnexpectedLengthError = "The data in the ciphertext is not the expected length.";
 		private const string WritingError = "Could not write transformed block bytes to output stream.";
 		private const string ShortCtsError = "Insufficient input length. CTS mode block ciphers require at least one block.";
 
+	    private static readonly byte[] EmptyByteArray = {};
 
-	    public SymmetricCryptoStream(Stream target, bool isEncrypting, SymmetricCipherConfiguration config)
-	        : this(target, isEncrypting, config, null, true) {}
+
+	    public SymmetricCryptoStream(Stream binding, bool encrypting, SymmetricCipherConfiguration config)
+	        : this(binding, encrypting, config, null, true) {}
 
 	    /// <summary>Initialises the stream and its associated cipher for operation automatically from provided configuration object.</summary>
-		/// <param name="target">Stream to be written/read to/from.</param>
-		/// <param name="isEncrypting">Specifies whether the stream is for writing (encrypting) or reading (decryption).</param>
+		/// <param name="binding">Stream to be written/read to/from.</param>
+		/// <param name="encrypting">Specifies whether the stream is for writing (encrypting) or reading (decryption).</param>
 		/// <param name="config">Configuration object describing how to set up the internal cipher and associated services.</param>
 		/// <param name="key">Derived cryptographic key for the internal cipher to operate with. Overrides key in configuration.</param>
 		/// <param name="closeOnDispose">Set to <c>true</c> to also close the base stream when closing, or vice-versa.</param>
-		public SymmetricCryptoStream (Stream target, bool isEncrypting, SymmetricCipherConfiguration config, 
-		                              byte[] key, bool closeOnDispose) : base(target, isEncrypting, closeOnDispose, true)
+		public SymmetricCryptoStream (Stream binding, bool encrypting, SymmetricCipherConfiguration config, 
+		                              byte[] key, bool closeOnDispose) : base(binding, encrypting, closeOnDispose, true)
 		{
             if ((config.Key.IsNullOrZeroLength()) && (key.IsNullOrZeroLength())) 
                 throw new ArgumentException("No key provided in field in configuration object or as parameter.");
@@ -101,38 +107,28 @@ namespace ObscurCore.Cryptography
 		                    var blockWrapper = new BlockCipherConfigurationWrapper(config);
 
 		                    BlockCipherMode blockModeEnum = blockWrapper.Mode;
-
 		                    byte[] blockIV = blockWrapper.IV;
 
-                            if(blockIV.Length != blockWrapper.BlockSize / 8)
-                                throw new NotSupportedException("IV length does not match block length.");
-
-                            cipherParams = Source.CreateBlockCipherParameters(config, workingKey);
+		                    cipherParams = Source.CreateBlockCipherParameters(blockCipherEnum, workingKey, blockIV);
                             // Overlay the cipher with the mode of operation
                             blockCipher = Source.OverlayBlockCipherWithMode(blockCipher, blockModeEnum,
 				                config.BlockSizeBits);
 
+                            IBlockCipherPadding padding = null;
                             BlockCipherPadding paddingEnum = blockWrapper.Padding;
-
-		                    if (blockModeEnum == BlockCipherMode.CtsCbc) {
-		                        if (paddingEnum == BlockCipherPadding.None) {
-                                    _cipher = new CtsBlockCipher(blockCipher);
-                                } else {
-									throw new ConfigurationInvalidException("CTS mode is inappropriate for use with padding.");
-                                }
-		                    } else if (paddingEnum == BlockCipherPadding.None) {
-		                        if (Athena.Cryptography.BlockCipherModes[
-		                            config.ModeName.ToEnum<BlockCipherMode>()]
+		                    if (paddingEnum == BlockCipherPadding.None) {
+		                        if (Athena.Cryptography.BlockCipherModes[blockModeEnum]
 		                            .PaddingRequirement == PaddingRequirement.Always) {
 		                            throw new NotSupportedException(
 		                                "Cipher configuration does not specify the use of padding, " +
 		                                    "which is required for the specified mode of operation.");
 		                        }
-		                        _cipher = new BufferedBlockCipher(blockCipher);
 		                    } else {
-		                        var padding = Source.CreatePadding(paddingEnum);
-		                        _cipher = new PaddedBufferedBlockCipher(blockCipher, padding);
+		                        padding = Source.CreatePadding(paddingEnum);
 		                    }
+                            blockCipher.Init(encrypting, cipherParams);
+
+                            _cipher = new BlockCipherWrapper(encrypting, blockCipher, padding);
 
 		                    break;
 		                case SymmetricCipherType.Aead:
@@ -152,7 +148,10 @@ namespace ObscurCore.Cryptography
 					        // Create the I/O-enabled transform object
 					        if (!String.IsNullOrEmpty(config.PaddingName) && !config.PaddingName.Equals(BlockCipherPadding.None.ToString()))
 						        throw new NotSupportedException("Padding was specified for use in AEAD mode - it is not allowed and unnecessary.");
-					        _cipher = new BufferedAeadBlockCipher(aeadCipher);
+
+                            aeadCipher.Init(encrypting, cipherParams);
+					        //_cipher = new BufferedAeadBlockCipher(aeadCipher);
+                            _cipher = new AeadCipherWrapper(encrypting, aeadCipher);
 
 		                    break;
 		            }
@@ -163,31 +162,25 @@ namespace ObscurCore.Cryptography
 
 		            var streamCipherEnum = streamWrapper.StreamCipher;
 		            var streamNonce = streamWrapper.Nonce;
-                    base.BufferRequirementOverride = !streamNonce.IsNullOrZeroLength() ? (streamNonce.Length) * 2 : streamWrapper.KeySizeBytes * 2;
+                    //base.BufferRequirementOverride = !streamNonce.IsNullOrZeroLength() ? (streamNonce.Length) * 2 : streamWrapper.KeySizeBytes * 2;
+		            base.BufferRequirementOverride = 64;
 
 				    // Requested a stream cipher.
                     cipherParams = Source.CreateStreamCipherParameters(streamCipherEnum, workingKey, streamNonce);
 				    // Instantiate the cipher
 				    var streamCipher = Source.CreateStreamCipher(streamCipherEnum);
 				    // Create the I/O-enabled transform object
-				    _cipher = new BufferedStreamCipher(streamCipher);
+				    //_cipher = new BufferedStreamCipher(streamCipher);
 
 		            break;
 		        default:
 		            throw new ArgumentException("Not a valid cipher configuration.");
 		    }
 
-			// Initialise the cipher
-			_cipher.Init(isEncrypting, cipherParams);
-			// Initialise the buffers
-			var opSize = _cipher.BlockSize; 
-			if (opSize == 0)
-				opSize = StreamStride;
-			else if (_cipher is CtsBlockCipher)
-				opSize *= 2;
-			_inBuffer = new byte[opSize];
-			_outBuffer = new byte[opSize];
-			_procBuffer = new RingByteBuffer (opSize << 8);
+			// Initialise the buffers 
+			_inBuffer = new byte[_cipher.OperationSize];
+			_outBuffer = new byte[_cipher.OperationSize];
+			_procBuffer = new RingByteBuffer (_cipher.OperationSize << 8);
 			// Shift left 8 upscales : 8 (64 bits) to 2048 [2kB], 16 (128) to 4096 [4kB], 32 (256) to 8192 [8kB]
 
 			// Customise the decorator-stream exception messages, since we enforce processing direction in this implementation
@@ -205,29 +198,49 @@ namespace ObscurCore.Cryptography
 
 		public override void Write (byte[] buffer, int offset, int count) {
 			CheckIfAllowed (true);
+            if (buffer == null) {
+                throw new ArgumentNullException("buffer");
+            }
+            if (buffer.Length < offset + count) {
+                throw new ArgumentException("Insufficient data.", "count");
+            }
 
-			while (count > 0) {
-				// Process and put the resulting bytes in procbuffer
-				var opSize = Math.Min (count, _outBuffer.Length);
-				var processed = _cipher.ProcessBytes(buffer, offset, opSize, _outBuffer, 0);
-				BytesIn += opSize;
-				_procBuffer.Put (_outBuffer, 0, processed);
-				offset += opSize;
-				count -= opSize;
+            // Process any leftovers
+            if (_operationBufferOffset > 0 && count > 0) {
+                Array.Copy(buffer, offset, _operationBuffer, _operationBufferOffset, 
+                    _operationSize - _operationBufferOffset);
+                var processed = _cipher.ProcessBytes(_operationBuffer, 0, _outBuffer, 0);
+                _operationBufferOffset -= processed;
+                offset -= processed;
+                count -= processed;
+                _writeBuffer.Put(_outBuffer, 0, processed);
+            }
 
-				// Prevent procbuffer overflow where applicable
-				if(_procBuffer.Spare < count) {
-					var overflowOut = _procBuffer.Length;
-					// Write out the processed bytes to stream
-					_procBuffer.TakeTo (Binding, overflowOut);
+		    while (count > _operationSize) {
+		        // Process and put the resulting bytes in procbuffer
+				var processed = _cipher.ProcessBytes(buffer, offset, _outBuffer, 0);
+                offset += _operationSize;
+				count -= _operationSize;
+				BytesIn += _operationSize;
+				_writeBuffer.Put (_outBuffer, 0, processed);
+				
+                // Prevent possible writebuffer overflow
+				if(_writeBuffer.Spare < _operationSize) {
+					var overflowOut = _writeBuffer.Length;
+					// Write out the processed data to the stream binding
+					_writeBuffer.TakeTo (Binding, overflowOut);
 					BytesOut += overflowOut;
 				}
-			}
+		    }
 
-			// Write out the processed bytes to stream
-			var writeOut = _procBuffer.Length;
-			_procBuffer.TakeTo (Binding, writeOut);
+            // Store any remainder in operation buffer
+            Array.Copy(buffer, offset, _operationBuffer, _operationBufferOffset, count);
+
+            // Write out the processed data to the stream binding
+			var writeOut = _writeBuffer.Length;
+			_writeBuffer.TakeTo (Binding, writeOut);
 			BytesOut += writeOut;
+
 		}
 
 		public override void WriteByte (byte b) {
@@ -263,10 +276,68 @@ namespace ObscurCore.Cryptography
 			}
 		}
 
-		public override int Read (byte[] buffer, int offset, int count) {
+        /// <summary>
+        /// Read the precise number of bytes specified. Not guaranteed to return the same quantity; 
+        /// only ensures that the stream source binding has a precise number of bytes read. 
+        /// Buffer must accomodate count + OperationLength quantity of bytes.
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        public void ReadPrecise(byte[] buffer, int offset, int count) {
+
+            // TODO: Finish method
+
+            if (buffer == null) {
+                throw new ArgumentNullException("buffer");
+            } else if (count == 0) {
+                return;
+            }
+
+            if (_operationBufferOffset > 0) {
+                var read = Binding.Read(_operationBuffer, _operationBufferOffset, _operationSize - _operationBufferOffset);
+                _operationBufferOffset -= _operationSize - read;
+                if (_operationBufferOffset > 0) {
+                    throw new DataLengthException("Could not read expected quantity (leftover fill step).");
+                }
+                count -= read;
+                offset += _cipher.ProcessBytes(_operationBuffer, 0, buffer, offset);
+            }
+
+
+
+            int remainder;
+            int operations = Math.DivRem(count, _operationSize, out remainder);
+
+            for (int i = 0; i < operations; i++) {
+                int bytesRead = Binding.Read(_operationBuffer, _operationBufferOffset, _operationSize);
+                if (bytesRead < _operationSize) {
+                    throw new DataLengthException("Could not read expected quantity.");
+                }
+                offset += _cipher.ProcessBytes(_operationBuffer, 0, buffer, offset);
+            }
+
+            // Any leftover/remainder bytes are stored (they are non-decrypted, so far)
+            int remainderRead = Binding.Read(_operationBuffer, _operationBufferOffset, remainder);
+            if (remainderRead > remainder) {
+                
+            }
+            _operationBufferOffset = remainderRead;
+            
+
+            BytesIn += count;
+
+        }
+
+
+	    public override int Read (byte[] buffer, int offset, int count) {
 			CheckIfAllowed (false);
 
-			var copiedOut = 0;
+
+            // TODO: Redo method. Use ReadPrecise as a prototype
+
+
+	        var copiedOut = 0;
 			while (_procBuffer.Length < count && !_inStreamEnded) {
 				// Read and process a block/stride
 				var bytesProcessed = FillAndProcessBuffer ();

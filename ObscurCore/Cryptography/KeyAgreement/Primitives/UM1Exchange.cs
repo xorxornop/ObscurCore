@@ -40,51 +40,60 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <summary>
         /// Calculate the shared secret in participant U's (initiator) role.
         /// </summary>
-        /// <param name="Q_static_V">Public key of the recipient.</param>
-        /// <param name="d_static_U">Private key of the sender.</param>
-        /// <param name="Q_ephemeral_V">Ephemeral public key to send to the responder (V, receiver). Output to this variable.</param>
+        /// <param name="receiverPublicKey">Public key of the recipient.</param>
+        /// <param name="senderPrivateKey">Private key of the sender.</param>
+        /// <param name="ephemeralSenderPublicKey">Ephemeral public key to send to the responder (V, receiver). Output to this variable.</param>
         /// <returns></returns>
-        public static byte[] Initiate(ECPublicKeyParameters Q_static_V, ECPrivateKeyParameters d_static_U, 
-            out ECPublicKeyParameters Q_ephemeral_V)
+        public static byte[] Initiate(ECPublicKeyParameters receiverPublicKey, ECPrivateKeyParameters senderPrivateKey, 
+            out ECPublicKeyParameters ephemeralSenderPublicKey)
         {
-            AsymmetricCipherKeyPair pair = ECAgreementUtility.GenerateKeyPair(Q_static_V.Parameters);
-			Q_ephemeral_V = (ECPublicKeyParameters)pair.Public;
+            var QsV = receiverPublicKey;
+            var dsU = senderPrivateKey;
+            ECPublicKeyParameters QeV;
+
+            AsymmetricCipherKeyPair pair = ECAgreementUtility.GenerateKeyPair(QsV.Parameters);
+			QeV = (ECPublicKeyParameters)pair.Public;
 			
-			ECDomainParameters domain = Q_static_V.Parameters;
+			ECDomainParameters domain = QsV.Parameters;
 
 		    // Calculate shared static secret 'Zs'
-			var Zs = ECAgreementUtility.CalculateDHCSecret(domain, Q_static_V, d_static_U); // EC-DHC
+			var Zs = ECAgreementUtility.CalculateDhcSecret(domain, QsV, dsU); // EC-DHC
 			byte[] Zs_encoded = Zs.ToByteArrayUnsigned();
 			
 			// Calculate shared ephemeral secret 'Ze'
-			ECPrivateKeyParameters d_ephemeral_U = (ECPrivateKeyParameters) pair.Private;
-			var Ze = ECAgreementUtility.CalculateDHCSecret(domain, Q_static_V, d_ephemeral_U); // EC-DHC
+			ECPrivateKeyParameters deU = (ECPrivateKeyParameters) pair.Private;
+			var Ze = ECAgreementUtility.CalculateDhcSecret(domain, QsV, deU); // EC-DHC
 			byte[] Ze_encoded = Ze.ToByteArrayUnsigned();
 			
 			// Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
 			var Z = new byte[Ze_encoded.Length + Zs_encoded.Length];
-			Array.Copy(Ze_encoded, Z, Ze_encoded.Length);
-			Array.Copy(Zs_encoded, 0, Z, Ze_encoded.Length, Zs_encoded.Length);
+			Buffer.BlockCopy(Ze_encoded, 0, Z, 0, Ze_encoded.Length);
+			Buffer.BlockCopy(Zs_encoded, 0, Z, Ze_encoded.Length, Zs_encoded.Length);
+            ephemeralSenderPublicKey = QeV;
 			return Z;
         }
 
         /// <summary>
 		/// Calculates the shared secret in participant V's (responder) role.
 		/// </summary>
-		/// <param name="Q_static_U">Public key of the sender.</param>
-        /// <param name="d_static_V">Private key of the recipient.</param>
-		/// <param name='Q_ephemeral_U'>Ephemeral public key supplied by the initiator (U, sender).</param>
-        public static byte[] Respond(ECPublicKeyParameters Q_static_U, ECPrivateKeyParameters d_static_V, ECPublicKeyParameters Q_ephemeral_U) {
+		/// <param name="senderPublicKey">Public key of the sender.</param>
+        /// <param name="receiverPrivateKey">Private key of the receiver.</param>
+		/// <param name='ephemeralPublicKey'>Ephemeral public key supplied by the initiator (U, sender).</param>
+        public static byte[] Respond(ECPublicKeyParameters senderPublicKey, ECPrivateKeyParameters receiverPrivateKey, 
+            ECPublicKeyParameters ephemeralSenderPublicKey)
+        {
+            var QsU = senderPublicKey;
+            var dsV = receiverPrivateKey;
+            ECPublicKeyParameters QeU = ephemeralSenderPublicKey;
+			ECDomainParameters domain = QsU.Parameters;
             // TODO: Verify QeU! Section 5.6.2.3.
-			
-			ECDomainParameters domain = Q_static_U.Parameters;
 
 		    // Calculate shared static secret 'Zs'
-			var Zs = ECAgreementUtility.CalculateDHCSecret(domain, Q_static_U, d_static_V); // EC-DHC
+			var Zs = ECAgreementUtility.CalculateDhcSecret(domain, QsU, dsV); // EC-DHC
 			byte[] Zs_encoded = Zs.ToByteArrayUnsigned();
 			
 			// Calculate shared ephemeral secret 'Ze'
-			var Ze = ECAgreementUtility.CalculateDHCSecret(domain, Q_ephemeral_U, d_static_V); // EC-DHC
+			var Ze = ECAgreementUtility.CalculateDhcSecret(domain, QeU, dsV); // EC-DHC
 			byte[] Ze_encoded = Ze.ToByteArrayUnsigned();
 			
 			// Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs

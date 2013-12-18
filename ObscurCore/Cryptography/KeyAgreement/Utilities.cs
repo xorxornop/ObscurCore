@@ -1,9 +1,6 @@
-using System.IO;
-using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve;
-using ObscurCore.Extensions.Streams;
 
 namespace ObscurCore.Cryptography.KeyAgreement
 {
@@ -30,11 +27,12 @@ namespace ObscurCore.Cryptography.KeyAgreement
 		/// <summary>
 		/// Calculates the shared secret in a Diffie-Hellman scheme with cofactor multiplication.
 		/// </summary>
-		/// <param name="domain">Domain parameters for the public and private ECPoints (keys) provided.</param>
+		/// <param name="domain">Domain parameters for the public and private keys provided.</param>
 		/// <param name="Q">Public component of an EC keypair.</param>
         /// <param name="d">Private component of an EC keypair.</param>
-		public static BigInteger CalculateDHCSecret(ECDomainParameters domain, 
-		                                         ECPublicKeyParameters Q, ECPrivateKeyParameters d) {
+		public static BigInteger CalculateDhcSecret(ECDomainParameters domain, 
+		    ECPublicKeyParameters Q, ECPrivateKeyParameters d)
+        {
 			return Q.Q.Multiply(domain.H.Multiply(d.D)).X.ToBigInteger();
 		}
 		
@@ -43,7 +41,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
 		/// </summary>
         /// <param name="Q">Public component of an EC keypair.</param>
         /// <param name="d">Private component of an EC keypair.</param>
-		public static BigInteger CalculateDHSecret(ECPublicKeyParameters Q, ECPrivateKeyParameters d) {
+		public static BigInteger CalculateDhSecret(ECPublicKeyParameters Q, ECPrivateKeyParameters d) {
 			return Q.Q.Multiply(d.D).X.ToBigInteger();
 		}
 	}

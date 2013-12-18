@@ -112,6 +112,171 @@ namespace ObscurCore
 
 namespace ObscurCore.Extensions
 {
+    namespace BitPacking
+    {
+        public static class BitPackingExtensions
+        {
+            public static byte[] ToBigEndian(this UInt32 n) {
+                byte[] bs = new byte[sizeof (UInt32)];
+                n.ToBigEndian(bs);
+                return bs;
+            }
+
+            public static void ToBigEndian(this UInt32 n, byte[] bs) {
+                bs[0] = (byte) (n >> 24);
+                bs[1] = (byte) (n >> 16);
+                bs[2] = (byte) (n >> 8);
+                bs[3] = (byte) (n);
+            }
+
+            public static void ToBigEndian(this UInt32 n, byte[] bs, int off) {
+                bs[off] = (byte) (n >> 24);
+                bs[++off] = (byte) (n >> 16);
+                bs[++off] = (byte) (n >> 8);
+                bs[++off] = (byte) (n);
+            }
+
+            public static UInt32 BigEndianToUInt32(this byte[] bs) {
+                UInt32 n = (UInt32) bs[0] << 24;
+                n |= (UInt32) bs[1] << 16;
+                n |= (UInt32) bs[2] << 8;
+                n |= (UInt32) bs[3];
+                return n;
+            }
+
+            public static UInt32 BigEndianToUInt32(this byte[] bs, int off) {
+                uint n = (UInt32) bs[off] << 24;
+                n |= (UInt32) bs[++off] << 16;
+                n |= (UInt32) bs[++off] << 8;
+                n |= (UInt32) bs[++off];
+                return n;
+            }
+
+            public static UInt64 BigEndianToUInt64(this byte[] bs) {
+                UInt32 hi = bs.BigEndianToUInt32();
+                UInt32 lo = bs.BigEndianToUInt32(4);
+                return ((UInt64) hi << 32) | (UInt64) lo;
+            }
+
+            public static UInt64 BigEndianToUInt64(this byte[] bs, int off) {
+                UInt32 hi = bs.BigEndianToUInt32(off);
+                UInt32 lo = bs.BigEndianToUInt32(off + 4);
+                return ((UInt64) hi << 32) | (UInt64) lo;
+            }
+
+            public static byte[] ToBigEndian(this UInt64 n) {
+                var bs = new byte[sizeof (UInt64)];
+                n.ToBigEndian(bs);
+                return bs;
+            }
+
+            public static void ToBigEndian(this UInt64 n, byte[] bs) {
+                ((UInt32) (n >> 32)).ToBigEndian(bs, 0);
+                ((UInt32) (n)).ToBigEndian(bs, 4);
+            }
+
+            public static void ToBigEndian(this UInt64 n, byte[] bs, int off) {
+                ((UInt32) (n >> 32)).ToBigEndian(bs, off);
+                ((UInt32) (n)).ToBigEndian(bs, off + 4);
+            }
+
+            public static byte[] ToLittleEndian(this UInt32 n) {
+                byte[] bs = new byte[sizeof (UInt32)];
+                n.ToLittleEndian(bs);
+                return bs;
+            }
+
+            public static void ToLittleEndian(this UInt32 n, byte[] bs) {
+                bs[0] = (byte) (n);
+                bs[1] = (byte) (n >> 8);
+                bs[2] = (byte) (n >> 16);
+                bs[3] = (byte) (n >> 24);
+            }
+
+            public static void ToLittleEndian(this UInt32 n, byte[] bs, int off) {
+                bs[off] = (byte) (n);
+                bs[++off] = (byte) (n >> 8);
+                bs[++off] = (byte) (n >> 16);
+                bs[++off] = (byte) (n >> 24);
+            }
+
+            public static UInt32 LittleEndianToUInt32(this byte[] bs) {
+                UInt32 n = (UInt32) bs[0];
+                n |= (UInt32) bs[1] << 8;
+                n |= (UInt32) bs[2] << 16;
+                n |= (UInt32) bs[3] << 24;
+                return n;
+            }
+
+            public static UInt32 LittleEndianToUInt32(this byte[] bs, int off) {
+                UInt32 n = (UInt32) bs[off];
+                n |= (UInt32) bs[++off] << 8;
+                n |= (UInt32) bs[++off] << 16;
+                n |= (UInt32) bs[++off] << 24;
+                return n;
+            }
+
+            public static UInt64 LittleEndianToUInt64(this byte[] bs) {
+                UInt32 lo = bs.LittleEndianToUInt32(0);
+                UInt32 hi = bs.LittleEndianToUInt32(4);
+                return ((UInt64) hi << 32) | (UInt64) lo;
+            }
+
+            public static UInt64 LittleEndianToUInt64(this byte[] bs, int off) {
+                UInt32 lo = bs.LittleEndianToUInt32(off);
+                UInt32 hi = bs.LittleEndianToUInt32(off + 4);
+                return ((UInt64) hi << 32) | (UInt64) lo;
+            }
+
+            public static void ToLittleEndian(this UInt64 n, byte[] bs) {
+                ((UInt32) n).ToLittleEndian(bs, 0);
+                ((UInt32) (n >> 32)).ToLittleEndian(bs, 4);
+            }
+
+            public static void ToLittleEndian(this UInt64 n, byte[] bs, int off) {
+                ((UInt32) n).ToLittleEndian(bs, off);
+                ((UInt32) (n >> 32)).ToLittleEndian(bs, off + 4);
+            }
+
+            public static byte[] ToLittleEndian(this Int32 n) {
+                byte[] bs = new byte[sizeof (UInt32)];
+                n.ToLittleEndian(bs);
+                return bs;
+            }
+
+            public static void ToLittleEndian(this Int32 n, byte[] bs) {
+                bs[0] = (byte) (n);
+                bs[1] = (byte) (n >> 8);
+                bs[2] = (byte) (n >> 16);
+                bs[3] = (byte) (n >> 24);
+            }
+
+            public static void ToLittleEndian(this Int32 n, byte[] bs, int off) {
+                bs[off] = (byte) (n);
+                bs[++off] = (byte) (n >> 8);
+                bs[++off] = (byte) (n >> 16);
+                bs[++off] = (byte) (n >> 24);
+            }
+
+            public static Int32 LittleEndianToInt32(this byte[] bs) {
+                Int32 n = (Int32) bs[0];
+                n |= (Int32) bs[1] << 8;
+                n |= (Int32) bs[2] << 16;
+                n |= (Int32) bs[3] << 24;
+                return n;
+            }
+
+            public static Int32 LittleEndianToInt32(this byte[] bs, int off) {
+                Int32 n = (Int32) bs[off];
+                n |= (Int32) bs[++off] << 8;
+                n |= (Int32) bs[++off] << 16;
+                n |= (Int32) bs[++off] << 24;
+                return n;
+            }
+        }
+    }
+
+
     namespace DTO
     {
             public static class PayloadItemExtensions

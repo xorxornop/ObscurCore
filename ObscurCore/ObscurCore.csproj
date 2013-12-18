@@ -22,7 +22,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>BasicCorrectnessRules.ruleset</CodeAnalysisRuleSet>
@@ -31,10 +31,20 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
+    <DefineConstants>TRACE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
+    <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
+    <DefineConstants>TRACE;INCLUDE_UNSAFE;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -74,8 +84,6 @@
     <Compile Include="Cryptography\Authentication\Primitives\Sha1Digest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Sha256Digest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\SHA3\Keccak.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\SHA3\KeccakManaged.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\SHA3\KeccakUnmanaged.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Sha512Digest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\TigerDigest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\WhirlpoolDigest.cs" />
@@ -84,11 +92,14 @@
     <Compile Include="Cryptography\BlockCipherConfigurationWrapper.cs" />
     <Compile Include="Cryptography\BlockSizeException.cs" />
     <Compile Include="Cryptography\Ciphers\AeadParameters.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\AeadCipherWrapper.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\BlockCipherWrapper.cs" />
     <Compile Include="Cryptography\Ciphers\Block\BufferedAeadBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\BufferedBlockCipher.cs" />
+    <Compile Include="Cryptography\Ciphers\ICipherWrapper.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\CbcBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\CfbBlockCipher.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\CtsBlockCipher.cs" />
+    <None Include="Cryptography\Ciphers\Block\Modes\CtsBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\EaxBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\GcmBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\GCM\BasicGcmExponentiator.cs" />
@@ -127,6 +138,7 @@
     <Compile Include="Cryptography\CiphertextAuthenticationException.cs" />
     <Compile Include="Cryptography\CryptoException.cs" />
     <Compile Include="Cryptography\IncompleteBlockException.cs" />
+    <Compile Include="Cryptography\Support\Pack.cs" />
     <Compile Include="Curve25519Keypair.cs" />
     <Compile Include="EcKeypair.cs" />
     <Compile Include="ItemKeyMissingException.cs" />
@@ -228,7 +240,7 @@
     <Compile Include="Cryptography\Support\Arrays.cs" />
     <Compile Include="Cryptography\Support\AsymmetricCipherKeyPair.cs" />
     <Compile Include="Cryptography\Support\AsymmetricKeyParameter.cs" />
-    <Compile Include="Cryptography\Support\BigIntegers.cs" />
+    <Compile Include="Cryptography\Support\Math\BigIntegers.cs" />
     <Compile Include="Cryptography\Support\ECDomainParameters.cs" />
     <Compile Include="Cryptography\Support\ECKeyGenerationParameters.cs" />
     <Compile Include="Cryptography\Support\ECKeyParameters.cs" />
@@ -252,7 +264,6 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\WNafPreCompInfo.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\WTauNafMultiplier.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\WTauNafPreCompInfo.cs" />
-    <Compile Include="Cryptography\Support\Pack.cs" />
     <Compile Include="Cryptography\Support\Strings.cs" />
     <Compile Include="Cryptography\Support\X9IntegerConverter.cs" />
     <Compile Include="RingByteBuffer.cs" />

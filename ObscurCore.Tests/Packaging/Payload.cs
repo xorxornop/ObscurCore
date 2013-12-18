@@ -30,8 +30,11 @@ namespace ObscurCore.Tests.Packaging
 	{
 	    private const string DemuxDir = "demuxed";
 
-        private readonly static List<FileInfo> SourceFiles = IOTestBase.SmallTextFileList;
-	    private static readonly DirectoryInfo DestinationDirectory = IOTestBase.SmallTextFilesDestinationDirectory;
+        //private readonly static List<FileInfo> SourceFiles = IOTestBase.SmallTextFileList;
+	    //private static readonly DirectoryInfo DestinationDirectory = IOTestBase.SmallTextFilesDestinationDirectory;
+
+        private readonly static List<FileInfo> SourceFiles = IOTestBase.LargeBinaryFileList;
+	    private static readonly DirectoryInfo DestinationDirectory = IOTestBase.LargeBinaryFilesDestinationDirectory;
 
 		[TestFixtureSetUp]
 		public void InitFixture () {
@@ -57,7 +60,7 @@ namespace ObscurCore.Tests.Packaging
         [Test]
 		public void Fabric () {
 			var items = Utilities.GetItemsStreamExample(SourceFiles);
-            var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Fabric);
+            var payloadConfig = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutScheme.Fabric);
 			DoMux (payloadConfig, items, SourceFiles);
 		}
 #endif

@@ -6,9 +6,7 @@ using System.Text;
 
 namespace ObscurCore.Cryptography.Support.Math
 {
-#if !(NETCF_1_0 || NETCF_2_0 || SILVERLIGHT)
 	[Serializable]
-#endif
 	public class BigInteger
 	{
 		// The primes b/w 2 and ~2^10
@@ -126,7 +124,7 @@ namespace ObscurCore.Cryptography.Support.Math
 		private static readonly BigInteger radix16 = ValueOf(16);
 		private static readonly BigInteger radix16E = radix16.Pow(chunk16);
 
-		private static readonly System.Random RandomSource = new Random();
+		private static readonly Random RandomSource = new Random();
 
 		private const int BitsPerByte = 8;
 		private const int BitsPerInt = 32;

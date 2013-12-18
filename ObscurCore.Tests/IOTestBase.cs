@@ -70,6 +70,7 @@ namespace ObscurCore.Tests
 			}
 			var fs = SmallTextFileList [0].OpenRead ();
 			fs.CopyTo(SmallTextFile);
+		    fs.Close();
 
 			foreach (var file in LargeBinaryFilesSourceDirectory.EnumerateFiles().Where(file 
                 => !file.Extension.Equals(RawPayloadExtension)))
@@ -80,6 +81,7 @@ namespace ObscurCore.Tests
 			}
 			fs = LargeBinaryFileList [0].OpenRead ();
 			fs.CopyTo(LargeBinaryFile);
+            fs.Close();
 
 			var rng = new Random();
 			var data = new byte[2048];
