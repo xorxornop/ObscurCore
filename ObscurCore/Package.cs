@@ -594,12 +594,6 @@ namespace ObscurCore
                 outputStream.Position));
             _manifestHeader.SerialiseDto(outputStream, prefixLength: true);
 
-            /* Prepare for writing payload */
-
-            // Create and bind transform functions (compression, encryption, etc) defined by items' configurations to those items
-            var transformFunctions = _manifest.PayloadItems.Select(item => (Func<Stream, DecoratingStream>) (binding =>
-                item.BindTransformStream(true, binding))).ToList();
-
             /* Write the payload to temporary storage (payloadTemp) */
             PayloadLayoutScheme payloadScheme;
             try {
@@ -610,19 +604,13 @@ namespace ObscurCore
             }
             // Bind the multiplexer to the temp stream
             var mux = Source.CreatePayloadMultiplexer(payloadScheme, true, _writingTempStream,
-                _manifest.PayloadItems.ToList<IStreamBinding>(),
-                transformFunctions, _manifest.PayloadConfiguration);
+				_manifest, _manifest.PayloadConfiguration);
 
             try {
                 mux.ExecuteAll();
             } catch (Exception e) {
                 throw;
             }
-
-            // Get internal lengths of the written items from the muxer and commit them to the manifest
-	        for (var i = 0; i < _manifest.PayloadItems.Count; i++) {
-	            _manifest.PayloadItems[i].InternalLength = mux.GetItemIO(i, source: false);
-	        }
 
             /* Write the manifest in encrypted form */
             using (var manifestTemp = new MemoryStream()) {
@@ -1024,10 +1012,6 @@ namespace ObscurCore
 			// Check that all payload items have decryption keys - if they do not, confirm them from potentials
 			ConfirmAndDeriveItemKeys(payloadKeys);
 
-			// Create and bind transform functions (compression, encryption, etc) defined by items' configurations to those items
-			var transformFunctions = _manifest.PayloadItems.Select(item => (Func<Stream, DecoratingStream>) 
-				(binding => item.BindTransformStream(false, binding))).ToList();
-
 			// Read the payload
 			PayloadLayoutScheme payloadScheme;
 			try {
@@ -1035,8 +1019,7 @@ namespace ObscurCore
 			} catch (Exception) {
 				throw new PackageConfigurationException("Payload layout scheme specified is unsupported/unknown or missing.");
 			}
-			var mux = Source.CreatePayloadMultiplexer(payloadScheme, false, _readingStream, _manifest.PayloadItems.ToList<IStreamBinding>(), 
-			                                          transformFunctions, _manifest.PayloadConfiguration);
+			var mux = Source.CreatePayloadMultiplexer(payloadScheme, false, _readingStream, _manifest, _manifest.PayloadConfiguration);
 
 			// Demux the payload
 			try {

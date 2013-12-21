@@ -74,56 +74,6 @@ namespace ObscurCore.Cryptography
             return config;
         }
 
-        public static SymmetricCipherConfiguration CreateAeadBlockCipherConfigurationWithoutKey(SymmetricBlockCipher cipher,
-                                                                                                AeadBlockCipherMode mode, int? keySize = null, int? blockSize = null, int? macSize = null)
-        {
-            var config = new SymmetricCipherConfiguration {Type = SymmetricCipherType.Aead};
-
-            // Set the key size
-            var keySizeNonNull = keySize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultKeySize;
-            if (Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
-                config.KeySizeBits = keySizeNonNull;
-            } else {
-                throw new KeySizeException(cipher, keySizeNonNull);
-            }
-
-            // Set the block size
-            var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize;
-            // TODO: Add in a section to handle MAC and block sizes seperately.
-            if (Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
-                config.BlockSizeBits = blockSizeNonNull;
-            } else {
-                throw new BlockSizeException(cipher, blockSizeNonNull);
-            }
-
-            // Set the mode
-            // Check if the AEAD mode supports the block size
-            var macSizeNonNull = macSize ?? config.BlockSizeBits;
-            if (!Athena.Cryptography.AeadBlockCipherModes[mode].AllowableBlockSizes.Contains(-1)) {
-                if (Athena.Cryptography.AeadBlockCipherModes[mode].AllowableBlockSizes.Contains(config.BlockSizeBits))
-                    config.MacSizeBits = macSizeNonNull;
-                else
-                    throw new MacSizeException(mode, macSizeNonNull);
-            }
-
-            config.ModeName = mode.ToString();
-            config.CipherName = cipher.ToString();
-            config.IV = new byte[config.BlockSizeBits / 8]; // Nonce in AEAD
-            StratCom.EntropySource.NextBytes(config.IV);
-
-            return config;
-        }
-
-        public static SymmetricCipherConfiguration CreateAeadBlockCipherConfiguration(SymmetricBlockCipher cipher,
-                                                                                      AeadBlockCipherMode mode, BlockCipherPadding padding, int? keySize = null, int? blockSize = null, int? macSize = null) 
-        {
-            var config = CreateAeadBlockCipherConfigurationWithoutKey(cipher, mode, keySize, blockSize, macSize);
-            config.Key = new byte[config.KeySizeBits / 8];
-            StratCom.EntropySource.NextBytes(config.Key);
-
-            return config;
-        }
-
         public static SymmetricCipherConfiguration CreateStreamCipherConfiguration(SymmetricStreamCipher cipher, 
                                                                                    int? keySize = null)
         {

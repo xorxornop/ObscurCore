@@ -31,6 +31,8 @@ namespace ObscurCore.Packaging
 							MaximumPaddingLength 		= 256,
 							DefaultFixedPaddingLength 	= 32;
 
+		private const bool AuthenticatePadding = true;
+
 		//protected readonly Random prngPadding;
 	    private readonly FrameshiftPaddingMode _mode;
 	    private readonly int _minPadding, _maxPadding;
@@ -44,9 +46,8 @@ namespace ObscurCore.Packaging
 	    /// <param name="streams">Streams being read from (sources; multiplexing), or written to (destinations; demultiplexing).</param>
 	    /// <param name="transforms">Transform funcs.</param>
 	    /// <param name="config">Configuration of stream selection and padding scheme.</param>
-	    public FrameshiftPayloadMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, 
-            IList<Func<Stream, DecoratingStream>> transforms, IPayloadConfiguration config) 
-            : base(writing, multiplexedStream, streams, transforms, config)
+		public FrameshiftPayloadMux (bool writing, Stream multiplexedStream, Manifest payloadManifest, IPayloadConfiguration config) 
+			: base(writing, multiplexedStream, payloadManifest, config)
 		{
 			var frameshiftConfig = StratCom.DeserialiseDataTransferObject<PayloadSchemeConfiguration>(config.SchemeConfiguration);
 
@@ -58,7 +59,7 @@ namespace ObscurCore.Packaging
 		    _minPadding = frameshiftConfig.Minimum;
 		    _maxPadding = frameshiftConfig.Maximum;
             _mode = _minPadding == _maxPadding ? FrameshiftPaddingMode.FixedLength : FrameshiftPaddingMode.VariableLength;
-			if (writing) _paddingBuffer = new byte[_maxPadding];
+			_paddingBuffer = new byte[_maxPadding];
 
             /*if (mode == FrameshiftPaddingModes.VariableLength) {
                 prngPadding = Source.CreateCsprng(config.SecondaryPRNGName.ToEnum<CsPseudorandomNumberGenerator>(),
@@ -66,35 +67,44 @@ namespace ObscurCore.Packaging
             }*/
 		}
 
-		protected override int EmitHeader () { return EmitPadding(); }
+		protected override int EmitHeader () {
+			var paddingLength = (_mode == FrameshiftPaddingMode.VariableLength) ? SelectionSource.Next(_minPadding, _maxPadding) : _maxPadding;
+			Debug.Print(DebugUtility.CreateReportString("FrameshiftPayloadMux", "EmitPadding", "Padding length",
+				paddingLength));
+			StratCom.EntropySource.NextBytes(_paddingBuffer, 0, paddingLength);
+
+			if(AuthenticatePadding) {
+				ItemStreamMacs[PayloadManifest.PayloadItems[Index].Identifier].Write(_paddingBuffer, 0, paddingLength);
+			} else {
+				ItemStreamMacs[PayloadManifest.PayloadItems[Index].Identifier].Binding.Write(_paddingBuffer, 0, paddingLength);
+			}
+
+			return paddingLength;
+		}
 		
 		protected override int EmitTrailer () { return EmitHeader(); }
 
-        private int EmitPadding () {
-            var paddingLength = (_mode == FrameshiftPaddingMode.VariableLength) ? SelectionSource.Next(_minPadding, _maxPadding) : _maxPadding;
+		protected override int ConsumeHeader () {
+			var paddingLength = (_mode == FrameshiftPaddingMode.VariableLength) ? SelectionSource.Next(_minPadding, _maxPadding) : _maxPadding;
+			Debug.Print(DebugUtility.CreateReportString("FrameshiftPayloadMux", "ConsumePadding", "Padding length",
+				paddingLength));
 
-            Debug.Print(DebugUtility.CreateReportString("FrameshiftPayloadMux", "EmitPadding", "Padding length",
-                    paddingLength));
+			var itemIdentifier = PayloadManifest.PayloadItems[Index].Identifier;
 
-            StratCom.EntropySource.NextBytes(_paddingBuffer, 0, paddingLength);
-            CurrentDestination.Write(_paddingBuffer, 0, paddingLength);
-            return paddingLength;
-        }
-		
-		protected override int ConsumeHeader () { return ConsumePadding(); }
-		
-		protected override int ConsumeTrailer () { return ConsumePadding(); }
-		
-		private int ConsumePadding() {
-            var paddingLength = (_mode == FrameshiftPaddingMode.VariableLength) ? SelectionSource.Next(_minPadding, _maxPadding) : _maxPadding;
-
-            Debug.Print(DebugUtility.CreateReportString("FrameshiftPayloadMux", "ConsumePadding", "Padding length",
-                    paddingLength));
-
-			if (CurrentSource.CanSeek) CurrentSource.Seek(paddingLength, SeekOrigin.Current);
-			else CurrentSource.Read(new byte[paddingLength], 0, paddingLength);
+			if(AuthenticatePadding) {
+				int bytesRead = ItemStreamMacs[itemIdentifier].Binding.Read (_paddingBuffer, 0, paddingLength);
+				if(bytesRead < paddingLength) {
+					throw new IOException ("Unable to read frameshift padding bytes.");
+				}
+				ItemStreamMacs[itemIdentifier].Update (_paddingBuffer, 0, paddingLength);
+			} else {
+				if (ItemStreamMacs[itemIdentifier].Binding.CanSeek) ItemStreamMacs[itemIdentifier].Binding.Seek(paddingLength, SeekOrigin.Current);
+				else ItemStreamMacs[itemIdentifier].Binding.Read(new byte[paddingLength], 0, paddingLength);
+			}
 			return paddingLength;
 		}
+		
+		protected override int ConsumeTrailer () { return ConsumeHeader(); }
 	}
 	
 }

@@ -15,6 +15,7 @@
 
 using System;
 using ObscurCore.Cryptography.Entropy;
+using ObscurCore.Extensions.BitPacking;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
@@ -24,6 +25,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         private byte[]          _workingKey,
                                 _workingIV;
         private bool	        _initialised;
+
+		private byte[] _keyStream = new byte[BufferLen];
 
         private int lfsr0, lfsr1, lfsr2, lfsr3, lfsr4;
         private int lfsr5, lfsr6, lfsr7, lfsr8, lfsr9;
@@ -51,6 +54,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             get { return "SOSEMANUK"; }
         }
 
+		public int StateSize
+		{
+			get { return 80; }
+		}
+
         public void Reset () {
             KeySetup(_workingKey);
             IVSetup(_workingIV);
@@ -73,14 +81,26 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			if ((outOff + len) > outBytes.Length) throw new ArgumentException("Output buffer too short.");
             //CheckLimitExceeded();
 
-            byte[] keyStream = new byte[len], bitStream = new byte[len];
-            GenerateKeystream(keyStream, 0, len);
-            Array.Copy(inBytes, inOff, bitStream, 0, len);
 
-            var output = new byte[keyStream.Length];
-            for (var i = 0; i < keyStream.Length; i++) output[i] = (byte) (keyStream[i] ^ bitStream[i]);
 
-            Array.Copy(output, 0, outBytes, outOff, len);
+			int remainder;
+			int blocks = Math.DivRem (len, _keyStream.Length, out remainder);
+
+			for (int i = 0; i < blocks; i++) {
+				GenerateKeystream (_keyStream, 0, _keyStream.Length);
+				for (int j = 0; j < _keyStream.Length; j++) {
+					outBytes [outOff + j] = (byte) (inBytes [inOff + j] ^ _keyStream[i]);
+				}
+				inOff += BufferLen;
+				outOff += BufferLen;
+			}
+
+			if(remainder > 0) {
+				GenerateKeystream (_keyStream, 0, remainder);
+				for (int i = 0; i < remainder; i++) {
+					outBytes [outOff + i] = (byte) (inBytes [inOff + i] ^ _keyStream[i]);
+				}
+			}
         }
 
         public void GetKeystream(byte[] buffer, int offset, int len) {
@@ -276,10 +296,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    /*
 		     * S-box result is in (f2, f3, f1, f4).
 		     */
-		    Encode32LE(f2 ^ v0, buf, off);
-		    Encode32LE(f3 ^ v1, buf, off + 4);
-		    Encode32LE(f1 ^ v2, buf, off + 8);
-		    Encode32LE(f4 ^ v3, buf, off + 12);
+			(f2 ^ v0).ToLittleEndian (buf, off);
+			(f3 ^ v1).ToLittleEndian (buf, off + 4);
+			(f1 ^ v2).ToLittleEndian (buf, off + 8);
+			(f4 ^ v3).ToLittleEndian (buf, off + 12);
 
 		    tt = r1;
 		    r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
@@ -336,10 +356,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    /*
 		     * S-box result is in (f2, f3, f1, f4).
 		     */
-		    Encode32LE(f2 ^ v0, buf, off + 16);
-		    Encode32LE(f3 ^ v1, buf, off + 20);
-		    Encode32LE(f1 ^ v2, buf, off + 24);
-		    Encode32LE(f4 ^ v3, buf, off + 28);
+		    (f2 ^ v0).ToLittleEndian (buf, off + 16);
+			(f3 ^ v1).ToLittleEndian (buf, off + 20);
+			(f1 ^ v2).ToLittleEndian (buf, off + 24);
+			(f4 ^ v3).ToLittleEndian (buf, off + 28);
 
 		    tt = r1;
 		    r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
@@ -396,10 +416,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    /*
 		     * S-box result is in (f2, f3, f1, f4).
 		     */
-		    Encode32LE(f2 ^ v0, buf, off + 32);
-		    Encode32LE(f3 ^ v1, buf, off + 36);
-		    Encode32LE(f1 ^ v2, buf, off + 40);
-		    Encode32LE(f4 ^ v3, buf, off + 44);
+		    (f2 ^ v0).ToLittleEndian (buf, off + 32);
+			(f3 ^ v1).ToLittleEndian (buf, off + 36);
+			(f1 ^ v2).ToLittleEndian (buf, off + 40);
+			(f4 ^ v3).ToLittleEndian (buf, off + 44);
 
 		    tt = r1;
 		    r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
@@ -456,10 +476,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    /*
 		     * S-box result is in (f2, f3, f1, f4).
 		     */
-		    Encode32LE(f2 ^ v0, buf, off + 48);
-		    Encode32LE(f3 ^ v1, buf, off + 52);
-		    Encode32LE(f1 ^ v2, buf, off + 56);
-		    Encode32LE(f4 ^ v3, buf, off + 60);
+		    (f2 ^ v0).ToLittleEndian (buf, off + 48);
+			(f3 ^ v1).ToLittleEndian (buf, off + 52);
+			(f1 ^ v2).ToLittleEndian (buf, off + 56);
+			(f4 ^ v3).ToLittleEndian (buf, off + 60);
 
 		    tt = r1;
 		    r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
@@ -516,10 +536,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    /*
 		     * S-box result is in (f2, f3, f1, f4).
 		     */
-		    Encode32LE(f2 ^ v0, buf, off + 64);
-		    Encode32LE(f3 ^ v1, buf, off + 68);
-		    Encode32LE(f1 ^ v2, buf, off + 72);
-		    Encode32LE(f4 ^ v3, buf, off + 76);
+		    (f2 ^ v0).ToLittleEndian (buf, off + 64);
+			(f3 ^ v1).ToLittleEndian (buf, off + 68);
+			(f1 ^ v2).ToLittleEndian (buf, off + 72);
+			(f4 ^ v3).ToLittleEndian (buf, off + 76);
 
 		    lfsr0 = s0;
 		    lfsr1 = s1;
@@ -543,14 +563,15 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             int r0, r1, r2, r3, r4, tt;
             int i = 0;
 
-            w0 = Decode32LE(key, 0);
-            w1 = Decode32LE(key, 4);
-            w2 = Decode32LE(key, 8);
-            w3 = Decode32LE(key, 12);
-            w4 = Decode32LE(key, 16);
-            w5 = Decode32LE(key, 20);
-            w6 = Decode32LE(key, 24);
-            w7 = Decode32LE(key, 28);
+			w0 = key.LittleEndianToInt32 (0);
+			w1 = key.LittleEndianToInt32 (4);
+			w2 = key.LittleEndianToInt32 (8);
+			w3 = key.LittleEndianToInt32 (12);
+			w4 = key.LittleEndianToInt32 (16);
+			w5 = key.LittleEndianToInt32 (20);
+			w6 = key.LittleEndianToInt32 (24);
+			w7 = key.LittleEndianToInt32 (28);
+
             tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (0)));
             w0 = RotLeft(tt, 11);
             tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (0 + 1)));

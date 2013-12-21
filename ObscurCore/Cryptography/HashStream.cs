@@ -30,6 +30,8 @@ namespace ObscurCore.Cryptography
 		private readonly byte[] _outputRef;
 		private bool _disposed;
 
+		private byte[] _buffer;
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.HashStream"/> class.
 		/// </summary>
@@ -73,6 +75,50 @@ namespace ObscurCore.Cryptography
 				_digest.BlockUpdate(buffer, offset, readBytes);
 			}
 			return readBytes;
+		}
+
+		public override long WriteExactlyFrom (Stream source, long length) {
+			if(source == null) {
+				throw new ArgumentNullException ("source");
+			}
+			if(_buffer == null) {
+				_buffer = new byte[1024];
+			}
+			int iterIn = 0;
+			long totalIn = 0;
+			while(totalIn > length) {
+				iterIn = source.Read (_buffer, 0, (int) Math.Min (_buffer.Length, length - totalIn));
+				if(iterIn == 0) {
+					throw new EndOfStreamException ();
+				}
+				totalIn += iterIn;
+				_digest.BlockUpdate(_buffer, 0, iterIn);
+				Binding.Write (_buffer, 0, iterIn);
+			}
+
+			return totalIn;
+		}
+
+		public override long ReadExactlyTo (Stream destination, long length) {
+			if(destination == null) {
+				throw new ArgumentNullException ("destination");
+			}
+			if(_buffer == null) {
+				_buffer = new byte[1024];
+			}
+			int iterIn = 0;
+			long totalIn = 0;
+			while(totalIn > length) {
+				iterIn = Binding.Read (_buffer, 0, (int) Math.Min (_buffer.Length, length - totalIn));
+				if(iterIn == 0) {
+					throw new EndOfStreamException ();
+				}
+				totalIn += iterIn;
+				_digest.BlockUpdate(_buffer, 0, iterIn);
+				destination.Write (_buffer, 0, iterIn);
+			}
+
+			return totalIn;
 		}
 
 		protected override void Finish () {

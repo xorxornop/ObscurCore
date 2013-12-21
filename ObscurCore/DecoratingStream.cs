@@ -1,4 +1,4 @@
-﻿//
+//
 //  Copyright 2013  Matthew Ducker
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,41 +24,64 @@ namespace ObscurCore
     /// </summary>
 	public abstract class DecoratingStream : Stream
 	{
-		public bool Writing { get; protected set; }
-		public long BytesIn { get; protected set; }
-		public long BytesOut { get; protected set; }
-
-		protected Stream Binding { get; private set; }
-
-		/// <summary>
-		/// How much data a buffer supplying or recieving data from this stream instance must store to avoid I/O errors.
-		/// </summary>
-		public int BufferSizeRequirement
-		{
-			get { return GetMaxBufferReq(0); }
-			protected set { BufferRequirementOverride = value; }
-		}
-
-
-		private bool _disposed;
-
-		private readonly bool _directionalityEnforced;
-        private bool _finished;
-		private readonly bool _closeOnDispose;
-
-		/// <summary>
-		/// Set this field in the constructor of a derived class to indicate how much data the base stream 
-		/// must have access to mid-operation to avoid I/O errors. Depends on behaviour of derived class logic.
-		/// </summary>
-		protected int? BufferRequirementOverride = null;
+		protected string	NotEffluxError =    "Stream is configured for write-direction/efflux processing, and so may only be written to.",
+							NotInfluxError =    "Stream is configured for read-direction/influx processing, and so may only be read from.";
 
 		/// <summary>
 		/// Default amount of data a buffer associated with this stream must store to avoid I/O errors.
 		/// </summary>
 		private const int DefaultBufferReq = 8192; // 8 KB
 
-        protected string 	NotEffluxError =    "Stream is configured for write-direction/efflux processing, and so may only be written to.",
-		                 	NotInfluxError =    "Stream is configured for read-direction/influx processing, and so may only be read from.";
+
+		private bool _disposed;
+		private readonly bool _directionalityEnforced;
+		private bool _finished;
+		private readonly bool _closeOnDispose;
+
+		/// <summary>
+		/// Set this field in the constructor of a derived class to indicate how much data the base stream 
+		/// must have access to mid-operation to avoid I/O errors. Depends on behaviour of derived class logic.
+		/// </summary>
+		private int? _bufferRequirementOverride = null;
+
+		/// <summary>
+		/// Stream that decorator writes to or reads from.
+		/// </summary>
+		/// <value>Stream binding.</value>
+		public Stream Binding { get; private set; }
+
+		/// <summary>
+		/// Whether the stream that decorator writes/reads to/from is also a <see cref="ObscurCore.DecoratingStream"/>.
+		/// </summary>
+		/// <value><c>true</c> if binding is decorator; otherwise, <c>false</c>.</value>
+		public bool BindingIsDecorator
+		{
+			get { return Binding is DecoratingStream; }
+		}
+
+		/// <summary>
+		/// What I/O mode of the decorator is active.
+		/// </summary>
+		/// <value><c>true</c> if writing, <c>false</c> if reading.</value>
+		public bool Writing { get; private set; }
+
+		public long BytesIn { get; protected set; }
+		public long BytesOut { get; protected set; }
+
+		/// <summary>
+		/// How many bytes must be kept in reserve to avoid I/O errors. 
+		/// When writing, this amount reflects capacity that must be free/empty to accomodate a write. 
+		/// When reading, it reflects data that must be available to accomodate a read.
+		/// </summary>
+		/// <remarks>
+		/// Clearly, this cannot apply for the ends of streams; 
+		/// this being violated is the means of end-of-stream detection.
+		/// </remarks>
+		public int BufferSizeRequirement
+		{
+			get { return GetBufferRequirement(0) ?? DefaultBufferReq; }
+			protected set { _bufferRequirementOverride = value; }
+		}
 
 
 		protected DecoratingStream (bool writing, bool closeOnDispose, bool enforce = true) {
@@ -79,10 +102,22 @@ namespace ObscurCore
 		}
 
 
-		private int GetMaxBufferReq(int maxFound) {
+		internal protected int? GetBufferRequirement(int maxFound) {
 			var dc = Binding as DecoratingStream;
-			var highest = Math.Max(maxFound, BufferRequirementOverride ?? DefaultBufferReq);
-			return dc != null ? Math.Max(dc.GetMaxBufferReq(highest), highest) : highest;
+			if(dc != null) {
+				var bindingRequirement = dc.GetBufferRequirement (maxFound);
+				if (bindingRequirement.HasValue) {
+					return Math.Max (maxFound, bindingRequirement.Value);
+				}
+			}
+			return null;
+		}
+
+		public override void WriteByte (byte b) {
+			CheckIfAllowed (true);
+			Binding.WriteByte(b);
+			BytesIn++;
+			BytesOut++;
 		}
 
 		public override void Write (byte[] buffer, int offset, int count) {
@@ -92,12 +127,13 @@ namespace ObscurCore
 			BytesOut += count;
 		}
 
-		public override void WriteByte (byte b) {
-			CheckIfAllowed (true);
-			Binding.WriteByte(b);
-			BytesIn++;
-			BytesOut++;
-		}
+		/// <summary>
+		/// Writes specified quantity of bytes exactly (after decoration transform)
+		/// </summary>
+		/// <returns>The quantity of bytes taken from the source stream to fulfil the request.</returns>
+		/// <param name="source">Source.</param>
+		/// <param name="length">Length.</param>
+		public abstract long WriteExactlyFrom(Stream source, long length);
 
 		public override int ReadByte () {
 			CheckIfAllowed (false);
@@ -115,6 +151,15 @@ namespace ObscurCore
 			BytesOut += count;
 			return readBytes;
 		}
+
+		/// <summary>
+		/// Read an exact amount of bytes from the stream binding and writes them 
+		/// (after being processed by the decorator transform) to the destination.
+		/// </summary>
+		/// <returns>The quantity of bytes written to the destination stream.</returns>
+		/// <param name="destination">Stream to write output to.</param>
+		/// <param name="length">Quantity of bytes to read.</param>
+		public abstract long ReadExactlyTo(Stream destination, long length);
 
 		public override bool CanRead {
 			get { return _directionalityEnforced ? !Writing && Binding.CanRead : Binding.CanRead; }
@@ -157,7 +202,6 @@ namespace ObscurCore
 		public override void Flush () {
 			Binding.Flush();
 		}
-
 
 		/// <summary>
 		/// Finish the decoration operation, whatever that constitutes in a derived implementation. 

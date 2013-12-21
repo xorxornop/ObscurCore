@@ -40,14 +40,9 @@ namespace ObscurCore.Information
         public PaddingRequirement PaddingRequirement { get; internal set; }
 
         /// <summary>
-        /// Whether this mode is of the Authenticated Encryption/Decryption type.
-        /// </summary>
-        public bool IsAeadMode { get; internal set; }
-
-        /// <summary>
         /// Whether the nonce/IV can be re-used in a later encryption operation, where data 
         /// will travel over the same channel, or otherwise might be subjected to analysis.
         /// </summary>
-        public NonceReusePolicy NonceReusePolicy { get; internal set; }
+        public NoncePolicy NonceReusePolicy { get; internal set; }
     }
 }

@@ -34,7 +34,7 @@ namespace ObscurCore.DTO
         /// Category/type of the cipher primitive, e.g. block, AEAD, or stream. 
         /// AEAD must be specified if using a block cipher in a AEAD mode of operation.
         /// </summary>
-        [ProtoMember(1, IsRequired = true), DefaultValue(SymmetricCipherType.None)]
+		[ProtoMember(1, IsRequired = true)]
         public SymmetricCipherType Type { get; set; }
 
         /// <summary>
@@ -83,20 +83,6 @@ namespace ObscurCore.DTO
         public string PaddingName { get; set; }
         #endregion
 
-        #region AEAD-related
-        /// <summary>
-        /// Size of the Message Authentication Code (MAC) hash in bits.
-        /// </summary>
-        [ProtoMember(9)]
-        public int MacSizeBits { get; set; }
-
-        /// <summary>
-        /// Data included with the ciphertext that is authenticated, but not encrypted.
-        /// </summary>
-        [ProtoMember(10, IsRequired = false)]
-        public byte[] AssociatedData { get; set; }
-        #endregion
-
         public override bool Equals (object obj) {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -117,11 +103,10 @@ namespace ObscurCore.DTO
             return Type.Equals(other.Type) &&
                    string.Equals(CipherName, other.CipherName) &&
                    KeySizeBits == other.KeySizeBits &&
-					(Key == null ? other.Key == null : Key.SequenceEqual(other.Key)) &&
+				   (Key == null ? other.Key == null : Key.SequenceEqual(other.Key)) &&
                    (IV == null ? other.IV == null : IV.SequenceEqual(other.IV)) &&
-                   string.Equals(ModeName, other.ModeName) && BlockSizeBits == other.BlockSizeBits && string.Equals(PaddingName, other.PaddingName) &&
-                   MacSizeBits == other.MacSizeBits &&
-                   (AssociatedData == null ? other.AssociatedData == null : AssociatedData.SequenceEqual(other.AssociatedData));
+                   string.Equals(ModeName, other.ModeName) && BlockSizeBits == other.BlockSizeBits &&
+				   string.Equals(PaddingName, other.PaddingName);
         }
 
         /// <summary>
@@ -141,8 +126,6 @@ namespace ObscurCore.DTO
                 hashCode = (hashCode * 397) ^ (ModeName != null ? ModeName.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ BlockSizeBits;
                 hashCode = (hashCode * 397) ^ (PaddingName != null ? PaddingName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ MacSizeBits;
-                hashCode = (hashCode * 397) ^ (AssociatedData != null ? AssociatedData.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -202,15 +185,5 @@ namespace ObscurCore.DTO
         /// Scheme utillised to 'pad' blocks to full size where required. 
         /// </summary>
         string PaddingName { get; }
-
-        /// <summary>
-        /// Size of the Message Authentication Code (MAC) hash in bits.
-        /// </summary>
-        int MacSizeBits { get; }
-
-        /// <summary>
-        /// Data concatenated with the ciphertext that is authenticated, but not encrypted (authenticity without privacy).
-        /// </summary>
-        byte[] AssociatedData { get; }
     }
 }

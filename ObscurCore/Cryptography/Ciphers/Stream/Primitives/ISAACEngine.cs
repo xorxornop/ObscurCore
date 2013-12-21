@@ -2,6 +2,7 @@ using System;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
+#if INCLUDE_ISAAC
 	/**
 	* Implementation of Bob Jenkin's ISAAC (Indirection Shift Accumulate Add and Count).
 	* see: http://www.burtleburtle.net/bob/rand/isaacafa.html
@@ -267,4 +268,5 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return output;
 		}
 	}
+#endif
 }

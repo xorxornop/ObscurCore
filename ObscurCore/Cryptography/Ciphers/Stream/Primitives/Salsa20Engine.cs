@@ -10,7 +10,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	public class Salsa20Engine : IStreamCipher, ICsprngCompatible
 	{
 		/** Constants */
-		private const int StateSize = 16; // 16, 32 bit ints = 64 bytes
+		private const int STATE_SIZE = 16; // 16, 32 bit ints = 64 bytes
 
 		private readonly static byte[]
 			Sigma = Strings.ToAsciiByteArray("expand 32-byte k"),
@@ -21,9 +21,9 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		* during encryption and decryption
 		*/
 		private int		_index;
-		private readonly int[]	_engineState = new int[StateSize]; // state
-		private readonly int[]	_x = new int[StateSize] ; // internal buffer
-		private readonly byte[]	_keyStream   = new byte[StateSize * 4];
+		private readonly int[]	_engineState = new int[STATE_SIZE]; // state
+		private readonly int[]	_x = new int[STATE_SIZE] ; // internal buffer
+		private readonly byte[]	_keyStream   = new byte[STATE_SIZE * 4];
 
 	    private byte[]	// expanded state, 64 bytes
 						_workingKey,
@@ -78,6 +78,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		public string AlgorithmName
 		{
 			get { return "Salsa20"; }
+		}
+
+		public int StateSize
+		{
+			get { return 64; }
 		}
 
 		public byte ReturnByte(
@@ -263,13 +268,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			}
 
 			int offset = 0;
-			for (int i = 0; i < StateSize; i++)
+			for (int i = 0; i < STATE_SIZE; i++)
 			{
 				intToByteLittle(_x[i] + input[i], output, offset);
 				offset += 4;
 			}
 
-			for (int i = StateSize; i < _x.Length; i++)
+			for (int i = STATE_SIZE; i < _x.Length; i++)
 			{
 				intToByteLittle(_x[i], output, offset);
 				offset += 4;

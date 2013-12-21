@@ -82,10 +82,10 @@ namespace ObscurCore.Cryptography
             {
                 return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                     "Nonce, hex: {3}",
-                    SymmetricCipherType.Aead, cipher, KeySizeBits, Nonce.IsNullOrZeroLength() ? "none" : Nonce.ToHexString());
+					SymmetricCipherType.Stream, cipher, KeySizeBits, Nonce.IsNullOrZeroLength() ? "none" : Nonce.ToHexString());
             }
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}",
-                    SymmetricCipherType.Aead, cipher, KeySizeBits);
+					SymmetricCipherType.Stream, cipher, KeySizeBits);
         }
     }
 }

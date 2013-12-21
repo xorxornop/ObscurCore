@@ -75,7 +75,7 @@ namespace ObscurCore.Cryptography
             set { RawConfiguration.PaddingName = value.ToString(); }
         }
 
-        public int BlockSize
+        public int BlockSizeBits
         {
             get {
                 if (Configuration.BlockSizeBits == 0) {
@@ -86,6 +86,12 @@ namespace ObscurCore.Cryptography
             }
             set { RawConfiguration.BlockSizeBits = value; }
         }
+
+		public int BlockSizeBytes
+		{
+			get { return BlockSizeBits / 8; }
+			set { BlockSizeBits = value * 8; }
+		}
 
         protected void ThrowIfBlockSizeIncompatible() {
             if (!Athena.Cryptography.BlockCiphers[BlockCipher].AllowableBlockSizes.Contains(Configuration.BlockSizeBits)) {
@@ -99,7 +105,7 @@ namespace ObscurCore.Cryptography
                 if (Configuration.IV.IsNullOrZeroLength()) {
 					throw new ConfigurationValueInvalidException("Block cipher cannot have an initalisation vector (IV) of null or zero length.");
                 }
-                if (Configuration.IV.Length != BlockSize / 8) {
+                if (Configuration.IV.Length != BlockSizeBits / 8) {
 					throw new ConfigurationInvalidException("Initialisation vector should not be a different length to the block size.");
                 }
                 var retVal = new byte[Configuration.IV.Length];
@@ -127,11 +133,11 @@ namespace ObscurCore.Cryptography
                 return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                     "Block size, bits: {3}\nMode: {4}\nPadding: {5}\n" +
                     "IV, hex: {6}",
-                    SymmetricCipherType.Block, cipher, KeySizeBits, BlockSize, mode, padding, hexIV);
+                    SymmetricCipherType.Block, cipher, KeySizeBits, BlockSizeBits, mode, padding, hexIV);
             }
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                 "Block size, bits: {3}\nMode: {4}\nPadding: {5}",
-                SymmetricCipherType.Block, cipher, KeySizeBits, BlockSize, mode, padding);
+                SymmetricCipherType.Block, cipher, KeySizeBits, BlockSizeBits, mode, padding);
         }
     }
 }

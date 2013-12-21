@@ -6,10 +6,16 @@
     /// </summary>
     public enum CsPseudorandomNumberGenerator
     {
+		/// <summary>
+		/// Generator based on Rabbit stream cipher.
+		/// </summary>
+		Rabbit,
+
         /// <summary>
         /// Generator based on Salsa20 stream cipher.
         /// </summary>
         Salsa20,
+
         /// <summary>
         /// Generator based on SOSEMANUK stream cipher. Fast initialisation and generation.
         /// </summary>

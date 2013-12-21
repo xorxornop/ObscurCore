@@ -38,8 +38,8 @@ namespace ObscurCore.Packaging
 	    /// <param name="streams">Streams being read from (sources; multiplexing), or written to (destinations; demultiplexing).</param>
 	    /// <param name="transforms">Transform funcs.</param>
 	    /// <param name="config">Configuration of stream selection.</param>
-		public SimplePayloadMux (bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, IList<Func<Stream, DecoratingStream>> transforms, 
-		                  IPayloadConfiguration config) : base(writing, multiplexedStream, streams, transforms)
+		public SimplePayloadMux (bool writing, Stream multiplexedStream, Manifest payloadManifest, IPayloadConfiguration config) 
+			: base(writing, multiplexedStream, payloadManifest)
 		{
 			_selectionSource = Source.CreateCsprng(config.PrimaryPrngName.ToEnum<CsPseudorandomNumberGenerator>(),
 		        config.PrimaryPrngConfiguration);
@@ -56,13 +56,10 @@ namespace ObscurCore.Packaging
 		/// </summary>
 		/// <remarks>May be overriden in a derived class to provide for advanced stream selection logic.</remarks>
 		/// <returns>The next stream index.</returns>
-		protected override sealed int NextSource() {
-		    CurrentIndex = _selectionSource.Next(0, ItemCount - 1);
-
+		protected override sealed void NextSource() {
+		    Index = _selectionSource.Next(0, ItemCount - 1);
             Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "NextSource", "Generated index",
                     CurrentIndex));
-
-			return CurrentIndex;
 		}
 	}
 }

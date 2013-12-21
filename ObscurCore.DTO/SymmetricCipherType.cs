@@ -6,7 +6,6 @@ namespace ObscurCore.DTO
     public enum SymmetricCipherType
     {
         None,
-        Aead,
         Block,
         Stream
     }

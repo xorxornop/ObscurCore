@@ -35,7 +35,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
     <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
@@ -45,6 +44,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -59,7 +59,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Athena.cs" />
-    <Compile Include="Cryptography\AeadBlockCipherConfigurationWrapper.cs" />
     <Compile Include="Cryptography\Authentication\AeadBlockCipherMode.cs" />
     <Compile Include="Cryptography\Authentication\IDigest.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />
@@ -69,10 +68,8 @@
     <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BConfig.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BCore.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BCoreInline.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BHasher.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BTreeConfig.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2IvBuilder.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Hasher.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\CbcBlockCipherMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\CfbBlockCipherMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\CMac.cs" />
@@ -91,32 +88,15 @@
     <Compile Include="Cryptography\Authentication\BlockCipherPadding.cs" />
     <Compile Include="Cryptography\BlockCipherConfigurationWrapper.cs" />
     <Compile Include="Cryptography\BlockSizeException.cs" />
-    <Compile Include="Cryptography\Ciphers\AeadParameters.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\AeadCipherWrapper.cs" />
     <Compile Include="Cryptography\Ciphers\Block\BlockCipherWrapper.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\BufferedAeadBlockCipher.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\BufferedBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\ICipherWrapper.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\CbcBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\CfbBlockCipher.cs" />
-    <None Include="Cryptography\Ciphers\Block\Modes\CtsBlockCipher.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\EaxBlockCipher.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\GcmBlockCipher.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\GCM\BasicGcmExponentiator.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\GCM\BasicGcmMultiplier.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\GCM\GcmUtilities.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\GCM\IGcmExponentiator.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\GCM\IGcmMultiplier.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\GCM\Tables1kGcmExponentiator.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\GCM\Tables64kGcmMultiplier.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\GCM\Tables8kGcmMultiplier.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Modes\IAeadBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\OfbBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\SicBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\IBlockCipherPadding.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\Iso10126D2Padding.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\Iso7816D4Padding.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Padding\PaddedBufferedBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\Pkcs7Padding.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\TbcPadding.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Padding\X923Padding.cs" />
@@ -167,7 +147,6 @@
     <Compile Include="Information\HashFunctionDescription.cs" />
     <Compile Include="Information\KdfDescription.cs" />
     <Compile Include="Information\MacFunctionDescription.cs" />
-    <Compile Include="Information\NonceReusePolicies.cs" />
     <Compile Include="ItemStreamBindingAbsentException.cs" />
     <Compile Include="Package.cs" />
     <Compile Include="Packaging\Exceptions.cs" />
@@ -179,15 +158,12 @@
     <None Include="Cryptography\Ciphers\Block\Primitives\RijndaelEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\SerpentEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\TwofishEngine.cs" />
-    <Compile Include="Cryptography\Ciphers\BufferedCipherBase.cs" />
     <Compile Include="Cryptography\Ciphers\InvalidCipherTextException.cs" />
     <Compile Include="Cryptography\Ciphers\KeyParameter.cs" />
     <Compile Include="Cryptography\Ciphers\ParametersWithIV.cs" />
     <Compile Include="Cryptography\Ciphers\ParametersWithRandom.cs" />
     <Compile Include="Cryptography\Ciphers\ParametersWithSalt.cs" />
-    <Compile Include="Cryptography\Ciphers\Stream\BufferedStreamCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Block\IBlockCipher.cs" />
-    <Compile Include="Cryptography\Ciphers\IBufferedCipher.cs" />
     <Compile Include="Cryptography\Ciphers\ICipherParameters.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\IStreamCipher.cs" />
     <None Include="Cryptography\Ciphers\Stream\Primitives\Hc128Engine.cs" />
@@ -227,7 +203,6 @@
     <Compile Include="Packaging\FabricPayloadMux.cs" />
     <Compile Include="Packaging\FrameshiftPayloadMux.cs" />
     <Compile Include="Packaging\SimplePayloadMux.cs" />
-    <Compile Include="Packaging\PayloadMux.cs" />
     <Compile Include="Packaging\Utilities.cs" />
     <Compile Include="Information\PaddingRequirement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -235,7 +210,6 @@
     <Compile Include="Source.cs" />
     <Compile Include="StratCom.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\Salsa20Generator.cs" />
-    <Compile Include="Cryptography\Entropy\Primitives\SOSEMANUKGenerator.cs" />
     <Compile Include="Cryptography\Entropy\Csprng.cs" />
     <Compile Include="Cryptography\Support\Arrays.cs" />
     <Compile Include="Cryptography\Support\AsymmetricCipherKeyPair.cs" />
@@ -277,6 +251,11 @@
     <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519Donna.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519HansWolff.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Poly1305Mac.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\StreamCipherWrapper.cs" />
+    <Compile Include="Information\NoncePolicy.cs" />
+    <Compile Include="Cryptography\Entropy\Primitives\SosemanukGenerator.cs" />
+    <Compile Include="Packaging\PayloadMuxNew.cs" />
+    <Compile Include="Cryptography\CryptographyExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />

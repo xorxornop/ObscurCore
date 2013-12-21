@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace ObscurCore.Cryptography
 {
     /// <summary>
-    /// Represents the error that occurs when a ciphertext authentication through AEAD mechanism fails.
+    /// Represents the error that occurs when a ciphertext authentication fails.
     /// </summary>
     [Serializable]
     public class CiphertextAuthenticationException : CryptoException

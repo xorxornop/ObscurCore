@@ -20,6 +20,7 @@ using NUnit.Framework;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Entropy.Primitives;
+using ObscurCore.DTO;
 
 namespace ObscurCore.Tests.Cryptography.Entropy
 {

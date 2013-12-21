@@ -62,7 +62,7 @@ namespace ObscurCore
                 });
                 _blockCipherDirectory.Add(SymmetricBlockCipher.Cast5, new SymmetricCipherDescription {
                     Name = SymmetricBlockCipher.Cast5.ToString(),
-                    DisplayName = "CAST-5 / CAST-128",
+					DisplayName = "CAST-5 (CAST-128)",
                     AllowableBlockSizes = new[] { 64 },
                     DefaultBlockSize = 64,
                     AllowableKeySizes = new[] { 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128 },
@@ -70,7 +70,7 @@ namespace ObscurCore
                 });
                 _blockCipherDirectory.Add(SymmetricBlockCipher.Cast6, new SymmetricCipherDescription {
                     Name = SymmetricBlockCipher.Cast6.ToString(),
-                    DisplayName = "CAST-6 / CAST-256",
+					DisplayName = "CAST-6 (CAST-256)",
                     AllowableBlockSizes = new[] { 128 },
                     DefaultBlockSize = 128,
                     AllowableKeySizes = new[] { 128, 160, 192, 224, 256 },
@@ -104,7 +104,7 @@ namespace ObscurCore
                 });
                 _blockCipherDirectory.Add(SymmetricBlockCipher.Rc6, new SymmetricCipherDescription {
                     Name = SymmetricBlockCipher.Rc6.ToString(),
-                    DisplayName = "RC6",
+					DisplayName = "RC6",
                     AllowableBlockSizes = new[] { 128 },
                     DefaultBlockSize = 128,
                     AllowableKeySizes = new[] { 128, 192, 256 },
@@ -130,7 +130,7 @@ namespace ObscurCore
                 });
                 _blockCipherDirectory.Add(SymmetricBlockCipher.TripleDes, new SymmetricCipherDescription {
                     Name = SymmetricBlockCipher.TripleDes.ToString(),
-                    DisplayName = "Triple DES (3DES, DESEDE; Triple Data Encryption Standard)",
+                    DisplayName = "Triple DES (3DES, DESEDE)",
                     AllowableBlockSizes = new[] { 64 },
                     DefaultBlockSize = 64,
                     AllowableKeySizes = new[] { 128, 192 },
@@ -243,7 +243,6 @@ namespace ObscurCore
                     DefaultKeySize = 256
                 });
 #endif
-
                 // Add block cipher modes of operation
 
                 _blockCipherModeDirectory.Add(BlockCipherMode.Cbc, new SymmetricCipherModeDescription {
@@ -251,80 +250,29 @@ namespace ObscurCore
                     DisplayName = "Ciphertext Block Chaining (CBC)",
                     PaddingRequirement = PaddingRequirement.Always,
                     AllowableBlockSizes = new[] { -1 },
-                    IsAeadMode = false,
-                    NonceReusePolicy = NonceReusePolicy.NotApplicable
+					NonceReusePolicy = NoncePolicy.RequireRandom
                 });
                 _blockCipherModeDirectory.Add(BlockCipherMode.Cfb, new SymmetricCipherModeDescription {
                     Name = BlockCipherMode.Cfb.ToString(),
                     DisplayName = "Cipher Feedback (CFB)",
                     PaddingRequirement = PaddingRequirement.None,
                     AllowableBlockSizes = new[] { -1 },
-                    IsAeadMode = false,
-                    NonceReusePolicy = NonceReusePolicy.NotAllowed
+					NonceReusePolicy = NoncePolicy.CounterAllowed
                 });
                 _blockCipherModeDirectory.Add(BlockCipherMode.Ctr, new SymmetricCipherModeDescription {
                     Name = BlockCipherMode.Ctr.ToString(),
-                    DisplayName = "Counter/Segmented Integer Counter (CTR/SIC)",
+					DisplayName = "Counter / Segmented Integer Counter (CTR/SIC)",
                     PaddingRequirement = PaddingRequirement.None,
                     AllowableBlockSizes = new[] { -1 },
-                    IsAeadMode = false,
-                    NonceReusePolicy = NonceReusePolicy.NotAllowed
-                });
-                _blockCipherModeDirectory.Add(BlockCipherMode.CtsCbc, new SymmetricCipherModeDescription {
-                    Name = BlockCipherMode.CtsCbc.ToString(),
-                    DisplayName = "Ciphertext Stealing with Ciphertext Block Chaining (CTS-CBC)",
-                    PaddingRequirement = PaddingRequirement.IfUnderOneBlock,
-                    AllowableBlockSizes = new[] { -1 },
-                    IsAeadMode = false,
-                    NonceReusePolicy = NonceReusePolicy.NotApplicable
+					NonceReusePolicy = NoncePolicy.CounterAllowed
                 });
                 _blockCipherModeDirectory.Add(BlockCipherMode.Ofb, new SymmetricCipherModeDescription {
                     Name = BlockCipherMode.Ofb.ToString(),
                     DisplayName = "Output Feedback (OFB)",
                     PaddingRequirement = PaddingRequirement.None,
                     AllowableBlockSizes = new[] { -1 },
-                    IsAeadMode = false,
-                    NonceReusePolicy = NonceReusePolicy.NotAllowed
+					NonceReusePolicy = NoncePolicy.CounterAllowed
                 });
-                // Add AEAD modes of operation
-                _aeadBlockCipherModeDirectory.Add(AeadBlockCipherMode.Eax, new SymmetricCipherModeDescription {
-                    Name = AeadBlockCipherMode.Eax.ToString(),
-                    DisplayName = "Counter with OMAC (EAX)",
-                    PaddingRequirement = PaddingRequirement.None,
-                    AllowableBlockSizes = new[] { 64, 128, 192, 256 },
-                    IsAeadMode = true,
-                    NonceReusePolicy = NonceReusePolicy.NotAllowed
-                });
-                _aeadBlockCipherModeDirectory.Add(AeadBlockCipherMode.Gcm, new SymmetricCipherModeDescription {
-                    Name = AeadBlockCipherMode.Gcm.ToString(),
-                    DisplayName = "Galois/Counter Mode (GCM)",
-                    PaddingRequirement = PaddingRequirement.None,
-                    AllowableBlockSizes = new[] { 128 },
-                    IsAeadMode = true,
-                    NonceReusePolicy = NonceReusePolicy.NotAllowed
-                });
-                // TODO: Implement OCB mode
-                /*
-                _aeadBlockCipherModeDirectory.Add(AeadBlockCipherMode.Ocb, new SymmetricCipherModeDescription {
-                    Name = AeadBlockCipherMode.Ocb.ToString(),
-                    DisplayName = "Offset Codebook (OCB)",
-                    PaddingRequirement = PaddingRequirements.None,
-                    AllowableBlockSizes = new[] { 128, 192, 256 },
-                    IsAEADMode = true,
-                    NonceReusePolicy = NonceReusePolicies.NotAllowed
-                });
-                */
-				// TODO: Implement SIV mode
-				/*
-                _aeadBlockCipherModeDirectory.Add(AeadBlockCipherMode.Siv, new SymmetricCipherModeDescription {
-                    Name = AeadBlockCipherMode.Siv.ToString(),
-                    DisplayName = "Synthetic Initialisation Vector (SIV)",
-                    PaddingRequirement = PaddingRequirements.None,
-                    AllowableBlockSizes = new[] { 128, 192, 256 },
-                    IsAeadMode = true,
-                    NonceReusePolicy = NonceReusePolicies.Allowed
-                });
-                */
 
                 // Add block cipher padding schemes
 

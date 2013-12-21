@@ -8,6 +8,12 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
 		/// <summary>The name of the algorithm this cipher implements.</summary>
 		string AlgorithmName { get; }
 
+		/// <summary>
+		/// The size of operation the cipher implements internally, e.g. keystream buffer.
+		/// </summary>
+		/// <value>The size of the internal operation.</value>
+		int StateSize { get; }
+
 		/// <summary>Initialise the cipher.</summary>
 		/// <param name="forEncryption">If true the cipher is initialised for encryption,
 		/// if false for decryption.</param>

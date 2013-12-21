@@ -40,12 +40,14 @@ namespace ObscurCore.Cryptography
 		}
 
 		private ICipherWrapper _cipher;
-	    private readonly RingByteBuffer _writeBuffer, _readBuffer;
-		private readonly byte[] _inBuffer;
-		private byte[] _outBuffer; // non-readonly allows for on-the-fly reassignment for CTS compat. during finalisation.
 
-	    private byte[] _operationBuffer;
-	    private int _operationBufferOffset;
+		private byte[] _operationBuffer; // primary buffer
+		private int _operationBufferOffset;
+
+		private byte[] _tempBuffer;
+		private readonly RingByteBuffer _outBuffer;
+
+
 
 	    private int _operationSize;
 
@@ -55,9 +57,6 @@ namespace ObscurCore.Cryptography
 		private const string UnknownFinaliseError = "An unknown type of error occured while transforming the final block of ciphertext.";
 		private const string UnexpectedLengthError = "The data in the ciphertext is not the expected length.";
 		private const string WritingError = "Could not write transformed block bytes to output stream.";
-		private const string ShortCtsError = "Insufficient input length. CTS mode block ciphers require at least one block.";
-
-	    private static readonly byte[] EmptyByteArray = {};
 
 
 	    public SymmetricCryptoStream(Stream binding, bool encrypting, SymmetricCipherConfiguration config)
@@ -83,7 +82,6 @@ namespace ObscurCore.Cryptography
                 case SymmetricCipherType.None:
 					throw new ConfigurationInvalidException("Type: None/null value is never set in a valid cipher configuration.");
 		        case SymmetricCipherType.Block:
-                case SymmetricCipherType.Aead:
 
                     SymmetricBlockCipher blockCipherEnum;
 		            try {
@@ -97,80 +95,56 @@ namespace ObscurCore.Cryptography
                     if(!Athena.Cryptography.BlockCiphers[blockCipherEnum].AllowableBlockSizes.Contains(config.BlockSizeBits)) 
                         throw new NotSupportedException("Specified block size is unsupported.");
 
-                    base.BufferRequirementOverride = (config.BlockSizeBits / 8) * 2;
+					base.BufferSizeRequirement = (config.BlockSizeBits / 8) * 2;
+					
+					var blockWrapper = new BlockCipherConfigurationWrapper(config);
 
-                    var blockCipher = Source.CreateBlockCipher(blockCipherEnum, config.BlockSizeBits);
+				var blockCipher = Source.CreateBlockCipher(blockCipherEnum, blockWrapper.BlockSizeBits);
 
-		            switch (config.Type) {
-                        case SymmetricCipherType.Block:
+					
 
-		                    var blockWrapper = new BlockCipherConfigurationWrapper(config);
+					BlockCipherMode blockModeEnum = blockWrapper.Mode;
+					byte[] blockIV = blockWrapper.IV;
 
-		                    BlockCipherMode blockModeEnum = blockWrapper.Mode;
-		                    byte[] blockIV = blockWrapper.IV;
+					cipherParams = Source.CreateBlockCipherParameters(blockCipherEnum, workingKey, blockIV);
+					// Overlay the cipher with the mode of operation
+					blockCipher = Source.OverlayBlockCipherWithMode(blockCipher, blockModeEnum,
+						config.BlockSizeBits);
 
-		                    cipherParams = Source.CreateBlockCipherParameters(blockCipherEnum, workingKey, blockIV);
-                            // Overlay the cipher with the mode of operation
-                            blockCipher = Source.OverlayBlockCipherWithMode(blockCipher, blockModeEnum,
-				                config.BlockSizeBits);
-
-                            IBlockCipherPadding padding = null;
-                            BlockCipherPadding paddingEnum = blockWrapper.Padding;
-		                    if (paddingEnum == BlockCipherPadding.None) {
-		                        if (Athena.Cryptography.BlockCipherModes[blockModeEnum]
-		                            .PaddingRequirement == PaddingRequirement.Always) {
-		                            throw new NotSupportedException(
-		                                "Cipher configuration does not specify the use of padding, " +
-		                                    "which is required for the specified mode of operation.");
-		                        }
-		                    } else {
-		                        padding = Source.CreatePadding(paddingEnum);
-		                    }
-                            blockCipher.Init(encrypting, cipherParams);
-
-                            _cipher = new BlockCipherWrapper(encrypting, blockCipher, padding);
-
-		                    break;
-		                case SymmetricCipherType.Aead:
-
-                            AeadBlockCipherMode aeadModeEnum;
-		                    try {
-		                        aeadModeEnum = config.ModeName.ToEnum<AeadBlockCipherMode>();
-		                    } catch (EnumerationValueUnknownException e) {
-								throw new ConfigurationValueInvalidException("AEAD mode unknown/unsupported.", e);
-		                    }
-
-                            cipherParams = Source.CreateAeadBlockCipherParameters(blockCipherEnum,
-				                workingKey, config.IV, config.MacSizeBits, config.AssociatedData);
-                            // Overlay the cipher with the mode of operation
-					        var aeadCipher = Source.OverlayBlockCipherWithAeadMode(blockCipher, aeadModeEnum);
-
-					        // Create the I/O-enabled transform object
-					        if (!String.IsNullOrEmpty(config.PaddingName) && !config.PaddingName.Equals(BlockCipherPadding.None.ToString()))
-						        throw new NotSupportedException("Padding was specified for use in AEAD mode - it is not allowed and unnecessary.");
-
-                            aeadCipher.Init(encrypting, cipherParams);
-					        //_cipher = new BufferedAeadBlockCipher(aeadCipher);
-                            _cipher = new AeadCipherWrapper(encrypting, aeadCipher);
-
-		                    break;
-		            }
+					IBlockCipherPadding padding = null;
+					BlockCipherPadding paddingEnum = blockWrapper.Padding;
+					if (paddingEnum == BlockCipherPadding.None) {
+						if (Athena.Cryptography.BlockCipherModes[blockModeEnum]
+							.PaddingRequirement == PaddingRequirement.Always)
+						{
+							throw new NotSupportedException(
+								"Cipher configuration does not specify the use of padding, " +
+								"which is required for the specified mode of operation.");
+						}
+					} else {
+						padding = Source.CreatePadding(paddingEnum);
+						padding.Init(StratCom.EntropySource);
+					}
+					
+					blockCipher.Init(encrypting, cipherParams);
+					_cipher = new BlockCipherWrapper(encrypting, blockCipher, padding);
+					
 		            break;
-		        case SymmetricCipherType.Stream:
+				case SymmetricCipherType.Stream:
 
-		            var streamWrapper = new StreamCipherConfigurationWrapper(config);
+					var streamWrapper = new StreamCipherConfigurationWrapper (config);
 
-		            var streamCipherEnum = streamWrapper.StreamCipher;
-		            var streamNonce = streamWrapper.Nonce;
-                    //base.BufferRequirementOverride = !streamNonce.IsNullOrZeroLength() ? (streamNonce.Length) * 2 : streamWrapper.KeySizeBytes * 2;
-		            base.BufferRequirementOverride = 64;
+					var streamCipherEnum = streamWrapper.StreamCipher;
+					var streamNonce = streamWrapper.Nonce;
+					//base.BufferSizeRequirement = !streamNonce.IsNullOrZeroLength() ? (streamNonce.Length) * 2 : streamWrapper.KeySizeBytes * 2;
+					base.BufferSizeRequirement = 64;
 
-				    // Requested a stream cipher.
-                    cipherParams = Source.CreateStreamCipherParameters(streamCipherEnum, workingKey, streamNonce);
-				    // Instantiate the cipher
-				    var streamCipher = Source.CreateStreamCipher(streamCipherEnum);
-				    // Create the I/O-enabled transform object
-				    //_cipher = new BufferedStreamCipher(streamCipher);
+					// Requested a stream cipher.
+					cipherParams = Source.CreateStreamCipherParameters (streamCipherEnum, workingKey, streamNonce);
+					// Instantiate the cipher
+					var streamCipher = Source.CreateStreamCipher (streamCipherEnum);
+					streamCipher.Init (encrypting, cipherParams);
+					_cipher = new StreamCipherWrapper (encrypting, streamCipher, strideIncreaseFactor : 2);
 
 		            break;
 		        default:
@@ -178,9 +152,21 @@ namespace ObscurCore.Cryptography
 		    }
 
 			// Initialise the buffers 
-			_inBuffer = new byte[_cipher.OperationSize];
-			_outBuffer = new byte[_cipher.OperationSize];
-			_procBuffer = new RingByteBuffer (_cipher.OperationSize << 8);
+			//_inBuffer = new byte[_cipher.OperationSize];
+			//_outBuffer = new byte[_cipher.OperationSize];
+
+			_operationSize = _cipher.OperationSize;
+			_operationBuffer = new byte[_operationSize];
+			_tempBuffer = new byte[_operationSize * 2];
+			_operationBufferOffset = 0;
+			if(encrypting) {
+				_outBuffer = new RingByteBuffer (_cipher.OperationSize << 8);
+			} else {
+				_outBuffer = new RingByteBuffer (_cipher.OperationSize << 2);
+			}
+
+
+			//_procBuffer = new RingByteBuffer (_cipher.OperationSize << 8);
 			// Shift left 8 upscales : 8 (64 bits) to 2048 [2kB], 16 (128) to 4096 [4kB], 32 (256) to 8192 [8kB]
 
 			// Customise the decorator-stream exception messages, since we enforce processing direction in this implementation
@@ -196,192 +182,325 @@ namespace ObscurCore.Cryptography
 			throw new NotSupportedException ();
 		}
 
+		/// <summary>
+		/// Writes specified quantity of bytes exactly (after decoration transform)
+		/// </summary>
+		/// <param name="source">Source.</param>
+		/// <param name="length">Length.</param>
+		/// <returns>The quantity of bytes taken from the source stream to fulfil the request.</returns>
+		public override long WriteExactlyFrom (Stream source, long length) {
+			CheckIfAllowed (true);
+			if(source == null) {
+				throw new ArgumentNullException ("source");
+			}
+
+			int totalIn = 0, totalOut = 0;
+			int iterIn = 0, iterOut = 0;
+
+			// Process any remainder
+			if (_operationBufferOffset > 0 && length > _operationSize) {
+				var gapLength = _operationSize - _operationBufferOffset;
+
+				iterIn = source.Read (_operationBuffer, _operationBufferOffset, gapLength);
+				if(iterIn > gapLength) {
+					throw new EndOfStreamException ();
+				}
+
+				totalIn += iterIn;
+				iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+				_operationBufferOffset = 0;
+				length -= iterOut;
+				_outBuffer.Put(_tempBuffer, 0, iterOut);
+			}
+
+			while(totalOut + _outBuffer.Length < length) {
+				if(source.Read (_operationBuffer, _operationBufferOffset, _operationSize) > _operationSize) {
+					throw new EndOfStreamException ();
+				}
+				totalIn += _operationSize;
+				iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+				_outBuffer.Put (_tempBuffer, 0, iterOut);
+
+				// Prevent possible writebuffer overflow
+				if(_outBuffer.Spare < _operationSize) {
+					iterOut = _outBuffer.Length;
+					// Write out the processed data to the stream binding
+					_outBuffer.TakeTo (Binding, iterOut);
+					totalOut += iterOut;
+				}
+			}
+
+			// Write out the processed data to the stream binding
+			iterOut = (int) (length - totalOut);
+			_outBuffer.TakeTo (Binding, iterOut);
+			BytesOut += iterOut + totalOut;
+
+			return totalIn;
+		}
+
+
 		public override void Write (byte[] buffer, int offset, int count) {
 			CheckIfAllowed (true);
-            if (buffer == null) {
-                throw new ArgumentNullException("buffer");
-            }
-            if (buffer.Length < offset + count) {
-                throw new ArgumentException("Insufficient data.", "count");
-            }
+			if (buffer == null) {
+				throw new ArgumentNullException("buffer");
+			}
+			if (buffer.Length < offset + count) {
+				throw new ArgumentException("Insufficient data.", "count");
+			}
 
-            // Process any leftovers
-            if (_operationBufferOffset > 0 && count > 0) {
-                Array.Copy(buffer, offset, _operationBuffer, _operationBufferOffset, 
-                    _operationSize - _operationBufferOffset);
-                var processed = _cipher.ProcessBytes(_operationBuffer, 0, _outBuffer, 0);
-                _operationBufferOffset -= processed;
-                offset -= processed;
-                count -= processed;
-                _writeBuffer.Put(_outBuffer, 0, processed);
-            }
+			int totalIn = 0, totalOut = 0;
+			int iterOut = 0;
 
-		    while (count > _operationSize) {
-		        // Process and put the resulting bytes in procbuffer
-				var processed = _cipher.ProcessBytes(buffer, offset, _outBuffer, 0);
-                offset += _operationSize;
-				count -= _operationSize;
-				BytesIn += _operationSize;
-				_writeBuffer.Put (_outBuffer, 0, processed);
-				
-                // Prevent possible writebuffer overflow
-				if(_writeBuffer.Spare < _operationSize) {
-					var overflowOut = _writeBuffer.Length;
+			// Process any leftovers
+			var gapLength = _operationSize - _operationBufferOffset;
+			if (_operationBufferOffset > 0 && count > gapLength) {
+				Array.Copy(buffer, offset, _operationBuffer, _operationBufferOffset, 
+					gapLength);
+				totalIn += gapLength;
+				iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+				_operationBufferOffset = 0;
+				offset += gapLength;
+				count -= gapLength;
+				_outBuffer.Put(_tempBuffer, 0, iterOut);
+			}
+
+			if (count < 0)
+				return;
+
+			int remainder;
+			var operations = Math.DivRem(count, _operationSize, out remainder);
+
+			for (var i = 0; i < operations; i++) {
+				iterOut = _cipher.ProcessBytes(buffer, offset, _tempBuffer, 0);
+				totalIn += _operationSize;
+				offset += _operationSize;
+				_outBuffer.Put (_tempBuffer, 0, iterOut);
+
+				// Prevent possible writebuffer overflow
+				if(_outBuffer.Spare < _operationSize) {
+					iterOut = _outBuffer.Length;
 					// Write out the processed data to the stream binding
-					_writeBuffer.TakeTo (Binding, overflowOut);
-					BytesOut += overflowOut;
+					_outBuffer.TakeTo (Binding, iterOut);
+					totalOut += iterOut;
 				}
-		    }
+			}
 
-            // Store any remainder in operation buffer
-            Array.Copy(buffer, offset, _operationBuffer, _operationBufferOffset, count);
+			// Store any remainder in operation buffer
+			Array.Copy(buffer, offset, _operationBuffer, _operationBufferOffset, remainder);
+			totalIn += remainder;
+			_operationBufferOffset += remainder;
 
-            // Write out the processed data to the stream binding
-			var writeOut = _writeBuffer.Length;
-			_writeBuffer.TakeTo (Binding, writeOut);
-			BytesOut += writeOut;
-
+			// Write out the processed data to the stream binding
+			iterOut = _outBuffer.Length - _operationSize;
+			if(iterOut > 0) {
+				//iterOut = _outBuffer.Length; 
+				_outBuffer.TakeTo (Binding, iterOut);
+				BytesOut += iterOut + totalOut;
+			}
 		}
 
+		/// <summary>
+		/// Writes a byte. Not guaranteed or likely to be written out immediately. 
+		/// If writing precision is required, do not use this wherever possible.
+		/// </summary>
+		/// <param name="b">The blue component.</param>
 		public override void WriteByte (byte b) {
 			CheckIfAllowed (true);
+			if (Finished)
+				return;
 
-			if(_procBuffer.Length == 0) {
-				var bytes = _cipher.ProcessByte (b);
-				_procBuffer.Put (bytes, 0, bytes.Length);
-				BytesIn++;
+			if (_operationBufferOffset == _operationSize) {
+				var iterOut = _cipher.ProcessBytes (_operationBuffer, 0, _tempBuffer, 0);
+				_outBuffer.Put (_tempBuffer, 0, iterOut);
+			} else {
+				_operationBuffer[_operationBufferOffset++] = b;
 			}
-			if(_procBuffer.Length > 0) {
-				_procBuffer.TakeTo (Binding, 1);
-				BytesOut++;
-			}
+
+			_outBuffer.TakeTo (Binding, 1);
 		}
+
+		// Reading
 
 		public override int ReadByte () {
 			CheckIfAllowed (false);
 			if (_inStreamEnded)
 				return -1;
 
-			if(_procBuffer.Length < 1) {
-				var bytesRead = FillAndProcessBuffer ();
-				_procBuffer.Put (_outBuffer, 0, bytesRead);
+			if (_operationBufferOffset == _operationSize) {
+				// Op buffer is full, process an op block
+				var iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+				_outBuffer.Put (_tempBuffer, 0, iterOut);
+				_operationBufferOffset = 0;
 			}
+			_operationBuffer[_operationBufferOffset++] = (byte)Binding.ReadByte();
 
-			if(_procBuffer.Length > 1) {
-				var outByte = _procBuffer.Take ();
-				BytesOut++;
-				return outByte;
-			} else {
-				return -1;
+			if(_outBuffer.Length == 0) {
+				throw new InvalidOperationException ();
 			}
-		}
-
-        /// <summary>
-        /// Read the precise number of bytes specified. Not guaranteed to return the same quantity; 
-        /// only ensures that the stream source binding has a precise number of bytes read. 
-        /// Buffer must accomodate count + OperationLength quantity of bytes.
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        public void ReadPrecise(byte[] buffer, int offset, int count) {
-
-            // TODO: Finish method
-
-            if (buffer == null) {
-                throw new ArgumentNullException("buffer");
-            } else if (count == 0) {
-                return;
-            }
-
-            if (_operationBufferOffset > 0) {
-                var read = Binding.Read(_operationBuffer, _operationBufferOffset, _operationSize - _operationBufferOffset);
-                _operationBufferOffset -= _operationSize - read;
-                if (_operationBufferOffset > 0) {
-                    throw new DataLengthException("Could not read expected quantity (leftover fill step).");
-                }
-                count -= read;
-                offset += _cipher.ProcessBytes(_operationBuffer, 0, buffer, offset);
-            }
-
-
-
-            int remainder;
-            int operations = Math.DivRem(count, _operationSize, out remainder);
-
-            for (int i = 0; i < operations; i++) {
-                int bytesRead = Binding.Read(_operationBuffer, _operationBufferOffset, _operationSize);
-                if (bytesRead < _operationSize) {
-                    throw new DataLengthException("Could not read expected quantity.");
-                }
-                offset += _cipher.ProcessBytes(_operationBuffer, 0, buffer, offset);
-            }
-
-            // Any leftover/remainder bytes are stored (they are non-decrypted, so far)
-            int remainderRead = Binding.Read(_operationBuffer, _operationBufferOffset, remainder);
-            if (remainderRead > remainder) {
-                
-            }
-            _operationBufferOffset = remainderRead;
-            
-
-            BytesIn += count;
-
-        }
-
-
-	    public override int Read (byte[] buffer, int offset, int count) {
-			CheckIfAllowed (false);
-
-
-            // TODO: Redo method. Use ReadPrecise as a prototype
-
-
-	        var copiedOut = 0;
-			while (_procBuffer.Length < count && !_inStreamEnded) {
-				// Read and process a block/stride
-				var bytesProcessed = FillAndProcessBuffer ();
-				// Put the processed bytes in the procbuffer
-				_procBuffer.Put (_outBuffer, 0, bytesProcessed);
-				// Prevent procbuffer overflow where applicable
-				if(_procBuffer.Spare < count) {
-					var overflowOut = _procBuffer.Length;
-					_procBuffer.Take (buffer, offset, overflowOut);
-					offset += overflowOut;
-					count -= overflowOut;
-					copiedOut += overflowOut;
-
-					BytesOut += overflowOut;
-				}
-			}
-			var copyOut = Math.Min (count, _procBuffer.Length);
-			_procBuffer.Take (buffer, offset, copyOut);
-			copiedOut += copyOut;
-
-			BytesOut += copyOut;
-
-			return copiedOut;
+			return _outBuffer.Take();
 		}
 
 		/// <summary>
-		/// Fills the read buffer with a single block/stride of input. Increments 'BytesIn' property.
+		/// Read the specified buffer, offset and count. 
+		/// Guaranteed to read 'count' bytes.
 		/// </summary>
-		/// <returns>The read buffer.</returns>
-		private int FillAndProcessBuffer() {
-			var bytesRead = 0;
-			do {
-				var iterRead = Binding.Read(_inBuffer, bytesRead, _inBuffer.Length - bytesRead);
-				if (iterRead < 1) {
-					_inStreamEnded = true;
-					break;
+		/// <returns>Quantity of bytes read into supplied buffer array.</returns>
+		/// <param name="buffer">Buffer.</param>
+		/// <param name="offset">Offset.</param>
+		/// <param name="count">Count.</param>
+	    public override int Read (byte[] buffer, int offset, int count) {
+			CheckIfAllowed (false);
+			if (Finished)
+				return 0;
+			if (buffer == null) {
+				throw new ArgumentNullException ("buffer");
+			} else if (buffer.Length < offset + count) {
+
+			}
+
+			int totalIn = 0, totalOut = 0;
+			int iterIn = 0, iterOut = 0;
+
+			// Has ReadByte been used? If it has then we need to return the partial block
+			if(_outBuffer.Length > 0) {
+				iterOut = _outBuffer.Length;
+				if(buffer.Length < offset + iterOut) {
+					throw new DataLengthException ("Buffer insufficient length to accomodate data.");
 				}
-				bytesRead += iterRead;
-			} while (bytesRead < _inBuffer.Length);
+				_outBuffer.Take (buffer, offset, iterOut);
+				totalOut += iterOut;
+				offset += iterOut;
+				count -= iterOut;
+			}
 
-			BytesIn += bytesRead;
+			// Process any remainder bytes from last call, if any, by filling the block/operation
+			if (_operationBufferOffset > 0) {
+				iterIn = Binding.Read(_operationBuffer, _operationBufferOffset, _operationSize - _operationBufferOffset);
+				totalIn += iterIn;
+				_operationBufferOffset -= _operationSize - iterIn;
 
-			return _inStreamEnded ? FinishReading (bytesRead) : _cipher.ProcessBytes (_inBuffer, 0, bytesRead, _outBuffer, 0);
+				// End of stream detection
+				if (_operationBufferOffset > 0) {
+					totalOut += FinishReading (_operationBuffer, 0, iterIn, buffer, offset);
+					BytesIn += totalIn;
+					BytesOut += totalOut;
+					return totalOut;
+				}
+
+				iterOut = _cipher.ProcessBytes(_operationBuffer, 0, buffer, offset);
+				count -= iterOut;
+				offset += iterOut;
+				totalOut += iterOut;
+			}
+
+			int remainder;
+			var operations = Math.DivRem(count, _operationSize, out remainder);
+
+			// Process all the whole blocks/operations
+			for (var i = 0; i < operations; i++) {
+				iterIn = Binding.Read(_operationBuffer, 0, _operationSize);
+				totalIn += iterIn;
+				// End of stream detection
+				if (iterIn < _operationSize) {
+					totalOut += FinishReading(_operationBuffer, 0, iterIn, buffer, offset);
+					BytesIn += totalIn;
+					BytesOut += totalOut;
+					return totalOut;
+				}
+				iterOut = _cipher.ProcessBytes(_operationBuffer, 0, buffer, offset);
+				totalOut += iterOut;
+				offset += iterOut;
+			}
+
+			// Any remainder bytes are stored (not decrypted)
+			if (remainder > 0) {
+				_operationBufferOffset = Binding.Read(_operationBuffer, _operationBufferOffset, remainder);
+				totalIn += _operationBufferOffset;
+				// End of stream detection
+				if (_operationBufferOffset < remainder) {
+					totalOut += FinishReading (_operationBuffer, 0, _operationBufferOffset, buffer, offset);
+				}
+			}
+
+			BytesIn += totalIn;
+			BytesOut += totalOut;
+			return totalOut;
 		}
+
+
+
+		public override long ReadExactlyTo (Stream destination, long length) {
+			CheckIfAllowed (false);
+			if (Finished)
+				return 0;
+			if (destination == null) {
+				throw new ArgumentNullException ("destination");
+			}
+
+			int totalIn = 0, totalOut = 0;
+			int iterIn = 0, iterOut = 0;
+
+			// Write out any partial completed block(s)
+			if(_outBuffer.Length > 0) {
+				iterOut = _outBuffer.Length;
+				_outBuffer.TakeTo (destination, iterOut);
+				totalOut += iterOut;
+				// No read took place, so no subtraction of length appropriate
+			}
+
+			// Process any remainder bytes from last call, if any, by filling the block/operation
+			if (_operationBufferOffset > 0) {
+				iterIn = Binding.Read(_operationBuffer, _operationBufferOffset, _operationSize - _operationBufferOffset);
+				totalIn += iterIn;
+				_operationBufferOffset -= _operationSize - iterIn;
+				// End of stream detection
+				if (_operationBufferOffset > 0) {
+					totalOut += FinishReading (_operationBuffer, 0, iterIn, _tempBuffer, 0);
+					BytesIn += totalIn;
+					BytesOut += totalOut;
+					return totalOut;
+				} else {
+					iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+				}
+				length -= iterOut;
+			}
+
+			long remainder;
+			var operations = Math.DivRem(length, (long)_operationSize, out remainder);
+
+			// Process all the whole blocks/operations
+			for (var i = 0; i < operations; i++) {
+				iterIn = Binding.Read(_operationBuffer, _operationBufferOffset, _operationSize);
+				totalIn += iterIn;
+				// End of stream detection
+				if (iterIn < _operationSize) {
+					totalOut += FinishReading(_operationBuffer, 0, iterIn, _tempBuffer, 0);
+					BytesIn += totalIn;
+					BytesOut += totalOut;
+					return totalOut;
+				}
+				iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+				totalOut += iterOut;
+			}
+
+			// Any remainder bytes are stored (not decrypted)
+			if (remainder > 0) {
+				_operationBufferOffset = Binding.Read(_operationBuffer, _operationBufferOffset, (int)remainder);
+				totalIn += _operationBufferOffset;
+				// End of stream detection
+				if (_operationBufferOffset < remainder) {
+					iterOut = FinishReading (_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);
+					totalOut += iterOut;
+					destination.Write (_tempBuffer, 0, iterOut);
+				}
+			}
+
+			BytesIn += totalIn;
+			BytesOut += totalOut;
+			return totalOut;
+		}
+
+
 
 		/// <summary>
 		/// Finishes the writing/encryption operation, processing the final block/stride.
@@ -389,14 +508,15 @@ namespace ObscurCore.Cryptography
 		/// <returns>Size of final block written.</returns>
 		/// <exception cref="DataLengthException">Thrown when final bytes could not be written to the output.</exception>
 		private void FinishWriting() {
-			byte[] finalBytes = null;
+			// Write any partial but complete block(s)
+			BytesOut += _outBuffer.Length;
+			_outBuffer.TakeTo (Binding, _outBuffer.Length);
+			int finalLength;
 			try {
-				finalBytes = _cipher.DoFinal ();
+				finalLength = _cipher.ProcessFinal(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);
 			} catch (DataLengthException dlEx) {
 				if(String.Equals(dlEx.Message, "output buffer too short")) {
-					throw new DataLengthException(WritingError);
-				} else if(String.Equals(dlEx.Message, "need at least one block of input for CTS")) {
-					throw new DataLengthException(ShortCtsError);
+					throw new DataLengthException (WritingError);
 				} else {
 					throw new DataLengthException (UnknownFinaliseError, dlEx);
 				}
@@ -405,72 +525,89 @@ namespace ObscurCore.Cryptography
 			    throw;
 			}
 			// Write out the final block
-			Binding.Write (finalBytes, 0, finalBytes.Length);
-			BytesOut += finalBytes.Length;
+			Binding.Write (_tempBuffer, 0, finalLength);
+			BytesOut += finalLength;
 		}
 
-		/// <summary>
-		/// Finishes the decryption/reading operation, processing the final block/stride. 
-		/// Majority of integrity checking happens here.
-		/// </summary>
-		/// <returns>The number of bytes in the final block/stride.</returns>
-		/// <exception cref="PaddingDataException">Thrown when no padding, malformed padding, or misaligned padding is found.</exception>
-		/// <exception cref="IncompleteBlockException">Thrown when ciphertext is not a multiple of block size (unexpected length).</exception>
-		/// <exception cref="CiphertextAuthenticationException">Thrown when MAC/authentication check fails to match with expected value. AEAD-relevant.</exception>
-		/// <exception cref=""></exception>
-		private int FinishReading(int length) {
-			var finalBytes = 0;
-			try {
-				if(_cipher is CtsBlockCipher) _outBuffer = new byte[_outBuffer.Length * 2];
-				finalBytes = _cipher.DoFinal(_inBuffer, 0, length, _outBuffer, 0);
-			} catch (DataLengthException dlEx) {
-				if (_cipher is IAeadBlockCipher) {
-					// No example here, but leaving it here anyway for possible future implementation.
-				} else if (_cipher is PaddedBufferedBlockCipher) {
-					switch (dlEx.Message) {
-					case "last block incomplete in decryption":
-						throw new PaddingDataException (UnexpectedLengthError);
-					default:
-						throw new PaddingDataException ("The ciphertext padding is corrupt.");
-					}
-				//} else if (_cipher is CtsBlockCipher) {
 
-				} else if (_cipher is BufferedBlockCipher) {
-					switch (dlEx.Message) {
-					case "data not block size aligned":
-						throw new IncompleteBlockException (UnexpectedLengthError);
-					default:
-						throw new DataLengthException (UnknownFinaliseError, dlEx);
-					}
-				} else {
-					// No example here, but leaving it here anyway for possible future implementation.
-				}
-			} catch (InvalidCipherTextException ctEx) {
-				if (_cipher is IAeadBlockCipher) {
-					switch (ctEx.Message) {
-					case "data too short":
-						throw new IncompleteBlockException ();
-					case "mac check in GCM failed":
-					case "mac check in EAX failed":
-						throw new CiphertextAuthenticationException ("The calculated MAC for the ciphertext is different to the supplied MAC.");
-					}
-				} else if(_cipher is PaddedBufferedBlockCipher) {
-					switch (ctEx.Message) {
-					case "pad block corrupted":
-						throw new PaddingDataException ();
-					default:
-						throw new InvalidCipherTextException (UnknownFinaliseError, ctEx);
-					}
-				} else if (_cipher is BufferedBlockCipher) {
-					throw new InvalidCipherTextException(UnknownFinaliseError, ctEx);
-				} else {
-					// No example here, but leaving it here anyway for possible future implementation.
-				}
+		private int FinishReading(byte[] input, int inputOffset, int length, byte[] output, int outputOffset) {
+			_inStreamEnded = true;
+			int finalByteQuantity = _outBuffer.Length;
+			_outBuffer.Take (output, outputOffset, finalByteQuantity);
+			outputOffset += finalByteQuantity;
+			try {
+				finalByteQuantity += _cipher.ProcessFinal (input, inputOffset, length, output, outputOffset);
+			} catch (Exception ex) {
+				throw;
 			}
 
-			base.Finish ();
-			return finalBytes;
+			base.Finish();
+			return finalByteQuantity;
 		}
+
+
+//		/// <summary>
+//		/// Finishes the decryption/reading operation, processing the final block/stride. 
+//		/// Majority of integrity checking happens here.
+//		/// </summary>
+//		/// <returns>The number of bytes in the final block/stride.</returns>
+//		/// <exception cref="PaddingDataException">Thrown when no padding, malformed padding, or misaligned padding is found.</exception>
+//		/// <exception cref="IncompleteBlockException">Thrown when ciphertext is not a multiple of block size (unexpected length).</exception>
+//		/// <exception cref="CiphertextAuthenticationException">Thrown when MAC/authentication check fails to match with expected value. AEAD-relevant.</exception>
+//		/// <exception cref=""></exception>
+//		private int FinishReading(int length) {
+//			var finalBytes = 0;
+//			try {
+//				if(_cipher is CtsBlockCipher) _outBuffer = new byte[_outBuffer.Length * 2];
+//				finalBytes = _cipher.DoFinal(_inBuffer, 0, length, _outBuffer, 0);
+//			} catch (DataLengthException dlEx) {
+//				if (_cipher is IAeadBlockCipher) {
+//					// No example here, but leaving it here anyway for possible future implementation.
+//				} else if (_cipher is PaddedBufferedBlockCipher) {
+//					switch (dlEx.Message) {
+//					case "last block incomplete in decryption":
+//						throw new PaddingDataException (UnexpectedLengthError);
+//					default:
+//						throw new PaddingDataException ("The ciphertext padding is corrupt.");
+//					}
+//				//} else if (_cipher is CtsBlockCipher) {
+//
+//				} else if (_cipher is BufferedBlockCipher) {
+//					switch (dlEx.Message) {
+//					case "data not block size aligned":
+//						throw new IncompleteBlockException (UnexpectedLengthError);
+//					default:
+//						throw new DataLengthException (UnknownFinaliseError, dlEx);
+//					}
+//				} else {
+//					// No example here, but leaving it here anyway for possible future implementation.
+//				}
+//			} catch (InvalidCipherTextException ctEx) {
+//				if (_cipher is IAeadBlockCipher) {
+//					switch (ctEx.Message) {
+//					case "data too short":
+//						throw new IncompleteBlockException ();
+//					case "mac check in GCM failed":
+//					case "mac check in EAX failed":
+//						throw new CiphertextAuthenticationException ("The calculated MAC for the ciphertext is different to the supplied MAC.");
+//					}
+//				} else if(_cipher is PaddedBufferedBlockCipher) {
+//					switch (ctEx.Message) {
+//					case "pad block corrupted":
+//						throw new PaddingDataException ();
+//					default:
+//						throw new InvalidCipherTextException (UnknownFinaliseError, ctEx);
+//					}
+//				} else if (_cipher is BufferedBlockCipher) {
+//					throw new InvalidCipherTextException(UnknownFinaliseError, ctEx);
+//				} else {
+//					// No example here, but leaving it here anyway for possible future implementation.
+//				}
+//			}
+//
+//			base.Finish ();
+//			return finalBytes;
+//		}
 
 		/// <summary>
 		/// Finish the decoration operation, whatever that constitutes in a derived implementation. 
@@ -486,9 +623,13 @@ namespace ObscurCore.Cryptography
 		}
 
 		protected override void Reset (bool finish = false) {
-			Array.Clear (_inBuffer, 0, _inBuffer.Length);
-			Array.Clear (_outBuffer, 0, _outBuffer.Length);
-			_procBuffer.Erase ();
+			Array.Clear (_operationBuffer, 0, _operationBuffer.Length);
+			_operationBufferOffset = 0;
+			Array.Clear (_tempBuffer, 0, _tempBuffer.Length);
+			_outBuffer.Erase ();
+
+
+
 			_cipher.Reset ();
 			base.Reset (finish);
 		}

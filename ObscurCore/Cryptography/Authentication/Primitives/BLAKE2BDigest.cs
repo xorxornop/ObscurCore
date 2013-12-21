@@ -20,16 +20,22 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 {
 	public class Blake2BDigest : IDigest
 	{
-		protected Blake2BHasher hasher;
+		protected Blake2BCore _core;
 		protected int outputSize;
+
+		private ulong[] rawConfig;
+		private byte[] key;
+
+		private static readonly Blake2BConfig DefaultConfig = new Blake2BConfig();
 
 		public Blake2BDigest (int size, bool bits) : this(size, bits, true)
 		{
 		}
 
 		protected Blake2BDigest(int size, bool bits, bool init) {
-            
             if (bits) size /= 8;
+			outputSize = size;
+			if (!init) return;
 
 			var config = new Blake2BConfig () {
 				Key = null,
@@ -38,9 +44,20 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 				OutputSizeInBytes = size,
 			};
 
-			outputSize = size;
-			if (!init) return;
-			hasher = new Blake2BHasher (config);
+			InitCore (config);
+		}
+
+		protected void InitCore (Blake2BConfig config) {
+			rawConfig = Blake2IvBuilder.ConfigB(config ?? DefaultConfig, null);
+			if (config.Key != null && config.Key.Length != 0) {
+				key = new byte[128];
+				Array.Copy(config.Key, key, config.Key.Length);
+			}
+			outputSize = config.OutputSizeInBytes;
+			_core.Initialize (rawConfig);
+			if(!key.IsNullOrZeroLength()) {
+				_core.HashCore (key, 0, key.Length);
+			}
 		}
 
 		#region IDigest implementation
@@ -55,25 +72,30 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
 	    public void Update (byte input)
 		{
-			hasher.Update (new byte[] { input });
+			_core.HashCore (new byte[] { input }, 0, 1);
 		}
 
 		public void BlockUpdate (byte[] input, int inOff, int length)
 		{
-			hasher.Update (input, inOff, length);
+			_core.HashCore (input, inOff, length);
 		}
 
 		public int DoFinal (byte[] output, int outOff)
 		{
-			var outputBytes = hasher.Finish ();
-			Array.Copy (outputBytes, 0, output, outOff, outputBytes.Length);
-            Reset();
-			return outputBytes.Length;
+			var fullResult = _core.HashFinal();
+			Array.Copy(fullResult, 0, output, outOff, outputSize);
+			return outputSize;
 		}
 
 		public void Reset ()
 		{
-			hasher.Init ();
+			if(rawConfig == null) {
+				throw new InvalidOperationException ();
+			}
+			_core.Initialize (rawConfig);
+			if(!key.IsNullOrZeroLength()) {
+				_core.HashCore (key, 0, key.Length);
+			}
 		}
 
 		public string AlgorithmName {

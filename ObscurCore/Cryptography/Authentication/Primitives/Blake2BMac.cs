@@ -26,18 +26,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		/// </summary>
 		/// <param name="size">Size of the MAC to produce.</param>
 		/// <param name="bits">Whether <paramref name="size"/> is interpreted as bits or bytes. If true, bits.</param>
-		public Blake2BMac (int size, bool bits) : this(size, bits, true)
+		public Blake2BMac (int size, bool bits) : base(size, bits, false)
 		{
-		}
-
-		/// <summary>
-		/// If using this constructor, be SURE to use Init() before doing anything 
-		/// else with the object to avoid null reference exceptions!
-		/// </summary>
-		/// <param name="size">Size of the MAC to produce.</param>
-		/// <param name="bits">Whether <paramref name="size"/> is interpreted as bits or bytes. If true, bits.</param>
-		/// <param name="init"><param>
-		internal Blake2BMac(int size, bool bits, bool init) : base(size, bits, init) {
 		}
 
 		#region IMac implementation
@@ -89,7 +79,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 				OutputSizeInBytes = outputSize,
 			};
 
-			hasher = new Blake2BHasher (config);
+			base.InitCore (config);
+		}
+
+		public void Init(byte[] key, byte[] salt) {
+			this.Init (key, salt, null);
 		}
 
 	    public int MacSize {
@@ -97,10 +91,6 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 	    }
 
 	    #endregion
-
-        public void Init (byte[] key, byte[] salt) {
-            this.Init(key, salt, null);
-        }
     }
 }
 

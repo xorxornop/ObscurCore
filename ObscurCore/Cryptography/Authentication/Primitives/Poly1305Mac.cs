@@ -17,6 +17,7 @@
 
 using System;
 using ObscurCore.Cryptography.Ciphers;
+using ObscurCore.Extensions.BitPacking;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
@@ -34,11 +35,6 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		private UInt64[] t;
 		private UInt64 c;
 
-
-		public Poly1305Mac ()
-		{
-		}
-
 		#region IMac implementation
 
 		public void Init (ICipherParameters parameters)
@@ -54,14 +50,14 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 				if(key.Length > 32) throw new ArgumentOutOfRangeException("parameters", "Key is longer than 32 bytes.");
 
 				_key = new Array8 {
-					x0 = ByteIntegerConverter.LoadLittleEndian32(key, 0),
-					x1 = ByteIntegerConverter.LoadLittleEndian32(key, 4),
-					x2 = ByteIntegerConverter.LoadLittleEndian32(key, 8),
-					x3 = ByteIntegerConverter.LoadLittleEndian32(key, 12),
-					x4 = ByteIntegerConverter.LoadLittleEndian32(key, 16),
-					x5 = ByteIntegerConverter.LoadLittleEndian32(key, 20),
-					x6 = ByteIntegerConverter.LoadLittleEndian32(key, 24),
-					x7 = ByteIntegerConverter.LoadLittleEndian32(key, 28)
+					x0 = key.LittleEndianToUInt32(0),
+					x1 = key.LittleEndianToUInt32(4),
+					x2 = key.LittleEndianToUInt32(8),
+					x3 = key.LittleEndianToUInt32(12),
+					x4 = key.LittleEndianToUInt32(16),
+					x5 = key.LittleEndianToUInt32(20),
+					x6 = key.LittleEndianToUInt32(24),
+					x7 = key.LittleEndianToUInt32(28)
 				};
 
 			} else {
@@ -110,10 +106,10 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		/// <param name="m">Input message.</param>
 		/// <param name="mStart">Input message offset.</param>
 		private void DoBlock(byte[] m, int mStart) {
-			t0 = ByteIntegerConverter.LoadLittleEndian32(m, 0);
-			t1 = ByteIntegerConverter.LoadLittleEndian32(m, 4);
-			t2 = ByteIntegerConverter.LoadLittleEndian32(m, 8);
-			t3 = ByteIntegerConverter.LoadLittleEndian32(m, 12);
+			t0 = m.LittleEndianToUInt32 (0);
+			t1 = m.LittleEndianToUInt32 (4);
+			t2 = m.LittleEndianToUInt32 (8);
+			t3 = m.LittleEndianToUInt32 (12);
 
 			h0 += t0 & 0x3ffffff;
 			h1 += (uint)(((((UInt64)t1 << 32) | t0) >> 26) & 0x3ffffff);
@@ -151,10 +147,10 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 					mp[j] = 0;
 				_blockBufferOffset = 0;
 
-				t0 = ByteIntegerConverter.LoadLittleEndian32(mp, 0);
-				t1 = ByteIntegerConverter.LoadLittleEndian32(mp, 4);
-				t2 = ByteIntegerConverter.LoadLittleEndian32(mp, 8);
-				t3 = ByteIntegerConverter.LoadLittleEndian32(mp, 12);
+				t0 = mp.LittleEndianToUInt32 (0);
+				t1 = mp.LittleEndianToUInt32 (4);
+				t2 = mp.LittleEndianToUInt32 (8);
+				t3 = mp.LittleEndianToUInt32 (12);
 
 				h0 += t0 & 0x3ffffff;
 				h1 += (uint)(((((UInt64)t1 << 32) | t0) >> 26) & 0x3ffffff);
@@ -194,10 +190,10 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			f2 = ((h2 >> 12) | (h3 << 14)) + (UInt64)_key.x6;
 			f3 = ((h3 >> 18) | (h4 << 8)) + (UInt64)_key.x7;
 
-			ByteIntegerConverter.StoreLittleEndian32(output, outOff + 0, (uint)f0); f1 += (f0 >> 32);
-			ByteIntegerConverter.StoreLittleEndian32(output, outOff + 4, (uint)f1); f2 += (f1 >> 32);
-			ByteIntegerConverter.StoreLittleEndian32(output, outOff + 8, (uint)f2); f3 += (f2 >> 32);
-			ByteIntegerConverter.StoreLittleEndian32(output, outOff + 12, (uint)f3);
+			((uint)f0).ToLittleEndian (output, outOff); f1 += (f0 >> 32);
+			((uint)f1).ToLittleEndian (output, outOff + 4); f2 += (f1 >> 32);
+			((uint)f2).ToLittleEndian (output, outOff + 8); f3 += (f2 >> 32);
+			((uint)f3).ToLittleEndian (output, outOff + 12);
 
 			return 16;
 		}
@@ -233,6 +229,9 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			nb = 0;
 			t = new UInt64[5];
 			c = 0;
+
+			Array.Clear (_blockBuffer, 0, _blockBuffer.Length);
+			_blockBufferOffset = 0;
 		}
 
 		public string AlgorithmName {
@@ -249,7 +248,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
 		#endregion
 
-		internal struct Array8
+		private struct Array8
 		{
 			public UInt32 x0;
 			public UInt32 x1;
@@ -259,26 +258,6 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			public UInt32 x5;
 			public UInt32 x6;
 			public UInt32 x7;
-		}
-
-		private static class ByteIntegerConverter
-		{
-			public static UInt32 LoadLittleEndian32(byte[] buf, int offset)
-			{
-				return
-					(UInt32)(buf[offset + 0])
-					| (((UInt32)(buf[offset + 1])) << 8)
-					| (((UInt32)(buf[offset + 2])) << 16)
-					| (((UInt32)(buf[offset + 3])) << 24);
-			}
-
-			public static void StoreLittleEndian32(byte[] buf, int offset, UInt32 value)
-			{
-				buf[offset + 0] = (byte)value;
-				buf[offset + 1] = (byte)(value >> 8);
-				buf[offset + 2] = (byte)(value >> 16);
-				buf[offset + 3] = (byte)(value >> 24);
-			}
 		}
 	}
 }

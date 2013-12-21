@@ -128,14 +128,6 @@ namespace ObscurCore.Tests.Cryptography
         }
         #endregion
 
-        [Test]
-        public virtual void CTS () {
-            // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.CtsCbc,
-                                                      BlockCipherPadding.None, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
-            RunEqualityTest(config);
-        }
-
         #region CBC with padding modes
         [Test]
         public virtual void CBC_ISO10126D2 () {
@@ -174,24 +166,6 @@ namespace ObscurCore.Tests.Cryptography
             // Using default block & key size
             var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.Cbc,
                                                       BlockCipherPadding.X923, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
-            RunEqualityTest(config);
-        }
-        #endregion
-
-        #region Authenticated (AEAD) modes
-        [Test]
-        public virtual void GCM () {
-            // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateAeadBlockCipherConfiguration(BlockCipher, AeadBlockCipherMode.Gcm, BlockCipherPadding.None, 
-                _defaultKeySize, _defaultBlockSize, null);
-            RunEqualityTest(config);
-        }
-
-        [Test]
-        public virtual void EAX () {
-            // Using default block & key size
-            var config = SymmetricCipherConfigurationFactory.CreateAeadBlockCipherConfiguration(BlockCipher, AeadBlockCipherMode.Eax, BlockCipherPadding.None, 
-                _defaultKeySize, _defaultBlockSize, null);
             RunEqualityTest(config);
         }
         #endregion

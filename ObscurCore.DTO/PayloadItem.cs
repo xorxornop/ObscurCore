@@ -113,19 +113,22 @@ namespace ObscurCore.DTO
         /// </summary>
         [ProtoMember(6, IsRequired = true)]
         public SymmetricCipherConfiguration Encryption { get; set; }
+
+		[ProtoMember(7, IsRequired = false)]
+		public VerificationFunctionConfiguration EncryptionAuthentication { get; set; }
 		
         /// <summary>
         /// Key confirmation configuration for this payload item. 
 		/// Used to validate the existence and validity of keying material 
 		/// at the respondent's side without disclosing the key itself.
         /// </summary>
-        [ProtoMember(7, IsRequired = false)]
+		[ProtoMember(8, IsRequired = false)]
 		public VerificationFunctionConfiguration KeyConfirmation { get; set; }
 
         /// <summary>
         /// Key derivation configuration for this payload item.
         /// </summary>
-        [ProtoMember(8, IsRequired = false)]
+		[ProtoMember(9, IsRequired = false)]
         public KeyDerivationConfiguration KeyDerivation { get; set; }
 
         public override bool Equals (object obj)

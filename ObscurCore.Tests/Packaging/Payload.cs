@@ -79,18 +79,17 @@ namespace ObscurCore.Tests.Packaging
 	            items[index].ExternalLength = items[index].StreamBinding.Length;
 	        }
 
-	        var transforms = GetTransforms(items, true);
+			Manifest manifest = new Manifest {
+				PayloadItems = items
+			};
+
+
 			var mux = Source.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutScheme>(), true, ms, 
-                items.ToList<IStreamBinding>(), transforms, payloadConfig);
+				manifest, payloadConfig);
 			
 			Assert.DoesNotThrow (mux.ExecuteAll);
 
             Debug.Print("\n##### END OF MUXING OPERATION #####\n");
-
-            // Get internal lengths
-	        for (var i = 0; i < items.Count; i++) {
-	            items[i].InternalLength = mux.GetItemIO(i);
-	        }
 
             var muxIn = mux.TotalSourceIO;
 
@@ -118,11 +117,9 @@ namespace ObscurCore.Tests.Packaging
 	            payloadItem.SetStreamBinding(() => new FileStream(demuxPath + Path.DirectorySeparatorChar + item.RelativePath, FileMode.Create));
 	        }
 
-	        transforms = GetTransforms(items, false);
-
 	        ms.Seek(0, SeekOrigin.Begin);
             mux = Source.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutScheme>(), false, ms, 
-                items.ToList<IStreamBinding>(), transforms, payloadConfig);
+				manifest, payloadConfig);
 
             Assert.DoesNotThrow(mux.ExecuteAll);
 

@@ -129,6 +129,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			get { return "HC-256"; }
 		}
 
+		public int StateSize
+		{
+			get { return 32; }
+		}
+
 		/**
 		* Initialise a HC-256 cipher.
 		*

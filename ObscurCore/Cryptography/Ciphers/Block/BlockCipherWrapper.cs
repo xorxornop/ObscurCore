@@ -27,25 +27,32 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         public int OperationSize { get { return _blockSize; } }
 
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
-        /// </summary>
-        public BlockCipherWrapper(bool encrypting, IBlockCipher cipher, IBlockCipherPadding padding) {
-            _cipher = cipher;
+		/// <summary>
+		/// Initializes a new <see cref="ObscurCore.Cryptography.Ciphers.Block.BlockCipherWrapper"/>.
+		/// </summary>
+		/// <param name="encrypting">If set to <c>true</c> encrypting.</param>
+		/// <param name="cipher">Cipher to wrap.</param>
+		/// <param name="padding">Padding scheme used with the cipher. Null if none.</param>
+		public BlockCipherWrapper(bool encrypting, IBlockCipher cipher, IBlockCipherPadding padding) {
+			if (cipher == null) {
+				throw new ArgumentNullException ("cipher");
+			}
+
+			Encrypting = encrypting;
+			_cipher = cipher;
             _padding = padding;
-            Encrypting = encrypting;
             _blockSize = cipher.BlockSize;
         }
 
         /// <summary>
-        /// Process a whole block of plaintext/ciphertext into the opposite form.
+		/// Process a single block of plaintext/ciphertext into the opposite form.
         /// </summary>
         /// <param name="input">Array to take input bytes from.</param>
         /// <param name="inputOffset">Position at which to read from.</param>
         /// <param name="output">Array to put output bytes in.</param>
         /// <param name="outputOffset">Position at which to write to.</param>
         public int ProcessBytes(byte[] input, int inputOffset, byte[] output, int outputOffset) {
-            if (input.Length > inputOffset + _blockSize) {
+			if (input.Length < inputOffset + _blockSize) {
                 throw new ArgumentException("Input array not large enough to supply input block.", "input");
             } else if (output.Length < outputOffset + _blockSize) {
                 throw new ArgumentException("Output array not large enough to accept output block.", "output");
@@ -58,45 +65,44 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         /// </summary>
         /// <param name="finalBytes">Block of plaintext/ciphertext to process as final block.</param>
         /// <returns></returns>
-        public byte[] ProcessFinal(byte[] finalBytes) {
-            var workingBlock = new byte[_blockSize];
-            byte[] outputBlock;
-
+		public int ProcessFinal(byte[] input, int inputOffset, int length, byte[] output, int outputOffset) {
+			var workingBlock = new byte[_blockSize];
             if (Encrypting) {
                 if (_cipher.IsPartialBlockOkay) {
                     // Output block is truncated size
-                    outputBlock = new byte[finalBytes.Length];
-                    Array.Copy(finalBytes, workingBlock, finalBytes.Length);
                     // Padding is pointless if cipher supports partial blocks, so we won't even support it
-                    _cipher.ProcessBlock(workingBlock, 0, workingBlock, 0);
-                    Array.Copy(workingBlock, outputBlock, finalBytes.Length);
+					_cipher.ProcessBlock(input, inputOffset, workingBlock, 0);
+					Array.Copy (workingBlock, 0, output, outputOffset, length);
                 } else {
                     // Output block is full block size
-                    outputBlock = new byte[_blockSize];
-                    Array.Copy(finalBytes, outputBlock, finalBytes.Length);
                     // Padding is required
-                    _padding.AddPadding(outputBlock, finalBytes.Length);
-                    _cipher.ProcessBlock(outputBlock, 0, outputBlock, 0);
+					Array.Copy(input, inputOffset, workingBlock, 0, _blockSize);
+					length += _padding.AddPadding(workingBlock, length);
+					_cipher.ProcessBlock(workingBlock, 0, output, outputOffset);
                 }
                 Reset();
             } else {
                 if (_cipher.IsPartialBlockOkay) {
-                    outputBlock = new byte[finalBytes.Length];
-                    Array.Copy(finalBytes, workingBlock, finalBytes.Length);
-                    _cipher.ProcessBlock(workingBlock, 0, workingBlock, 0);
-                    Array.Copy(workingBlock, outputBlock, finalBytes.Length);
-                    Reset();
+					_cipher.ProcessBlock(input, inputOffset, workingBlock, 0);
+					Array.Copy (workingBlock, 0, output, outputOffset, length);
+					Reset ();
                 } else {
-                    if (finalBytes.Length != _blockSize) {
-                        throw new CryptoException();
-                    }
-                    Array.Copy(finalBytes, workingBlock, finalBytes.Length);
-                    _cipher.ProcessBlock(workingBlock, 0, workingBlock, 0);
+					if (length != _blockSize) {
+						if(length == 0 && _padding != null) {
+							// Overran the end
+							outputOffset -= _blockSize;
+							Array.Copy (output, outputOffset, workingBlock, 0, _blockSize);
+						} else {
+							throw new CryptoException();
+						}
+					} else {
+						_cipher.ProcessBlock(input, inputOffset, workingBlock, 0);
+					}
                     try {
                         // Determine the number of padding bytes
                         var paddingByteCount = _padding.PadCount(workingBlock);
-                        outputBlock = new byte[_blockSize - paddingByteCount];
-                        Array.Copy(workingBlock, outputBlock, outputBlock.Length);
+						Array.Copy(workingBlock, 0, output, outputOffset, _blockSize - paddingByteCount);
+						length -= paddingByteCount;
                     }
                     finally {
                         Reset();
@@ -104,7 +110,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
                 }
             }
 
-            return outputBlock;
+			return length;
         }
 
         public void Reset() {

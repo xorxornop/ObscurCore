@@ -25,11 +25,13 @@ namespace ObscurCore.Cryptography
 		/// <summary>
 		/// The output/digest of the internal hash function. Zeroed if function is not finished.
 		/// </summary>
-		public byte[] Mac { get { return _outputRef; } }
+		public byte[] Mac { get { return _output; } }
 
 		private IMac _mac;
-	    private readonly byte[] _outputRef;
+	    private readonly byte[] _output;
 		private bool _disposed;
+
+		private byte[] _buffer;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.HashStream"/> class.
@@ -45,18 +47,26 @@ namespace ObscurCore.Cryptography
 			byte[] config = null, bool closeOnDispose = true) : base(binding, writing, closeOnDispose, false)
 		{
 			_mac = Source.CreateMacPrimitive (function, key, salt, config);
-            _outputRef = new byte[_mac.MacSize];
-		    output = _outputRef;
+            _output = new byte[_mac.MacSize];
+		    output = _output;
 		}
 
-        public MacStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, out byte[] output, byte[] key, 
-            bool closeOnDispose = true) : base(binding, writing, closeOnDispose, false) 
-        {
-            _mac = Source.CreateMacPrimitive (config.FunctionName.ToEnum<MacFunction>(), key, config.Salt, config.FunctionConfiguration);
-            _outputRef = new byte[_mac.MacSize];
-            output = _outputRef;
-        }
+		public MacStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, byte[] key, 
+			bool closeOnDispose = true) : base(binding, writing, closeOnDispose, false) 
+		{
+			if(config.FunctionType.ToEnum<VerificationFunctionType>() != VerificationFunctionType.Mac) {
 
+			}
+
+			_mac = Source.CreateMacPrimitive (config.FunctionName.ToEnum<MacFunction>(), key, config.Salt, config.FunctionConfiguration);
+			_output = new byte[_mac.MacSize];
+		}
+
+		public MacStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, out byte[] output, byte[] key, 
+			bool closeOnDispose = true) : this(binding, writing, config, key, closeOnDispose)
+		{
+			output = _output;
+		}
 
 		public override void Write (byte[] buffer, int offset, int count) {
 			if (count > 0) {
@@ -68,7 +78,7 @@ namespace ObscurCore.Cryptography
 		public override void WriteByte (byte b) {
 			_mac.Update(b);
 			base.WriteByte (b);
-		} 
+		}
 
 		public override int ReadByte () {
 			int readByte = base.ReadByte();
@@ -86,11 +96,56 @@ namespace ObscurCore.Cryptography
 			return readBytes;
 		}
 
+		public override long WriteExactlyFrom (Stream source, long length) {
+			if(source == null) {
+				throw new ArgumentNullException ("source");
+			}
+			if(_buffer == null) {
+				_buffer = new byte[1024];
+			}
+			int iterIn = 0, totalIn = 0;
+			while(totalIn > length) {
+				iterIn = source.Read (_buffer, 0, (int) Math.Min (_buffer.Length, length - totalIn));
+				if(iterIn == 0) {
+					throw new EndOfStreamException ();
+				}
+				totalIn += iterIn;
+				_mac.BlockUpdate(_buffer, 0, iterIn);
+				Binding.Write (_buffer, 0, iterIn);
+			}
+
+			return totalIn;
+		}
+
+		public override long ReadExactlyTo (Stream destination, long length) {
+			if(destination == null) {
+				throw new ArgumentNullException ("destination");
+			}
+			if(_buffer == null) {
+				_buffer = new byte[1024];
+			}
+			int iterIn = 0, totalIn = 0;
+			while(totalIn > length) {
+				iterIn = Binding.Read (_buffer, 0, (int) Math.Min (_buffer.Length, length - totalIn));
+				if(iterIn == 0) {
+					throw new EndOfStreamException ();
+				}
+				totalIn += iterIn;
+				_mac.BlockUpdate(_buffer, 0, iterIn);
+				destination.Write (_buffer, 0, iterIn);
+			}
+
+			return totalIn;
+		}
+
+		public void Update (byte[] buffer, int offset, int count) {
+			_mac.BlockUpdate (buffer, offset, count);
+		}
+
 		protected override void Finish () {
 			if (Finished)
 				return;
-			//_outputRef = new byte[_mac.GetMacSize()];
-			_mac.DoFinal (_outputRef, 0);
+			_mac.DoFinal (_output, 0);
 			base.Finish ();
 		}
 

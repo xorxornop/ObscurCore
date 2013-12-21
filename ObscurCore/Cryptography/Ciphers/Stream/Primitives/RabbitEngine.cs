@@ -14,23 +14,27 @@
 //    limitations under the License.
 
 using System;
+using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.Extensions.BitPacking;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
-    public sealed class RabbitEngine : IStreamCipher
+	public sealed class RabbitEngine : IStreamCipher, ICsprngCompatible
     {
         // Stores engine state
         private byte[]          _workingKey,
                                 _workingIV;
 
         private bool	        _initialised;
-        private readonly uint[] state              = new uint[8],
-                                counter              = new uint[8];
-        private uint counterarry;
+		private readonly uint[] _state 			= new uint[8],
+								_counter  		= new uint[8];
+		private uint 			_counterArray;
 
-        private readonly uint[] constants = new uint[] { 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D,
+		private byte[] 			_keyStream 		= new byte[16];
+		private int 			_keyStreamPtr 	= 16;
+
+		private readonly uint[] constants = new uint[] 	{ 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D,
                                                           0xD34D34D3, 0x34D34D34, 0x4D34D34D, 0xD34D34D3 };
 
         public void Init (bool forEncryption, ICipherParameters parameters) {
@@ -55,10 +59,17 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             get { return "Rabbit"; }
         }
 
+		public int StateSize
+		{
+			get { return 16; }
+		}
+
         public void Reset () {
             KeySetup(_workingKey);
             IVSetup(_workingIV);
             _initialised = true;
+			Array.Clear (_keyStream, 0, 16);
+			_keyStreamPtr = 16;
         }
 
         public byte ReturnByte (byte input) {
@@ -67,94 +78,106 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             //}
             if (!_initialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
 
-            throw new NotImplementedException(); // TODO: yes... I need to buffer input, and I haven't gotten round to it yet.
-            //return 0;
+			if(_keyStreamPtr == 16) {
+				NextState();
+				Pack.UInt32_To_LE((_state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16)), _keyStream, 0);
+				Pack.UInt32_To_LE((_state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16)), _keyStream, 4);
+				Pack.UInt32_To_LE((_state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16)), _keyStream, 8);
+				Pack.UInt32_To_LE((_state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16)), _keyStream, 12);
+			}
+			return _keyStream [_keyStreamPtr++];
         }
 
         public void ProcessBytes (byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff) {
             if (!_initialised) {
                 throw new InvalidOperationException(AlgorithmName + " not initialised.");
-            }
-
-            if ((inOff + len) > inBytes.Length) {
+			} else if ((inOff + len) > inBytes.Length) {
 				throw new ArgumentException("Input buffer too short.");
-            }
-
-            if ((outOff + len) > outBytes.Length) {
+			} else if ((outOff + len) > outBytes.Length) {
 				throw new ArgumentException("Output buffer too short.");
             }
 
             //if (limitExceeded(len)) {
             //throw new MaxBytesExceededException("2^70 byte limit per IV would be exceeded; Change IV");
             //}
-            
-            XORKeystream(inBytes, inOff, len, outBytes, outOff);
+
+			if (len == 0)
+				return;
+
+			if(_keyStreamPtr < 16) {
+				int blockLength = 16 - _keyStreamPtr;
+				if (blockLength > len) {
+					blockLength = len;
+				}
+				for (int i = 0; i < blockLength; i++) {
+					outBytes [outOff + i] = (byte)(_keyStream [_keyStreamPtr + i] ^ inBytes [inOff]);
+				}
+				_keyStreamPtr += blockLength;
+				inOff += blockLength;
+				outOff += blockLength;
+				len -= blockLength;
+			}
+
+			if (len == 0)
+				return;
+
+			int truncatedLen;
+			var blocks = Math.DivRem(len, 16, out truncatedLen);
+			for (var i = 0; i < blocks; i++) {
+				NextState();
+				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff) ^ _state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16), outBytes, outOff);
+				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ _state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16), outBytes, outOff + 4);
+				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ _state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16), outBytes, outOff + 8);
+				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ _state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16), outBytes, outOff + 12);
+				inOff += 16;
+				outOff += 16;
+			}
+			if (truncatedLen == 0) return;
+
+			NextState();
+			Pack.UInt32_To_LE((_state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16)), _keyStream, 0);
+			Pack.UInt32_To_LE((_state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16)), _keyStream, 4);
+			Pack.UInt32_To_LE((_state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16)), _keyStream, 8);
+			Pack.UInt32_To_LE((_state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16)), _keyStream, 12);
+			for (int i = 0; i < truncatedLen; i++) {
+				outBytes[outOff + i] = (byte) (inBytes[inOff + i] ^ _keyStream[i]);
+			}
+			_keyStreamPtr = truncatedLen;
         }
+
+		public void GetKeystream(byte[] buffer, int offset, int length) {
+			if(_keyStreamPtr < 16) {
+				int blockLength = 16 - _keyStreamPtr;
+				if (blockLength > length) {
+					blockLength = length;
+				}
+				Array.Copy(_keyStream, _keyStreamPtr, buffer, offset, blockLength);
+				_keyStreamPtr += blockLength;
+				offset += blockLength;
+				length -= blockLength;
+			}
+
+			while (length >= 16) {
+				NextState();
+				Pack.UInt32_To_LE((_state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16)), _keyStream, 0);
+				Pack.UInt32_To_LE((_state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16)), _keyStream, 4);
+				Pack.UInt32_To_LE((_state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16)), _keyStream, 8);
+				Pack.UInt32_To_LE((_state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16)), _keyStream, 12);
+				offset += 16;
+				length -= 16;
+			}
+			if(length > 0) {
+				NextState();
+				Pack.UInt32_To_LE((_state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16)), _keyStream, 0);
+				Pack.UInt32_To_LE((_state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16)), _keyStream, 4);
+				Pack.UInt32_To_LE((_state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16)), _keyStream, 8);
+				Pack.UInt32_To_LE((_state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16)), _keyStream, 12);
+				Array.Copy(_keyStream, 0, buffer, offset, length);
+				_keyStreamPtr = length;
+			}
+		}
 
         #region Private implementation
-        /// <summary>
-        /// XORs generates keystream with input data.
-        /// </summary>
-        /// <param name="inBytes">Input byte array must be a multiple of 16 in length.</param>
-        /// <returns></returns>
-        private void XORKeystream (byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff) {
-            int truncatedLen;
-            var blocks = Math.DivRem(len, 16, out truncatedLen);
-            for (var i = 0; i < blocks; i++) {
-                NextState();
-
-                if (BitConverter.IsLittleEndian) {
-                    // Output/input is in little endian, so we can just do a memcpy
-                    //uint[] tempMap = new uint[4];
-                    //Buffer.BlockCopy(inBytes, inOff, tempMap, 0, sizeof (uint)*4);
-                    //tempMap[0] ^= state[0] ^ (state[5] >> 16) ^ (state[3] << 16);
-                    //tempMap[1] ^= state[2] ^ (state[7] >> 16) ^ (state[5] << 16);
-                    //tempMap[2] ^= state[4] ^ (state[1] >> 16) ^ (state[7] << 16);
-                    //tempMap[3] ^= state[6] ^ (state[3] >> 16) ^ (state[1] << 16);
-                    //Buffer.BlockCopy(tempMap, 0, outBytes, outOff, sizeof (uint)*4);
-
-                    Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff) ^ state[0] ^ (state[5] >> 16) ^ (state[3] << 16), outBytes, outOff);
-                    Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ state[2] ^ (state[7] >> 16) ^ (state[5] << 16), outBytes, outOff + 4);
-                    Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ state[4] ^ (state[1] >> 16) ^ (state[7] << 16), outBytes, outOff + 8);
-                    Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ state[6] ^ (state[3] >> 16) ^ (state[1] << 16), outBytes, outOff + 12);
-                } else {
-                    throw new NotImplementedException(); //TODO: figure out implications of little endianness
-                }
-
-                inOff += 16;
-                outOff += 16;
-            }
-            if (truncatedLen == 0) return;
-
-            NextState();
-
-            var outTruncated = new byte[16];
-            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff) ^ state[0] ^ (state[5] >> 16) ^ (state[3] << 16), outTruncated, 0);
-            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ state[2] ^ (state[7] >> 16) ^ (state[5] << 16), outTruncated, 4);
-            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ state[4] ^ (state[1] >> 16) ^ (state[7] << 16), outTruncated, 8);
-            Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ state[6] ^ (state[3] >> 16) ^ (state[1] << 16), outTruncated, 12);
-            Array.Copy(outTruncated, 0, outBytes, outOff, truncatedLen);
-        }
-
-        /*
-        /// <summary>
-        /// Get raw keystream in a multiple of 16 bytes length.
-        /// </summary>
-        private byte[] GenerateKeystream(int blocks) {
-            var outBytes = new byte[16 * blocks];
-            var outOffset = 0;
-            for (var i = 0; i < blocks; i++)
-            {
-                NextState();
-                Pack.UInt32_To_LE(state[0] ^ (state[5] >> 16) ^ (state[3] << 16), outBytes, outOffset);
-                Pack.UInt32_To_LE(state[2] ^ (state[7] >> 16) ^ (state[5] << 16), outBytes, outOffset + 4);
-                Pack.UInt32_To_LE(state[4] ^ (state[1] >> 16) ^ (state[7] << 16), outBytes, outOffset + 8);
-                Pack.UInt32_To_LE(state[6] ^ (state[3] >> 16) ^ (state[1] << 16), outBytes, outOffset + 12);
-                outOffset += 16;
-            }
-            return outBytes;
-        }
-        */
 
         /// <summary>
         /// Initialise the engine state with key material.
@@ -169,33 +192,33 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             k[3] = BitConverter.ToUInt32(key, 12);
 
             // Generate initial state variables
-            state[0] = k[0];
-            state[2] = k[1];
-            state[4] = k[2];
-            state[6] = k[3];
-            state[1] = (k[3] << 16) | (k[2] >> 16);
-            state[3] = (k[0] << 16) | (k[3] >> 16);
-            state[5] = (k[1] << 16) | (k[0] >> 16);
-            state[7] = (k[2] << 16) | (k[1] >> 16);
+            _state[0] = k[0];
+            _state[2] = k[1];
+            _state[4] = k[2];
+            _state[6] = k[3];
+            _state[1] = (k[3] << 16) | (k[2] >> 16);
+            _state[3] = (k[0] << 16) | (k[3] >> 16);
+            _state[5] = (k[1] << 16) | (k[0] >> 16);
+            _state[7] = (k[2] << 16) | (k[1] >> 16);
 
             // Generate initial counter values
-            counter[0] = RotLeft(k[2], 16);
-            counter[2] = RotLeft(k[3], 16);
-            counter[4] = RotLeft(k[0], 16);
-            counter[6] = RotLeft(k[1], 16);
-            counter[1] = (k[0] & 0xFFFF0000) | (k[1] & 0xFFFF);
-            counter[3] = (k[1] & 0xFFFF0000) | (k[2] & 0xFFFF);
-            counter[5] = (k[2] & 0xFFFF0000) | (k[3] & 0xFFFF);
-            counter[7] = (k[3] & 0xFFFF0000) | (k[0] & 0xFFFF);
+            _counter[0] = RotLeft(k[2], 16);
+            _counter[2] = RotLeft(k[3], 16);
+            _counter[4] = RotLeft(k[0], 16);
+            _counter[6] = RotLeft(k[1], 16);
+            _counter[1] = (k[0] & 0xFFFF0000) | (k[1] & 0xFFFF);
+            _counter[3] = (k[1] & 0xFFFF0000) | (k[2] & 0xFFFF);
+            _counter[5] = (k[2] & 0xFFFF0000) | (k[3] & 0xFFFF);
+            _counter[7] = (k[3] & 0xFFFF0000) | (k[0] & 0xFFFF);
 
             // Clear carry bit
-            counterarry = 0;
+            _counterArray = 0;
 
             // Iterate the system four times
             for (var j = 0; j < 4; j++) NextState();
 
             // Iterate the counters
-            for (var j = 0; j < 8; j++) counter[j] ^= state[(j + 4) & 0x7];
+            for (var j = 0; j < 8; j++) _counter[j] ^= _state[(j + 4) & 0x7];
         }
 
         /// <summary>
@@ -214,12 +237,15 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             // Modify counter values
             var subIndex = 0;
             for (var index = 0; index < 8; index++) {
-                counter[index] ^= i[subIndex];
+                _counter[index] ^= i[subIndex];
                 if (++subIndex > 3) subIndex = 0;
             }
 
             // Iterate the system four times
-            for (var j = 0; j < 4; j++) NextState();
+			NextState();
+			NextState();
+			NextState();
+			NextState();
         }
 
         private static uint RotLeft (uint state, int rot) {
@@ -231,27 +257,27 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             uint[] g = new uint[8], cOld = new uint[8];
 
             /* Save old counter values */
-            for (var i = 0; i < 8; i++) cOld[i] = counter[i];
+            for (var i = 0; i < 8; i++) cOld[i] = _counter[i];
 
             /* Calculate new counter values */
-            counter[0] += constants[0] + counterarry;
+            _counter[0] += constants[0] + _counterArray;
             for (var i = 1; i < 8; i++) {
-                counter[i] += constants[i] + Convert.ToUInt32(counter[i - 1] < cOld[i - 1]);
+                _counter[i] += constants[i] + Convert.ToUInt32(_counter[i - 1] < cOld[i - 1]);
             }
-            counterarry = Convert.ToUInt32(counter[7] < cOld[7]);
+            _counterArray = Convert.ToUInt32(_counter[7] < cOld[7]);
 
             /* Calculate the g-functions */
-            for (var i = 0; i < 8; i++) g[i] = GFunc(state[i] + counter[i]);
+            for (var i = 0; i < 8; i++) g[i] = GFunc(_state[i] + _counter[i]);
 
             /* Calculate new state values */
-            state[0] = g[0] + RotLeft(g[7], 16) + RotLeft(g[6], 16);
-            state[1] = g[1] + RotLeft(g[0], 8) + g[7];
-            state[2] = g[2] + RotLeft(g[1], 16) + RotLeft(g[0], 16);
-            state[3] = g[3] + RotLeft(g[2], 8) + g[1];
-            state[4] = g[4] + RotLeft(g[3], 16) + RotLeft(g[2], 16);
-            state[5] = g[5] + RotLeft(g[4], 8) + g[3];
-            state[6] = g[6] + RotLeft(g[5], 16) + RotLeft(g[4], 16);
-            state[7] = g[7] + RotLeft(g[6], 8) + g[5];
+            _state[0] = g[0] + RotLeft(g[7], 16) + RotLeft(g[6], 16);
+            _state[1] = g[1] + RotLeft(g[0], 8) + g[7];
+            _state[2] = g[2] + RotLeft(g[1], 16) + RotLeft(g[0], 16);
+            _state[3] = g[3] + RotLeft(g[2], 8) + g[1];
+            _state[4] = g[4] + RotLeft(g[3], 16) + RotLeft(g[2], 16);
+            _state[5] = g[5] + RotLeft(g[4], 8) + g[3];
+            _state[6] = g[6] + RotLeft(g[5], 16) + RotLeft(g[4], 16);
+            _state[7] = g[7] + RotLeft(g[6], 8) + g[5];
         }
 
         /// <summary>

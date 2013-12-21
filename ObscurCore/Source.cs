@@ -54,8 +54,6 @@ namespace ObscurCore
 
         private readonly static IDictionary<BlockCipherMode, Func<IBlockCipher, int, IBlockCipher>> ModeInstantiatorsBlock =
             new Dictionary<BlockCipherMode, Func<IBlockCipher, int, IBlockCipher>>();
-        private readonly static IDictionary<AeadBlockCipherMode, Func<IBlockCipher, IAeadBlockCipher>> ModeInstantiatorsAead =
-            new Dictionary<AeadBlockCipherMode, Func<IBlockCipher, IAeadBlockCipher>>();
 
         private readonly static IDictionary<BlockCipherPadding, Func<IBlockCipherPadding>> PaddingInstantiators =
             new Dictionary<BlockCipherPadding, Func<IBlockCipherPadding>>();
@@ -80,9 +78,9 @@ namespace ObscurCore
 
         // Packaging related
 
-        private readonly static IDictionary<PayloadLayoutScheme, Func<bool, Stream, IList<IStreamBinding>, IList<Func<Stream, DecoratingStream>>, 
+		private readonly static IDictionary<PayloadLayoutScheme, Func<bool, Stream, Manifest, 
 			IPayloadConfiguration, PayloadMux>> PayloadLayoutModuleInstantiators = new Dictionary<PayloadLayoutScheme, 
-		    Func<bool, Stream, IList<IStreamBinding>, IList<Func<Stream, DecoratingStream>>, IPayloadConfiguration, PayloadMux>>();
+		Func<bool, Stream, Manifest, IPayloadConfiguration, PayloadMux>>();
 
         static Source() {
             // ######################################## ENGINES ########################################
@@ -131,11 +129,6 @@ namespace ObscurCore
             // The return type is non-compatible :( .
             ModeInstantiatorsBlock.Add(BlockCipherMode.CtsCbc, (cipher, size) => new CbcBlockCipher(cipher));
             ModeInstantiatorsBlock.Add(BlockCipherMode.Ofb, (cipher, size) => new OfbBlockCipher(cipher, size));
-            // AEAD modes
-            ModeInstantiatorsAead.Add(AeadBlockCipherMode.Eax, cipher => new EaxBlockCipher(cipher));
-            ModeInstantiatorsAead.Add(AeadBlockCipherMode.Gcm, cipher => new GcmBlockCipher(cipher));
-            //ModeInstantiatorsAead.Add(AeadBlockCipherMode.Siv, cipher => new SivBlockCipher(cipher));
-			//ModeInstantiatorsAead.Add(AeadBlockCipherMode.Ocb, cipher => new OcbBlockCipher(cipher));
 
             // ######################################## PADDING ########################################
 
@@ -183,9 +176,9 @@ namespace ObscurCore
 
             // ######################################## MAC ########################################
 
-            MacInstantiators.Add(MacFunction.Blake2B256, () => new Blake2BMac(256, true, false));
-			MacInstantiators.Add(MacFunction.Blake2B384, () => new Blake2BMac(384, true, false));
-			MacInstantiators.Add(MacFunction.Blake2B512, () => new Blake2BMac(512, true, false));
+            MacInstantiators.Add(MacFunction.Blake2B256, () => new Blake2BMac(256, true));
+			MacInstantiators.Add(MacFunction.Blake2B384, () => new Blake2BMac(384, true));
+			MacInstantiators.Add(MacFunction.Blake2B512, () => new Blake2BMac(512, true));
 
 			MacInstantiators.Add(MacFunction.Keccak224, () => new KeccakMac(224, true));
 			MacInstantiators.Add(MacFunction.Keccak256, () => new KeccakMac(256, true));
@@ -525,13 +518,13 @@ namespace ObscurCore
 
             // ######################################## PACKAGING ########################################
 
-            PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Simple, (writing, multiplexedStream, streams, transforms, config) => 
-			                         new SimplePayloadMux(writing, multiplexedStream, streams, transforms, config));
-			PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Frameshift, (writing, multiplexedStream, streams, transforms, config) => 
-			                         new FrameshiftPayloadMux(writing, multiplexedStream, streams, transforms, config));
+			PayloadLayoutModuleInstantiators.Add (PayloadLayoutScheme.Simple, (writing, multiplexedStream, manifest, config) => 
+				new SimplePayloadMux (writing, multiplexedStream, manifest, config));
+			PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Frameshift, (writing, multiplexedStream, manifest, config) => 
+					new FrameshiftPayloadMux(writing, multiplexedStream, manifest, config));
 #if(INCLUDE_FABRIC)
-            PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Fabric, (writing, multiplexedStream, streams, transforms, config) => 
-			                                     new FabricPayloadMux(writing, multiplexedStream, streams, transforms, config));
+			PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Fabric, (writing, multiplexedStream, manifest, config) => 
+				new FabricPayloadMux(writing, multiplexedStream, manifest, config));
 #endif
             // ######################################## INIT END ########################################
         }
@@ -591,23 +584,6 @@ namespace ObscurCore
             return CreatePadding(paddingName.ToEnum<BlockCipherPadding>());
         }
 
-        /// <summary>
-        /// Implements an Authenticated Encryption/Decryption (AEAD) mode of operation on top of an existing block cipher. 
-        /// </summary>
-        /// <param name="cipher">The block cipher to implement this mode of operation on top of.</param>
-        /// <param name="modeEnum">The mode of operation to implement.</param>
-        /// <returns>
-        /// IAeadBlockCipher object implementing the relevant mode of operation, 
-        /// overlaying the supplied symmetric block cipher.
-        /// </returns>
-        public static IAeadBlockCipher OverlayBlockCipherWithAeadMode (IBlockCipher cipher, AeadBlockCipherMode modeEnum) {
-            return ModeInstantiatorsAead[modeEnum](cipher);
-        }
-
-        public static IAeadBlockCipher OverlayBlockCipherWithAeadMode (IBlockCipher cipher, string modeName) {
-            return ModeInstantiatorsAead[modeName.ToEnum<AeadBlockCipherMode>()](cipher);
-        }
-
         // Block cipher parameters
 
         public static ICipherParameters CreateKeyParameter(SymmetricBlockCipher cipherEnum, byte[] key) {
@@ -635,26 +611,6 @@ namespace ObscurCore
                     iv.Length);
             } else {
                 cipherParams = new ParametersWithIV(CreateKeyParameter(cipherEnum, key), iv, 0, iv.Length);
-            }
-
-            return cipherParams;
-        }
-
-        public static ICipherParameters CreateAeadBlockCipherParameters(SymmetricBlockCipher cipherEnum, byte[] key, byte[] iv, 
-            int macSizeBits, byte[] ad)
-		{
-            ICipherParameters cipherParams = null;
-
-            if(!Athena.Cryptography.BlockCiphers[cipherEnum].AllowableBlockSizes.Contains(macSizeBits)) 
-                throw new InvalidDataException("MAC size is unsupported/incompatible.");
-
-            if (cipherEnum == SymmetricBlockCipher.TripleDes) {
-                // Treat 3DES differently to other ciphers for key parameter object creation
-                cipherParams = new AeadParameters(new DesEdeParameters(key, 0, key.Length), macSizeBits, iv,
-                    ad ?? new byte[0]);
-            } else {
-                cipherParams = new AeadParameters(new KeyParameter(key, 0, key.Length), macSizeBits, iv,
-                    ad ?? new byte[0]);
             }
 
             return cipherParams;
@@ -874,10 +830,10 @@ namespace ObscurCore
         /// <returns>
         /// An module object deriving from PayloadMultiplexer.
         /// </returns>
-        public static PayloadMux CreatePayloadMultiplexer (PayloadLayoutScheme schemeEnum, bool writing, Stream multiplexedStream, IList<IStreamBinding> streams, 
-		                                            IList<Func<Stream, DecoratingStream>> transforms, IPayloadConfiguration config)
+		public static PayloadMux CreatePayloadMultiplexer (PayloadLayoutScheme schemeEnum, bool writing, 
+			Stream multiplexedStream, Manifest manifest, IPayloadConfiguration config)
 		{
-			return PayloadLayoutModuleInstantiators[schemeEnum](writing, multiplexedStream, streams, transforms, config);
+			return PayloadLayoutModuleInstantiators[schemeEnum](writing, multiplexedStream, manifest, config);
 		}
     }
 }

@@ -40,7 +40,7 @@ namespace ObscurCore.Cryptography
 					throw new ConfigurationValueInvalidException("Cipher cannot have a key size of 0 (zero).");
                 }
                 if (!Configuration.Key.IsNullOrZeroLength() &&
-                    Configuration.Key.Length != Configuration.KeySizeBits/8) {
+					Configuration.Key.Length != Configuration.KeySizeBits / 8) {
                     throw new KeySizeException("Key size inconsistent with actual key length.");
                 }
                 ThrowIfKeySizeIncompatible();
@@ -57,7 +57,7 @@ namespace ObscurCore.Cryptography
         public int KeySizeBytes
         {
             get { return KeySizeBits / 8; }
-            set { Configuration.KeySizeBits = value; }
+			set { Configuration.KeySizeBits = value * 8; }
         }
 
         /// <summary>
