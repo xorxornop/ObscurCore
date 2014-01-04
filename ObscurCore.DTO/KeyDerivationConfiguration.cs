@@ -106,14 +106,14 @@ namespace ObscurCore.DTO
     public class ScryptConfiguration : IDataTransferObject, IEquatable<ScryptConfiguration>
     {
         /// <summary>
-        /// Power to raise the iteration count by, e.g. 2^n iterations. 
+		/// Number of iterations of hashing to perform. 
         /// Causes the algorithm to take more cumulative time.
         /// </summary>
         /// <remarks>
         /// General-use cost increase. Use to scale cost/difficulty without changing CPU or memory cost directly, only time.
         /// </remarks>
 		[ProtoMember(1, IsRequired = true)]
-        public int IterationPower { get; set; }
+        public int Iterations { get; set; }
 
         /// <summary>
         /// Blocks to operate on. Increases memory cost, as this algorithm is memory-hard. 
@@ -125,7 +125,7 @@ namespace ObscurCore.DTO
         public int Blocks { get; set; }
 
         /// <summary>
-        /// How many co-dependant mix operations must be performed.
+		/// How many co-dependent mix operations must be performed.
         /// </summary>
         /// <remarks>
         /// Can be run in parallel, hence the name. Increases CPU cost. Scale according to CPU speed advancements.
@@ -151,13 +151,13 @@ namespace ObscurCore.DTO
 		public bool Equals (ScryptConfiguration other) {
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
-			return IterationPower == other.IterationPower && Blocks == other.Blocks && Parallelism == other.Parallelism;
+			return Iterations == other.Iterations && Blocks == other.Blocks && Parallelism == other.Parallelism;
 		}
 
     	public override int GetHashCode ()
     	{
     		unchecked {
-				int hashCode = IterationPower.GetHashCode();
+				int hashCode = Iterations.GetHashCode();
 				hashCode = (hashCode * 397) ^ Blocks.GetHashCode();
 				hashCode = (hashCode * 397) ^ Parallelism.GetHashCode();
 				return hashCode;

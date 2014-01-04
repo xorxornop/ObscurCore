@@ -373,61 +373,51 @@ namespace ObscurCore
 					Name = MacFunction.Blake2B256.ToString(),
 					DisplayName = "BLAKE-2B-256",
 					OutputSize = 256,
-					SaltSupported = true
 				});
 				_macFunctionDirectory.Add(MacFunction.Blake2B384, new MacFunctionDescription {
 					Name = MacFunction.Blake2B384.ToString(),
 					DisplayName = "BLAKE-2B-384",
 					OutputSize = 384,
-					SaltSupported = true
 				});
 				_macFunctionDirectory.Add(MacFunction.Blake2B512, new MacFunctionDescription {
 					Name = MacFunction.Blake2B512.ToString(),
 					DisplayName = "BLAKE-2B-512",
-					OutputSize = 512,
-					SaltSupported = true
+					OutputSize = 512
 				});
 				_macFunctionDirectory.Add(MacFunction.Keccak224, new MacFunctionDescription {
 					Name = MacFunction.Keccak224.ToString(),
 					DisplayName = "Keccak-224 (SHA-3-224)",
-					OutputSize = 224,
-					SaltSupported = true
+					OutputSize = 224
 				});
 				_macFunctionDirectory.Add(MacFunction.Keccak256, new MacFunctionDescription {
 					Name = MacFunction.Keccak256.ToString(),
 					DisplayName = "Keccak-256 (SHA-3-256)",
-					OutputSize = 256,
-					SaltSupported = true
+					OutputSize = 256
 				});
 				_macFunctionDirectory.Add(MacFunction.Keccak384, new MacFunctionDescription {
 					Name = MacFunction.Keccak384.ToString(),
 					DisplayName = "Keccak-384 (SHA-3-384)",
-					OutputSize = 384,
-					SaltSupported = true
+					OutputSize = 384
 				});
 				_macFunctionDirectory.Add(MacFunction.Keccak512, new MacFunctionDescription {
 					Name = MacFunction.Keccak512.ToString(),
 					DisplayName = "Keccak-512 (SHA-3-512)",
-					OutputSize = 512,
-					SaltSupported = true
+					OutputSize = 512
 				});
 				_macFunctionDirectory.Add(MacFunction.Poly1305, new MacFunctionDescription {
 					Name = MacFunction.Poly1305.ToString(),
 					DisplayName = "Poly1305",
-					OutputSize = 128,
-					SaltSupported = false
+					OutputSize = 128
 				});
 				_macFunctionDirectory.Add(MacFunction.Cmac, new MacFunctionDescription {
 					Name = MacFunction.Cmac.ToString(),
 					DisplayName = "CMAC/OMAC1 construction",
-					OutputSize = null,
-					SaltSupported = false
+					OutputSize = null
 				});
 				_macFunctionDirectory.Add(MacFunction.Hmac, new MacFunctionDescription {
 					Name = MacFunction.Hmac.ToString(),
 					DisplayName = "HMAC construction",
-					OutputSize = null,
-					SaltSupported = false
+					OutputSize = null
 				});
 
                 // Add key derivation schemes
@@ -460,8 +450,6 @@ namespace ObscurCore
                 new Dictionary<SymmetricStreamCipher, SymmetricCipherDescription>();
             private static readonly Dictionary<BlockCipherMode, SymmetricCipherModeDescription> _blockCipherModeDirectory =
                 new Dictionary<BlockCipherMode, SymmetricCipherModeDescription>();
-            private static readonly Dictionary<AeadBlockCipherMode, SymmetricCipherModeDescription> _aeadBlockCipherModeDirectory =
-                new Dictionary<AeadBlockCipherMode, SymmetricCipherModeDescription>();
             private static readonly Dictionary<BlockCipherPadding, SymmetricCipherPaddingDescription> _blockCipherPaddingDirectory =
                 new Dictionary<BlockCipherPadding, SymmetricCipherPaddingDescription>();
             private static readonly Dictionary<HashFunction, HashFunctionDescription> _hashFunctionDirectory =
@@ -485,10 +473,6 @@ namespace ObscurCore
 
             public static IReadOnlyDictionary<BlockCipherMode, SymmetricCipherModeDescription> BlockCipherModes {
                 get { return _blockCipherModeDirectory; }
-            }
-
-            public static IReadOnlyDictionary<AeadBlockCipherMode, SymmetricCipherModeDescription> AeadBlockCipherModes {
-                get { return _aeadBlockCipherModeDirectory; }
             }
 
             public static IReadOnlyDictionary<BlockCipherPadding, SymmetricCipherPaddingDescription> BlockCipherPaddings {

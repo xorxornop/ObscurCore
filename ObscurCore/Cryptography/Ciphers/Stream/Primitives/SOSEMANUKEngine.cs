@@ -78,13 +78,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         public void ProcessBytes (byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff) {
             if (!_initialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
             if ((inOff + len) > inBytes.Length) throw new ArgumentException("Input buffer too short.");
-			if ((outOff + len) > outBytes.Length) throw new ArgumentException("Output buffer too short.");
+			if ((outOff + len) > outBytes.Length) 
+				throw new ArgumentException("Output buffer too short.");
             //CheckLimitExceeded();
 
 
 
 			int remainder;
-			int blocks = Math.DivRem (len, _keyStream.Length, out remainder);
+			int blocks = Math.DivRem (len, BufferLen, out remainder);
 
 			for (int i = 0; i < blocks; i++) {
 				GenerateKeystream (_keyStream, 0, _keyStream.Length);
@@ -105,7 +106,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
         public void GetKeystream(byte[] buffer, int offset, int len) {
             if (!_initialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
-			if ((offset + len) > buffer.Length) throw new ArgumentException("Output buffer too short.");
+			if ((offset + len) > buffer.Length) 
+				throw new ArgumentException("Output buffer too short.");
             //CheckLimitExceeded();
 
             GenerateKeystream(buffer, offset, len);

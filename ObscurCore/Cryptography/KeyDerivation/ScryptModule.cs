@@ -27,12 +27,12 @@ namespace ObscurCore.Cryptography.KeyDerivation
 	{
 		private readonly int _outputSize, _iterationPower, _blocks, _parallelisation;
 
-        public const int DefaultIterationPower = 16, DefaultBlocks = 8, DefaultParallelisation = 2;
+		public const int DefaultIterations = 16384, DefaultBlocks = 8, DefaultParallelisation = 2;
 
 	    public ScryptModule (int outputSize, byte[] config) {
 			_outputSize = outputSize;
 	        var configObj = StratCom.DeserialiseDataTransferObject<ScryptConfiguration>(config);
-	        _iterationPower = configObj.IterationPower;
+	        _iterationPower = configObj.Iterations;
 	        _blocks = configObj.Blocks;
 	        _parallelisation = configObj.Parallelism;
 	    }
@@ -64,25 +64,19 @@ namespace ObscurCore.Cryptography.KeyDerivation
         public byte[] DeriveKey(byte[] key, int outputSize, KeyDerivationConfiguration config) {
             return DeriveKeyWithConfig(key, config.Salt, outputSize, config.SchemeConfiguration);
         }
-		#endregion		
-		
+		#endregion
+
 		private static byte[] DeriveKey (byte[] key, byte[] salt, int outputSize, int iterationPower, int blocks, int parallelisation) {
-			var output = new byte[outputSize / 8];
-			SCrypt.ComputeKey(key, salt, iterationPower, blocks, parallelisation, null, output);
-			return output;
+			return Scrypt.ComputeDerivedKey (key, salt, iterationPower, blocks, parallelisation, null, outputSize);
 		}
 		
 		public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, byte[] config) {
 		    var scConfig = StratCom.DeserialiseDataTransferObject<ScryptConfiguration>(config);
-			var output = new byte[outputSize / 8];
-			SCrypt.ComputeKey(key, salt, scConfig.IterationPower, scConfig.Blocks, scConfig.Parallelism, null, output);
-			return output;
+			return DeriveKeyWithConfig (key, salt, outputSize, scConfig);
 		}
 
         public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, ScryptConfiguration config) {
-			var output = new byte[outputSize / 8];
-			SCrypt.ComputeKey(key, salt, config.IterationPower, config.Blocks, config.Parallelism, null, output);
-			return output;
+			return Scrypt.ComputeDerivedKey (key, salt, config.Iterations, config.Blocks, config.Parallelism, null, outputSize);
 		}
 	}
 	

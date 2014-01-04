@@ -319,20 +319,21 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 				throw new ArgumentException ("Key is null or zero-length.", "key");
 			}
 
+			string functionName;
+
 			int saltSize = 0;
 			switch (functionType) {
 				case VerificationFunctionType.Digest:
+					functionName = hashFEnum.ToString();
 					saltSize = Athena.Cryptography.HashFunctions[hashFEnum].OutputSize / 8;
 					break;
 				case VerificationFunctionType.Mac:
+					functionName = macFEnum.ToString();
 					var macFOutputSize = Athena.Cryptography.MacFunctions [macFEnum].OutputSize;
-					if (Athena.Cryptography.MacFunctions [macFEnum].SaltSupported) {
-						// Conservative, allows for salt size restrictions
-						macFOutputSize = macFOutputSize.Value / 2;
-					}
 					saltSize = (macFOutputSize ?? minimumOutputSizeBytes) / 8;
 					break;
 				case VerificationFunctionType.Kdf:
+					functionName = kdfEnum.ToString();
 					saltSize = minimumOutputSizeBytes;
 					break;
 				default:
@@ -342,7 +343,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
             var config = new VerificationFunctionConfiguration
                 {
                     FunctionType = functionType.ToString(),
-					FunctionName = macFEnum.ToString(),
+					FunctionName = functionName,
                     FunctionConfiguration = null
                 };
 
@@ -351,9 +352,6 @@ namespace ObscurCore.Cryptography.KeyConfirmation
             if (true) {
                 config.Salt = new byte[saltSize];
                 StratCom.EntropySource.NextBytes(config.Salt);
-                // And some additional data...
-                config.AdditionalData = new byte[key.Length];
-                StratCom.EntropySource.NextBytes(config.AdditionalData);
             }
 
             switch (functionType) {
@@ -374,8 +372,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                     break;
                 case VerificationFunctionType.Kdf:
                     config.VerifiedOutput = Source.DeriveKeyWithKdf(config.FunctionName.ToEnum<KeyDerivationFunction>(), key,
-                        config.Salt,
-                        256, config.FunctionConfiguration);
+						config.Salt, 32, config.FunctionConfiguration);
                     break;
             }
 

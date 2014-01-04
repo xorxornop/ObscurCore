@@ -18,7 +18,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
         /// <returns>The derived key.</returns>
         /// <param name="key">Pre-key material to derive working key from.</param>
         /// <param name="salt">Salt to apply in the derivation process.</param>
-        /// <param name="outputSize">Size/length of the derived key in bits.</param>
+		/// <param name="outputSize">Size/length of the derived key in bytes.</param>
         byte[] DeriveKey(byte[] key, byte[] salt, int outputSize);
 		
         /// <summary>
@@ -36,7 +36,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
         /// <returns>The derived key.</returns>
         /// <param name="key">Pre-key material to derive working key from.</param>
         /// <param name="salt">Salt to apply in the derivation process.</param>
-        /// <param name="outputSize">Size/length of the derived key in bits.</param>
+		/// <param name="outputSize">Size/length of the derived key in bytes.</param>
         /// <param name="config">Configuration to use in the KDF instance.</param>
         byte[] DeriveKey(byte[] key, byte[] salt, int outputSize, byte[] config);
 

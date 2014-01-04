@@ -39,10 +39,6 @@ namespace ObscurCore.Cryptography
                 if (Configuration.KeySizeBits == 0) {
 					throw new ConfigurationValueInvalidException("Cipher cannot have a key size of 0 (zero).");
                 }
-                if (!Configuration.Key.IsNullOrZeroLength() &&
-					Configuration.Key.Length != Configuration.KeySizeBits / 8) {
-                    throw new KeySizeException("Key size inconsistent with actual key length.");
-                }
                 ThrowIfKeySizeIncompatible();
                 return Configuration.KeySizeBits;
             }
@@ -67,16 +63,6 @@ namespace ObscurCore.Cryptography
         /// Key is incompatible with cipher.
         /// </exception>
         protected abstract void ThrowIfKeySizeIncompatible();
-
-        public byte[] Key
-        {
-            get {
-                var retVal = new byte[Configuration.Key.Length];
-                Buffer.BlockCopy(Configuration.Key, 0, retVal, 0, Configuration.Key.Length);
-                return retVal;
-            }
-            set { Configuration.Key = value; }
-        }
 
         public override string ToString()
         {

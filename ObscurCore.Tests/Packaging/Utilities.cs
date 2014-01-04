@@ -25,11 +25,15 @@ namespace ObscurCore.Tests.Packaging
                         Type = PayloadItemType.Binary,
                         //Compression = new CompressionConfiguration () { AlgorithmName = CompressionAlgorithms.LZ4.ToString() },
                         //Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCiphers.AES, BlockCipherModes.CTR, BlockCipherPaddings.None),
-                        Encryption = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Sosemanuk)
+						Encryption = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Sosemanuk),
+						Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration()
                     };
 
-                payloadItem.Encryption.Key = new byte[payloadItem.Encryption.KeySizeBits / 8];
-                StratCom.EntropySource.NextBytes(payloadItem.Encryption.Key);
+				payloadItem.EncryptionKey = new byte[payloadItem.Encryption.KeySizeBits / 8];
+				StratCom.EntropySource.NextBytes(payloadItem.EncryptionKey);
+				payloadItem.AuthenticationKey = new byte[payloadItem.Encryption.KeySizeBits / 8];
+				StratCom.EntropySource.NextBytes(payloadItem.AuthenticationKey);
+
                 payloadItem.SetStreamBinding(fileInfo.OpenRead);
 
                 items.Add(payloadItem);
@@ -50,11 +54,15 @@ namespace ObscurCore.Tests.Packaging
                         Type = PayloadItemType.Binary,
                         //Compression = new CompressionConfiguration () { AlgorithmName = CompressionAlgorithms.LZ4.ToString() },
                         Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCipher.Serpent, 
-                            BlockCipherMode.Ctr, BlockCipherPadding.None)
+						BlockCipherMode.Ctr, BlockCipherPadding.None),
+						Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration()
                     };
 
-                payloadItem.Encryption.Key = new byte[payloadItem.Encryption.KeySizeBits / 8];
-                StratCom.EntropySource.NextBytes(payloadItem.Encryption.Key);
+                payloadItem.EncryptionKey = new byte[payloadItem.Encryption.KeySizeBits / 8];
+                StratCom.EntropySource.NextBytes(payloadItem.EncryptionKey);
+				payloadItem.AuthenticationKey = new byte[payloadItem.Encryption.KeySizeBits / 8];
+				StratCom.EntropySource.NextBytes(payloadItem.AuthenticationKey);
+
                 payloadItem.SetStreamBinding(fileInfo.OpenRead);
 
                 items.Add(payloadItem);

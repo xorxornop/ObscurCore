@@ -67,7 +67,7 @@ namespace ObscurCore.Cryptography
         {
             get {
                 var paddingEnum = RawConfiguration.PaddingName.ToEnum<BlockCipherPadding>();
-                if (!Athena.Cryptography.BlockCipherModes[Mode].PaddingRequirement.Equals(PaddingRequirement.None) && paddingEnum == BlockCipherPadding.None && Mode != BlockCipherMode.CtsCbc) {
+                if (!Athena.Cryptography.BlockCipherModes[Mode].PaddingRequirement.Equals(PaddingRequirement.None) && paddingEnum == BlockCipherPadding.None) {
 					throw new ConfigurationInvalidException("Block cipher mode requires padding."); // TODO: make new custom exception
                 }
                 return paddingEnum;

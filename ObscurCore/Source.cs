@@ -21,7 +21,6 @@ using System.Text;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Authentication.Primitives;
-using ObscurCore.Cryptography.Authentication.Primitives.SHA3;
 using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Block.Modes;
@@ -78,9 +77,9 @@ namespace ObscurCore
 
         // Packaging related
 
-		private readonly static IDictionary<PayloadLayoutScheme, Func<bool, Stream, Manifest, 
+		private readonly static IDictionary<PayloadLayoutScheme, Func<bool, Stream, List<PayloadItem>, IReadOnlyDictionary<Guid, byte[]>,
 			IPayloadConfiguration, PayloadMux>> PayloadLayoutModuleInstantiators = new Dictionary<PayloadLayoutScheme, 
-		Func<bool, Stream, Manifest, IPayloadConfiguration, PayloadMux>>();
+		Func<bool, Stream, List<PayloadItem>, IReadOnlyDictionary<Guid, byte[]>, IPayloadConfiguration, PayloadMux>>();
 
         static Source() {
             // ######################################## ENGINES ########################################
@@ -124,19 +123,15 @@ namespace ObscurCore
             ModeInstantiatorsBlock.Add(BlockCipherMode.Cbc, (cipher, size) => new CbcBlockCipher(cipher));
             ModeInstantiatorsBlock.Add(BlockCipherMode.Cfb, (cipher, size) => new CfbBlockCipher(cipher, size));
             ModeInstantiatorsBlock.Add(BlockCipherMode.Ctr, (cipher, size) => new SicBlockCipher(cipher));
-            // CTS is not properly supported here...
-            // Interim solution is just to return a CBC mode cipher, then it can be transformed into a CTS cipher afterwards. 
-            // The return type is non-compatible :( .
-            ModeInstantiatorsBlock.Add(BlockCipherMode.CtsCbc, (cipher, size) => new CbcBlockCipher(cipher));
             ModeInstantiatorsBlock.Add(BlockCipherMode.Ofb, (cipher, size) => new OfbBlockCipher(cipher, size));
 
             // ######################################## PADDING ########################################
 
             PaddingInstantiators.Add(BlockCipherPadding.Iso10126D2, () => new Iso10126D2Padding());
             PaddingInstantiators.Add(BlockCipherPadding.Iso7816D4, () => new Iso7816D4Padding());
-            PaddingInstantiators.Add(BlockCipherPadding.Pkcs7, () => new Iso10126D2Padding());
-            PaddingInstantiators.Add(BlockCipherPadding.Tbc, () => new Iso10126D2Padding());
-            PaddingInstantiators.Add(BlockCipherPadding.X923, () => new Iso10126D2Padding());
+			PaddingInstantiators.Add(BlockCipherPadding.Pkcs7, () => new Pkcs7Padding());
+			PaddingInstantiators.Add(BlockCipherPadding.Tbc, () => new TbcPadding());
+			PaddingInstantiators.Add(BlockCipherPadding.X923, () => new X923Padding());
 
             // ######################################## KEY DERIVATION ########################################
 
@@ -518,13 +513,13 @@ namespace ObscurCore
 
             // ######################################## PACKAGING ########################################
 
-			PayloadLayoutModuleInstantiators.Add (PayloadLayoutScheme.Simple, (writing, multiplexedStream, manifest, config) => 
-				new SimplePayloadMux (writing, multiplexedStream, manifest, config));
-			PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Frameshift, (writing, multiplexedStream, manifest, config) => 
-					new FrameshiftPayloadMux(writing, multiplexedStream, manifest, config));
+			PayloadLayoutModuleInstantiators.Add (PayloadLayoutScheme.Simple, (writing, multiplexedStream, payloadItems, itemPreKeys, config) => 
+				new SimplePayloadMux (writing, multiplexedStream, payloadItems, itemPreKeys, config));
+			PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Frameshift, (writing, multiplexedStream, payloadItems, itemPreKeys, config) => 
+				new FrameshiftPayloadMux(writing, multiplexedStream, payloadItems, itemPreKeys, config));
 #if(INCLUDE_FABRIC)
-			PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Fabric, (writing, multiplexedStream, manifest, config) => 
-				new FabricPayloadMux(writing, multiplexedStream, manifest, config));
+			PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Fabric, (writing, multiplexedStream, payloadItems, itemPreKeys, config) => 
+				new FabricPayloadMux(writing, multiplexedStream, payloadItems, itemPreKeys, config));
 #endif
             // ######################################## INIT END ########################################
         }
@@ -594,8 +589,8 @@ namespace ObscurCore
             return cipherParams;
         }
 
-        public static ICipherParameters CreateBlockCipherParameters(ISymmetricCipherConfiguration config, byte[] key = null) {
-            return CreateBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCipher>(), key ?? config.Key, config.IV);
+        public static ICipherParameters CreateBlockCipherParameters(ISymmetricCipherConfiguration config, byte[] key) {
+            return CreateBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCipher>(), key, config.IV);
         }
 
         public static ICipherParameters CreateBlockCipherParameters(SymmetricBlockCipher cipherEnum, byte[] key, byte[] iv) {
@@ -604,7 +599,7 @@ namespace ObscurCore
             if((iv == null || iv.Length == 0) && Athena.Cryptography.BlockCiphers[cipherEnum].DefaultIvSize != -1) 
                 throw new NotSupportedException("IV is null or zero-zength.");
 
-            if (cipherEnum.ToString().Equals(SymmetricBlockCipher.TripleDes.ToString())) {
+			if (cipherEnum == SymmetricBlockCipher.TripleDes) {
                 if(!Athena.Cryptography.BlockCiphers[cipherEnum].AllowableKeySizes.Contains(key.Length * 8)) 
                     throw new InvalidDataException("Key size is unsupported/incompatible.");
                 cipherParams = new ParametersWithIV(new DesEdeParameters(key, 0, key.Length), iv, 0,
@@ -697,11 +692,6 @@ namespace ObscurCore
 				macObj = CreateCmacPrimitive(Encoding.UTF8.GetString(config).ToEnum<SymmetricBlockCipher>(), key, salt);
 			} else {
 				macObj = MacInstantiators[macEnum]();
-				if (Athena.Cryptography.MacFunctions [macEnum].SaltSupported && salt != null) {
-					// Primitive has its own special salting procedure
-					((IMacWithSalt)macObj).Init (key, salt);
-					return macObj;
-				}
 				macObj.Init (new KeyParameter (key));
 				if(!salt.IsNullOrZeroLength()) macObj.BlockUpdate(salt, 0, salt.Length);
 			}
@@ -729,7 +719,7 @@ namespace ObscurCore
 			var macObj = new CMac (CreateBlockCipher (cipherEnum, null));
 			var keyParam = CreateKeyParameter (cipherEnum, key);
 			macObj.Init (keyParam);
-			if(salt != null && salt.Length > 0) macObj.BlockUpdate(salt, 0, salt.Length);
+			if(!salt.IsNullOrZeroLength()) macObj.BlockUpdate(salt, 0, salt.Length);
 
 			return macObj;
 		}
@@ -757,7 +747,7 @@ namespace ObscurCore
         /// <param name="kdfEnum">Key derivation function to use.</param>
         /// <param name="key">Pre-key to use as input material.</param>
         /// <param name="salt">Salt to use in derivation to increase entropy.</param>
-        /// <param name="outputSize">Output key size in bits.</param>
+		/// <param name="outputSize">Output key size in bytes.</param>
         /// <param name="config">Serialised configuration of the KDF.</param>
         public static byte[] DeriveKeyWithKdf (KeyDerivationFunction kdfEnum, byte[] key, byte[] salt, int outputSize, byte[] config) {
 			return KdfStatics[kdfEnum](key, salt, outputSize, config);
@@ -831,9 +821,10 @@ namespace ObscurCore
         /// An module object deriving from PayloadMultiplexer.
         /// </returns>
 		public static PayloadMux CreatePayloadMultiplexer (PayloadLayoutScheme schemeEnum, bool writing, 
-			Stream multiplexedStream, Manifest manifest, IPayloadConfiguration config)
+			Stream multiplexedStream, List<PayloadItem> payloadItems, IReadOnlyDictionary<Guid, byte[]> itemPreKeys, 
+			IPayloadConfiguration config)
 		{
-			return PayloadLayoutModuleInstantiators[schemeEnum](writing, multiplexedStream, manifest, config);
+			return PayloadLayoutModuleInstantiators[schemeEnum](writing, multiplexedStream, payloadItems, itemPreKeys, config);
 		}
     }
 }

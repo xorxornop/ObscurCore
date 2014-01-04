@@ -30,10 +30,5 @@ namespace ObscurCore.Information
         /// Size of the MAC produced in bits. Null if output size depends on configuration.
         /// </summary>
         public int? OutputSize { get; internal set; }
-
-        /// <summary>
-        /// Whether the MAC operation may include special salting operation.
-        /// </summary>
-        public bool SaltSupported { get; internal set; }
     }
 }

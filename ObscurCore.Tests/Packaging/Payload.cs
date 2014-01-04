@@ -21,7 +21,6 @@ using System.IO;
 using NUnit.Framework;
 using ObscurCore.Cryptography;
 using ObscurCore.DTO;
-using ObscurCore.Extensions.DTO;
 using ObscurCore.Packaging;
 
 namespace ObscurCore.Tests.Packaging
@@ -65,10 +64,6 @@ namespace ObscurCore.Tests.Packaging
 		}
 #endif
 
-		protected List<Func<Stream, DecoratingStream>> GetTransforms(List<PayloadItem> items, bool writingPayload) {
-            return items.Select(item => (Func<Stream, DecoratingStream>) (binding => item.BindTransformStream(writingPayload, binding))).ToList();
-		}
-
 	    protected void DoMux(PayloadConfiguration payloadConfig, List<PayloadItem> items, List<FileInfo> files,  bool outputPayload = false) {
 			
             var ms = new MemoryStream ();
@@ -79,19 +74,14 @@ namespace ObscurCore.Tests.Packaging
 	            items[index].ExternalLength = items[index].StreamBinding.Length;
 	        }
 
-			Manifest manifest = new Manifest {
-				PayloadItems = items
-			};
-
+			var itemPreKeys = new Dictionary<Guid, byte[]> ();
 
 			var mux = Source.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutScheme>(), true, ms, 
-				manifest, payloadConfig);
+				items, itemPreKeys, payloadConfig);
 			
-			Assert.DoesNotThrow (mux.ExecuteAll);
+			Assert.DoesNotThrow (mux.Execute);
 
             Debug.Print("\n##### END OF MUXING OPERATION #####\n");
-
-            var muxIn = mux.TotalSourceIO;
 
 			foreach (var item in items) {
 				item.StreamBinding.Close();
@@ -119,23 +109,20 @@ namespace ObscurCore.Tests.Packaging
 
 	        ms.Seek(0, SeekOrigin.Begin);
             mux = Source.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutScheme>(), false, ms, 
-				manifest, payloadConfig);
+				items, itemPreKeys, payloadConfig);
 
-            Assert.DoesNotThrow(mux.ExecuteAll);
+            Assert.DoesNotThrow(mux.Execute);
 
             Debug.Print("\n##### END OF DEMUXING OPERATION #####\n");
-
-	        var muxOut = mux.TotalDestinationIO;
 
             foreach (var item in items) {
                 item.StreamBinding.Close();
             }
 
             if (mux is FrameshiftPayloadMux) {
-                Assert.Pass("MuxOut: {0}, Overhead: {1:P4} ({2} bytes) ; MuxIn: {3}",
-                    muxOut, ((double) mux.Overhead/(double) muxOut), mux.Overhead, muxIn);
+				Assert.Pass("Overhead: {0} bytes", ((FrameshiftPayloadMux)mux).Overhead);
             } else {
-                Assert.Pass("MuxOut: {0}, MuxIn: {1}", muxOut, muxIn);
+                Assert.Pass();
             }
 	    }
 

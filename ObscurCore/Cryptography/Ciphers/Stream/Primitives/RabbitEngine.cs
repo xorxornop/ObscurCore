@@ -215,7 +215,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _counterArray = 0;
 
             // Iterate the system four times
-            for (var j = 0; j < 4; j++) NextState();
+			NextState();
+			NextState();
+			NextState();
+			NextState();
 
             // Iterate the counters
             for (var j = 0; j < 8; j++) _counter[j] ^= _state[(j + 4) & 0x7];
@@ -254,7 +257,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
         private void NextState () {
             // Temporary variables
-            uint[] g = new uint[8], cOld = new uint[8];
+            uint[] cOld = new uint[8];
 
             /* Save old counter values */
             for (var i = 0; i < 8; i++) cOld[i] = _counter[i];
@@ -267,17 +270,24 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _counterArray = Convert.ToUInt32(_counter[7] < cOld[7]);
 
             /* Calculate the g-functions */
-            for (var i = 0; i < 8; i++) g[i] = GFunc(_state[i] + _counter[i]);
+			uint g0 = GFunc(_state[0] + _counter[0]);
+			uint g1 = GFunc(_state[1] + _counter[1]);
+			uint g2 = GFunc(_state[2] + _counter[2]);
+			uint g3 = GFunc(_state[3] + _counter[3]);
+			uint g4 = GFunc(_state[4] + _counter[4]);
+			uint g5 = GFunc(_state[5] + _counter[5]);
+			uint g6 = GFunc(_state[6] + _counter[6]);
+			uint g7 = GFunc(_state[7] + _counter[7]);
 
             /* Calculate new state values */
-            _state[0] = g[0] + RotLeft(g[7], 16) + RotLeft(g[6], 16);
-            _state[1] = g[1] + RotLeft(g[0], 8) + g[7];
-            _state[2] = g[2] + RotLeft(g[1], 16) + RotLeft(g[0], 16);
-            _state[3] = g[3] + RotLeft(g[2], 8) + g[1];
-            _state[4] = g[4] + RotLeft(g[3], 16) + RotLeft(g[2], 16);
-            _state[5] = g[5] + RotLeft(g[4], 8) + g[3];
-            _state[6] = g[6] + RotLeft(g[5], 16) + RotLeft(g[4], 16);
-            _state[7] = g[7] + RotLeft(g[6], 8) + g[5];
+			_state[0] = g0 + RotLeft(g7, 16) + RotLeft(g6, 16);
+			_state[1] = g1 + RotLeft(g0, 8) + g7;
+			_state[2] = g2 + RotLeft(g1, 16) + RotLeft(g0, 16);
+			_state[3] = g3 + RotLeft(g2, 8) + g1;
+			_state[4] = g4 + RotLeft(g3, 16) + RotLeft(g2, 16);
+			_state[5] = g5 + RotLeft(g4, 8) + g3;
+			_state[6] = g6 + RotLeft(g5, 16) + RotLeft(g4, 16);
+			_state[7] = g7 + RotLeft(g6, 8) + g5;
         }
 
         /// <summary>

@@ -49,7 +49,7 @@ namespace ObscurCore.Cryptography.Support
             this.g = g;
             this.n = n;
             this.h = h;
-            this.seed = Arrays.Clone(seed);
+			this.seed = (byte[])seed.Clone ();
         }
 
 		public ECCurve Curve
@@ -74,7 +74,7 @@ namespace ObscurCore.Cryptography.Support
 
         public byte[] GetSeed()
         {
-			return Arrays.Clone(seed);
+			return (byte[])seed.Clone ();
         }
 
 		public override bool Equals(
@@ -98,16 +98,16 @@ namespace ObscurCore.Cryptography.Support
 				&&	g.Equals(other.g)
 				&&	n.Equals(other.n)
 				&&	h.Equals(other.h)
-				&&	Arrays.AreEqual(seed, other.seed);
+				&&	seed.AreEqual(other.seed);
 		}
 
 		public override int GetHashCode()
         {
-            return curve.GetHashCode()
-				^	g.GetHashCode()
-				^	n.GetHashCode()
-				^	h.GetHashCode()
-				^	Arrays.GetHashCode(seed);
+			return curve.GetHashCode ()
+			^	g.GetHashCode ()
+			^	n.GetHashCode ()
+			^	h.GetHashCode ()
+			^	seed.GetHashCode ();
         }
     }
 

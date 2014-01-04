@@ -2,6 +2,8 @@ using System;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Support;
 
+using ObscurCore.Extensions.BitPacking;
+
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
 	/**
@@ -13,8 +15,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		private const int STATE_SIZE = 16; // 16, 32 bit ints = 64 bytes
 
 		private readonly static byte[]
-			Sigma = Strings.ToAsciiByteArray("expand 32-byte k"),
-            Tau = Strings.ToAsciiByteArray("expand 16-byte k");
+			Sigma = System.Text.Encoding.ASCII.GetBytes("expand 32-byte k"),
+			Tau = System.Text.Encoding.ASCII.GetBytes("expand 16-byte k");
 
 		/*
 		* variables to hold the state of the engine
@@ -186,33 +188,30 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			byte[] constants;
 
 			// Key
-			_engineState[1] = byteToIntLittle(_workingKey, 0);
-			_engineState[2] = byteToIntLittle(_workingKey, 4);
-			_engineState[3] = byteToIntLittle(_workingKey, 8);
-			_engineState[4] = byteToIntLittle(_workingKey, 12);
+			_engineState[1] = _workingKey.LittleEndianToInt32 (0);
+			_engineState[2] = _workingKey.LittleEndianToInt32 (4);
+			_engineState[3] = _workingKey.LittleEndianToInt32 (8);
+			_engineState[4] = _workingKey.LittleEndianToInt32 (12);
 
-			if (_workingKey.Length == 32)
-			{
+			if (_workingKey.Length == 32) {
 				constants = Sigma;
 				offset = 16;
-			}
-			else
-			{
+			} else {
 				constants = Tau;
 			}
-	        
-			_engineState[11] = byteToIntLittle(_workingKey, offset);
-			_engineState[12] = byteToIntLittle(_workingKey, offset+4);
-			_engineState[13] = byteToIntLittle(_workingKey, offset+8);
-			_engineState[14] = byteToIntLittle(_workingKey, offset+12);
-			_engineState[0 ] = byteToIntLittle(constants, 0);
-			_engineState[5 ] = byteToIntLittle(constants, 4);
-			_engineState[10] = byteToIntLittle(constants, 8);
-			_engineState[15] = byteToIntLittle(constants, 12);
+
+			_engineState[11] = _workingKey.LittleEndianToInt32 (offset + 0);
+			_engineState[12] = _workingKey.LittleEndianToInt32 (offset + 4);
+			_engineState[13] = _workingKey.LittleEndianToInt32 (offset + 8);
+			_engineState[14] = _workingKey.LittleEndianToInt32 (offset + 12);
+			_engineState[0 ] = constants.LittleEndianToInt32 (0);
+			_engineState[5 ] = constants.LittleEndianToInt32 (4);
+			_engineState[10] = constants.LittleEndianToInt32 (8);
+			_engineState[15] = constants.LittleEndianToInt32 (12);
 	        
 			// IV
-			_engineState[6] = byteToIntLittle(_workingIv, 0);
-			_engineState[7] = byteToIntLittle(_workingIv, 4);
+			_engineState[6] = _workingIv.LittleEndianToInt32 (0);
+			_engineState[7] = _workingIv.LittleEndianToInt32 (4);
 			_engineState[8] = _engineState[9] = 0;
 	        
 			_initialised = true;
@@ -229,123 +228,79 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			int[]	input,
 			byte[]	output)
 		{
-			Array.Copy(input, 0, _x, 0, input.Length);
+			int x0 = input[0];
+			int x1 = input[1];
+			int x2 = input[2];
+			int x3 = input[3];
+			int x4 = input[4];
+			int x5 = input[5];
+			int x6 = input[6];
+			int x7 = input[7];
+			int x8 = input[8];
+			int x9 = input[9];
+			int x10 = input[10];
+			int x11 = input[11];
+			int x12 = input[12];
+			int x13 = input[13];
+			int x14 = input[14];
+			int x15 = input[15];
 
-			for (int i = 0; i < 10; i++)
-			{
-				_x[ 4] ^= rotl((_x[ 0]+_x[12]), 7);
-				_x[ 8] ^= rotl((_x[ 4]+_x[ 0]), 9);
-				_x[12] ^= rotl((_x[ 8]+_x[ 4]),13);
-				_x[ 0] ^= rotl((_x[12]+_x[ 8]),18);
-				_x[ 9] ^= rotl((_x[ 5]+_x[ 1]), 7);
-				_x[13] ^= rotl((_x[ 9]+_x[ 5]), 9);
-				_x[ 1] ^= rotl((_x[13]+_x[ 9]),13);
-				_x[ 5] ^= rotl((_x[ 1]+_x[13]),18);
-				_x[14] ^= rotl((_x[10]+_x[ 6]), 7);
-				_x[ 2] ^= rotl((_x[14]+_x[10]), 9);
-				_x[ 6] ^= rotl((_x[ 2]+_x[14]),13);
-				_x[10] ^= rotl((_x[ 6]+_x[ 2]),18);
-				_x[ 3] ^= rotl((_x[15]+_x[11]), 7);
-				_x[ 7] ^= rotl((_x[ 3]+_x[15]), 9);
-				_x[11] ^= rotl((_x[ 7]+_x[ 3]),13);
-				_x[15] ^= rotl((_x[11]+_x[ 7]),18);
-				_x[ 1] ^= rotl((_x[ 0]+_x[ 3]), 7);
-				_x[ 2] ^= rotl((_x[ 1]+_x[ 0]), 9);
-				_x[ 3] ^= rotl((_x[ 2]+_x[ 1]),13);
-				_x[ 0] ^= rotl((_x[ 3]+_x[ 2]),18);
-				_x[ 6] ^= rotl((_x[ 5]+_x[ 4]), 7);
-				_x[ 7] ^= rotl((_x[ 6]+_x[ 5]), 9);
-				_x[ 4] ^= rotl((_x[ 7]+_x[ 6]),13);
-				_x[ 5] ^= rotl((_x[ 4]+_x[ 7]),18);
-				_x[11] ^= rotl((_x[10]+_x[ 9]), 7);
-				_x[ 8] ^= rotl((_x[11]+_x[10]), 9);
-				_x[ 9] ^= rotl((_x[ 8]+_x[11]),13);
-				_x[10] ^= rotl((_x[ 9]+_x[ 8]),18);
-				_x[12] ^= rotl((_x[15]+_x[14]), 7);
-				_x[13] ^= rotl((_x[12]+_x[15]), 9);
-				_x[14] ^= rotl((_x[13]+_x[12]),13);
-				_x[15] ^= rotl((_x[14]+_x[13]),18);
+			for (int i = 0; i < 10; i++) {
+				x4 ^= RotLeft(x0 + x12, 7);
+				x8 ^= RotLeft(x4 + x0, 9);
+				x12 ^= RotLeft(x8 + x4, 13);
+				x0 ^= RotLeft(x12 + x8, 18);
+				x9 ^= RotLeft(x5 + x1, 7);
+				x13 ^= RotLeft(x9 + x5, 9);
+				x1 ^= RotLeft(x13 + x9, 13);
+				x5 ^= RotLeft(x1 + x13, 18);
+				x14 ^= RotLeft(x10 + x6, 7);
+				x2 ^= RotLeft(x14 + x10, 9);
+				x6 ^= RotLeft(x2 + x14, 13);
+				x10 ^= RotLeft(x6 + x2, 18);
+				x3 ^= RotLeft(x15 + x11, 7);
+				x7 ^= RotLeft(x3 + x15, 9);
+				x11 ^= RotLeft(x7 + x3, 13);
+				x15 ^= RotLeft(x11 + x7, 18);
+				x1 ^= RotLeft(x0 + x3, 7);
+				x2 ^= RotLeft(x1 + x0, 9);
+				x3 ^= RotLeft(x2 + x1, 13);
+				x0 ^= RotLeft(x3 + x2, 18);
+				x6 ^= RotLeft(x5 + x4, 7);
+				x7 ^= RotLeft(x6 + x5, 9);
+				x4 ^= RotLeft(x7 + x6, 13);
+				x5 ^= RotLeft(x4 + x7, 18);
+				x11 ^= RotLeft(x10 + x9, 7);
+				x8 ^= RotLeft(x11 + x10, 9);
+				x9 ^= RotLeft(x8 + x11, 13);
+				x10 ^= RotLeft(x9 + x8, 18);
+				x12 ^= RotLeft(x15 + x14, 7);
+				x13 ^= RotLeft(x12 + x15, 9);
+				x14 ^= RotLeft(x13 + x12, 13);
+				x15 ^= RotLeft(x14 + x13, 18);
 			}
 
-			int offset = 0;
-			for (int i = 0; i < STATE_SIZE; i++)
-			{
-				intToByteLittle(_x[i] + input[i], output, offset);
-				offset += 4;
-			}
-
-			for (int i = STATE_SIZE; i < _x.Length; i++)
-			{
-				intToByteLittle(_x[i], output, offset);
-				offset += 4;
-			}
+			x0.ToLittleEndian  (output, 0 );
+			x1.ToLittleEndian  (output, 4 );
+			x2.ToLittleEndian  (output, 8 );
+			x3.ToLittleEndian  (output, 12);
+			x4.ToLittleEndian  (output, 16);
+			x5.ToLittleEndian  (output, 20);
+			x6.ToLittleEndian  (output, 24);
+			x7.ToLittleEndian  (output, 28);
+			x8.ToLittleEndian  (output, 32);
+			x9.ToLittleEndian  (output, 36);
+			x10.ToLittleEndian (output, 40);
+			x11.ToLittleEndian (output, 44);
+			x12.ToLittleEndian (output, 48);
+			x13.ToLittleEndian (output, 52);
+			x14.ToLittleEndian (output, 56);
+			x15.ToLittleEndian (output, 60);
 		}
+        
 
-		// parallellise this by making x a array of arrays (number = no of cpus or # of cpus wanted to parallellise to)
-
-		/**
-		* 32 bit word to 4 byte array in little endian order
-		*
-		* @param   x   value to 'unpack'
-		*
-		* @return  value of x expressed as a byte[] array in little endian order
-		*/
-        //private byte[] intToByteLittle(
-        //    int		x,
-        //    byte[]	bs,
-        //    int		off)
-        //{
-        //    bs[off] = (byte)x;
-        //    bs[off + 1] = (byte)(x >> 8);
-        //    bs[off + 2] = (byte)(x >> 16);
-        //    bs[off + 3] = (byte)(x >> 24);
-        //    return bs;
-        //}
-
-        private static void intToByteLittle(
-			int		x,
-			byte[]	bs,
-			int		off)
-		{
-			bs[off] = (byte)x;
-			bs[off + 1] = (byte)(x >> 8);
-			bs[off + 2] = (byte)(x >> 16);
-			bs[off + 3] = (byte)(x >> 24);
-		}
-
-
-
-		/**
-		* Rotate left
-		*
-		* @param   x   value to rotate
-		* @param   y   amount to rotate x
-		*
-		* @return  rotated x
-		*/
-		private static int rotl(
-			int	x,
-			int	y)
-		{
-			return (x << y) | ((int)((uint) x >> -y));
-		}
-
-		/**
-		* Pack byte[] array into an int in little endian order
-		*
-		* @param   x       byte array to 'pack'
-		* @param   offset  only x[offset]..x[offset+3] will be packed
-		*
-		* @return  x[offset]..x[offset+3] 'packed' into an int in little-endian order
-		*/
-		private static int byteToIntLittle(
-			byte[]	x,
-			int		offset)
-		{
-			return ((x[offset] & 255)) |
-				((x[offset + 1] & 255) <<  8) |
-				((x[offset + 2] & 255) << 16) |
-				(x[offset + 3] << 24);
+		private static int RotLeft(int a, int b) { 
+			return (a << b) | ((int)((uint) a >> -b));
 		}
 
 		private void resetCounter()

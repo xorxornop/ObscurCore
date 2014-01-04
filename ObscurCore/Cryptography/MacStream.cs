@@ -22,29 +22,28 @@ namespace ObscurCore.Cryptography
 {
 	public sealed class MacStream : DecoratingStream
 	{
+		private readonly IMac _mac;
+	    private readonly byte[] _output;
+		private byte[] _buffer;
+		private const int BufferSize = 4096;
+
 		/// <summary>
 		/// The output/digest of the internal hash function. Zeroed if function is not finished.
 		/// </summary>
 		public byte[] Mac { get { return _output; } }
 
-		private IMac _mac;
-	    private readonly byte[] _output;
-		private bool _disposed;
-
-		private byte[] _buffer;
-
 		/// <summary>
-		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.HashStream"/> class.
+		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.MacStream"/> class.
 		/// </summary>
-		/// <param name="binding">Binding.</param>
-		/// <param name="writing">If set to <c>true</c> writing.</param>
+		/// <param name="binding">Stream to write to or read from.</param>
+		/// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
 		/// <param name="function">MAC function to instantiate.</param>
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
 		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
 		/// <param name="output">Byte array where the finished MAC will be output to. Does not need to be initialised.</param>
 		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
 		public MacStream (Stream binding, bool writing, MacFunction function, out byte[] output, byte[] key, byte[] salt = null,
-			byte[] config = null, bool closeOnDispose = true) : base(binding, writing, closeOnDispose, false)
+			byte[] config = null, bool closeOnDispose = true) : base(binding, writing, closeOnDispose)
 		{
 			_mac = Source.CreateMacPrimitive (function, key, salt, config);
             _output = new byte[_mac.MacSize];
@@ -52,10 +51,10 @@ namespace ObscurCore.Cryptography
 		}
 
 		public MacStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, byte[] key, 
-			bool closeOnDispose = true) : base(binding, writing, closeOnDispose, false) 
+			bool closeOnDispose = true) : base(binding, writing, closeOnDispose) 
 		{
 			if(config.FunctionType.ToEnum<VerificationFunctionType>() != VerificationFunctionType.Mac) {
-
+				throw new ConfigurationInvalidException ("Configuration specifies function type other than MAC.");
 			}
 
 			_mac = Source.CreateMacPrimitive (config.FunctionName.ToEnum<MacFunction>(), key, config.Salt, config.FunctionConfiguration);
@@ -69,19 +68,17 @@ namespace ObscurCore.Cryptography
 		}
 
 		public override void Write (byte[] buffer, int offset, int count) {
-			if (count > 0) {
-				_mac.BlockUpdate(buffer, offset, count);
-			}
 			base.Write(buffer, offset, count);
+			_mac.BlockUpdate(buffer, offset, count);
 		}
 
 		public override void WriteByte (byte b) {
-			_mac.Update(b);
 			base.WriteByte (b);
+			_mac.Update(b);
 		}
 
 		public override int ReadByte () {
-			int readByte = base.ReadByte();
+			var readByte = base.ReadByte();
 			if (readByte >= 0) {
 				_mac.Update((byte)readByte);
 			}
@@ -89,23 +86,35 @@ namespace ObscurCore.Cryptography
 		}
 
 		public override int Read (byte[] buffer, int offset, int count) {
-			var readBytes = base.Read(buffer, offset, count);
+			if (buffer == null)
+				throw new ArgumentNullException ("buffer");
+
+			int readBytes = base.Read(buffer, offset, count);
 			if (readBytes > 0) {
 				_mac.BlockUpdate(buffer, offset, readBytes);
 			}
 			return readBytes;
 		}
 
+		/// <summary>
+		/// Write exact quantity of bytes (after decoration) to the destination.
+		/// </summary>
+		/// <returns>The quantity of bytes taken from the source stream to fulfil the request.</returns>
+		/// <param name="source">Source.</param>
+		/// <param name="length">Length.</param>
 		public override long WriteExactlyFrom (Stream source, long length) {
+			CheckIfCanDecorate ();
 			if(source == null) {
 				throw new ArgumentNullException ("source");
 			}
+
 			if(_buffer == null) {
-				_buffer = new byte[1024];
+				_buffer = new byte[BufferSize];
 			}
-			int iterIn = 0, totalIn = 0;
-			while(totalIn > length) {
-				iterIn = source.Read (_buffer, 0, (int) Math.Min (_buffer.Length, length - totalIn));
+			int iterIn = 0;
+			long totalIn = 0;
+			while(length > 0) {
+				iterIn = source.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
 				if(iterIn == 0) {
 					throw new EndOfStreamException ();
 				}
@@ -117,16 +126,19 @@ namespace ObscurCore.Cryptography
 			return totalIn;
 		}
 
-		public override long ReadExactlyTo (Stream destination, long length) {
+		public override long ReadExactlyTo (Stream destination, long length, bool finishing = false) {
+			CheckIfCanDecorate ();
 			if(destination == null) {
 				throw new ArgumentNullException ("destination");
 			}
+
 			if(_buffer == null) {
-				_buffer = new byte[1024];
+				_buffer = new byte[BufferSize];
 			}
-			int iterIn = 0, totalIn = 0;
-			while(totalIn > length) {
-				iterIn = Binding.Read (_buffer, 0, (int) Math.Min (_buffer.Length, length - totalIn));
+			int iterIn = 0;
+			long totalIn = 0;
+			while(length > 0) {
+				iterIn = DecoratorBinding.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
 				if(iterIn == 0) {
 					throw new EndOfStreamException ();
 				}
@@ -134,17 +146,30 @@ namespace ObscurCore.Cryptography
 				_mac.BlockUpdate(_buffer, 0, iterIn);
 				destination.Write (_buffer, 0, iterIn);
 			}
+			if(finishing) {
+				Finish ();
+			}
 
 			return totalIn;
 		}
 
+
 		public void Update (byte[] buffer, int offset, int count) {
+			CheckIfCanDecorate ();
+
+			if (buffer == null)
+				throw new ArgumentNullException ("buffer");
+
+			//BytesIn += count;
 			_mac.BlockUpdate (buffer, offset, count);
 		}
 
+		/// <summary>
+		/// Finish the MAC operation manually. 
+		/// Unnecessary to use, as this is also accomplished by closing/disposing the stream.
+		/// </summary>
 		protected override void Finish () {
-			if (Finished)
-				return;
+			CheckIfCanDecorate ();
 			_mac.DoFinal (_output, 0);
 			base.Finish ();
 		}
@@ -152,22 +177,7 @@ namespace ObscurCore.Cryptography
 		protected override void Reset (bool finish = false) {
 			base.Reset (finish);
 			_mac.Reset ();
-		}
-
-        public override void Close() {
-            Finish();
-        }
-
-		protected override void Dispose (bool disposing) {
-			if (!_disposed) {
-				if (disposing) {
-					// dispose managed resources
-					Finish ();
-					this._mac = null;
-					base.Dispose (true);
-					_disposed = true;
-				}
-			}
+			Array.Clear (_output, 0, _output.Length);
 		}
 	}
 }

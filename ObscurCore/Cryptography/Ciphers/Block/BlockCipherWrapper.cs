@@ -90,12 +90,13 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 					if (length != _blockSize) {
 						if(length == 0 && _padding != null) {
 							// Overran the end
-							outputOffset -= _blockSize;
+							if(outputOffset >= _blockSize) outputOffset -= _blockSize;
 							Array.Copy (output, outputOffset, workingBlock, 0, _blockSize);
 						} else {
 							throw new CryptoException();
 						}
 					} else {
+						// Normal padded block
 						_cipher.ProcessBlock(input, inputOffset, workingBlock, 0);
 					}
                     try {

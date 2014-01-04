@@ -31,23 +31,29 @@ namespace ObscurCore.DTO
     public class SymmetricManifestCryptographyConfiguration : IManifestCryptographySchemeConfiguration, 
         IDataTransferObject, IEquatable<SymmetricManifestCryptographyConfiguration>
     {
-        /// <summary>
-        /// Encryption configuration for the manifest.
-        /// </summary>
+		/// <summary>
+		/// Configuration of the cipher used in encryption of the manifest.
+		/// </summary>
         [ProtoMember(1, IsRequired = true)]
         public SymmetricCipherConfiguration SymmetricCipher { get; set; }
 
 		/// <summary>
-		/// Key confirmation configuration used to validate the existence and validity 
-		/// of keying material at respondent's side without disclosing the key itself.
+		/// Configuration for the authentication of the manifest and cipher configuration.
 		/// </summary>
-        [ProtoMember(2, IsRequired = false)]
+		[ProtoMember(2, IsRequired = true)]
+		public VerificationFunctionConfiguration Authentication { get; set; }
+
+		/// <summary>
+		/// Configuration for the key confirmation scheme used to validate the existence and 
+		/// validity of keying material at respondent's side without disclosing the key itself.
+		/// </summary>
+		[ProtoMember(3, IsRequired = false)]
         public VerificationFunctionConfiguration KeyConfirmation { get; set; }
 
 		/// <summary>
 		/// Configuration for the scheme used to derive a key from the shared secret.
 		/// </summary>
-        [ProtoMember(3, IsRequired = true)]
+		[ProtoMember(4, IsRequired = true)]
         public KeyDerivationConfiguration KeyDerivation { get; set; }
 
         public override bool Equals (object obj) {
@@ -60,14 +66,18 @@ namespace ObscurCore.DTO
         public bool Equals (SymmetricManifestCryptographyConfiguration other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return SymmetricCipher.Equals(other.SymmetricCipher) && KeyConfirmation.Equals(other.KeyConfirmation) && KeyDerivation.Equals(other.KeyDerivation);
+			return SymmetricCipher.Equals(other.SymmetricCipher) &&
+				Authentication.Equals(other.Authentication) && 
+				(KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) && 
+				KeyDerivation.Equals(other.KeyDerivation);
         }
 
         public override int GetHashCode () {
             unchecked {
-                int hashCode = SymmetricCipher.GetHashCode();
-                hashCode = (hashCode * 397) ^ KeyConfirmation.GetHashCode();
-                hashCode = (hashCode * 397) ^ KeyDerivation.GetHashCode();
+				int hashCode = SymmetricCipher.GetHashCode(); // Must not be null!
+				hashCode = (hashCode * 397) ^ Authentication.GetHashCode(); // Must not be null!
+				hashCode = (hashCode * 397) ^ (KeyConfirmation != null ? KeyConfirmation.GetHashCode() : 0); 
+				hashCode = (hashCode * 397) ^ KeyDerivation.GetHashCode(); // Must not be null!
                 return hashCode;
             }
         }

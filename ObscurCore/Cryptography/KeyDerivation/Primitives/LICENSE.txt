@@ -1,5 +1,5 @@
-﻿Illusory Studios C# Crypto Library (CryptSharp)
-Copyright (c) 2011 James F. Bellinger <jfb@zer7.com>
+CryptSharp
+Copyright (c) 2010, 2013 James F. Bellinger <http://www.zer7.com/software/cryptsharp>
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above

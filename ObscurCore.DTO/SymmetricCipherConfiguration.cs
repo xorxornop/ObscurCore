@@ -31,8 +31,7 @@ namespace ObscurCore.DTO
         #region Data relevant to all symmetric ciphers
 
         /// <summary>
-        /// Category/type of the cipher primitive, e.g. block, AEAD, or stream. 
-        /// AEAD must be specified if using a block cipher in a AEAD mode of operation.
+		/// Category/type of the cipher primitive, e.g. block or stream.
         /// </summary>
 		[ProtoMember(1, IsRequired = true)]
         public SymmetricCipherType Type { get; set; }
@@ -48,38 +47,31 @@ namespace ObscurCore.DTO
         /// </summary>
         [ProtoMember(3)]
         public int KeySizeBits { get; set; }
-		
-        /// <summary>
-        /// One-time key to use in place of one derived using a supplied KDF configuration using the supplied 
-        /// salt and a key from a local security context's keystore.
-        /// </summary>
-        [ProtoMember(4, IsRequired = false)]
-        public byte[] Key { get; set; }
 
         /// <summary>
         /// Data that initialises the state of the cipher prior to processing any data.
         /// </summary>
-        [ProtoMember(5, IsRequired = false)]
+		[ProtoMember(4, IsRequired = false)]
         public byte[] IV { get; set; }
         #endregion
 
         /// <summary>
-        /// Mode of operation used in the cipher, where applicable (block and AEAD ciphers).
+        /// Mode of operation used in the cipher, where applicable (block ciphers).
         /// </summary>
-        [ProtoMember(6, IsRequired = false)]
+		[ProtoMember(5, IsRequired = false)]
         public string ModeName { get; set; }
 
         #region Block-cipher related
         /// <summary>
         /// Size of each block of data in bits.
         /// </summary>
-        [ProtoMember(7)]
+		[ProtoMember(6)]
         public int BlockSizeBits { get; set; }
 
         /// <summary>
-        /// Scheme utillised to 'pad' blocks to full size where required. 
+		/// Scheme utillised to 'pad' blocks to full size where required (block ciphers in some modes). 
         /// </summary>
-        [ProtoMember(8, IsRequired = false)]
+		[ProtoMember(7, IsRequired = false)]
         public string PaddingName { get; set; }
         #endregion
 
@@ -103,7 +95,6 @@ namespace ObscurCore.DTO
             return Type.Equals(other.Type) &&
                    string.Equals(CipherName, other.CipherName) &&
                    KeySizeBits == other.KeySizeBits &&
-				   (Key == null ? other.Key == null : Key.SequenceEqual(other.Key)) &&
                    (IV == null ? other.IV == null : IV.SequenceEqual(other.IV)) &&
                    string.Equals(ModeName, other.ModeName) && BlockSizeBits == other.BlockSizeBits &&
 				   string.Equals(PaddingName, other.PaddingName);
@@ -121,7 +112,6 @@ namespace ObscurCore.DTO
                 int hashCode = Type.GetHashCode();
                 hashCode = (hashCode * 397) ^ CipherName.GetHashCode(); // Must not be null!
                 hashCode = (hashCode * 397) ^ KeySizeBits;
-				hashCode = (hashCode * 397) ^ (Key != null ? Key.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (IV != null ? IV.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (ModeName != null ? ModeName.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ BlockSizeBits;
@@ -137,8 +127,6 @@ namespace ObscurCore.DTO
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}",
                                  Type, CipherName, KeySizeBits);
         }
-		
-        
     }
 
     public interface ISymmetricCipherConfiguration
@@ -158,13 +146,6 @@ namespace ObscurCore.DTO
         /// Size of the key being used, in bits.
         /// </summary>
         int KeySizeBits { get; }
-
-        /// <summary>
-        /// One-time key to use in place of one derived using a supplied KDF configuration 
-        /// using the supplied salt and a key from a local keystore. If used, no KDF is used or should be specified.
-        /// </summary>
-        /// <value>The ephemeral key.</value>
-		byte[] Key { get; }
 
         /// <summary>
         /// Data that initialises the  state of the cipher prior to processing any data.

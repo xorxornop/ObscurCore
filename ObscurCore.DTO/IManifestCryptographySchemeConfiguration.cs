@@ -21,13 +21,18 @@ namespace ObscurCore.DTO
     public interface IManifestCryptographySchemeConfiguration
     {
 		/// <summary>
-		/// Configuration for the symmetric cipher to use with the key derived from the shared secret.
+		/// Configuration of the cipher used in encryption of the manifest.
 		/// </summary>
         SymmetricCipherConfiguration SymmetricCipher { get; }
 
 		/// <summary>
-		/// Key confirmation configuration used to validate the existence and validity 
-		/// of keying material at respondent's side without disclosing the key itself.
+		/// Configuration for the authentication of the manifest and cipher configuration.
+		/// </summary>
+		VerificationFunctionConfiguration Authentication { get; }
+
+		/// <summary>
+		/// Configuration for the key confirmation scheme used to validate the existence and 
+		/// validity of keying material at respondent's side without disclosing the key itself.
 		/// </summary>
         VerificationFunctionConfiguration KeyConfirmation { get; }
 

@@ -1,5 +1,3 @@
-#region License
-
 /*
 Illusory Studios C# Crypto Library (CryptSharp)
 Copyright (c) 2010 James F. Bellinger <jfb@zer7.com>
@@ -16,8 +14,6 @@ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
-
-#endregion
 
 using System;
 

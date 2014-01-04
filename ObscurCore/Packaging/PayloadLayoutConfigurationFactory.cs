@@ -61,7 +61,7 @@ namespace ObscurCore.Packaging
 		}
 		
 		public static PayloadConfiguration CreateFrameshiftFixed(CsPseudorandomNumberGenerator csprngEnum, int? paddingSize = null) {
-            var fixedSize = paddingSize == null ? FabricPayloadMux.DefaultFixedStripeLength : paddingSize.Value;
+			var fixedSize = paddingSize == null ? FrameshiftPayloadMux.DefaultFixedPaddingLength : paddingSize.Value;
             var config = new PayloadConfiguration {
                 SchemeName = PayloadLayoutScheme.Frameshift.ToString(),
                 SchemeConfiguration = new PayloadSchemeConfiguration {

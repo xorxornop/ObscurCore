@@ -1,8 +1,6 @@
-#region License
-
 /*
-Illusory Studios C# Crypto Library (CryptSharp)
-Copyright (c) 2011 James F. Bellinger <jfb@zer7.com>
+CryptSharp
+Copyright (c) 2010, 2013 James F. Bellinger <http://www.zer7.com/software/cryptsharp>
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -17,185 +15,233 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-#endregion
-
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 
+using ObscurCore.Extensions.BitPacking;
+
 namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 {
-    public class Pbkdf2 : Stream
-    {
-        #region PBKDF2
-        public delegate void ComputeHmacCallback(byte[] key, byte[] data, byte[] output);
+	public class Pbkdf2 : Stream
+	{
+		#region PBKDF2
+		byte[] _saltBuffer, _digest, _digestT1;
+		KeyedHashAlgorithm _hmacAlgorithm;
+		int _iterations;
 
-        byte[] _key, _saltBuf, _block, _blockT1, _blockT2;
-        ComputeHmacCallback _computeHmacCallback;
-        int _iterations;
+		/// <summary>
+		/// Creates a new PBKDF2 stream.
+		/// </summary>
+		/// <param name="hmacAlgorithm">
+		///     The HMAC algorithm to use, for example <see cref="HMACSHA256"/>.
+		///     Make sure to set <see cref="KeyedHashAlgorithm.Key"/>.
+		/// </param>
+		/// <param name="salt">
+		///     The salt.
+		///     A unique salt means a unique PBKDF2 stream, even if the original key is identical.
+		/// </param>
+		/// <param name="iterations">The number of iterations to apply.</param>
+		public Pbkdf2(KeyedHashAlgorithm hmacAlgorithm, byte[] salt, int iterations)
+		{
+			Helper.CheckNull("hmacAlgorithm", hmacAlgorithm);
+			Helper.CheckNull("salt", salt);
+			//Check.Length("salt", salt, 0, int.MaxValue - 4);
+			Helper.CheckRange("iterations", iterations, 1, int.MaxValue);
+			if (hmacAlgorithm.HashSize == 0 || hmacAlgorithm.HashSize % 8 != 0)
+			{ throw new ArgumentException("Unsupported hash size.", "hmacAlgorithm"); }
 
-        public Pbkdf2(byte[] key, byte[] salt, int iterations,
-            ComputeHmacCallback computeHmacCallback, int hmacLength) {
-            Reopen(key, salt, iterations, computeHmacCallback, hmacLength);
-        }
+			int hmacLength = hmacAlgorithm.HashSize / 8;
+			_saltBuffer = new byte[salt.Length + 4]; Array.Copy(salt, _saltBuffer, salt.Length);
+			_iterations = iterations; _hmacAlgorithm = hmacAlgorithm;
+			_digest = new byte[hmacLength]; _digestT1 = new byte[hmacLength];
+		}
 
-        static void Clear(Array arr) {
-            Array.Clear(arr, 0, arr.Length);
-        }
+		/// <summary>
+		/// Reads from the derived key stream.
+		/// </summary>
+		/// <param name="count">The number of bytes to read.</param>
+		/// <returns>Bytes from the derived key stream.</returns>
+		public byte[] Read(int count)
+		{
+			Helper.CheckRange("count", count, 0, int.MaxValue);
 
-        public void Read(byte[] output) {
-            Helper.CheckNull("output", output);
+			byte[] buffer = new byte[count];
+			int bytes = Read(buffer, 0, count);
+			if (bytes < count)
+			{
+				throw new ArgumentException("Can only return " + bytes + " bytes.", "count");
+			}
 
-            int bytes = Read(output, 0, output.Length);
-            if (bytes < output.Length) {
-                throw new ArgumentException("Can only return "
-                    + output.Length.ToString() + " bytes.", "output");
-            }
-        }
+			return buffer;
+		}
 
-        public static void ComputeKey(byte[] key, byte[] salt, int iterations,
-            ComputeHmacCallback computeHmacCallback, int hmacLength, byte[] output) {
-            using (Pbkdf2 kdf = new Pbkdf2
-                (key, salt, iterations, computeHmacCallback, hmacLength)) {
-                kdf.Read(output);
-            }
-        }
+		/// <summary>
+		/// Computes a derived key.
+		/// </summary>
+		/// <param name="hmacAlgorithm">
+		///     The HMAC algorithm to use, for example <see cref="HMACSHA256"/>.
+		///     Make sure to set <see cref="KeyedHashAlgorithm.Key"/>.
+		/// </param>
+		/// <param name="salt">
+		///     The salt.
+		///     A unique salt means a unique derived key, even if the original key is identical.
+		/// </param>
+		/// <param name="iterations">The number of iterations to apply.</param>
+		/// <param name="derivedKeyLength">The desired length of the derived key.</param>
+		/// <returns>The derived key.</returns>
+		public static byte[] ComputeDerivedKey(KeyedHashAlgorithm hmacAlgorithm, byte[] salt, int iterations,
+			int derivedKeyLength)
+		{
+			Helper.CheckRange("derivedKeyLength", derivedKeyLength, 0, int.MaxValue);
 
-        public static ComputeHmacCallback CallbackFromHmac<T>() where T : KeyedHashAlgorithm, new() {
-            return delegate(byte[] key, byte[] data, byte[] output) {
-                using (T hmac = new T()) {
-                    Helper.CheckNull("key", key); Helper.CheckNull("data", data);
-                    hmac.Key = key; byte[] hmacOutput = hmac.ComputeHash(data);
+			using (Pbkdf2 kdf = new Pbkdf2(hmacAlgorithm, salt, iterations))
+			{
+				return kdf.Read(derivedKeyLength);
+			}
+		}
 
-                    try {
-                        Helper.CheckRange("output", output, hmacOutput.Length, hmacOutput.Length);
-                        Array.Copy(hmacOutput, output, output.Length);
-                    }
-                    finally {
-                        Clear(hmacOutput);
-                    }
-                }
-            };
-        }
+		/// <summary>
+		/// Closes the stream, clearing memory and disposing of the HMAC algorithm.
+		/// </summary>
+		public override void Close()
+		{
+			Array.Clear(_saltBuffer, 0, _saltBuffer.Length);
+			Array.Clear(_digest, 0, _digest.Length);
+			Array.Clear(_digestT1, 0, _digestT1.Length);
 
-        public void Reopen(byte[] key, byte[] salt, int iterations,
-            ComputeHmacCallback computeHmacCallback, int hmacLength) {
-            Helper.CheckNull("key", key);
-            Helper.CheckNull("salt", salt);
-            Helper.CheckNull("computeHmacCallback", computeHmacCallback);
-            Helper.CheckRange("salt", salt, 0, int.MaxValue - 4);
-            Helper.CheckRange("iterations", iterations, 1, int.MaxValue);
-            Helper.CheckRange("hmacLength", hmacLength, 1, int.MaxValue);
-            _key = new byte[key.Length]; Array.Copy(key, _key, key.Length);
-            _saltBuf = new byte[salt.Length + 4]; Array.Copy(salt, _saltBuf, salt.Length);
-            _iterations = iterations; _computeHmacCallback = computeHmacCallback;
-            _block = new byte[hmacLength]; _blockT1 = new byte[hmacLength]; _blockT2 = new byte[hmacLength];
-            ReopenStream();
-        }
 
-        public override void Close() {
-            Clear(_key); Clear(_saltBuf); Clear(_block);
-        }
+			_hmacAlgorithm.Clear();
+		}
 
-        void ComputeBlock(uint pos) {
-            Helper.UInt32ToBytes(pos, _saltBuf, _saltBuf.Length - 4);
-            ComputeHmac(_saltBuf, _blockT1);
-            Array.Copy(_blockT1, _block, _blockT1.Length);
+		void ComputeBlock(uint pos)
+		{
+			pos.ToBigEndian (_saltBuffer, _saltBuffer.Length - 4);
+			ComputeHmac(_saltBuffer, _digestT1);
+			Array.Copy(_digestT1, _digest, _digestT1.Length);
 
-            for (int i = 1; i < _iterations; i++) {
-                ComputeHmac(_blockT1, _blockT2); // let's not require aliasing support
-                Array.Copy(_blockT2, _blockT1, _blockT2.Length);
-                for (int j = 0; j < _block.Length; j++) { _block[j] ^= _blockT1[j]; }
-            }
+			for (int i = 1; i < _iterations; i++)
+			{
+				ComputeHmac(_digestT1, _digestT1);
+				for (int j = 0; j < _digest.Length; j++) { _digest[j] ^= _digestT1[j]; }
+			}
 
-            Clear(_blockT1); Clear(_blockT2);
-        }
+			Array.Clear(_digestT1, 0, _digestT1.Length);
+		}
 
-        void ComputeHmac(byte[] data, byte[] output) {
-            Debug.Assert(data != null && output != null);
-            _computeHmacCallback(_key, data, output);
-        }
-        #endregion
+		void ComputeHmac(byte[] input, byte[] output)
+		{
+			_hmacAlgorithm.Initialize();
+			_hmacAlgorithm.TransformBlock(input, 0, input.Length, input, 0);
+			_hmacAlgorithm.TransformFinalBlock(new byte[0], 0, 0);
+			Array.Copy(_hmacAlgorithm.Hash, output, output.Length);
+		}
+		#endregion
 
-        #region Stream
-        long _blockStart, _blockEnd, _pos;
+		#region Stream
+		long _blockStart, _blockEnd, _pos;
 
-        void ReopenStream() {
-            _blockStart = _blockEnd = _pos = 0;
-        }
+		/// <exclude />
+		public override void Flush()
+		{
 
-        public override void Flush() {
+		}
 
-        }
+		/// <inheritdoc />
+		public override int Read(byte[] buffer, int offset, int count)
+		{
+			//Check.Bounds("buffer", buffer, offset, count); 
+			int bytes = 0;
 
-        public override int Read(byte[] buffer, int offset, int count) {
-            Helper.CheckBounds("buffer", buffer, offset, count); int bytes = 0;
+			while (count > 0)
+			{
+				if (Position < _blockStart || Position >= _blockEnd)
+				{
+					if (Position >= Length) { break; }
 
-            while (count > 0) {
-                if (Position < _blockStart || Position >= _blockEnd) {
-                    if (Position >= Length) { break; }
+					long pos = Position / _digest.Length;
+					ComputeBlock((uint)(pos + 1));
+					_blockStart = pos * _digest.Length;
+					_blockEnd = _blockStart + _digest.Length;
+				}
 
-                    long pos = Position / _block.Length;
-                    ComputeBlock((uint) (pos + 1));
-                    _blockStart = pos * _block.Length;
-                    _blockEnd = _blockStart + _block.Length;
-                }
+				int bytesSoFar = (int)(Position - _blockStart);
+				int bytesThisTime = (int)Math.Min(_digest.Length - bytesSoFar, count);
+				Array.Copy(_digest, bytesSoFar, buffer, bytes, bytesThisTime);
+				count -= bytesThisTime; bytes += bytesThisTime; Position += bytesThisTime;
+			}
 
-                int bytesSoFar = (int) (Position - _blockStart);
-                int bytesThisTime = (int) Math.Min(_block.Length - bytesSoFar, count);
-                Array.Copy(_block, bytesSoFar, buffer, bytes, bytesThisTime);
-                count -= bytesThisTime; bytes += bytesThisTime; Position += bytesThisTime;
-            }
+			return bytes;
+		}
 
-            return bytes;
-        }
+		/// <inheritdoc />
+		public override long Seek(long offset, SeekOrigin origin)
+		{
+			long pos;
 
-        public override long Seek(long offset, SeekOrigin origin) {
-            long pos;
+			switch (origin)
+			{
+			case SeekOrigin.Begin: pos = offset; break;
+			case SeekOrigin.Current: pos = Position + offset; break;
+			case SeekOrigin.End: pos = Length + offset; break;
+			default: throw new ArgumentOutOfRangeException("origin", "Unknown seek type.");
+			}
 
-            switch (origin) {
-                case SeekOrigin.Begin: pos = offset; break;
-                case SeekOrigin.Current: pos = Position + offset; break;
-                case SeekOrigin.End: pos = Length + offset; break;
-                default: throw new ArgumentException("Unknown seek type.", "origin");
-            }
+			if (pos < 0) { throw new ArgumentException("Can't seek before the stream start.", "offset"); }
+			Position = pos; return pos;
+		}
 
-            if (pos < 0) { throw new ArgumentException("Seeking before the stream start.", "offset"); }
-            Position = pos; return pos;
-        }
+		/// <exclude />
+		public override void SetLength(long value)
+		{
+			throw new NotSupportedException ();
+		}
 
-        public override void SetLength(long value) {
-            throw new NotSupportedException();
-        }
+		/// <exclude />
+		public override void Write(byte[] buffer, int offset, int count)
+		{
+			throw new NotSupportedException ();
+		}
 
-        public override void Write(byte[] buffer, int offset, int count) {
-            throw new NotSupportedException();
-        }
+		/// <exclude />
+		public override bool CanRead
+		{
+			get { return true; }
+		}
 
-        public override bool CanRead {
-            get { return true; }
-        }
+		/// <exclude />
+		public override bool CanSeek
+		{
+			get { return true; }
+		}
 
-        public override bool CanSeek {
-            get { return true; }
-        }
+		/// <exclude />
+		public override bool CanWrite
+		{
+			get { return false; }
+		}
 
-        public override bool CanWrite {
-            get { return false; }
-        }
+		/// <summary>
+		/// The maximum number of bytes that can be derived is 2^32-1 times the HMAC size.
+		/// </summary>
+		public override long Length
+		{
+			get { return (long)_digest.Length * uint.MaxValue; }
+		}
 
-        public override long Length {
-            get { return (long) _block.Length * uint.MaxValue; }
-        }
-
-        public override long Position {
-            get { return _pos; }
-            set {
-                if (_pos < 0) { throw new ArgumentOutOfRangeException("value"); }
-                _pos = value;
-            }
-        }
-        #endregion
-    }
+		/// <summary>
+		/// The position within the derived key stream.
+		/// </summary>
+		public override long Position
+		{
+			get { return _pos; }
+			set
+			{
+				if (_pos < 0) { throw new ArgumentException("Can't seek before the stream start."); }
+				_pos = value;
+			}
+		}
+		#endregion
+	}
 }
+

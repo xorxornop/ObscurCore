@@ -16,49 +16,58 @@
 using System;
 using System.IO;
 using ObscurCore.Cryptography.Authentication;
+using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography
 {
 	public sealed class HashStream : DecoratingStream
 	{
+		private IDigest _digest;
+		private readonly byte[] _output;
+		private byte[] _buffer;
+		private const int BufferSize = 4096;
+
 		/// <summary>
 		/// The output/digest of the internal hash function. Zeroed if function is not finished.
 		/// </summary>
-		public byte[] Hash { get { return _outputRef; } }
-
-		private IDigest _digest;
-		private readonly byte[] _outputRef;
-		private bool _disposed;
-
-		private byte[] _buffer;
+		public byte[] Hash { get { return _output; } }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.HashStream"/> class.
 		/// </summary>
-		/// <param name="binding">Binding.</param>
-		/// <param name="writing">If set to <c>true</c> writing.</param>
-		/// <param name="function">Function.</param>
-		/// <param name="output">Byte array where the finished hash will be output to. Does not need to be initialised.</param>
+		/// <param name="binding">Stream to write to or read from.</param>
+		/// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
+		/// <param name="function">Hash/digest function to instantiate.</param>
+		/// <param name="output">Byte array where the finished hash will be output to.</param>
 		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
 		public HashStream (Stream binding, bool writing, HashFunction function, out byte[] output, bool closeOnDispose = true) 
-			: base(binding, writing, closeOnDispose, false)
+			: base(binding, writing, closeOnDispose)
 		{
 			_digest = Source.CreateHashPrimitive (function);
-            _outputRef = new byte[_digest.DigestSize];
-			output = _outputRef;
+            _output = new byte[_digest.DigestSize];
+			output = _output;
+		}
+
+		public HashStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, 
+			bool closeOnDispose = true) : base(binding, writing, closeOnDispose) 
+		{
+			if(config.FunctionType.ToEnum<VerificationFunctionType>() != VerificationFunctionType.Mac) {
+				throw new ConfigurationInvalidException ("Configuration specifies function type other than MAC.");
+			}
+
+			_digest = Source.CreateHashPrimitive (config.FunctionName.ToEnum<HashFunction>());
+			_output = new byte[_digest.DigestSize];
 		}
 
 
 		public override void Write (byte[] buffer, int offset, int count) {
-			if (count > 0) {
-				_digest.BlockUpdate(buffer, offset, count);
-			}
 			base.Write(buffer, offset, count);
+			_digest.BlockUpdate(buffer, offset, count);
 		}
 
 		public override void WriteByte (byte b) {
-			_digest.Update(b);
 			base.WriteByte (b);
+			_digest.Update(b);
 		} 
 
 		public override int ReadByte () {
@@ -70,7 +79,7 @@ namespace ObscurCore.Cryptography
 		}
 
 		public override int Read (byte[] buffer, int offset, int count) {
-			var readBytes = base.Read(buffer, offset, count);
+			int readBytes = base.Read(buffer, offset, count);
 			if (readBytes > 0) {
 				_digest.BlockUpdate(buffer, offset, readBytes);
 			}
@@ -78,16 +87,18 @@ namespace ObscurCore.Cryptography
 		}
 
 		public override long WriteExactlyFrom (Stream source, long length) {
+			CheckIfCanDecorate ();
 			if(source == null) {
 				throw new ArgumentNullException ("source");
 			}
+
 			if(_buffer == null) {
-				_buffer = new byte[1024];
+				_buffer = new byte[BufferSize];
 			}
 			int iterIn = 0;
 			long totalIn = 0;
-			while(totalIn > length) {
-				iterIn = source.Read (_buffer, 0, (int) Math.Min (_buffer.Length, length - totalIn));
+			while(length > 0) {
+				iterIn = source.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
 				if(iterIn == 0) {
 					throw new EndOfStreamException ();
 				}
@@ -99,17 +110,19 @@ namespace ObscurCore.Cryptography
 			return totalIn;
 		}
 
-		public override long ReadExactlyTo (Stream destination, long length) {
+		public override long ReadExactlyTo (Stream destination, long length, bool finishing = false) {
+			CheckIfCanDecorate ();
 			if(destination == null) {
 				throw new ArgumentNullException ("destination");
 			}
+
 			if(_buffer == null) {
-				_buffer = new byte[1024];
+				_buffer = new byte[BufferSize];
 			}
 			int iterIn = 0;
 			long totalIn = 0;
-			while(totalIn > length) {
-				iterIn = Binding.Read (_buffer, 0, (int) Math.Min (_buffer.Length, length - totalIn));
+			while(length > 0) {
+				iterIn = DecoratorBinding.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
 				if(iterIn == 0) {
 					throw new EndOfStreamException ();
 				}
@@ -117,36 +130,23 @@ namespace ObscurCore.Cryptography
 				_digest.BlockUpdate(_buffer, 0, iterIn);
 				destination.Write (_buffer, 0, iterIn);
 			}
+			if(finishing) {
+				Finish ();
+			}
 
 			return totalIn;
 		}
 
 		protected override void Finish () {
-			if (Finished)
-				return;
-			_digest.DoFinal (_outputRef, 0);
+			CheckIfCanDecorate ();
+			_digest.DoFinal (_output, 0);
 			base.Finish ();
 		}
 
 		protected override void Reset (bool finish = false) {
 			base.Reset (finish);
 			_digest.Reset ();
-		}
-
-        public override void Close() {
-            Finish();
-        }
-
-		protected override void Dispose (bool disposing) {
-			if (!_disposed) {
-				if (disposing) {
-					// dispose managed resources
-					Finish ();
-					this._digest = null;
-					base.Dispose (disposing);
-					_disposed = true;
-				}
-			}
+			Array.Clear (_output, 0, _output.Length);
 		}
 	}
 }

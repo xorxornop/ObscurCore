@@ -1,5 +1,22 @@
+﻿//
+//  Copyright 2013  Matthew Ducker
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//        http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
 using System;
 using ObscurCore.Cryptography.Support;
+
+// Optimised by Matthew Ducker from original BC source. Removed method calls.
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
@@ -19,80 +36,97 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	public class Hc128Engine
 		: IStreamCipher
 	{
-		private uint[] p = new uint[512];
-		private uint[] q = new uint[512];
-		private uint cnt = 0;
+		private readonly uint[] _p = new uint[512];
+		private readonly uint[] _q = new uint[512];
+		private uint _cnt;
 
-		private static uint F1(uint x)
-		{
-			return RotateRight(x, 7) ^ RotateRight(x, 18) ^ (x >> 3);
-		}
+        //private static uint F1(uint x)
+        //{
+        //    return RotateRight(x, 7) ^ RotateRight(x, 18) ^ (x >> 3);
+        //}
 
-		private static uint F2(uint x)
-		{
-			return RotateRight(x, 17) ^ RotateRight(x, 19) ^ (x >> 10);
-		}
+        //private static uint F2(uint x)
+        //{
+        //    return RotateRight(x, 17) ^ RotateRight(x, 19) ^ (x >> 10);
+        //}
 
-		private uint G1(uint x, uint y, uint z)
-		{
-			return (RotateRight(x, 10) ^ RotateRight(z, 23)) + RotateRight(y, 8);
-		}
+        //private uint G1(uint x, uint y, uint z)
+        //{
+        //    return (RotateRight(x, 10) ^ RotateRight(z, 23)) + RotateRight(y, 8);
+        //}
 
-		private uint G2(uint x, uint y, uint z)
-		{
-			return (RotateLeft(x, 10) ^ RotateLeft(z, 23)) + RotateLeft(y, 8);
-		}
+        //private uint G2(uint x, uint y, uint z)
+        //{
+        //    return (RotateLeft(x, 10) ^ RotateLeft(z, 23)) + RotateLeft(y, 8);
+        //}
 
-		private static uint RotateLeft(uint	x, int bits)
-		{
+		private static uint RotateLeft(uint	x, int bits) {
 			return (x << bits) | (x >> -bits);
 		}
 
-		private static uint RotateRight(uint x, int bits)
-		{
+		private static uint RotateRight(uint x, int bits) {
 			return (x >> bits) | (x << -bits);
 		}
 
-		private uint H1(uint x)
-		{
-			return q[x & 0xFF] + q[((x >> 16) & 0xFF) + 256];
-		}
+        //private uint H1(uint x)
+        //{
+        //    return q[x & 0xFF] + q[((x >> 16) & 0xFF) + 256];
+        //}
 
-		private uint H2(uint x)
-		{
-			return p[x & 0xFF] + p[((x >> 16) & 0xFF) + 256];
-		}
+        //private uint H2(uint x)
+        //{
+        //    return p[x & 0xFF] + p[((x >> 16) & 0xFF) + 256];
+        //}
 
-		private static uint Mod1024(uint x)
-		{
-			return x & 0x3FF;
-		}
+        //private static uint Mod1024(uint x)
+        //{
+        //    return x & 0x3FF;
+        //}
 
-		private static uint Mod512(uint x)
-		{
-			return x & 0x1FF;
-		}
+        //private static uint Mod512(uint x)
+        //{
+        //    return x & 0x1FF;
+        //}
 
-		private static uint Dim(uint x, uint y)
-		{
-			return Mod512(x - y);
-		}
+        //private static uint Dim(uint x, uint y)
+        //{
+        //    return Mod512(x - y);
+        //}
 
 		private uint Step()
 		{
-			uint j = Mod512(cnt);
+            //Mod512(cnt);
+			uint j = _cnt & 0x1FF; 
 			uint ret;
-			if (cnt < 512)
-			{
-				p[j] += G1(p[Dim(j, 3)], p[Dim(j, 10)], p[Dim(j, 511)]);
-				ret = H1(p[Dim(j, 12)]) ^ p[j];
+			if (_cnt < 512) {
+				//p[j] += G1(p[Dim(j, 3)], p[Dim(j, 10)], p[Dim(j, 511)]);
+                // ## G1 = RotateRight((j - 3) & 0x1FF, 10) ^ RotateRight((j - 10) & 0x1FF, 23)) + RotateRight((j - 511) & 0x1FF, 8);
+
+                _p[j] += RotateRight((j-3) & 0x1FF, 10) ^ RotateRight((j - 10) & 0x1FF, 23) + RotateRight((j - 511) & 0x1FF, 8);
+
+				//ret = H1(p[Dim(j, 12)]) ^ p[j];
+                // ## H1 = q[x & 0xFF] + q[((x >> 16) & 0xFF) + 256];
+
+                uint x = _p[(j - 12) & 0x1FF];
+			    ret = _q[x & 0xFF] + _q[((x >> 16) & 0xFF) + 256];
+
+			} else {
+				// q[j] += G2(q[Dim(j, 3)], q[Dim(j, 10)], q[Dim(j, 511)]);
+                // ## G2 = (RotateLeft(x, 10) ^ RotateLeft(z, 23)) + RotateLeft(y, 8)
+
+                _q[j] += RotateLeft((j - 3) & 0x1FF, 10) ^ RotateLeft((j - 10) & 0x1FF, 23) + RotateLeft((j - 511) & 0x1FF, 8);
+
+				//ret = H2(q[Dim(j, 12)]) ^ q[j];
+                // ## H2 = p[x & 0xFF] + p[((x >> 16) & 0xFF) + 256];
+
+                uint x = _p[(j - 12) & 0x1FF];
+                ret = _p[x & 0xFF] + _p[((x >> 16) & 0xFF) + 256];
 			}
-			else
-			{
-				q[j] += G2(q[Dim(j, 3)], q[Dim(j, 10)], q[Dim(j, 511)]);
-				ret = H2(q[Dim(j, 12)]) ^ q[j];
-			}
-			cnt = Mod1024(cnt + 1);
+			
+            //cnt = Mod1024(cnt + 1);
+
+            _cnt = (_cnt + 1) & 0x3FF;
+
 			return ret;
 		}
 
@@ -104,45 +138,54 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			if (key.Length != 16)
 				throw new ArgumentException("The key must be 128 bits long");
 
-			cnt = 0;
+			_cnt = 0;
 
 			uint[] w = new uint[1280];
 
-			for (int i = 0; i < 16; i++)
-			{
+			for (int i = 0; i < 16; i++) {
 				w[i >> 2] |= ((uint)key[i] << (8 * (i & 0x3)));
 			}
 			Array.Copy(w, 0, w, 4, 4);
 
-			for (int i = 0; i < iv.Length && i < 16; i++)
-			{
+			for (int i = 0; i < iv.Length && i < 16; i++) {
 				w[(i >> 2) + 8] |= ((uint)iv[i] << (8 * (i & 0x3)));
 			}
 			Array.Copy(w, 8, w, 12, 4);
 
-			for (uint i = 16; i < 1280; i++)
-			{
-				w[i] = F2(w[i - 2]) + w[i - 7] + F1(w[i - 15]) + w[i - 16] + i;
+			for (uint i = 16; i < 1280; i++) {
+                //w[i] = F2(w[i - 2]) + w[i - 7] + F1(w[i - 15]) + w[i - 16] + i;
+
+                // ## F1 = RotateRight(x, 7) ^ RotateRight(x, 18) ^ (x >> 3);
+                // ## F2 = RotateRight(x, 17) ^ RotateRight(x, 19) ^ (x >> 10);
+
+			    uint x = w[i - 2];
+                uint y = w[i - 15];
+                w[i] = (RotateRight(x, 7) ^ RotateRight(x, 18) ^ (x >> 3)) + w[i - 7]
+					+ (RotateRight(y, 17) ^ RotateRight(y, 19) ^ (y >> 10))
+					+ w[i - 16] + i;
 			}
 
-			Array.Copy(w, 256, p, 0, 512);
-			Array.Copy(w, 768, q, 0, 512);
+			Array.Copy(w, 256, _p, 0, 512);
+			Array.Copy(w, 768, _q, 0, 512);
 
-			for (int i = 0; i < 512; i++)
-			{
-				p[i] = Step();
+			for (int i = 0; i < 512; i++) {
+				_p[i] = Step();
 			}
-			for (int i = 0; i < 512; i++)
-			{
-				q[i] = Step();
+			for (int i = 0; i < 512; i++) {
+				_q[i] = Step();
 			}
 
-			cnt = 0;
+			_cnt = 0;
 		}
 
 		public string AlgorithmName
 		{
 			get { return "HC-128"; }
+		}
+
+		public int StateSize
+		{
+			get { return 32; }
 		}
 
 		/**
@@ -160,23 +203,17 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		{
 			ICipherParameters keyParam = parameters;
 
-			if (parameters is ParametersWithIV)
-			{
+			if (parameters is ParametersWithIV) {
 				iv = ((ParametersWithIV)parameters).GetIV();
 				keyParam = ((ParametersWithIV)parameters).Parameters;
-			}
-			else
-			{
+			} else {
 				iv = new byte[0];
 			}
 
-			if (keyParam is KeyParameter)
-			{
+			if (keyParam is KeyParameter) {
 				key = ((KeyParameter)keyParam).GetKey();
 				Init();
-			}
-			else
-			{
+			} else {
 				throw new ArgumentException(
 					"Invalid parameter passed to HC128 init - " + parameters.GetType().Name,
 					"parameters");
@@ -186,12 +223,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		}
 
 		private byte[] buf = new byte[4];
-		private int idx = 0;
+		private int idx;
 
-		private byte GetByte()
-		{
-			if (idx == 0)
-			{
+		private byte GetByte() {
+			if (idx == 0) {
 				Pack.UInt32_To_LE(Step(), buf);				
 			}
 			byte ret = buf[idx];
@@ -213,20 +248,17 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			if ((outOff + len) > output.Length)
 				throw new DataLengthException("output buffer too short");
 
-			for (int i = 0; i < len; i++)
-			{
+			for (int i = 0; i < len; i++) {
 				output[outOff + i] = (byte)(input[inOff + i] ^ GetByte());
 			}
 		}
 
-		public void Reset()
-		{
+		public void Reset() {
 			idx = 0;
 			Init();
 		}
 
-		public byte ReturnByte(byte input)
-		{
+		public byte ReturnByte(byte input) {
 			return (byte)(input ^ GetByte());
 		}
 	}

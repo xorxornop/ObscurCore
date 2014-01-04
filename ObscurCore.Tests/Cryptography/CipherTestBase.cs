@@ -40,34 +40,20 @@ namespace ObscurCore.Tests.Cryptography
 
         protected void RunEqualityTest (SymmetricCipherConfiguration config, byte[] overrideKey = null) {
             TimeSpan enc, dec;
+			MemoryStream fileStream = LargeBinaryFile;
 
-            config.Key = Key;
+			Assert.IsTrue(OutputNonMalformed(fileStream, config, overrideKey ?? Key, out enc, out dec));
 
-            byte[] keyBackup = null;
-            var backupRequired = false;
-            try {
-                if (overrideKey != null) {
-                    keyBackup = new byte[config.Key.Length];
-                    Array.Copy(config.Key, keyBackup, config.Key.Length);
-                    config.Key = overrideKey;
-                    config.KeySizeBits = overrideKey.Length * 8;
-                    backupRequired = true;
-                }
-                Assert.IsTrue(OutputNonMalformed(LargeBinaryFile, config, out enc, out dec));
-            }
-            finally {
-                if(backupRequired) config.Key = keyBackup;
-            }
-            double encSpeed = ((double) LargeBinaryFile.Length / 1048576) / enc.TotalSeconds, decSpeed = ((double) LargeBinaryFile.Length / 1048576) / dec.TotalSeconds;
+			double encSpeed = ((double) fileStream.Length / 1048576) / enc.TotalSeconds, decSpeed = ((double) fileStream.Length / 1048576) / dec.TotalSeconds;
             Assert.Pass("{0:N0} ms ({1:N2} MB/s) : {2:N0} ms ({3:N2} MB/s)", enc.TotalMilliseconds, encSpeed, dec.TotalMilliseconds, decSpeed);
         }
 
-        protected bool OutputNonMalformed (MemoryStream input, SymmetricCipherConfiguration config, out TimeSpan encryptTime, out TimeSpan decryptTime) {
+		protected bool OutputNonMalformed (MemoryStream input, SymmetricCipherConfiguration config, byte[] key, out TimeSpan encryptTime, out TimeSpan decryptTime) {
             var crypted = new MemoryStream();
 
             var sw = new Stopwatch();
             
-            using (var cs = new SymmetricCryptoStream(crypted, true, config, null, false)) {
+			using (var cs = new SymmetricCryptoStream(crypted, true, config, key, false)) {
                 sw.Start();
                 input.CopyTo(cs, GetBufferSize());
             }
@@ -78,7 +64,7 @@ namespace ObscurCore.Tests.Cryptography
             crypted.Seek(0, SeekOrigin.Begin);
 
             sw.Reset();
-            using (var cs = new SymmetricCryptoStream(crypted, false, config, null, false)) {
+			using (var cs = new SymmetricCryptoStream(crypted, false, config, key, false)) {
                 sw.Start();
                 cs.CopyTo(decrypted, GetBufferSize());
             }

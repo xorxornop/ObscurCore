@@ -70,7 +70,8 @@ namespace ObscurCore.DTO
         public bool StreamInitialised { get { return _stream.IsValueCreated; } }
 
         /// <summary>
-        /// State of <see cref="StreamBinding"/> - whether it has a lazy binding (can be activated), or none at all (activation is impossible; null reference).
+        /// State of <see cref="StreamBinding"/> - whether it has a lazy binding (can be activated), 
+		/// or none at all (activation is impossible; null reference).
         /// </summary>
         [ProtoIgnore]
         public bool StreamHasBinding { get { return _stream != null; } }
@@ -114,21 +115,33 @@ namespace ObscurCore.DTO
         [ProtoMember(6, IsRequired = true)]
         public SymmetricCipherConfiguration Encryption { get; set; }
 
-		[ProtoMember(7, IsRequired = false)]
-		public VerificationFunctionConfiguration EncryptionAuthentication { get; set; }
+		/// <summary>
+		/// Cryptographic key for encryption of the payload item.
+		/// </summary>
+		[ProtoMember(7, IsRequired = true)]
+		public byte[] EncryptionKey { get; set; }
+
+		[ProtoMember(8, IsRequired = true)]
+		public VerificationFunctionConfiguration Authentication { get; set; }
+
+		/// <summary>
+		/// Cryptographic key for authentication of the payload item.
+		/// </summary>
+		[ProtoMember(9, IsRequired = true)]
+		public byte[] AuthenticationKey { get; set; }
 		
         /// <summary>
         /// Key confirmation configuration for this payload item. 
 		/// Used to validate the existence and validity of keying material 
 		/// at the respondent's side without disclosing the key itself.
         /// </summary>
-		[ProtoMember(8, IsRequired = false)]
+		[ProtoMember(10, IsRequired = false)]
 		public VerificationFunctionConfiguration KeyConfirmation { get; set; }
 
         /// <summary>
         /// Key derivation configuration for this payload item.
         /// </summary>
-		[ProtoMember(9, IsRequired = false)]
+		[ProtoMember(11, IsRequired = false)]
         public KeyDerivationConfiguration KeyDerivation { get; set; }
 
         public override bool Equals (object obj)

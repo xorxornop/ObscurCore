@@ -20,7 +20,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 {
 	public class Blake2BDigest : IDigest
 	{
-		protected Blake2BCore _core;
+		protected Blake2BCore _core = new Blake2BCore();
 		protected int outputSize;
 
 		private ulong[] rawConfig;

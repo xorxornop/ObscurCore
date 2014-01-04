@@ -16,6 +16,7 @@
     <Description>General-purpose encryption and data packaging library</Description>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
+    <ReleaseVersion>0.5</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,7 +40,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
     <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
     <DefineConstants>TRACE;INCLUDE_UNSAFE;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Optimize>true</Optimize>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
@@ -59,10 +59,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Athena.cs" />
-    <Compile Include="Cryptography\Authentication\AeadBlockCipherMode.cs" />
     <Compile Include="Cryptography\Authentication\IDigest.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />
-    <Compile Include="Cryptography\Authentication\IMacWithSalt.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Blake2BDigest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Blake2BMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BConfig.cs" />
@@ -80,7 +78,6 @@
     <Compile Include="Cryptography\Authentication\Primitives\RipeMD160Digest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Sha1Digest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Sha256Digest.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\SHA3\Keccak.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Sha512Digest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\TigerDigest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\WhirlpoolDigest.cs" />
@@ -134,7 +131,6 @@
     <Compile Include="Cryptography\KeyDerivation\IKdfFunction.cs" />
     <Compile Include="Cryptography\KeySizeException.cs" />
     <Compile Include="Cryptography\Authentication\MacFunction.cs" />
-    <Compile Include="Cryptography\MacSizeException.cs" />
     <Compile Include="Cryptography\Ciphers\SymmetricBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\SymmetricStreamCipher.cs" />
     <Compile Include="Cryptography\MaxBytesExceededException.cs" />
@@ -149,7 +145,6 @@
     <Compile Include="Information\MacFunctionDescription.cs" />
     <Compile Include="ItemStreamBindingAbsentException.cs" />
     <Compile Include="Package.cs" />
-    <Compile Include="Packaging\Exceptions.cs" />
     <Compile Include="Packaging\FabricStripeMode.cs" />
     <Compile Include="Packaging\FrameshiftPaddingMode.cs" />
     <Compile Include="Information\SymmetricCipherDescription.cs" />
@@ -166,8 +161,6 @@
     <Compile Include="Cryptography\Ciphers\Block\IBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\ICipherParameters.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\IStreamCipher.cs" />
-    <None Include="Cryptography\Ciphers\Stream\Primitives\Hc128Engine.cs" />
-    <Compile Include="Cryptography\Ciphers\Stream\Primitives\Hc128EngineOptimised.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Hc256Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\IsaacEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\RabbitEngine.cs" />
@@ -183,21 +176,15 @@
     <Compile Include="Cryptography\Entropy\SecureRandom.cs" />
     <Compile Include="Cryptography\Entropy\StreamCsprng.cs" />
     <Compile Include="Cryptography\KeyAgreement\BrainpoolEllipticCurve.cs" />
-    <Compile Include="Cryptography\Exceptions.cs" />
     <Compile Include="Cryptography\MacStream.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\UM1Exchange.cs" />
     <Compile Include="Cryptography\KeyAgreement\Utilities.cs" />
     <None Include="Cryptography\Entropy\Primitives\MersenneTwister.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Helper.cs" />
-    <Compile Include="Cryptography\KeyDerivation\Primitives\Pbkdf2.cs" />
-    <Compile Include="Cryptography\KeyDerivation\Primitives\Salsa20Core.cs" />
-    <Compile Include="Cryptography\KeyDerivation\Primitives\Scrypt.cs" />
     <Compile Include="Cryptography\StreamCipherConfigurationWrapper.cs" />
     <Compile Include="Cryptography\SymmetricCryptoStream.cs" />
-    <Compile Include="Cryptography\Templates.cs" />
     <Compile Include="DecoratingStream.cs" />
     <Compile Include="EventArgs.cs" />
-    <None Include="Packaging\AsyncCryptoMux.cs" />
     <Compile Include="Packaging\PayloadLayoutConfigurationFactory.cs" />
     <Compile Include="Packaging\PayloadLayoutScheme.cs" />
     <Compile Include="Packaging\FabricPayloadMux.cs" />
@@ -211,7 +198,6 @@
     <Compile Include="StratCom.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\Salsa20Generator.cs" />
     <Compile Include="Cryptography\Entropy\Csprng.cs" />
-    <Compile Include="Cryptography\Support\Arrays.cs" />
     <Compile Include="Cryptography\Support\AsymmetricCipherKeyPair.cs" />
     <Compile Include="Cryptography\Support\AsymmetricKeyParameter.cs" />
     <Compile Include="Cryptography\Support\Math\BigIntegers.cs" />
@@ -238,7 +224,6 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\WNafPreCompInfo.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\WTauNafMultiplier.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\WTauNafPreCompInfo.cs" />
-    <Compile Include="Cryptography\Support\Strings.cs" />
     <Compile Include="Cryptography\Support\X9IntegerConverter.cs" />
     <Compile Include="RingByteBuffer.cs" />
     <Compile Include="ExtensionMethods.cs" />
@@ -254,8 +239,18 @@
     <Compile Include="Cryptography\Ciphers\Stream\StreamCipherWrapper.cs" />
     <Compile Include="Information\NoncePolicy.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\SosemanukGenerator.cs" />
-    <Compile Include="Packaging\PayloadMuxNew.cs" />
     <Compile Include="Cryptography\CryptographyExtensions.cs" />
+    <Compile Include="Cryptography\Authentication\AuthenticationConfigurationFactory.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\KeccakDigest.cs" />
+    <None Include="Cryptography\MacSizeException.cs" />
+    <Compile Include="Cryptography\Authentication\EtMKeyStretchingUtility.cs" />
+    <Compile Include="Cryptography\KeyDerivation\Primitives\Utility.cs" />
+    <Compile Include="Packaging\PayloadMux.cs" />
+    <Compile Include="Cryptography\KeyDerivation\Primitives\Salsa20Core.cs" />
+    <Compile Include="Cryptography\KeyDerivation\Primitives\Pbkdf2.cs" />
+    <Compile Include="Cryptography\KeyDerivation\Primitives\Scrypt.cs" />
+    <Compile Include="DataLengthException.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Primitives\Hc128Engine.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />

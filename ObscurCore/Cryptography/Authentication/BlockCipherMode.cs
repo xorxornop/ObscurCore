@@ -13,13 +13,6 @@
         Cbc,
 
         /// <summary>
-        /// Ciphertext Stealing mode on top of CBC mode. Can write partial blocks 
-        /// without padding so long as plaintext exceeds one block length.
-        /// </summary>
-        /// <see cref="Cbc"/>
-        CtsCbc,
-
-        /// <summary>
         /// Counter (aka Segmented Integer Counter, SIC). Can write partial blocks.
         /// </summary>
         Ctr,

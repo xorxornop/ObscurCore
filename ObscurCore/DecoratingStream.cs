@@ -19,36 +19,32 @@ using System.IO;
 namespace ObscurCore
 {
     /// <summary>
-    /// Base class for ObscurCore's decorating streams to inherit from. 
-    /// Provides baseline functionality, such as I/O directionality enforcement, and buffer information passthrough. 
+    /// Base class for ObscurCore's decorating streams to inherit from.
     /// </summary>
 	public abstract class DecoratingStream : Stream
 	{
-		protected string	NotEffluxError =    "Stream is configured for write-direction/efflux processing, and so may only be written to.",
-							NotInfluxError =    "Stream is configured for read-direction/influx processing, and so may only be read from.";
-
 		/// <summary>
 		/// Default amount of data a buffer associated with this stream must store to avoid I/O errors.
 		/// </summary>
-		private const int DefaultBufferReq = 8192; // 8 KB
+		private const int DefaultBufferRequirement = 1024; // 1 KB
 
+		protected bool Disposed;
+		protected bool Finished;
+		protected Stream Binding;
 
-		private bool _disposed;
-		private readonly bool _directionalityEnforced;
-		private bool _finished;
 		private readonly bool _closeOnDispose;
 
 		/// <summary>
 		/// Set this field in the constructor of a derived class to indicate how much data the base stream 
 		/// must have access to mid-operation to avoid I/O errors. Depends on behaviour of derived class logic.
 		/// </summary>
-		private int? _bufferRequirementOverride = null;
+		private int? _bufferRequirement = null;
 
 		/// <summary>
 		/// Stream that decorator writes to or reads from.
 		/// </summary>
 		/// <value>Stream binding.</value>
-		public Stream Binding { get; private set; }
+		public Stream DecoratorBinding { get { return Binding; } }
 
 		/// <summary>
 		/// Whether the stream that decorator writes/reads to/from is also a <see cref="ObscurCore.DecoratingStream"/>.
@@ -56,7 +52,7 @@ namespace ObscurCore
 		/// <value><c>true</c> if binding is decorator; otherwise, <c>false</c>.</value>
 		public bool BindingIsDecorator
 		{
-			get { return Binding is DecoratingStream; }
+			get { return DecoratorBinding is DecoratingStream; }
 		}
 
 		/// <summary>
@@ -79,56 +75,66 @@ namespace ObscurCore
 		/// </remarks>
 		public int BufferSizeRequirement
 		{
-			get { return GetBufferRequirement(0) ?? DefaultBufferReq; }
-			protected set { _bufferRequirementOverride = value; }
-		}
-
-
-		protected DecoratingStream (bool writing, bool closeOnDispose, bool enforce = true) {
-			Writing = writing;
-			_closeOnDispose = closeOnDispose;
-			_directionalityEnforced = enforce;
+			get { return GetBufferRequirement(0) ?? DefaultBufferRequirement; }
+			protected set { _bufferRequirement = value; }
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="ObscurCore.DecoratingStream"/> class without a stream binding at construction time. 
+		/// Initializes a new instance of the <see cref="ObscurCore.DecoratingStream"/> class. 
 		/// </summary>
+		/// <param name="binding">Stream to bind decoration functionality to.</param>
 		/// <param name="writing">If set to <c>true</c>, stream is used for writing-only, as opposed to reading-only.</param>
 		/// <param name="closeOnDispose">If set to <c>true</c>, when stream is closed, bound stream will also be closed.</param>
-		protected DecoratingStream (Stream binding, bool writing, bool closeOnDispose, bool enforce = true) 
-			: this(writing, closeOnDispose, enforce)
+		protected DecoratingStream (Stream binding, bool writing, bool closeOnDispose) 
 		{
 			Binding = binding;
+			Writing = writing;
+			_closeOnDispose = closeOnDispose;
 		}
 
-
-		internal protected int? GetBufferRequirement(int maxFound) {
-			var dc = Binding as DecoratingStream;
-			if(dc != null) {
+		/// <summary>
+		/// Determine the maximum of the minimum size buffers required for 
+		/// reliable I/O in a sequence of bound streams.
+		/// </summary>
+		/// <returns>The buffer requirement.</returns>
+		/// <param name="maxFound">Maximum of the minimum sizes found thus far in recursive call.</param>
+		protected int? GetBufferRequirement(int maxFound) {
+			var dc = DecoratorBinding as DecoratingStream;
+			if (dc != null) {
 				var bindingRequirement = dc.GetBufferRequirement (maxFound);
 				if (bindingRequirement.HasValue) {
 					return Math.Max (maxFound, bindingRequirement.Value);
 				}
 			}
-			return null;
+			return _bufferRequirement;
+		}
+
+		/// <summary>
+		/// Check if disposed or finished (throw exception if either).
+		/// </summary>
+		protected void CheckIfCanDecorate() {
+			if (Disposed) 
+				throw new ObjectDisposedException(GetType().Name);
+			if (Finished)
+				throw new InvalidOperationException ();
 		}
 
 		public override void WriteByte (byte b) {
-			CheckIfAllowed (true);
-			Binding.WriteByte(b);
+			CheckIfCanDecorate ();
+			DecoratorBinding.WriteByte(b);
 			BytesIn++;
 			BytesOut++;
 		}
 
 		public override void Write (byte[] buffer, int offset, int count) {
-			CheckIfAllowed (true);
-			Binding.Write(buffer, offset, count);
+			CheckIfCanDecorate ();
+			DecoratorBinding.Write(buffer, offset, count);
 			BytesIn += count;
 			BytesOut += count;
 		}
 
 		/// <summary>
-		/// Writes specified quantity of bytes exactly (after decoration transform)
+		/// Write exact quantity of bytes (after decoration) to the destination.
 		/// </summary>
 		/// <returns>The quantity of bytes taken from the source stream to fulfil the request.</returns>
 		/// <param name="source">Source.</param>
@@ -136,37 +142,38 @@ namespace ObscurCore
 		public abstract long WriteExactlyFrom(Stream source, long length);
 
 		public override int ReadByte () {
-			CheckIfAllowed (false);
-			if (Writing) throw new InvalidOperationException(NotEffluxError);
+			if (Disposed) 
+				throw new ObjectDisposedException(GetType().Name);
+			if (Finished)
+				return -1;
 			BytesIn++;
 			BytesOut++;
-			return Binding.ReadByte();
+			return DecoratorBinding.ReadByte();
 		}
 
 		public override int Read (byte[] buffer, int offset, int count) {
-			CheckIfAllowed (false);
-			if (Writing) throw new InvalidOperationException(NotInfluxError);
-			var readBytes = Binding.Read(buffer, offset, count);
-			BytesIn += count;
-			BytesOut += count;
+			CheckIfCanDecorate ();
+			int readBytes = DecoratorBinding.Read(buffer, offset, count);
+			BytesIn += readBytes;
+			BytesOut += readBytes;
 			return readBytes;
 		}
 
 		/// <summary>
-		/// Read an exact amount of bytes from the stream binding and writes them 
-		/// (after being processed by the decorator transform) to the destination.
+		/// Read an exact amount of bytes from the stream binding and write them 
+		/// (after decoration) to the destination.
 		/// </summary>
 		/// <returns>The quantity of bytes written to the destination stream.</returns>
 		/// <param name="destination">Stream to write output to.</param>
 		/// <param name="length">Quantity of bytes to read.</param>
-		public abstract long ReadExactlyTo(Stream destination, long length);
+		public abstract long ReadExactlyTo(Stream destination, long length, bool finishing = false);
 
 		public override bool CanRead {
-			get { return _directionalityEnforced ? !Writing && Binding.CanRead : Binding.CanRead; }
+			get { return DecoratorBinding.CanRead; }
 		}
 
 		public override bool CanWrite {
-			get { return _directionalityEnforced ? Writing && Binding.CanWrite : Binding.CanWrite; }
+			get { return DecoratorBinding.CanWrite; }
 		}
 
 		public override bool CanSeek {
@@ -178,18 +185,15 @@ namespace ObscurCore
 		}
 
 		public override long Position {
-			get { return Binding.Position; }
+			get { return DecoratorBinding.Position; }
 			set {
 				if(!CanSeek) {
 					throw new NotSupportedException ();
 				}
-				Binding.Position = value;
+				//Binding.Position = value;
+				Binding.Seek (value, SeekOrigin.Begin);
 			}
 		}
-
-        protected internal bool Finished {
-            get { return _finished; }
-        }
 
         public override long Seek (long offset, SeekOrigin origin) {
 			return Binding.Seek (offset, origin);
@@ -203,17 +207,6 @@ namespace ObscurCore
 			Binding.Flush();
 		}
 
-		/// <summary>
-		/// Finish the decoration operation, whatever that constitutes in a derived implementation. 
-		/// Could be done before a close or reset.
-		/// </summary>
-		protected virtual void Finish() {
-			if (_finished)
-				return;
-			// Nothing here
-			_finished = true;
-		}
-
         /// <summary>
         /// Changes the stream that is written to or read from from this decorating stream.
         /// Writing/Reading mode is not reassignable without object reconstruction.
@@ -221,26 +214,28 @@ namespace ObscurCore
         /// <param name="newBinding">The stream that the decorator will be bound to after method completion.</param>
         /// <param name="reset">Whether to reset the rest of the decorator state in addition to the stream binding.</param>
 		/// <param name="finish">Whether to finalise the existing decoration operation before resetting. Only applicable if resetting.</param>
-        public void SetStreamBinding(Stream newBinding, bool reset = true, bool finish = false) {
+        public void ReassignBinding(Stream newBinding, bool reset = true, bool finish = false) {
             if(newBinding == null || newBinding == Stream.Null) throw new ArgumentNullException("newBinding", "Stream is null, cannot reassign.");
             if (reset) Reset (finish);
+			Binding = newBinding;
+			Finished = false;
         }
 
 		protected virtual void Reset(bool finish = false) {
 			if (finish) Finish ();
 			BytesIn = 0;
 			BytesOut = 0;
-			_finished = false;
+			Finished = false;
 		}
 
-		protected void CheckIfDisposed() {
-			if (_disposed) throw new ObjectDisposedException(GetType().Name);
-		}
-
-		protected void CheckIfAllowed(bool writing) {
-			if (!_directionalityEnforced) return;
-			if (Writing && !writing) throw new InvalidOperationException(NotInfluxError);
-			else if (!Writing && writing) throw new InvalidOperationException(NotEffluxError);
+		/// <summary>
+		/// Finish the decoration operation (whatever that may constitute in a derived implementation). 
+		/// Could be done before a close or reset.
+		/// </summary>
+		protected virtual void Finish() {
+			if (Finished)
+				return;
+			Finished = true;
 		}
 
 		public override void Close () {
@@ -250,7 +245,7 @@ namespace ObscurCore
 
 		protected override void Dispose (bool disposing) {
 			try {
-				if (!_disposed) {
+				if (!Disposed) {
 					if (disposing) {
 						// dispose managed resources
 						Finish ();
@@ -260,7 +255,7 @@ namespace ObscurCore
 						this.Binding = null;
 					}
 				}
-				_disposed = true;
+				Disposed = true;
 			}
 			finally {
 				if(this.Binding != null) {

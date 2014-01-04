@@ -24,8 +24,8 @@ namespace ObscurCore.Cryptography
 {
     public static class SymmetricCipherConfigurationFactory
     {
-        public static SymmetricCipherConfiguration CreateBlockCipherConfigurationWithoutKey(SymmetricBlockCipher cipher,
-                                                                                            BlockCipherMode mode, BlockCipherPadding padding, int? keySize = null, int? blockSize = null)
+        public static SymmetricCipherConfiguration CreateBlockCipherConfiguration(SymmetricBlockCipher cipher,
+        	BlockCipherMode mode, BlockCipherPadding padding, int? keySize = null, int? blockSize = null)
         {
             var config = new SymmetricCipherConfiguration { Type = SymmetricCipherType.Block };
 
@@ -64,28 +64,8 @@ namespace ObscurCore.Cryptography
             return config;
         }
 
-        public static SymmetricCipherConfiguration CreateBlockCipherConfiguration(SymmetricBlockCipher cipher, 
-                                                                                  BlockCipherMode mode, BlockCipherPadding padding, int? keySize = null, int? blockSize = null)
-        {
-            var config = CreateBlockCipherConfigurationWithoutKey(cipher, mode, padding, keySize, blockSize);
-            config.Key = new byte[config.KeySizeBits / 8];
-            StratCom.EntropySource.NextBytes(config.Key);
-
-            return config;
-        }
-
-        public static SymmetricCipherConfiguration CreateStreamCipherConfiguration(SymmetricStreamCipher cipher, 
-                                                                                   int? keySize = null)
-        {
-            var config = CreateStreamCipherConfigurationWithoutKey(cipher, null);
-            config.Key = new byte[config.KeySizeBits / 8];
-            StratCom.EntropySource.NextBytes(config.Key);
-
-            return config;
-        }
-
-        public static SymmetricCipherConfiguration CreateStreamCipherConfigurationWithoutKey(SymmetricStreamCipher cipher,
-                                                                                             int? keySize = null)
+        public static SymmetricCipherConfiguration CreateStreamCipherConfiguration(SymmetricStreamCipher cipher,
+        	int? keySize = null)
         {
             var config = new SymmetricCipherConfiguration {Type = SymmetricCipherType.Stream};
 
@@ -95,7 +75,6 @@ namespace ObscurCore.Cryptography
             } else {
                 throw new KeySizeException(cipher, keySizeNonNull);
             }
-            config.Key = new byte[config.KeySizeBits / 8];
             config.CipherName = cipher.ToString();
             if(Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize != -1) 
                 config.IV = new byte[Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize / 8];

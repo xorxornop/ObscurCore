@@ -17,7 +17,7 @@
 
 using System;
 
-namespace ObscurCore.Cryptography.Authentication.Primitives.SHA3
+namespace ObscurCore.Cryptography.Authentication.Primitives
 {
     public class KeccakDigest : IDigest {
         private const int KeccakB = 1600;

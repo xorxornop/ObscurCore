@@ -1,5 +1,5 @@
 //
-//  Copyright 2013  Matthew Ducker
+//  Copyright 2014  Matthew Ducker
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -24,32 +24,103 @@ using ObscurCore.DTO;
 namespace ObscurCore.Packaging
 {
 	/// <summary>
-	/// Payload multiplexer implementing stream selection order by PRNG.
+	/// Payload multiplexer implementing stream selection order by CSPRNG.
 	/// </summary>
 	public class SimplePayloadMux : PayloadMux
 	{
-	    private readonly Csprng _selectionSource;
+		protected const int BufferSize = 4096;
+		protected readonly byte[] Buffer = new byte[BufferSize];
+		protected readonly Csprng SelectionSource;
 
         /// <summary>
-	    /// Initializes a new instance of a stream multiplexer.
+		/// Initializes a new instance of a payload multiplexer.
 	    /// </summary>
-	    /// <param name="writing">If set to <c>true</c>, writing a multiplexed stream.</param>
+		/// <param name="writing">If set to <c>true</c>, writing a multiplexed stream (payload); otherwise, reading.</param>
 	    /// <param name="multiplexedStream">Stream being written to (destination; multiplexing) or read from (source; demultiplexing).</param>
-	    /// <param name="streams">Streams being read from (sources; multiplexing), or written to (destinations; demultiplexing).</param>
-	    /// <param name="transforms">Transform funcs.</param>
+		/// <param name="payloadItems">Payload items to write.</param>
+		/// <param name="itemPreKeys">Pre-keys for items (indexed by item identifiers).</param>
 	    /// <param name="config">Configuration of stream selection.</param>
-		public SimplePayloadMux (bool writing, Stream multiplexedStream, Manifest payloadManifest, IPayloadConfiguration config) 
-			: base(writing, multiplexedStream, payloadManifest)
+		public SimplePayloadMux (bool writing, Stream multiplexedStream, IReadOnlyList<PayloadItem> payloadItems, 
+			IReadOnlyDictionary<Guid, byte[]> itemPreKeys, IPayloadConfiguration config) 
+			: base(writing, multiplexedStream, payloadItems, itemPreKeys)
 		{
-			_selectionSource = Source.CreateCsprng(config.PrimaryPrngName.ToEnum<CsPseudorandomNumberGenerator>(),
-		        config.PrimaryPrngConfiguration);
+			if (config == null)
+				throw new ArgumentNullException ("config");
 
+			SelectionSource = Source.CreateCsprng(config.PrimaryPrngName.ToEnum<CsPseudorandomNumberGenerator>(),
+		        config.PrimaryPrngConfiguration);
 		    NextSource();
 		}
 
-	    protected internal Csprng SelectionSource {
-	        get { return _selectionSource; }
-	    }
+		public int Overhead { get; protected set; }
+
+		protected override void ExecuteOperation () {
+			var item = PayloadItems[Index];
+			var itemIdentifier = item.Identifier;
+			DecoratingStream itemDecorator;
+			MacStream itemAuthenticator;
+
+			CreateEtMSchemeStreams (item, out itemDecorator, out itemAuthenticator);
+
+			Overhead += Writing ? EmitHeader(itemAuthenticator) : ConsumeHeader(itemAuthenticator);
+
+			if(Writing) {
+				int iterIn = 0;
+				do {
+					iterIn = item.StreamBinding.Read(Buffer, 0, BufferSize);
+					itemDecorator.Write(Buffer, 0, iterIn);
+				} while (iterIn > 0);
+			} else {
+				itemDecorator.ReadExactlyTo (item.StreamBinding, item.InternalLength, true);
+			}
+
+			// Item is finished, we need to do some things.
+			itemDecorator.Close ();
+			Overhead += Writing ? EmitTrailer(itemAuthenticator) : ConsumeTrailer(itemAuthenticator);
+
+			// Final stages of Encrypt-then-MAC authentication scheme
+			byte[] encryptionConfig = item.Encryption.SerialiseDto ();
+			// Authenticate the encryption configuration
+			itemAuthenticator.Update (encryptionConfig, 0, encryptionConfig.Length);
+			itemAuthenticator.Close ();
+
+			// Authentication
+			if(Writing) {
+				// Commit the MAC to item in payload manifest
+				item.Authentication.VerifiedOutput = itemAuthenticator.Mac;
+			} else {
+				// Verify the authenticity of the item ciphertext and configuration
+				if(!itemAuthenticator.Mac.SequenceEqualConstantTime(item.Authentication.VerifiedOutput)) {
+					// Verification failed!
+					throw new CiphertextAuthenticationException ();
+				}
+			}
+
+			// Length checks & commits
+			if(Writing) {
+				// Check if pre-stated length matches what was actually written
+				if(item.ExternalLength != 0 && itemDecorator.BytesIn != item.ExternalLength) {
+					throw new InvalidDataException ("Mismatch between stated item external length and actual input length.");
+				}
+				// Commit the determined internal length to item in payload manifest
+				item.InternalLength = itemDecorator.BytesOut;
+			} else {
+				if(itemDecorator.BytesIn != item.InternalLength) {
+					throw new InvalidOperationException ("Probable decorator stack malfunction.");
+				}
+				if(itemDecorator.BytesOut != item.ExternalLength) {
+					throw new InvalidDataException ("Mismatch between stated item external length and actual output length.");
+				}
+			}
+
+			// Mark the item as completed in the register
+			ItemCompletionRegister[Index] = true;
+			ItemsCompleted++;
+			// Close the source/destination
+			item.StreamBinding.Close();
+			Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "ExecuteOperation", "[*** END OF ITEM",
+				Index + " ***]"));
+		}
 
 	    /// <summary>
 		/// Advances and returns the index of the next stream to use in an I/O operation (whether to completion or just a buffer-full).
@@ -57,10 +128,33 @@ namespace ObscurCore.Packaging
 		/// <remarks>May be overriden in a derived class to provide for advanced stream selection logic.</remarks>
 		/// <returns>The next stream index.</returns>
 		protected override sealed void NextSource() {
-		    Index = _selectionSource.Next(0, ItemCount - 1);
-            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "NextSource", "Generated index",
-                    CurrentIndex));
+			Index = SelectionSource.Next(0, PayloadItems.Count - 1);
+			Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "NextSource", "Generated index",
+                    Index));
 		}
+
+		protected virtual int EmitHeader(MacStream authenticator) {
+			// Unused in this version
+			return 0;
+		}
+
+		protected virtual int EmitTrailer(MacStream authenticator) {
+			// Unused in this version
+			return 0;
+		}
+
+		protected virtual int ConsumeHeader(MacStream authenticator) {
+			// Unused in this version
+			// Could throw an exception in an implementation where a header must be present
+			return 0;
+		}
+
+		protected virtual int ConsumeTrailer(MacStream authenticator) {
+			// Unused in this version
+			// Could throw an exception in an implementation where a trailer must be present
+			return 0;
+		}
+
 	}
 }
 

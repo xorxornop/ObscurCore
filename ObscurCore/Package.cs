@@ -28,7 +28,6 @@ using ObscurCore.Cryptography.KeyConfirmation;
 using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.DTO;
-using ObscurCore.Extensions.DTO;
 using ObscurCore.Extensions.EllipticCurve;
 using ObscurCore.Extensions.Streams;
 using ObscurCore.Packaging;
@@ -51,6 +50,8 @@ namespace ObscurCore
 
         private readonly Manifest _manifest;
         private readonly ManifestHeader _manifestHeader;
+
+		private Dictionary<Guid, byte[]> ItemPreKeys = new Dictionary<Guid, byte[]>();
 
         // Writing fields
 
@@ -105,12 +106,12 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Configuration of cryptography used for the manifest.
+		/// Configuration of symmetric cipher used for encryption of the manifest.
         /// </summary>
         /// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
-        internal SymmetricCipherConfiguration ManifestCipher {
+		internal SymmetricCipherConfiguration ManifestCipher {
             get { return _manifestCryptoConfig.SymmetricCipher; }
-            set {
+			private set {
                 if (_reading) {
                     throw new InvalidOperationException("Cannot change manifest cryptography of existing package.");
                 }
@@ -127,6 +128,82 @@ namespace ObscurCore
                 }
             }
         }
+
+		/// <summary>
+		/// Configuration of function used in verifying the authenticity/integrity of the manifest.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
+		internal VerificationFunctionConfiguration ManifestAuthentication {
+			get { return _manifestCryptoConfig.Authentication; }
+			private set {
+				if (_reading) {
+					throw new InvalidOperationException("Cannot change manifest cryptography of existing package.");
+				}
+				switch (ManifestCryptoScheme) {
+				case ManifestCryptographyScheme.SymmetricOnly:
+					((SymmetricManifestCryptographyConfiguration)_manifestCryptoConfig).Authentication = value;
+					break;
+				case ManifestCryptographyScheme.UM1Hybrid:
+					((UM1ManifestCryptographyConfiguration)_manifestCryptoConfig).Authentication = value;
+					break;
+				case ManifestCryptographyScheme.Curve25519UM1Hybrid:
+					((Curve25519UM1ManifestCryptographyConfiguration)_manifestCryptoConfig).Authentication = value;
+					break;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Configuration of key derivation used to derive encryption and authentication keys from prior key material. 
+		/// These keys are used in those functions of manifest encryption/authentication, respectively.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
+		internal KeyDerivationConfiguration ManifestKeyDerivation {
+			get { return _manifestCryptoConfig.KeyDerivation; }
+			private set {
+				if (_reading) {
+					throw new InvalidOperationException("Cannot change manifest cryptography of existing package.");
+				}
+				switch (ManifestCryptoScheme) {
+				case ManifestCryptographyScheme.SymmetricOnly:
+					((SymmetricManifestCryptographyConfiguration)_manifestCryptoConfig).KeyDerivation = value;
+					break;
+				case ManifestCryptographyScheme.UM1Hybrid:
+					((UM1ManifestCryptographyConfiguration)_manifestCryptoConfig).KeyDerivation = value;
+					break;
+				case ManifestCryptographyScheme.Curve25519UM1Hybrid:
+					((Curve25519UM1ManifestCryptographyConfiguration)_manifestCryptoConfig).KeyDerivation = value;
+					break;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Configuration of key confirmation used for confirming the cryptographic key 
+		/// to be used as the basis for key derivation.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
+		internal VerificationFunctionConfiguration ManifestKeyConfirmation {
+			get { return _manifestCryptoConfig.KeyConfirmation; }
+			private set {
+				if (_reading) {
+					throw new InvalidOperationException("Cannot change manifest cryptography of existing package.");
+				}
+				switch (ManifestCryptoScheme) {
+				case ManifestCryptographyScheme.SymmetricOnly:
+					((SymmetricManifestCryptographyConfiguration)_manifestCryptoConfig).KeyConfirmation = value;
+					break;
+				case ManifestCryptographyScheme.UM1Hybrid:
+					((UM1ManifestCryptographyConfiguration)_manifestCryptoConfig).KeyConfirmation = value;
+					break;
+				case ManifestCryptographyScheme.Curve25519UM1Hybrid:
+					((Curve25519UM1ManifestCryptographyConfiguration)_manifestCryptoConfig).KeyConfirmation = value;
+					break;
+				}
+			}
+		}
+
+
 
         /// <summary>
         /// Offset of payload from the manifest.
@@ -150,7 +227,7 @@ namespace ObscurCore
         /// Layout scheme configuration of the items in the payload.
         /// </summary>
         /// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
-        public PayloadLayoutScheme LayoutScheme
+        public PayloadLayoutScheme PayloadLayout
         {
             get {
                 return _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>();
@@ -161,21 +238,6 @@ namespace ObscurCore
                 }
                 _manifest.PayloadConfiguration = PayloadLayoutConfigurationFactory.CreateDefault(value);
             }
-        }
-
-        /// <summary>
-        /// Advanced method. Manually set a payload configuration for the package.
-        /// </summary>
-        /// <param name="payloadConfiguration">Payload configuration to set.</param>
-        /// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
-        public void SetPayloadConfiguration(PayloadConfiguration payloadConfiguration) {
-            if (_reading) {
-                throw new InvalidOperationException("Cannot change payload configuration of existing package.");
-            }
-            if (payloadConfiguration == null) {
-                throw new ArgumentNullException("payloadConfiguration");
-            }
-            _manifest.PayloadConfiguration = payloadConfiguration;
         }
 
         // Constructors
@@ -194,7 +256,7 @@ namespace ObscurCore
                     CryptographySchemeName = ManifestCryptographyScheme.SymmetricOnly.ToString()
                 };
             SetManifestCryptoSymmetric(key);
-            LayoutScheme = layoutScheme;
+            PayloadLayout = layoutScheme;
         }
 
         /// <summary>
@@ -213,7 +275,7 @@ namespace ObscurCore
                     CryptographySchemeName = ManifestCryptographyScheme.Curve25519UM1Hybrid.ToString()
                 };
             SetManifestCryptoCurve25519UM1(senderKey, receiverKey);
-            LayoutScheme = layoutScheme;
+            PayloadLayout = layoutScheme;
         }
 
 
@@ -309,8 +371,16 @@ namespace ObscurCore
 				Type = itemType,
 				RelativePath = relativePath,
 				Encryption = !skipCrypto ? SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration
-				             (SymmetricBlockCipher.Aes, BlockCipherMode.Ctr, BlockCipherPadding.None) : null
+				             (SymmetricBlockCipher.Aes, BlockCipherMode.Ctr, BlockCipherPadding.None) : null,
+				Authentication = !skipCrypto ? AuthenticationConfigurationFactory.CreateAuthenticationConfiguration() : null
 			};
+
+			if(!skipCrypto) {
+				newItem.EncryptionKey = new byte[newItem.Encryption.KeySizeBits / 8];
+				StratCom.EntropySource.NextBytes (newItem.EncryptionKey);
+				newItem.AuthenticationKey = new byte[32];
+				StratCom.EntropySource.NextBytes (newItem.AuthenticationKey);
+			}
 
 			newItem.SetStreamBinding (itemData);
 			return newItem;
@@ -366,11 +436,11 @@ namespace ObscurCore
             KeyDerivationConfiguration derivationConfig =  _manifestCryptoConfig == null
                 ? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8)
                 : _manifestCryptoConfig.KeyDerivation ?? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8);
-            _manifestCryptoConfig = new SymmetricManifestCryptographyConfiguration
-                {
+			_manifestCryptoConfig = new SymmetricManifestCryptographyConfiguration {
                     SymmetricCipher = cipherConfig,
-                    KeyDerivation = derivationConfig,
-                    KeyConfirmation = ConfirmationUtility.CreateDefaultManifestKeyConfirmation(_writingPreManifestKey)
+					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(),
+					KeyConfirmation = ConfirmationUtility.CreateDefaultManifestKeyConfirmation(_writingPreManifestKey),
+                    KeyDerivation = derivationConfig
                 };
             _manifestHeader.CryptographySchemeName = ManifestCryptographyScheme.SymmetricOnly.ToString();
         }
@@ -393,7 +463,7 @@ namespace ObscurCore
             } else if (cipher == SymmetricBlockCipher.None) {
                 throw new ArgumentException();
             }
-            ManifestCipher = SymmetricCipherConfigurationFactory.CreateBlockCipherConfigurationWithoutKey(cipher, mode, padding);
+            ManifestCipher = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(cipher, mode, padding);
         }
 
         /// <summary>
@@ -401,15 +471,14 @@ namespace ObscurCore
         /// </summary>
         /// <exception cref="InvalidOperationException">Package is being written, not read.</exception>
         /// <exception cref="ArgumentException">Cipher was set to None.</exception>
-        public void ConfigureManifestSymmetricCrypto(SymmetricStreamCipher cipher)
-        {
+		public void ConfigureManifestCryptoSymmetric(SymmetricStreamCipher cipher) {
             if (_reading) {
                 throw new InvalidOperationException("Cannot change manifest cryptography of package being read.");
             }
             if (cipher == SymmetricStreamCipher.None) {
                 throw new ArgumentException();
             }
-            ManifestCipher = SymmetricCipherConfigurationFactory.CreateStreamCipherConfigurationWithoutKey(cipher);
+            ManifestCipher = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(cipher);
         }
 
         /// <summary>
@@ -421,6 +490,11 @@ namespace ObscurCore
             if (_reading) {
                 throw new InvalidOperationException("Cannot change manifest cryptography of package being read.");
             }
+			if (senderKey == null) {
+				throw new ArgumentNullException("senderKey");
+			} else if(receiverKey == null) {
+				throw new ArgumentNullException("receiverKey");
+			}
 
             var localPrivateKey = receiverKey.DecodeToPrivateKey();
             var remotePublicKey = senderKey.DecodeToPublicKey();
@@ -437,9 +511,10 @@ namespace ObscurCore
                 ? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8)
                 : _manifestCryptoConfig.KeyDerivation ?? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8);
             _manifestCryptoConfig = new UM1ManifestCryptographyConfiguration {
-                    SymmetricCipher = cipherConfig,
+					SymmetricCipher = cipherConfig,
+					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(),
+					KeyConfirmation = ConfirmationUtility.CreateDefaultManifestKeyConfirmation(_writingPreManifestKey),
                     KeyDerivation = derivationConfig,
-                    KeyConfirmation = ConfirmationUtility.CreateDefaultManifestKeyConfirmation(_writingPreManifestKey),
                     EphemeralKey = new EcKeyConfiguration {
                             CurveProviderName = receiverKey.CurveProviderName,
                             CurveName = receiverKey.CurveName,
@@ -455,13 +530,11 @@ namespace ObscurCore
         /// </summary>
         /// <param name="senderKey">Key of the sender (private key).</param>
         /// <param name="receiverKey">Key of the receiver (public key).</param>
-        public void SetManifestCryptoCurve25519UM1(byte[] senderKey, byte[] receiverKey) {
-
+		public void SetManifestCryptoCurve25519UM1(byte[] senderKey, byte[] receiverKey) {
             if (senderKey.Length != 32) {
                 throw new ArgumentException(
                     "Sender's Curve25519 elliptic curve private key is not 32 bytes in length.", "senderKey");
-            }
-            if (receiverKey.Length != 32) {
+			} else if (receiverKey.Length != 32) {
                 throw new ArgumentException(
                     "Recipient's Curve25519 elliptic curve public key is not 32 bytes in length.", "receiverKey");
             }
@@ -479,15 +552,16 @@ namespace ObscurCore
                 : _manifestCryptoConfig.KeyDerivation ?? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8);
             _manifestCryptoConfig = new Curve25519UM1ManifestCryptographyConfiguration {
                     SymmetricCipher = cipherConfig,
+					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(),
+					KeyConfirmation = ConfirmationUtility.CreateDefaultManifestKeyConfirmation(_writingPreManifestKey),
                     KeyDerivation = derivationConfig,
-                    KeyConfirmation = ConfirmationUtility.CreateDefaultManifestKeyConfirmation(_writingPreManifestKey),
                     EphemeralKey = ephemeralKey
                 };
             _manifestHeader.CryptographySchemeName = ManifestCryptographyScheme.Curve25519UM1Hybrid.ToString();
         }
 
         private static SymmetricCipherConfiguration CreateDefaultCipherConfiguration() {
-            return SymmetricCipherConfigurationFactory.CreateBlockCipherConfigurationWithoutKey(
+            return SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(
                 SymmetricBlockCipher.Aes, BlockCipherMode.Ctr, BlockCipherPadding.None);
         }
 
@@ -499,7 +573,7 @@ namespace ObscurCore
 		/// <param name="keyLengthBytes">Length of key to produce.</param>
 		private static KeyDerivationConfiguration CreateDefaultManifestKeyDerivation(int keyLengthBytes) {
 			var schemeConfig = new ScryptConfiguration {
-				IterationPower = 16,
+				Iterations = 32768,
 				Blocks = 8,
 				Parallelism = 2
 			};
@@ -510,6 +584,21 @@ namespace ObscurCore
 			};
 			StratCom.EntropySource.NextBytes(config.Salt);
 			return config;
+		}
+
+		/// <summary>
+		/// Advanced method. Manually set a payload configuration for the package.
+		/// </summary>
+		/// <param name="payloadConfiguration">Payload configuration to set.</param>
+		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
+		public void SetPayloadConfiguration(PayloadConfiguration payloadConfiguration) {
+			if (_reading) {
+				throw new InvalidOperationException("Cannot change payload configuration of existing package.");
+			}
+			if (payloadConfiguration == null) {
+				throw new ArgumentNullException("payloadConfiguration");
+			}
+			_manifest.PayloadConfiguration = payloadConfiguration;
 		}
 
         
@@ -540,10 +629,16 @@ namespace ObscurCore
                     _manifest.PayloadItems.Where(payloadItem => !payloadItem.StreamHasBinding)
                              .Select(payloadItem => new ItemStreamBindingAbsentException(payloadItem)));
             }
-            if (_manifest.PayloadItems.Any(item => item.Encryption.Key.IsNullOrZeroLength())) {
-                throw new AggregateException(
-                    _manifest.PayloadItems.Where(payloadItem => payloadItem.Encryption.Key.IsNullOrZeroLength())
-                             .Select(payloadItem => new ItemKeyMissingException(payloadItem)));
+			if (_manifest.PayloadItems.Any(item => !ItemPreKeys.ContainsKey(item.Identifier) && 
+				(item.EncryptionKey.IsNullOrZeroLength() || item.AuthenticationKey.IsNullOrZeroLength())))
+			{
+				var exceptions = from payloadItem in _manifest.PayloadItems
+				                 where !ItemPreKeys.ContainsKey (payloadItem.Identifier) &&
+				                     (payloadItem.EncryptionKey.IsNullOrZeroLength () ||
+				                     payloadItem.AuthenticationKey.IsNullOrZeroLength ())
+				                 select new ItemKeyMissingException (payloadItem);
+
+				throw new AggregateException (exceptions);
             }
 
             if (!outputStream.CanWrite) throw new IOException("Cannot write to output stream.");
@@ -551,72 +646,80 @@ namespace ObscurCore
                 // Default to writing to memory
                 _writingTempStream = new MemoryStream();
             }
-
-            // Serialise the manifest crypto configuration
-            switch (ManifestCryptoScheme) {
-                case ManifestCryptographyScheme.SymmetricOnly:
-                    _manifestHeader.CryptographySchemeConfiguration =
-                        ((SymmetricManifestCryptographyConfiguration) _manifestCryptoConfig).SerialiseDto();
-                    break;
-                case ManifestCryptographyScheme.UM1Hybrid:
-                    _manifestHeader.CryptographySchemeConfiguration =
-                        ((UM1ManifestCryptographyConfiguration) _manifestCryptoConfig).SerialiseDto();
-                    break;
-                case ManifestCryptographyScheme.Curve25519UM1Hybrid:
-                    _manifestHeader.CryptographySchemeConfiguration =
-                        ((Curve25519UM1ManifestCryptographyConfiguration) _manifestCryptoConfig).SerialiseDto();
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            
-            // Derive the key which will be used for encrypting the manifest
-            var workingMKey = Source.DeriveKeyWithKdf(_manifestCryptoConfig.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunction>(),
-                _writingPreManifestKey, _manifestCryptoConfig.KeyDerivation.Salt, _manifestCryptoConfig.SymmetricCipher.KeySizeBits,
-                _manifestCryptoConfig.KeyDerivation.SchemeConfiguration);
-            
-            // Clear the pre-key from memory
-            Array.Clear(_writingPreManifestKey, 0, _writingPreManifestKey.Length);
-
-            Debug.Print(DebugUtility.CreateReportString("Package", "Write", "Manifest working key",
-                workingMKey.ToHexString()));
             
             /* Now we write the package */
             
             // Write the header tag
-            Debug.Print(DebugUtility.CreateReportString("Package", "Write", "[*PACKAGE START*] Header offset (absolute)",
+			Debug.Print(DebugUtility.CreateReportString("Package", "Write", "[*PACKAGE START*] Offset",
                 outputStream.Position));
             var headerTag = Athena.Packaging.GetHeaderTag();
             outputStream.Write(headerTag, 0, headerTag.Length);
 
-            // Serialise and write ManifestHeader (this part is written as plaintext, otherwise INCEPTION!)
-            Debug.Print(DebugUtility.CreateReportString("Package", "Write", "Manifest header offset (absolute)",
-                outputStream.Position));
-            _manifestHeader.SerialiseDto(outputStream, prefixLength: true);
+			// Derive working manifest encryption & authentication keys from the manifest pre-key
+			byte[] workingMEncryptionKey, workingMAuthKey;
+			EtMKeyStretchingUtility.DeriveWorkingKeys (_writingPreManifestKey, _manifestCryptoConfig.SymmetricCipher.KeySizeBits / 8,
+				_manifestCryptoConfig.Authentication, _manifestCryptoConfig.KeyDerivation, out workingMEncryptionKey, out workingMAuthKey);
+
+			Debug.Print(DebugUtility.CreateReportString("Package", "Write", "Manifest working key",
+				workingMEncryptionKey.ToHexString()));
 
             /* Write the payload to temporary storage (payloadTemp) */
             PayloadLayoutScheme payloadScheme;
             try {
                 payloadScheme = _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>();
             } catch (Exception) {
-                throw new PackageConfigurationException(
+				throw new ConfigurationValueInvalidException(
                     "Package payload schema specified is unsupported/unknown or missing.");
             }
             // Bind the multiplexer to the temp stream
             var mux = Source.CreatePayloadMultiplexer(payloadScheme, true, _writingTempStream,
-				_manifest, _manifest.PayloadConfiguration);
+				_manifest.PayloadItems, ItemPreKeys, _manifest.PayloadConfiguration);
 
             try {
-                mux.ExecuteAll();
+                mux.Execute();
             } catch (Exception e) {
                 throw;
             }
 
-            /* Write the manifest in encrypted form */
+			/* Write the manifest in encrypted form to temporary storage at first, then to actual output */
             using (var manifestTemp = new MemoryStream()) {
-                using (var cs = new SymmetricCryptoStream(manifestTemp, true, _manifestCryptoConfig.SymmetricCipher, workingMKey, false)) {
-                    _manifest.SerialiseDto(cs);
-                }
+				byte[] manifestMac = null;
+				using (var authenticator = new MacStream (manifestTemp, true, _manifestCryptoConfig.Authentication, 
+					out manifestMac, workingMAuthKey, false)) 
+				{
+					using (var cs = new SymmetricCryptoStream (authenticator, true, _manifestCryptoConfig.SymmetricCipher, 
+						workingMEncryptionKey, false)) 
+					{
+						_manifest.SerialiseDto(cs);
+					}
+					byte[] encryptionConfiguration = _manifestCryptoConfig.SymmetricCipher.SerialiseDto ();
+					authenticator.Update (encryptionConfiguration, 0, encryptionConfiguration.Length);
+				}
+				_manifestCryptoConfig.Authentication.VerifiedOutput = manifestMac;
+
+				// Serialise the manifest crypto configuration
+				switch (ManifestCryptoScheme) {
+				case ManifestCryptographyScheme.SymmetricOnly:
+					_manifestHeader.CryptographySchemeConfiguration =
+						((SymmetricManifestCryptographyConfiguration) _manifestCryptoConfig).SerialiseDto();
+					break;
+				case ManifestCryptographyScheme.UM1Hybrid:
+					_manifestHeader.CryptographySchemeConfiguration =
+						((UM1ManifestCryptographyConfiguration) _manifestCryptoConfig).SerialiseDto();
+					break;
+				case ManifestCryptographyScheme.Curve25519UM1Hybrid:
+					_manifestHeader.CryptographySchemeConfiguration =
+						((Curve25519UM1ManifestCryptographyConfiguration) _manifestCryptoConfig).SerialiseDto();
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+				}
+
+				// Serialise and write ManifestHeader (this part is written as plaintext, otherwise INCEPTION!)
+				Debug.Print(DebugUtility.CreateReportString("Package", "Write", "Manifest header offset",
+					outputStream.Position));
+				_manifestHeader.SerialiseDto(outputStream, prefixLength: true);
+
                 // Write length prefix
                 Debug.Print(DebugUtility.CreateReportString("Package", "Write", "Manifest length prefix offset (absolute)",
                     outputStream.Position));
@@ -628,8 +731,9 @@ namespace ObscurCore
                 manifestTemp.WriteTo(outputStream);
             }
 
-            // Clear manifest key from memory
-            Array.Clear(workingMKey, 0, workingMKey.Length);
+			// Clear manifest keys from memory
+            Array.Clear(workingMEncryptionKey, 0, workingMEncryptionKey.Length);
+			Array.Clear(workingMAuthKey, 0, workingMAuthKey.Length);
 
             // Write payload offset filler, where applicable
             if (_manifest.PayloadConfiguration.Offset > 0) {
@@ -861,86 +965,90 @@ namespace ObscurCore
             Debug.Print(DebugUtility.CreateReportString("Package", "ReadManifest", "Manifest pre-key",
                     preMKey.ToHexString()));
 
-            // Derive the manifest working key
-            var workingMKey = Source.DeriveKeyWithKdf(_manifestCryptoConfig.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunction>(),
-                    preMKey, _manifestCryptoConfig.KeyDerivation.Salt, _manifestCryptoConfig.SymmetricCipher.KeySizeBits,
-                    _manifestCryptoConfig.KeyDerivation.SchemeConfiguration);
+			// Derive working manifest encryption & authentication keys from the manifest pre-key
+			byte[] workingMEncryptionKey, workingMAuthKey;
+			EtMKeyStretchingUtility.DeriveWorkingKeys (preMKey, _manifestCryptoConfig.SymmetricCipher.KeySizeBits / 8,
+				_manifestCryptoConfig.Authentication, _manifestCryptoConfig.KeyDerivation, out workingMEncryptionKey, out workingMAuthKey);
 
             // Clear the manifest pre-key
             Array.Clear(preMKey, 0, preMKey.Length);
 
             Debug.Print(DebugUtility.CreateReportString("Package", "ReadManifest", "Manifest working key",
-                    workingMKey.ToHexString()));
-            Debug.Print(DebugUtility.CreateReportString("Package", "ReadManifest", "Manifest length prefix offset (absolute)",
-                    _readingStream.Position));
+				workingMEncryptionKey.ToHexString()));
+			Debug.Print(DebugUtility.CreateReportString("Package", "ReadManifest", "Manifest length prefix offset (absolute)", 
+				_readingStream.Position));
 
             // Read manifest length prefix
             Manifest manifest;
             uint mlUint;
             _readingStream.ReadPrimitive(out mlUint);
-            var manifestLength = (int) mlUint;
+			int manifestLength = (int) mlUint;
 
             Debug.Print(DebugUtility.CreateReportString("Package", "ReadManifest", "Manifest length prefix",
-                    manifestLength));
+            	manifestLength));
             Debug.Print(DebugUtility.CreateReportString("Package", "ReadManifest", "Manifest offset (absolute)",
-                    _readingStream.Position));
+            	_readingStream.Position));
 
-            /* Read manifest */
-            using (var decryptedManifestStream = new MemoryStream()) {
-                using (var encryptedManifestStream = new MemoryStream()) {
-                    const int bufferLength = 4096;
-                    var readBuffer = new byte[bufferLength];
-                    while (manifestLength > 0) {
-                        var count = _readingStream.Read(readBuffer, 0, Math.Min(manifestLength, bufferLength));
-                        manifestLength -= count;
-                        encryptedManifestStream.Write(readBuffer, 0, count);
-                    }
-                    encryptedManifestStream.Seek(0, SeekOrigin.Begin);
-                    // Decrypt the manifest from the MemoryStream buffer (prevents protobuf-net overread)
-                    using (var cs = new SymmetricCryptoStream(encryptedManifestStream, false, _manifestCryptoConfig.SymmetricCipher, workingMKey, false)) {
-                        cs.CopyTo(decryptedManifestStream);
-                    }
-                    // Clear the manifest working key
-                    Array.Clear(workingMKey, 0, workingMKey.Length);
-                }
-                decryptedManifestStream.Seek(0, SeekOrigin.Begin);
-                try {
-                    manifest = (Manifest)StratCom.Serialiser.Deserialize(decryptedManifestStream, null, typeof (Manifest));
-                } catch (Exception e) {
-                    throw new InvalidDataException("Manifest failed to deserialise.");
-                }
-            }
+			/* Read manifest */
+			using(var decryptedManifestStream = new MemoryStream()) {
+				byte[] manifestMac = null;
+				using(var authenticator = new MacStream(_readingStream, false, _manifestCryptoConfig.Authentication, 
+					out manifestMac, workingMAuthKey, closeOnDispose : false)) 
+				{
+					using(var cs = new SymmetricCryptoStream(authenticator, false, _manifestCryptoConfig.SymmetricCipher, 
+						workingMEncryptionKey, closeOnDispose : false))
+					{
+					cs.ReadExactlyTo (decryptedManifestStream, manifestLength, true);
+					}
+					byte[] encryptionConfig = _manifestCryptoConfig.SymmetricCipher.SerialiseDto ();
+					authenticator.Update (encryptionConfig, 0, encryptionConfig.Length);
+				}
+				// Authenticate the manifest
+				if(!manifestMac.SequenceEqualConstantTime(_manifestCryptoConfig.Authentication.VerifiedOutput)) {
+					throw new CiphertextAuthenticationException ("Manifest not authenticated.");
+				}
+				decryptedManifestStream.Seek(0, SeekOrigin.Begin);
+				try {
+					manifest = (Manifest)StratCom.Serialiser.Deserialize(decryptedManifestStream, null, typeof (Manifest));
+				} catch (Exception e) {
+					throw new InvalidDataException("Manifest failed to deserialise.");
+				}
+			}
+
+			// Clear the manifest encryption & authentication keys
+			Array.Clear(workingMEncryptionKey, 0, workingMEncryptionKey.Length);
+			Array.Clear(workingMAuthKey, 0, workingMAuthKey.Length);
             
             return manifest;
         }
 
-        /// <summary>
+        /// <summary
         /// Performs key confirmation and derivation on each payload item.
         /// </summary>
         /// <param name="payloadKeysSymmetric">Potential symmetric keys for payload items.</param>
         /// <exception cref="AggregateException">
         /// Consisting of ItemKeyMissingException, indicating items missing cryptographic keys.
         /// </exception>
-        public void ConfirmAndDeriveItemKeys(IEnumerable<byte[]> payloadKeysSymmetric = null) {
+		public void ConfirmItemPreKeys(IEnumerable<byte[]> payloadKeysSymmetric = null) {
             if (!_reading) {
                 throw new InvalidOperationException("Not reading a package.");
             }
 
             var keys = payloadKeysSymmetric != null ? payloadKeysSymmetric.ToList() : new List<byte[]>();
             var errorList = new List<PayloadItem>();
-			foreach (var item in _manifest.PayloadItems.Where(item => item.Encryption.Key.IsNullOrZeroLength())) {
-			    if(item.KeyConfirmation == null) {
+			foreach (var item in _manifest.PayloadItems.Where(item => item.EncryptionKey.IsNullOrZeroLength() || 
+				item.AuthenticationKey.IsNullOrZeroLength())) 
+			{
+				if(item.KeyConfirmation == null || item.KeyDerivation == null) {
                     errorList.Add(item);
 			    }
 			    // We will derive the key from one supplied as a potential
 			    var preIKey = ConfirmationUtility.ConfirmSymmetricKey(item.KeyConfirmation, keys);
-			    if (preIKey == null || preIKey.Length == 0) {
+				if (preIKey.IsNullOrZeroLength()) {
 			        errorList.Add(item);
 			    }
-                if (errorList.Count == 0) {
-                    item.Encryption.Key = Source.DeriveKeyWithKdf(item.KeyDerivation.SchemeName.ToEnum<KeyDerivationFunction>(),
-			        preIKey, item.KeyDerivation.Salt, item.Encryption.KeySizeBits,
-			        item.KeyDerivation.SchemeConfiguration);
+				if (errorList.Count == 0 && !ItemPreKeys.ContainsKey(item.Identifier)) {
+					ItemPreKeys.Add (item.Identifier, preIKey);
                 }
 			}
             if (errorList.Count > 0) {
@@ -1010,20 +1118,21 @@ namespace ObscurCore
                     _readingStream.Position));
 
 			// Check that all payload items have decryption keys - if they do not, confirm them from potentials
-			ConfirmAndDeriveItemKeys(payloadKeys);
+			ConfirmItemPreKeys(payloadKeys);
 
 			// Read the payload
 			PayloadLayoutScheme payloadScheme;
 			try {
 				payloadScheme = _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme> ();
 			} catch (Exception) {
-				throw new PackageConfigurationException("Payload layout scheme specified is unsupported/unknown or missing.");
+				throw new ConfigurationValueInvalidException("Payload layout scheme specified is unsupported/unknown or missing.");
 			}
-			var mux = Source.CreatePayloadMultiplexer(payloadScheme, false, _readingStream, _manifest, _manifest.PayloadConfiguration);
+			var mux = Source.CreatePayloadMultiplexer(payloadScheme, false, _readingStream, _manifest.PayloadItems, 
+				ItemPreKeys, _manifest.PayloadConfiguration);
 
 			// Demux the payload
 			try {
-				mux.ExecuteAll ();
+				mux.Execute ();
 			} catch (Exception ex) {
 				// Catch different kinds of exception in future
 				throw;

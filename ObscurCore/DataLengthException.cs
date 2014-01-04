@@ -14,17 +14,26 @@
 //    limitations under the License.
 
 using System;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace ObscurCore.Packaging
+namespace ObscurCore
 {
-    /// <summary>
-	/// Represents the error that occurs when, during package I/O, 
-	/// a configuration error causes an abort of the package I/O operation.
+	/// <summary>
+	/// Exception thrown when a data buffer is either too short or too long.
 	/// </summary>
-	public class PackageConfigurationException : Exception
+	[Serializable]
+	public class DataLengthException : Exception
 	{
-		public PackageConfigurationException (string message) : base(message)
-		{
-		}
+		private const string ExceptionMessage = "Data is incorrect length.";
+
+		public DataLengthException() : base(ExceptionMessage) {}
+		public DataLengthException(string message) : base(message) {}
+		public DataLengthException(string message, Exception inner) : base(message, inner) {}
+
+		protected DataLengthException(
+			SerializationInfo info,
+			StreamingContext context) : base(info, context) {}
 	}
 }
