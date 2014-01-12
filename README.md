@@ -29,22 +29,20 @@ How do I use it?
 
 First up, a disclaimer:
 
-**This library as it is currently should not be considered production ready and is a work in progress. It is currently in Alpha.**
-
-*It is recommended that you not use the UM1 key agreement scheme (and the manifest cryptography scheme derived from it, UM1Hybrid). It lacks a security feature in the key generation to ensure that the generated keys do not fall into a vulnerable set of parameters. It has not, however, been disabled.*
+**This library as it is currently should not be considered production ready and is a work in progress. It is currently in Beta.**
 
 *****
 
-Now that that's out of the way, here's how you can use it for doing some stuff. Where there is a non-obvious parameter list, the signature of the constructor/method is included as a comment.
+Now that that's out of the way, here's how you can use it for doing some stuff!
 
 
 ObscurCore Packaging System
 ---------------------------
 
-**Please note that this part of the API is very, very new and is subject to change (a lot) on its way to a stable release. I'll try to minimise this, but the fact remains.**
+**Please note that this part of the API is new and is subject to change on its way to a stable release. I'll try to minimise this, but the fact remains.**
 
 This feature is an automated system that acts somewhat like an very paranoid archive format.
-It allows you to bundle together collections of data and key agreements/actions [latter not implemented fully].
+It allows you to bundle together collections of data and key agreements/actions.
 The index of the archive is encrypted too, as with the actual contents. Each item has its own unique encryption configuration, so you can have plausible deniability by using different keys on different items, and/or including decoy/fake items if needed. If deniability is not needed, one could use this feature by distributing a package to multiple recipients, with the different items encrypted with recipient-specific keys, so each sees only that which they are able to decrypt.
 
 The index of the archive (where all the information about the items in the archive is kept), termed a *manifest* in ObscurCore nonclemature, is encrypted with a choice of schemes: 
@@ -63,9 +61,11 @@ The collection of items in the package is termed the "payload". There is a choic
 +	Fabric
 
 Simple just concatenates them together in *random* order. Frameshift does the same but inserts *random* lengths of bytes before and after each item. Fabric multiplexes *random*-length stripes of each item, mixing them all up, much like the Rubberhose file system.
-Fabric is currently disabled in the build as it's unpredictably buggy. Work is ongoing.
 
-... Obviously, if it were *really* random, you'd never get your data back. No - rather, "random" is the output of a stream-cipher-powered CSPRNG.
+... Obviously, if it were *really* random, you'd never get your data back. No - rather, "random" is the output of a CSPRNG.
+
+
+All items and their configurations, along with the manifest and its configuration, are authenticated with a MAC in the Encrypt-then-MAC (EtM) scheme, which provides strong verification and minimum information leakage. Upon detection of any alteration, all operations are aborted.
 
 
 Here's an example using the packager:
@@ -79,12 +79,11 @@ Here's an example using the packager:
 The above...
 *	Creates the package with frameshifting payload layout (default)
 *	Sets up key confirmation for the manifest with BLAKE2B-256 (default)
-*	Adds a file to a package with AES-256/CTR encryption (random key, default)
+*	Adds a file to a package with AES-256/CTR encryption (random key, default) and BLAKE2B-256 EtM authentication (random key, default)
 *	Derives a package/manifest key (from the supplied one) with scrypt KDF
 *	Writes it out to the output stream
 
 Pretty easy huh?
-
 
 All schemes offer key confirmation capability with a choice of algorithms (e.g. MAC, KDF, etc.)
 If a package is recieived from a sender for which you hold multiple keys on file for (whatever kind they may be), all them will be verified with the key confirmation data (if present, which it is by default - generated automatically) to determine the correct one to proceed with.
@@ -103,8 +102,7 @@ Functionality exposed through streams
 
 	var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCiphers.AES,
 		BlockCipherModes.CTR, BlockCipherPaddings.None);
-	/* SymmetricCryptoStream (Stream target, bool isEncrypting, ISymmetricCipherConfiguration config, byte[] key = null, bool closeOnDispose = true) */
-	using (var cs = new SymmetricCryptoStream(destStream, true, config) ) {
+	using (var cs = new SymmetricCryptoStream(destStream, encrypting:true, config) ) {
 		sourceStream.CopyTo(cs);
 	}
 
@@ -115,43 +113,40 @@ These block ciphers are supported:
 +	Camellia
 +	CAST-5
 +	CAST-6
-+	GOST 28147-89 [disabled]
++	GOST 28147-89 [disabled; optionally included]
 +	IDEA
 +	NOEKEON
 +	RC-6
-+	Rijndael [disabled]
++	Rijndael [disabled; optionally included]
 +	Serpent
 +	TripleDES (3DES/DESEDE)
 +	Twofish
 
-... in CBC mode (variety of paddings provided), CTR, CFB, OFB, and CTS. There is also GCM and EAX provided for your authenticated encryption/decryption needs.
+... in CBC mode (variety of paddings provided), CTR, CFB, and OFB.
 Paddings available: ISO 10126-2, ISO/IEC 7816-4, PKCS7, TBC, and ANSI X.923.
 
 And these stream ciphers:
 
 +	HC-128
 +	HC-256
-+	ISAAC [disabled]
++	ISAAC [disabled; optionally included]
 +	Rabbit
-+	RC-4 [disabled]
++	RC-4 [disabled; optionally included]
 +	Salsa20
 +	SOSEMANUK
-+	VMPC [disabled]
-+	VMPC with KSA3 [disabled]
++	VMPC [disabled; optionally included]
++	VMPC with KSA3 [disabled; optionally included]
 
 
 ### Hashing and MAC ###
 
 	byte[] hash = null;
-	/* HashStream (Stream binding, bool writing, HashFunctions function, ref byte[] output, bool closeOnDispose = true) */
-	using (var hs = new HashStream(destStream, true, HashFunctions.BLAKE2B256, hash, true) ) {
+	using (var hs = new HashStream(destStream, writing:true, HashFunctions.BLAKE2B256, hash, closeOnDispose:true) ) {
 		sourceStream.CopyTo(cs);
 	}
 
 	byte[] mac = null;
-	/* MacStream (Stream binding, bool writing, MACFunctions function, out byte[] output, byte[] key, 
-		byte[] salt = null, byte[] config = null, bool closeOnDispose = true) */
-	using (var ms = new MacStream(destStream, true, MACFunctions.BLAKE2B256, mac, key, salt, null, true) ) {
+	using (var ms = new MacStream(destStream, writing:true, MACFunctions.BLAKE2B256, mac, key, salt, config:null, closeOnDispose:true) ) {
 		sourceStream.CopyTo(cs);
 	}
 
@@ -196,7 +191,7 @@ Primitives
 		Blocks = 8,
 		Parallelism = 2
 	};
-	var configBytes = StratCom.SerialiseDTO(config).ToArray();
+	var configBytes = config.SerialiseDto();
 	var derivedKey = Source.DeriveKeyWithKDF(KeyDerivationFunctions.Scrypt, key, salt, outputSizeBits, configBytes);
 
 These are in serious need of a convenience method. It's on the list.
@@ -262,6 +257,7 @@ and in stream ciphers:
 In hash and MAC functions:
 
 +	BLAKE2B
++	Keccak
 
 In KDFs:
 
