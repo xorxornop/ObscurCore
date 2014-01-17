@@ -675,24 +675,18 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 
         private const int BLOCK_SIZE = 16;
 
-        /**
-        * initialise an AES cipher.
-        *
-        * @param forEncryption whether or not we are for encryption.
-        * @param parameters the parameters required to set up the cipher.
-        * @exception ArgumentException if the parameters argument is
-        * inappropriate.
-        */
-        public void Init(
-            bool				forEncryption,
-            ICipherParameters	parameters)
-        {
-            if (!(parameters is KeyParameter))
-				throw new ArgumentException("invalid parameter passed to AES init - " + parameters.GetType().ToString());
 
-			WorkingKey = GenerateWorkingKey(((KeyParameter)parameters).GetKey(), forEncryption);
-			this.forEncryption = forEncryption;
-        }
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			this.forEncryption = encrypting;
+			if (key == null) {
+				throw new ArgumentNullException ("key");
+			}
+			if (key.Length == 16 || key.Length == 24 || key.Length == 32) {
+				WorkingKey = GenerateWorkingKey(key, encrypting);
+			} else {
+				throw new ArgumentException ("Key length incompatible.", "key");
+			}
+		}
 
 		public string AlgorithmName
         {

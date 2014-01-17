@@ -37,40 +37,29 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
 		#region IMac implementation
 
-		public void Init (ICipherParameters parameters)
-		{
-			byte[] key = new byte[32];
-			var keyParameter = parameters as KeyParameter;
-			if (keyParameter != null) {
-				var keyRaw = keyParameter.GetKey();
-				Buffer.BlockCopy (keyRaw, 0, key, 0, key.Length);
-			}
+		public void Init (byte[] key) {
+			if (key == null)
+				throw new ArgumentNullException ("key", "Poly1305 initialisation requires exactly 32 bytes of key.");
+			if(key.Length > 32) 
+				throw new ArgumentOutOfRangeException("parameters", "Key is longer than 32 bytes.");
 
-			if(key != null) {
-				if(key.Length > 32) throw new ArgumentOutOfRangeException("parameters", "Key is longer than 32 bytes.");
-
-				_key = new Array8 {
-					x0 = key.LittleEndianToUInt32(0),
-					x1 = key.LittleEndianToUInt32(4),
-					x2 = key.LittleEndianToUInt32(8),
-					x3 = key.LittleEndianToUInt32(12),
-					x4 = key.LittleEndianToUInt32(16),
-					x5 = key.LittleEndianToUInt32(20),
-					x6 = key.LittleEndianToUInt32(24),
-					x7 = key.LittleEndianToUInt32(28)
-				};
-
-			} else {
-				throw new ArgumentException ("No key provided.");
-			}
+			_key = new Array8 {
+				x0 = key.LittleEndianToUInt32(0),
+				x1 = key.LittleEndianToUInt32(4),
+				x2 = key.LittleEndianToUInt32(8),
+				x3 = key.LittleEndianToUInt32(12),
+				x4 = key.LittleEndianToUInt32(16),
+				x5 = key.LittleEndianToUInt32(20),
+				x6 = key.LittleEndianToUInt32(24),
+				x7 = key.LittleEndianToUInt32(28)
+			};
 
 			Reset ();
 		}
 
 		public void Update (byte input)
 		{
-			_blockBuffer [_blockBufferOffset] = input;
-			_blockBufferOffset++;
+			_blockBuffer [_blockBufferOffset++] = input;
 
 			if(_blockBufferOffset > 15) {
 				DoBlock (_blockBuffer, 0);

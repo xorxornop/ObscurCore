@@ -27,24 +27,17 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 
         private int           X0, X1, X2, X3;    // registers
 
-        /**
-        * initialise a Serpent cipher.
-        *
-        * @param forEncryption whether or not we are for encryption.
-        * @param parameters the parameters required to set up the cipher.
-        * @exception ArgumentException if the parameters argument is
-        * inappropriate.
-        */
-        public void Init(
-            bool				forEncryption,
-            ICipherParameters	parameters)
-        {
-            if (!(parameters is KeyParameter))
-				throw new ArgumentException("invalid parameter passed to Serpent init - " + parameters.GetType().ToString());
 
-			this.encrypting = forEncryption;
-            this.wKey = MakeWorkingKey(((KeyParameter)parameters).GetKey());
-        }
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			if (key == null) {
+				throw new ArgumentNullException ("key");
+			} else if (!key.Length.IsBetween(16, 32)) {
+				throw new ArgumentException ("Key length incompatible.", "key");
+			}
+
+			this.encrypting = encrypting;
+			this.wKey = MakeWorkingKey (key);
+		}
 
 		public string AlgorithmName
 		{

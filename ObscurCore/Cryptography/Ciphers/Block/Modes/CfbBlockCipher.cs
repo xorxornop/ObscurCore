@@ -2,80 +2,64 @@ using System;
 
 namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 {
-    /**
-    * implements a Cipher-FeedBack (CFB) mode on top of a simple cipher.
-    */
-    public class CfbBlockCipher
-		: IBlockCipher
+	/// <summary>
+	/// Implements Cipher FeedBack (CFB) mode on top of a block cipher. 
+	/// Supports variable feedback size, default is 8 bits (1 byte).
+	/// </summary>
+	public class CfbBlockCipher : IBlockCipher
     {
-        private byte[]	IV;
-        private byte[]	cfbV;
-        private byte[]	cfbOutV;
-		private bool	encrypting;
+		private bool					encrypting;
+		private readonly byte[]			_iv;
+		private readonly byte[]			_cfbV;
+		private readonly byte[]			_cfbOutV;
+		private readonly int			_feedbackSize;
+		private readonly IBlockCipher	_cipher;
 
-		private readonly int			blockSize;
-        private readonly IBlockCipher	cipher;
-
-		/**
-        * Basic constructor.
-        *
-        * @param cipher the block cipher to be used as the basis of the
-        * feedback mode.
-        * @param blockSize the block size in bits (note: a multiple of 8)
-        */
-        public CfbBlockCipher(
-            IBlockCipher cipher,
-            int          bitBlockSize)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.Ciphers.Block.Modes.CfbBlockCipher"/> class.
+		/// </summary>
+		/// <param name="cipher">Cipher to be used as the basis for the feedback mode.</param>
+		/// <param name="feedbackSize">
+		/// Bytes copied in feedback mechanism per block. 
+		/// Defaults to full block, but other values can be used to produce a self-synchonising 
+		/// stream cipher such as with CFB-8 (1 byte feedback - slow).
+		/// </param>
+		public CfbBlockCipher (IBlockCipher cipher, int? feedbackSize = null)
         {
-            this.cipher = cipher;
-            this.blockSize = bitBlockSize / 8;
-            this.IV = new byte[cipher.BlockSize];
-            this.cfbV = new byte[cipher.BlockSize];
-            this.cfbOutV = new byte[cipher.BlockSize];
+            this._cipher = cipher;
+			this._feedbackSize = feedbackSize ?? cipher.BlockSize;
+            this._iv = new byte[cipher.BlockSize];
+            this._cfbV = new byte[cipher.BlockSize];
+            this._cfbOutV = new byte[cipher.BlockSize];
         }
         
         public IBlockCipher UnderlyingCipher {
-            get { return cipher; }
+            get { return _cipher; }
         }
 
-        /**
-        * Initialise the cipher and, possibly, the initialisation vector (IV).
-        * If an IV isn't passed as part of the parameter, the IV will be all zeros.
-        * An IV which is too short is handled in FIPS compliant fashion.
-        *
-        * @param forEncryption if true the cipher is initialised for
-        *  encryption, if false for decryption.
-        * @param param the key and other data required by the cipher.
-        * @exception ArgumentException if the parameters argument is
-        * inappropriate.
-        */
-        public void Init(
-            bool forEncryption,
-            ICipherParameters parameters)
-        {
-            this.encrypting = forEncryption;
-            if (parameters is ParametersWithIV)
-            {
-                ParametersWithIV ivParam = (ParametersWithIV) parameters;
-                byte[] iv = ivParam.GetIV();
-                int diff = IV.Length - iv.Length;
-                Array.Copy(iv, 0, IV, diff, iv.Length);
-                Array.Clear(IV, 0, diff);
+		/// <summary>
+		/// Initialise the cipher. 
+		/// If a supplied IV is short, it is handled in FIPS fashion.
+		/// </summary>
+		/// <param name="encrypting">If set to <c>true</c> encrypting.</param>
+		/// <param name="key">Key for the cipher.</param>
+		/// <param name="iv">Initialisation vector for the cipher mode.</param>
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			if(iv.IsNullOrZeroLength()) {
+				throw new ArgumentException ("CFB block cipher mode requires an initialisation vector for security.");
+			}
 
-                parameters = ivParam.Parameters;
-            }
-            Reset();
-            cipher.Init(true, parameters);
-        }
-        /**
-        * return the algorithm name and mode.
-        *
-        * @return the name of the underlying algorithm followed by "/CFB"
-        * and the block size in bits.
-        */
+			this.encrypting = encrypting;
+			// Prepend the supplied IV with zeros (as per FIPS PUB 81)
+			Array.Copy(iv, 0, _iv, _iv.Length - iv.Length, iv.Length);
+			Array.Clear(_iv, 0, _iv.Length - iv.Length);
+			Reset();
+			_cipher.Init (true, key, null); // Streaming mode - cipher always used in encryption mode
+		}
+
         public string AlgorithmName
         {
-            get { return cipher.AlgorithmName + "/CFB" + (blockSize * 8); }
+			get { return _cipher.AlgorithmName + "/CFB-" + _feedbackSize; }
         }
 
 		public bool IsPartialBlockOkay
@@ -83,29 +67,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 			get { return true; }
 		}
 
-		/**
-        * return the block size we are operating at.
-        *
-        * @return the block size we are operating at (in bytes).
-        */
-
         public int BlockSize {
-            get { return blockSize; }
+            get { return _feedbackSize; }
         }
 
-        /**
-        * Process one block of input from the array in and write it to
-        * the out array.
-        *
-        * @param in the array containing the input data.
-        * @param inOff offset into the in array the data starts at.
-        * @param out the array the output data will be copied into.
-        * @param outOff the offset into the out array the output will start at.
-        * @exception DataLengthException if there isn't enough data in in, or
-        * space in out.
-        * @exception InvalidOperationException if the cipher isn't initialised.
-        * @return the number of bytes processed and produced.
-        */
+
         public int ProcessBlock(
             byte[]	input,
             int		inOff,
@@ -117,96 +83,73 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 				:	DecryptBlock(input, inOff, output, outOff);
         }
 
-		/**
-        * Do the appropriate processing for CFB mode encryption.
-        *
-        * @param in the array containing the data to be encrypted.
-        * @param inOff offset into the in array the data starts at.
-        * @param out the array the encrypted data will be copied into.
-        * @param outOff the offset into the out array the output will start at.
-        * @exception DataLengthException if there isn't enough data in in, or
-        * space in out.
-        * @exception InvalidOperationException if the cipher isn't initialised.
-        * @return the number of bytes processed and produced.
-        */
         public int EncryptBlock(
             byte[]      input,
             int         inOff,
             byte[]      outBytes,
             int         outOff)
         {
-            if ((inOff + blockSize) > input.Length)
+            if ((inOff + _feedbackSize) > input.Length)
             {
                 throw new DataLengthException("input buffer too short");
             }
-            if ((outOff + blockSize) > outBytes.Length)
+            if ((outOff + _feedbackSize) > outBytes.Length)
             {
                 throw new DataLengthException("output buffer too short");
             }
-            cipher.ProcessBlock(cfbV, 0, cfbOutV, 0);
+            _cipher.ProcessBlock(_cfbV, 0, _cfbOutV, 0);
             //
             // XOR the cfbV with the plaintext producing the ciphertext
             //
-            for (int i = 0; i < blockSize; i++)
+            for (int i = 0; i < _feedbackSize; i++)
             {
-                outBytes[outOff + i] = (byte)(cfbOutV[i] ^ input[inOff + i]);
+                outBytes[outOff + i] = (byte)(_cfbOutV[i] ^ input[inOff + i]);
             }
             //
             // change over the input block.
             //
-            Array.Copy(cfbV, blockSize, cfbV, 0, cfbV.Length - blockSize);
-            Array.Copy(outBytes, outOff, cfbV, cfbV.Length - blockSize, blockSize);
-            return blockSize;
+            Array.Copy(_cfbV, _feedbackSize, _cfbV, 0, _cfbV.Length - _feedbackSize);
+            Array.Copy(outBytes, outOff, _cfbV, _cfbV.Length - _feedbackSize, _feedbackSize);
+            return _feedbackSize;
         }
-        /**
-        * Do the appropriate processing for CFB mode decryption.
-        *
-        * @param in the array containing the data to be decrypted.
-        * @param inOff offset into the in array the data starts at.
-        * @param out the array the encrypted data will be copied into.
-        * @param outOff the offset into the out array the output will start at.
-        * @exception DataLengthException if there isn't enough data in in, or
-        * space in out.
-        * @exception InvalidOperationException if the cipher isn't initialised.
-        * @return the number of bytes processed and produced.
-        */
+        
         public int DecryptBlock(
             byte[]	input,
             int		inOff,
             byte[]	outBytes,
             int		outOff)
         {
-            if ((inOff + blockSize) > input.Length)
+            if ((inOff + _feedbackSize) > input.Length)
             {
                 throw new DataLengthException("input buffer too short");
             }
-            if ((outOff + blockSize) > outBytes.Length)
+            if ((outOff + _feedbackSize) > outBytes.Length)
             {
                 throw new DataLengthException("output buffer too short");
             }
-            cipher.ProcessBlock(cfbV, 0, cfbOutV, 0);
+            _cipher.ProcessBlock(_cfbV, 0, _cfbOutV, 0);
             //
             // change over the input block.
             //
-            Array.Copy(cfbV, blockSize, cfbV, 0, cfbV.Length - blockSize);
-            Array.Copy(input, inOff, cfbV, cfbV.Length - blockSize, blockSize);
+            Array.Copy(_cfbV, _feedbackSize, _cfbV, 0, _cfbV.Length - _feedbackSize);
+            Array.Copy(input, inOff, _cfbV, _cfbV.Length - _feedbackSize, _feedbackSize);
             //
             // XOR the cfbV with the ciphertext producing the plaintext
             //
-            for (int i = 0; i < blockSize; i++)
+            for (int i = 0; i < _feedbackSize; i++)
             {
-                outBytes[outOff + i] = (byte)(cfbOutV[i] ^ input[inOff + i]);
+                outBytes[outOff + i] = (byte)(_cfbOutV[i] ^ input[inOff + i]);
             }
-            return blockSize;
+            return _feedbackSize;
         }
-        /**
-        * reset the chaining vector back to the IV and reset the underlying
-        * cipher.
-        */
+        
+		/// <summary>
+		/// Reset the chaining vector back to the IV and reset the underlying cipher.
+		/// </summary>
         public void Reset()
         {
-            Array.Copy(IV, 0, cfbV, 0, IV.Length);
-            cipher.Reset();
+            Array.Copy(_iv, 0, _cfbV, 0, _iv.Length);
+            _cipher.Reset();
         }
     }
 }

@@ -50,7 +50,6 @@ namespace ObscurCore.Tests.Cryptography
 
 		protected bool OutputNonMalformed (MemoryStream input, SymmetricCipherConfiguration config, byte[] key, out TimeSpan encryptTime, out TimeSpan decryptTime) {
             var crypted = new MemoryStream();
-
             var sw = new Stopwatch();
             
 			using (var cs = new SymmetricCryptoStream(crypted, true, config, key, false)) {
@@ -94,7 +93,7 @@ namespace ObscurCore.Tests.Cryptography
             // Using default block & key size
             var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher, BlockCipherMode.Ctr,
                                                       BlockCipherPadding.None, keySize: _defaultKeySize, blockSize: _defaultBlockSize);
-            RunEqualityTest(config);
+			RunEqualityTest(config);
         }
 
         [Test]

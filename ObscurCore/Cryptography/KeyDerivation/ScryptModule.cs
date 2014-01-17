@@ -14,7 +14,6 @@
 //    limitations under the License.
 
 using System;
-using System.Security.Cryptography;
 using ObscurCore.Cryptography.KeyDerivation.Primitives;
 using ObscurCore.DTO;
 

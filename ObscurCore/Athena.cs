@@ -76,16 +76,6 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128, 160, 192, 224, 256 },
                     DefaultKeySize = 256
                 });
-#if(INCLUDE_GOST28147)
-                BlockCipherDirectory.Add(SymmetricBlockCipher.Gost28147, new SymmetricCipherDescription {
-                    Name = SymmetricBlockCipher.Gost28147.ToString(),
-                    DisplayName = "GOST 28147-89",
-                    AllowableBlockSizes = new[] { 64 },
-                    DefaultBlockSize = 64,
-                    AllowableKeySizes = new[] { 256 },
-                    DefaultKeySize = 256
-                });
-#endif
                 _blockCipherDirectory.Add(SymmetricBlockCipher.Idea, new SymmetricCipherDescription {
                     Name = SymmetricBlockCipher.Idea.ToString(),
                     DisplayName = "International Data Encryption Algorithm (IDEA)",
@@ -127,14 +117,6 @@ namespace ObscurCore
                     DefaultBlockSize = 128,
                     AllowableKeySizes = new[] { 128, 192, 256 },
                     DefaultKeySize = 256
-                });
-                _blockCipherDirectory.Add(SymmetricBlockCipher.TripleDes, new SymmetricCipherDescription {
-                    Name = SymmetricBlockCipher.TripleDes.ToString(),
-                    DisplayName = "Triple DES (3DES, DESEDE)",
-                    AllowableBlockSizes = new[] { 64 },
-                    DefaultBlockSize = 64,
-                    AllowableKeySizes = new[] { 128, 192 },
-                    DefaultKeySize = 192
                 });
                 _blockCipherDirectory.Add(SymmetricBlockCipher.Twofish, new SymmetricCipherDescription {
                     Name = SymmetricBlockCipher.Twofish.ToString(),
@@ -360,11 +342,6 @@ namespace ObscurCore
 					Name = HashFunction.Tiger.ToString(),
 					DisplayName = "Tiger",
 					OutputSize = 192
-				});
-				_hashFunctionDirectory.Add(HashFunction.Whirlpool, new HashFunctionDescription {
-					Name = HashFunction.Whirlpool.ToString(),
-					DisplayName = "Whirlpool",
-					OutputSize = 512
 				});
 
 				// Add MAC functions

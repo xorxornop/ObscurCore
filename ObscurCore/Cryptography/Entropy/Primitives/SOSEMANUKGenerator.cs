@@ -26,15 +26,11 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
 	public sealed class SosemanukGenerator : StreamCsprng
 	{
         public SosemanukGenerator(StreamCipherCsprngConfiguration config) : base(new SosemanukEngine(), config) {
-            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCipher.Sosemanuk, Config.Key,
-                Config.Nonce);
-            Cipher.Init(true, cp);
+			Cipher.Init(true, Config.Key, Config.Nonce);
         }
 
         public SosemanukGenerator(byte[] config) : base(new SosemanukEngine(), config) {
-            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCipher.Sosemanuk, Config.Key,
-                Config.Nonce);
-            Cipher.Init(true, cp);
+			Cipher.Init(true, Config.Key, Config.Nonce);
         }
 	}
 }

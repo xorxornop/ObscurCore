@@ -26,7 +26,6 @@ using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Block.Modes;
 using ObscurCore.Cryptography.Ciphers.Block.Padding;
 using ObscurCore.Cryptography.Ciphers.Block.Primitives;
-using ObscurCore.Cryptography.Ciphers.Block.Primitives.Parameters;
 using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
 using ObscurCore.Cryptography.Entropy;
@@ -51,8 +50,8 @@ namespace ObscurCore
         private readonly static IDictionary<SymmetricStreamCipher, Func<IStreamCipher>> EngineInstantiatorsStream =
             new Dictionary<SymmetricStreamCipher, Func<IStreamCipher>>();
 
-        private readonly static IDictionary<BlockCipherMode, Func<IBlockCipher, int, IBlockCipher>> ModeInstantiatorsBlock =
-            new Dictionary<BlockCipherMode, Func<IBlockCipher, int, IBlockCipher>>();
+        private readonly static IDictionary<BlockCipherMode, Func<IBlockCipher, IBlockCipher>> ModeInstantiatorsBlock =
+			new Dictionary<BlockCipherMode, Func<IBlockCipher, IBlockCipher>>();
 
         private readonly static IDictionary<BlockCipherPadding, Func<IBlockCipherPadding>> PaddingInstantiators =
             new Dictionary<BlockCipherPadding, Func<IBlockCipherPadding>>();
@@ -89,9 +88,6 @@ namespace ObscurCore
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Cast5, blockSize => new Cast5Engine());
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Cast6, blockSize => new Cast6Engine());
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Camellia, blockSize => new CamelliaEngine());
-#if INCLUDE_GOST28147
-            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Gost28147, blockSize => new Gost28147Engine());
-#endif
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Idea, blockSize => new IdeaEngine());
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Noekeon, blockSize => new NoekeonEngine());
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Rc6, blockSize => new Rc6Engine());
@@ -99,7 +95,6 @@ namespace ObscurCore
             EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.Rijndael, blockSize => new RijndaelEngine(blockSize));
 #endif
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Serpent, blockSize => new SerpentEngine());
-            EngineInstantiatorsBlock.Add(SymmetricBlockCipher.TripleDes, blockSize => new DesEdeEngine());
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Twofish, blockSize => new TwofishEngine());
 
             // Stream engines
@@ -120,10 +115,10 @@ namespace ObscurCore
 #endif
 
             // ######################################## BLOCK MODES ########################################
-            ModeInstantiatorsBlock.Add(BlockCipherMode.Cbc, (cipher, size) => new CbcBlockCipher(cipher));
-            ModeInstantiatorsBlock.Add(BlockCipherMode.Cfb, (cipher, size) => new CfbBlockCipher(cipher, size));
-            ModeInstantiatorsBlock.Add(BlockCipherMode.Ctr, (cipher, size) => new SicBlockCipher(cipher));
-            ModeInstantiatorsBlock.Add(BlockCipherMode.Ofb, (cipher, size) => new OfbBlockCipher(cipher, size));
+            ModeInstantiatorsBlock.Add(BlockCipherMode.Cbc, (cipher) => new CbcBlockCipher(cipher));
+            ModeInstantiatorsBlock.Add(BlockCipherMode.Cfb, (cipher) => new CfbBlockCipher(cipher));
+            ModeInstantiatorsBlock.Add(BlockCipherMode.Ctr, (cipher) => new CtrBlockCipher(cipher));
+            ModeInstantiatorsBlock.Add(BlockCipherMode.Ofb, (cipher) => new OfbBlockCipher(cipher));
 
             // ######################################## PADDING ########################################
 
@@ -151,23 +146,17 @@ namespace ObscurCore
             DigestInstantiators.Add(HashFunction.Blake2B256, () => new Blake2BDigest(256, true));
 			DigestInstantiators.Add(HashFunction.Blake2B384, () => new Blake2BDigest(384, true));
 			DigestInstantiators.Add(HashFunction.Blake2B512, () => new Blake2BDigest(512, true));
-
 			DigestInstantiators.Add(HashFunction.Keccak224, () => new KeccakDigest(224, true));
 			DigestInstantiators.Add(HashFunction.Keccak256, () => new KeccakDigest(256, true));
 			DigestInstantiators.Add(HashFunction.Keccak384, () => new KeccakDigest(384, true));
 			DigestInstantiators.Add(HashFunction.Keccak512, () => new KeccakDigest(512, true));
-
 #if INCLUDE_SHA1
             DigestInstantiators.Add(HashFunction.Sha1, () => new Sha1Digest());
 #endif
             DigestInstantiators.Add(HashFunction.Sha256, () => new Sha256Digest());
             DigestInstantiators.Add(HashFunction.Sha512, () => new Sha512Digest());
-
             DigestInstantiators.Add(HashFunction.Ripemd160, () => new RipeMD160Digest());
-
             DigestInstantiators.Add(HashFunction.Tiger, () => new TigerDigest());
-
-            DigestInstantiators.Add(HashFunction.Whirlpool, () => new WhirlpoolDigest());
 
             // ######################################## MAC ########################################
 
@@ -550,18 +539,16 @@ namespace ObscurCore
         /// IBlockCipher object implementing the relevant mode of operation, 
         /// overlaying the supplied symmetric block cipher.
         /// </returns>
-        public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, BlockCipherMode modeEnum, int? size = null) {
+        public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, BlockCipherMode modeEnum) {
             if (cipher == null) {
                 throw new ArgumentNullException();
             }
-            var cipherMode = ModeInstantiatorsBlock[modeEnum](cipher, size ??
-                    Athena.Cryptography.BlockCiphers[cipher.AlgorithmName.ToEnum<SymmetricBlockCipher>(true)]
-                        .DefaultBlockSize);
+			var cipherMode = ModeInstantiatorsBlock[modeEnum](cipher);
             return cipherMode;
         }
 
-        public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, string modeName, int? size = null) {
-            return OverlayBlockCipherWithMode(cipher, modeName.ToEnum<BlockCipherMode>(), size);
+        public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, string modeName) {
+            return OverlayBlockCipherWithMode(cipher, modeName.ToEnum<BlockCipherMode>());
         }
 
         /// <summary>
@@ -579,38 +566,6 @@ namespace ObscurCore
             return CreatePadding(paddingName.ToEnum<BlockCipherPadding>());
         }
 
-        // Block cipher parameters
-
-        public static ICipherParameters CreateKeyParameter(SymmetricBlockCipher cipherEnum, byte[] key) {
-            if (!Athena.Cryptography.BlockCiphers[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
-                throw new InvalidDataException("Key size is unsupported/incompatible.");
-            
-            var cipherParams = new KeyParameter(key);
-            return cipherParams;
-        }
-
-        public static ICipherParameters CreateBlockCipherParameters(ISymmetricCipherConfiguration config, byte[] key) {
-            return CreateBlockCipherParameters(config.CipherName.ToEnum<SymmetricBlockCipher>(), key, config.IV);
-        }
-
-        public static ICipherParameters CreateBlockCipherParameters(SymmetricBlockCipher cipherEnum, byte[] key, byte[] iv) {
-            ICipherParameters cipherParams = null;
-
-            if((iv == null || iv.Length == 0) && Athena.Cryptography.BlockCiphers[cipherEnum].DefaultIvSize != -1) 
-                throw new NotSupportedException("IV is null or zero-zength.");
-
-			if (cipherEnum == SymmetricBlockCipher.TripleDes) {
-                if(!Athena.Cryptography.BlockCiphers[cipherEnum].AllowableKeySizes.Contains(key.Length * 8)) 
-                    throw new InvalidDataException("Key size is unsupported/incompatible.");
-                cipherParams = new ParametersWithIV(new DesEdeParameters(key, 0, key.Length), iv, 0,
-                    iv.Length);
-            } else {
-                cipherParams = new ParametersWithIV(CreateKeyParameter(cipherEnum, key), iv, 0, iv.Length);
-            }
-
-            return cipherParams;
-        }
-
         // Stream ciphers
 
         /// <summary>
@@ -624,33 +579,7 @@ namespace ObscurCore
         public static IStreamCipher CreateStreamCipher (string cipherName) {
             return EngineInstantiatorsStream[cipherName.ToEnum<SymmetricStreamCipher>()]();
         }
-
-        // Stream cipher parameters
-
-        public static ICipherParameters CreateKeyParameter(SymmetricStreamCipher cipherEnum, byte[] key) {
-            if (!Athena.Cryptography.StreamCiphers[cipherEnum].AllowableKeySizes.Contains(key.Length * 8))
-                throw new InvalidDataException("Key size is unsupported/incompatible.");
-
-            var cipherParams = new KeyParameter(key);
-            return cipherParams;
-        }
-
-        public static ICipherParameters CreateStreamCipherParameters(SymmetricStreamCipher cipherEnum, byte[] key, byte[] iv) {
-#if(INCLUDE_RC4)
-            if (cipher == SymmetricStreamCiphers.RC4) return CreateKeyParameter(key);
-#endif
-#if(INCLUDE_ISAAC)
-            if (cipherEnum == SymmetricStreamCiphers.ISAAC) return CreateKeyParameter(cipherEnum, key);
-#endif
-            if (iv.IsNullOrZeroLength()) throw new InvalidDataException("IV is null or zero-length.");
-            if (!Athena.Cryptography.StreamCiphers[cipherEnum].AllowableIvSizes.Contains(iv.Length * 8)) {
-                throw new InvalidDataException("IV size is unsupported/incompatible.");
-            }
-
-            var cipherParams = new ParametersWithIV(CreateKeyParameter(cipherEnum, key), iv);
-            return cipherParams;
-        }
-
+        
         // Authentication-related
 
 		/// <summary>
@@ -692,7 +621,7 @@ namespace ObscurCore
 				macObj = CreateCmacPrimitive(Encoding.UTF8.GetString(config).ToEnum<SymmetricBlockCipher>(), key, salt);
 			} else {
 				macObj = MacInstantiators[macEnum]();
-				macObj.Init (new KeyParameter (key));
+				macObj.Init (key);
 				if(!salt.IsNullOrZeroLength()) macObj.BlockUpdate(salt, 0, salt.Length);
 			}
 
@@ -717,8 +646,7 @@ namespace ObscurCore
 				throw new NotSupportedException ("CMAC/OMAC1 only supports ciphers with 64 / 128 bit block sizes.");
 			}
 			var macObj = new CMac (CreateBlockCipher (cipherEnum, null));
-			var keyParam = CreateKeyParameter (cipherEnum, key);
-			macObj.Init (keyParam);
+			macObj.Init (key);
 			if(!salt.IsNullOrZeroLength()) macObj.BlockUpdate(salt, 0, salt.Length);
 
 			return macObj;
@@ -733,8 +661,7 @@ namespace ObscurCore
 		/// <returns>Pre-initialised HMAC primitive.</returns>
 		public static IMac CreateHmacPrimitive(HashFunction hashEnum, byte[] key, byte[] salt = null) {
 			var macObj = new HMac (DigestInstantiators [hashEnum]());
-			var keyParam = new KeyParameter (key);
-			macObj.Init (keyParam);
+			macObj.Init (key);
 			if(!salt.IsNullOrZeroLength()) macObj.BlockUpdate(salt, 0, salt.Length);
 
 			return macObj;

@@ -99,7 +99,7 @@ namespace ObscurCore.Packaging
 			// Length checks & commits
 			if(Writing) {
 				// Check if pre-stated length matches what was actually written
-				if(item.ExternalLength != 0 && itemDecorator.BytesIn != item.ExternalLength) {
+				if(item.ExternalLength > 0 && itemDecorator.BytesIn != item.ExternalLength) {
 					throw new InvalidDataException ("Mismatch between stated item external length and actual input length.");
 				}
 				// Commit the determined internal length to item in payload manifest

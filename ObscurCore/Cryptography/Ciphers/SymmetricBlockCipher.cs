@@ -32,13 +32,6 @@
         /// </summary><seealso cref="Cast5"/>
         Cast6,
 
-#if(INCLUDE_GOST28147)
-    /// <summary>
-    /// GOST 28147-89; Soviet/Russian government standard symmetric key block cipher.
-    /// </summary>
-		Gost28147,
-#endif
-
         /// <summary>
         /// International Data Encryption Algorithm - patent unencumbered as of 2012. 64 bit block size.
         /// </summary>
@@ -64,12 +57,6 @@
         /// 128-bit block cipher, finalist in AES content, 2nd place after Rijndael.
         /// </summary>
         Serpent,
-
-        /// <summary>
-        /// Triple Data Encryption Algorithm, or 3DES. 64-bit block cipher. Derivative of DES. 3 (optionally different) 56-bit keys. 
-        /// Use is popular in the financial industries.
-        /// </summary>
-        TripleDes,
 
         /// <summary>
         /// 128-bit block cipher. Derivative of Blowfish with better security.

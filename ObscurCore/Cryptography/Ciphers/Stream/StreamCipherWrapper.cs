@@ -39,6 +39,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
 
 		public int OperationSize { get { return _strideSize; } }
 
+		public string AlgorithmName { get { return _cipher.AlgorithmName; } }
+
 		/// <summary>
 		/// Initializes a new <see cref="ObscurCore.Cryptography.Ciphers.Stream.StreamCipherWrapper"/>.
 		/// </summary>

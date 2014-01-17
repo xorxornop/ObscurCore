@@ -1,4 +1,4 @@
-﻿using ObscurCore.Cryptography.Ciphers;
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
 using ObscurCore.DTO;
 
@@ -11,15 +11,11 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
     public sealed class Salsa20Generator : StreamCsprng
     {
 		public Salsa20Generator(StreamCipherCsprngConfiguration config) : base(new Salsa20Engine(), config) {
-            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCipher.Salsa20, Config.Key,
-                Config.Nonce);
-            Cipher.Init(true, cp);
+			Cipher.Init(true, Config.Key, Config.Nonce);
         }
 
         public Salsa20Generator(byte[] config) : base(new Salsa20Engine(), config) {
-            var cp = Source.CreateStreamCipherParameters(SymmetricStreamCipher.Salsa20, Config.Key,
-                Config.Nonce);
-            Cipher.Init(true, cp);
+			Cipher.Init(true, Config.Key, Config.Nonce);
         }
     }
 }

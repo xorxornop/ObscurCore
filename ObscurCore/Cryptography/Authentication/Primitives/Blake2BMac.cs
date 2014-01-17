@@ -21,6 +21,10 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 {
 	public sealed class Blake2BMac : Blake2BDigest, IMac
 	{
+		public int MacSize {
+			get { return this.DigestSize; }
+		}
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.MACs.Blake2BMac"/> class.
 		/// </summary>
@@ -30,27 +34,18 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		{
 		}
 
-		#region IMac implementation
 
-		public void Init (ICipherParameters parameters)
-		{
-			this.Init (parameters, null);
+		public void Init (byte[] key) {
+			this.Init (key, null, null);
 		}
+
 
 		/// <summary>
 		/// Initialise the MAC primitive with a key and/or salt and/or a tag.
 		/// </summary>
-		/// <param name="parameters">Parameter object that may comprise a key and/or salt. Key maximum 64 bytes, salt 16.</param>
-		/// <param name="tag">Tag/personalisation to include in the IV for the MAC. 16 bytes maximum.</param>
-		public void Init(ICipherParameters parameters, byte[] tag) {
-			byte[] key = null, salt = null;
-		    var keyParameter = parameters as KeyParameter;
-		    if (keyParameter != null) key = keyParameter.GetKey();
-		    var parametersWithSalt = parameters as ParametersWithSalt;
-		    if (parametersWithSalt != null) salt = parametersWithSalt.GetSalt();
-			this.Init (key, salt, tag);
-		}
-
+		/// <param name="key">Key for the MAC. Maximum 64 bytes.</param>
+		/// <param name="salt">Salt for the MAC. Maximum 16 bytes.</param>
+		/// <param name="tag">Tag/personalisation to include in the IV for the MAC. Maximum 16 bytes.</param>
 		public void Init(byte[] key, byte[] salt, byte[] tag) {
 			byte[] keyBytes = null, saltBytes = null, tagBytes = null;
 
@@ -82,15 +77,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			base.InitCore (config);
 		}
 
-		public void Init(byte[] key, byte[] salt) {
-			this.Init (key, salt, null);
-		}
 
-	    public int MacSize {
-	        get { return this.DigestSize; }
-	    }
-
-	    #endregion
     }
 }
 

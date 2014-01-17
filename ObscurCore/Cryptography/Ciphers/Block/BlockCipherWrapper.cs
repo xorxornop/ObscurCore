@@ -26,6 +26,16 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         public int BlockSize { get { return _blockSize; } }
         public int OperationSize { get { return _blockSize; } }
 
+		public string AlgorithmName {
+			get { 
+				if (_padding == null) {
+					return _cipher.AlgorithmName;
+				} else {
+					return String.Format("{0}/{1}", _cipher.AlgorithmName, _padding.PaddingName);
+				}
+			} 
+		}
+
 
 		/// <summary>
 		/// Initializes a new <see cref="ObscurCore.Cryptography.Ciphers.Block.BlockCipherWrapper"/>.

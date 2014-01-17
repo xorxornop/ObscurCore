@@ -37,23 +37,24 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		private readonly uint[] constants = new uint[] 	{ 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D,
                                                           0xD34D34D3, 0x34D34D34, 0x4D34D34D, 0xD34D34D3 };
 
-        public void Init (bool forEncryption, ICipherParameters parameters) {
-            // forEncryption parameter is irrelevant for Rabbit as operations are symmetrical, 
-            // but required by class interface
 
-            var ivParams = parameters as ParametersWithIV;
-            if (ivParams == null) throw new ArgumentException("Rabbit initialisation requires an IV.", "parameters");
-            _workingIV = ivParams.GetIV();
-            if (_workingIV == null || _workingIV.Length != 8)
-                throw new ArgumentException("Rabbit requires exactly 8 bytes of IV.");
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			if (iv == null) 
+				throw new ArgumentNullException("iv", "Rabbit initialisation requires an IV.");
+			if (iv.Length != 8)
+				throw new ArgumentException("Rabbit requires exactly 8 bytes of IV.", "iv");
 
-            var key = ivParams.Parameters as KeyParameter;
-            if (key == null) throw new ArgumentException("Rabbit initialisation requires a key.", "parameters");
-            _workingKey = key.GetKey();
-            if (_workingKey.Length != 16) throw new ArgumentException("Rabbit requires exactly 16 bytes of key.", "parameters");
+			_workingIV = iv;
 
-            Reset();
-        }
+			if (key == null) 
+				throw new ArgumentNullException("key", "Rabbit initialisation requires a key.");
+			if (key.Length != 16)
+				throw new ArgumentException("Rabbit requires an exactly 16 byte key.", "key");
+
+			_workingKey = key;
+
+			Reset ();
+		}
 
         public string AlgorithmName {
             get { return "Rabbit"; }
@@ -79,13 +80,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             if (!_initialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
 
 			if(_keyStreamPtr == 16) {
-				NextState();
-				Pack.UInt32_To_LE((_state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16)), _keyStream, 0);
-				Pack.UInt32_To_LE((_state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16)), _keyStream, 4);
-				Pack.UInt32_To_LE((_state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16)), _keyStream, 8);
-				Pack.UInt32_To_LE((_state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16)), _keyStream, 12);
+				GenerateKeystream (_keyStream, 0);
+				_keyStreamPtr = 0;
 			}
-			return _keyStream [_keyStreamPtr++];
+			return (byte)(_keyStream [_keyStreamPtr++] ^ input);
         }
 
         public void ProcessBytes (byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff) {
@@ -110,7 +108,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 					blockLength = len;
 				}
 				for (int i = 0; i < blockLength; i++) {
-					outBytes [outOff + i] = (byte)(_keyStream [_keyStreamPtr + i] ^ inBytes [inOff]);
+					outBytes [outOff + i] = (byte)(_keyStream [_keyStreamPtr + i] ^ inBytes [inOff + i]);
 				}
 				_keyStreamPtr += blockLength;
 				inOff += blockLength;
@@ -121,32 +119,64 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			if (len == 0)
 				return;
 
-			int truncatedLen;
-			var blocks = Math.DivRem(len, 16, out truncatedLen);
-			for (var i = 0; i < blocks; i++) {
+			int remainder;
+			var blocks = Math.DivRem(len, 16, out remainder);
+
+			#if INCLUDE_UNSAFE
+			if(BitConverter.IsLittleEndian) {
+				unsafe {
+					fixed (byte* inPtr = inBytes) {
+						fixed (byte* outPtr = outBytes) {
+							uint* inLongPtr = (uint*)(inPtr + inOff);
+							uint* outLongPtr = (uint*)(outPtr + outOff);
+							for (int i = 0; i < blocks; i++) {
+								NextState();
+								outLongPtr[0] = inLongPtr[0] ^ _state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16);
+								outLongPtr[1] = inLongPtr[1] ^ _state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16);
+								outLongPtr[2] = inLongPtr[2] ^ _state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16);
+								outLongPtr[3] = inLongPtr[3] ^ _state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16);
+								inLongPtr += 4;
+								outLongPtr += 4;
+							}
+						}
+					}
+				}
+				inOff += 16 * blocks;
+				outOff += 16 * blocks;
+			} else {
+				for (int i = 0; i < blocks; i++) {
+					NextState();
+					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 0) ^ _state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16), outBytes, outOff + 0);
+					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ _state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16), outBytes, outOff + 4);
+					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ _state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16), outBytes, outOff + 8);
+					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ _state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16), outBytes, outOff + 12);
+					inOff += 16;
+					outOff += 16;
+				}
+			}
+			#else
+			for (int i = 0; i < blocks; i++) {
 				NextState();
-				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff) ^ _state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16), outBytes, outOff);
+				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 0) ^ _state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16), outBytes, outOff + 0);
 				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ _state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16), outBytes, outOff + 4);
 				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ _state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16), outBytes, outOff + 8);
 				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ _state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16), outBytes, outOff + 12);
 				inOff += 16;
 				outOff += 16;
 			}
-			if (truncatedLen == 0) return;
+			#endif
 
-			NextState();
-			Pack.UInt32_To_LE((_state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16)), _keyStream, 0);
-			Pack.UInt32_To_LE((_state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16)), _keyStream, 4);
-			Pack.UInt32_To_LE((_state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16)), _keyStream, 8);
-			Pack.UInt32_To_LE((_state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16)), _keyStream, 12);
-			for (int i = 0; i < truncatedLen; i++) {
+			if (remainder == 0) return;
+
+			GenerateKeystream (_keyStream, 0);
+			for (int i = 0; i < remainder; i++) {
 				outBytes[outOff + i] = (byte) (inBytes[inOff + i] ^ _keyStream[i]);
 			}
-			_keyStreamPtr = truncatedLen;
+			_keyStreamPtr = remainder;
         }
 
 		public void GetKeystream(byte[] buffer, int offset, int length) {
-			if(_keyStreamPtr < 16) {
+			if (_keyStreamPtr < 16) {
 				int blockLength = 16 - _keyStreamPtr;
 				if (blockLength > length) {
 					blockLength = length;
@@ -158,23 +188,23 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			}
 
 			while (length >= 16) {
-				NextState();
-				Pack.UInt32_To_LE((_state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16)), _keyStream, 0);
-				Pack.UInt32_To_LE((_state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16)), _keyStream, 4);
-				Pack.UInt32_To_LE((_state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16)), _keyStream, 8);
-				Pack.UInt32_To_LE((_state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16)), _keyStream, 12);
+				GenerateKeystream (buffer, offset);
 				offset += 16;
 				length -= 16;
 			}
 			if(length > 0) {
-				NextState();
-				Pack.UInt32_To_LE((_state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16)), _keyStream, 0);
-				Pack.UInt32_To_LE((_state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16)), _keyStream, 4);
-				Pack.UInt32_To_LE((_state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16)), _keyStream, 8);
-				Pack.UInt32_To_LE((_state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16)), _keyStream, 12);
+				GenerateKeystream (_keyStream, 0);
 				Array.Copy(_keyStream, 0, buffer, offset, length);
 				_keyStreamPtr = length;
 			}
+		}
+
+		private void GenerateKeystream(byte[] buffer, int offset) {
+			NextState();
+			Pack.UInt32_To_LE((_state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16)), buffer, offset + 0);
+			Pack.UInt32_To_LE((_state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16)), buffer, offset + 4);
+			Pack.UInt32_To_LE((_state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16)), buffer, offset + 8);
+			Pack.UInt32_To_LE((_state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16)), buffer, offset + 12);
 		}
 
         #region Private implementation

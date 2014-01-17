@@ -16,7 +16,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
 using System;
-using System.Security.Cryptography;
 using System.Threading;
 
 using ObscurCore.Extensions.BitPacking;
@@ -130,7 +129,8 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 			int cost, int blockSize, int parallel, int? maxThreads)
 		{
 			byte[] B = GetEffectivePbkdf2Salt(key, salt, cost, blockSize, parallel, maxThreads);
-			Pbkdf2 kdf = new Pbkdf2(new HMACSHA256(key), B, 1);
+			var hmac = Source.CreateHmacPrimitive (ObscurCore.Cryptography.Authentication.HashFunction.Sha256, key, null);
+			Pbkdf2 kdf = new Pbkdf2(hmac, B, 1);
 			//Security.Clear(B);
 			Array.Clear (B, 0, B.Length);
 			return kdf;
@@ -148,7 +148,8 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 			Helper.CheckRange("parallel", parallel, 1, int.MaxValue / MFLen);
 			Helper.CheckRange("maxThreads", (int)maxThreads, 1, int.MaxValue);
 
-			byte[] B = Pbkdf2.ComputeDerivedKey(new HMACSHA256(P), S, 1, parallel * MFLen);
+			var hmac = Source.CreateHmacPrimitive (ObscurCore.Cryptography.Authentication.HashFunction.Sha256, P, null);
+			byte[] B = Pbkdf2.ComputeDerivedKey(hmac, S, 1, parallel * MFLen);
 
 			uint[] B0 = new uint[B.Length / 4];
 			for (int i = 0; i < B0.Length; i++) { B0[i] = B.LittleEndianToUInt32 (i * 4); } // code is easier with uint[]

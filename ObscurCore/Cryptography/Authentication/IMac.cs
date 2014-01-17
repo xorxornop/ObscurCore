@@ -7,14 +7,8 @@ namespace ObscurCore.Cryptography.Authentication
      */
     public interface IMac
     {
-        /**
-         * Initialise the MAC.
-         *
-         * @param param the key and other data required by the MAC.
-         * @exception ArgumentException if the parameters argument is
-         * inappropriate.
-         */
-        void Init(ICipherParameters parameters);
+
+		void Init (byte[] key);
 
         /**
          * Return the name of the algorithm the MAC implements.

@@ -20,6 +20,12 @@ namespace ObscurCore.Cryptography.Ciphers
         bool Encrypting { get; }
         int OperationSize { get; }
 
+		/// <summary>
+		/// Description/name of the cipher construction, e.g. AES/CTR, or Blowfish/CBC/PKCS7.
+		/// </summary>
+		/// <value>The name of the algorithm.</value>
+		string AlgorithmName { get; }
+
         int ProcessBytes(byte[] input, int inputOffset, byte[] output, int outputOffset);
 
 		int ProcessFinal(byte[] input, int inputOffset, int length, byte[] output, int outputOffset);

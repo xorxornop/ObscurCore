@@ -14,18 +14,22 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
 		/// <value>The size of the internal operation.</value>
 		int StateSize { get; }
 
-		/// <summary>Initialise the cipher.</summary>
+		/// <summary>
+		/// Initialise the cipher.
+		/// </summary>
 		/// <param name="forEncryption">If true the cipher is initialised for encryption,
 		/// if false for decryption.</param>
 		/// <param name="parameters">The key and other data required by the cipher.</param>
 		/// <exception cref="ArgumentException">
-		/// If the parameters argument is inappropriate.
+		/// If the parameter argument is invalid (e.g. incorrect length).
 		/// </exception>
-        void Init(bool forEncryption, ICipherParameters parameters);
+		void Init (bool encrypting, byte[] key, byte[] iv);
 
-		/// <summary>encrypt/decrypt a single byte returning the result.</summary>
-		/// <param name="input">the byte to be processed.</param>
-		/// <returns>the result of processing the input byte.</returns>
+		/// <summary>
+		/// Encrypt/Decrypt a single byte.
+		/// </summary>
+		/// <param name="input">The byte to be processed.</param>
+		/// <returns>Result of processing the input byte.</returns>
         byte ReturnByte(byte input);
 
 		/// <summary>

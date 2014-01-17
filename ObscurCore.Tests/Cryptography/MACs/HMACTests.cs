@@ -76,10 +76,5 @@ namespace ObscurCore.Tests.Cryptography.MACs
         public void Tiger () {
             RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Tiger.ToString()));
         }
-
-        [Test]
-        public void Whirlpool () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(HashFunction.Whirlpool.ToString()));
-        }
     }
 }

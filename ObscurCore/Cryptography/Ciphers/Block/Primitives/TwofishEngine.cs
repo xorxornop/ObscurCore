@@ -252,26 +252,18 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             }
         }
 
-        /**
-        * initialise a Twofish cipher.
-        *
-        * @param forEncryption whether or not we are for encryption.
-        * @param parameters the parameters required to set up the cipher.
-        * @exception ArgumentException if the parameters argument is
-        * inappropriate.
-        */
-        public void Init(
-            bool              forEncryption,
-            ICipherParameters parameters)
-        {
-            if (!(parameters is KeyParameter))
-				throw new ArgumentException("invalid parameter passed to Twofish init - " + parameters.GetType().ToString());
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			if (key == null) {
+				throw new ArgumentNullException ("key");
+			} else if (!key.Length.IsBetween(16, 32)) {
+				throw new ArgumentException ("Key length incompatible.", "key");
+			}
 
-			this.encrypting = forEncryption;
-			this.workingKey = ((KeyParameter)parameters).GetKey();
-			this.k64Cnt = (this.workingKey.Length / 8); // pre-padded ?
+			this.encrypting = encrypting;
+			this.workingKey = key;
+			this.k64Cnt = this.workingKey.Length / 8;
 			SetKey(this.workingKey);
-        }
+		}
 
 		public string AlgorithmName
         {

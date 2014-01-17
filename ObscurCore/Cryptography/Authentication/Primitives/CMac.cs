@@ -31,14 +31,13 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		private const byte Constant128 = (byte)0x87;
 		private const byte Constant64 = (byte)0x1b;
 
+		private readonly byte[] _nullCbcIv;
 		private readonly byte[] _zeroes;
-
 		private readonly byte[] _mac;
-
 		private readonly byte[] _buf;
 		private int _bufOff;
-		private readonly IBlockCipher _cipher;
 
+		private readonly IBlockCipher _cipher;
 		private readonly int macSize;
 
 		private byte[] L, Lu, Lu2;
@@ -97,6 +96,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
 			_zeroes = new byte[cipher.BlockSize];
 
+			_nullCbcIv = new byte[cipher.BlockSize];
+
 			_bufOff = 0;
 		}
 
@@ -122,12 +123,10 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			return ret;
 		}
 
-		public void Init(
-			ICipherParameters parameters)
-		{
+		public void Init (byte[] key) {
 			Reset();
 
-			_cipher.Init(true, parameters);
+			_cipher.Init (true, key, _nullCbcIv);
 
 			//initializes the L, Lu, Lu2 numbers
 			L = new byte[_zeroes.Length];
@@ -135,7 +134,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			Lu = doubleLu(L);
 			Lu2 = doubleLu(Lu);
 
-			_cipher.Init(true, parameters);
+			_cipher.Init (true, key, _nullCbcIv);
 		}
 
 	    public int MacSize {
@@ -230,6 +229,9 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			*/
 			Array.Clear(_buf, 0, _buf.Length);
 			_bufOff = 0;
+
+			// Make sure all IV bytes are zeroed
+			Array.Clear(_nullCbcIv, 0, _nullCbcIv.Length);
 
 			/*
 			* Reset the underlying cipher.

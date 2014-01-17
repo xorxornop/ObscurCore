@@ -315,25 +315,19 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         private byte[] _workingKey;
         private int _rounds = MAX_ROUNDS;
 
-        /**
-        * initialise a CAST cipher.
-        *
-        * @param forEncryption whether or not we are for encryption.
-        * @param parameters the parameters required to set up the cipher.
-        * @exception ArgumentException if the parameters argument is
-        * inappropriate.
-        */
-        public void Init(
-            bool				forEncryption,
-            ICipherParameters	parameters)
-        {
-            if (!(parameters is KeyParameter))
-				throw new ArgumentException("Invalid parameter passed to "+ AlgorithmName +" init - " + parameters.GetType().ToString());
 
-			_encrypting = forEncryption;
-			_workingKey = ((KeyParameter)parameters).GetKey();
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			_encrypting = encrypting;
+
+			if (key == null) {
+				throw new ArgumentNullException ("key");
+			} else if (!key.Length.IsBetween(5, 16)) {
+				throw new ArgumentException ("Key length incompatible.", "key");
+			}
+
+			_workingKey = key;
 			SetKey(_workingKey);
-        }
+		}
 
 		public virtual string AlgorithmName
         {

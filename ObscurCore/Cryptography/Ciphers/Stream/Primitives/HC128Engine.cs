@@ -188,37 +188,16 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			get { return 32; }
 		}
 
-		/**
-		* Initialise a HC-128 cipher.
-		*
-		* @param forEncryption whether or not we are for encryption. Irrelevant, as
-		*                      encryption and decryption are the same.
-		* @param params        the parameters required to set up the cipher.
-		* @throws ArgumentException if the params argument is
-		*                                  inappropriate (ie. the key is not 128 bit long).
-		*/
-		public void Init(
-			bool				forEncryption,
-			ICipherParameters	parameters)
-		{
-			ICipherParameters keyParam = parameters;
 
-			if (parameters is ParametersWithIV) {
-				iv = ((ParametersWithIV)parameters).GetIV();
-				keyParam = ((ParametersWithIV)parameters).Parameters;
-			} else {
-				iv = new byte[0];
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			this.iv = iv ?? new byte[0];
+			if(key == null) {
+				throw new ArgumentNullException("key", "HC-128 initialisation requires a key.");
+			} else if (key.Length != 16) {
+				throw new ArgumentException ("HC-128 requires an exactly 16 byte key.");
 			}
-
-			if (keyParam is KeyParameter) {
-				key = ((KeyParameter)keyParam).GetKey();
-				Init();
-			} else {
-				throw new ArgumentException(
-					"Invalid parameter passed to HC128 init - " + parameters.GetType().Name,
-					"parameters");
-			}
-
+			this.key = key;
+			Init ();
 			initialised = true;
 		}
 
@@ -230,7 +209,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				Pack.UInt32_To_LE(Step(), buf);				
 			}
 			byte ret = buf[idx];
-			idx = idx + 1 & 0x3;
+			idx = (idx + 1) & 3;
 			return ret;
 		}
 
@@ -248,8 +227,62 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			if ((outOff + len) > output.Length)
 				throw new DataLengthException("output buffer too short");
 
-			for (int i = 0; i < len; i++) {
-				output[outOff + i] = (byte)(input[inOff + i] ^ GetByte());
+			// Process leftover keystream
+			for (; idx != 0; idx = (idx + 1) & 3) {
+				output[outOff++] = (byte)(input[inOff++] ^ buf[idx]);
+				len--;
+			}
+
+			int remainder;
+			int blocks = Math.DivRem (len, 4, out remainder);
+
+			#if INCLUDE_UNSAFE
+			if(BitConverter.IsLittleEndian) {
+				unsafe {
+					fixed (byte* inPtr = input) {
+						fixed (byte* outPtr = output) {
+							uint* inLongPtr = (uint*)(inPtr + inOff);
+							uint* outLongPtr = (uint*)(outPtr + outOff);
+							for (int i = 0; i < blocks; i++) {
+								outLongPtr [0] = inLongPtr [0] ^ Step ();
+								inLongPtr++;
+								outLongPtr++;
+							}
+						}
+					}
+				}
+				inOff += 4 * blocks;
+				outOff += 4 * blocks;
+			} else {
+				for (int i = 0; i < blocks; i++) {
+					Pack.UInt32_To_LE(Step(), buf);
+					output[outOff + 0] = (byte)(input[inOff + 0] ^ buf[0]);
+					output[outOff + 1] = (byte)(input[inOff + 1] ^ buf[1]);
+					output[outOff + 2] = (byte)(input[inOff + 2] ^ buf[2]);
+					output[outOff + 3] = (byte)(input[inOff + 3] ^ buf[3]);
+					inOff += 4;
+					outOff += 4;
+				}
+			}
+			#else
+			for (int i = 0; i < blocks; i++) {
+				Pack.UInt32_To_LE(Step(), buf);
+				output[outOff + 0] = (byte)(input[inOff + 0] ^ buf[0]);
+				output[outOff + 1] = (byte)(input[inOff + 1] ^ buf[1]);
+				output[outOff + 2] = (byte)(input[inOff + 2] ^ buf[2]);
+				output[outOff + 3] = (byte)(input[inOff + 3] ^ buf[3]);
+				inOff += 4;
+				outOff += 4;
+			}
+			#endif
+
+			// Process remainder input (insufficient width for a full step)
+			for (int i = 0; i < remainder; i++) {
+				if (idx == 0) {
+					Pack.UInt32_To_LE(Step(), buf);
+				}
+				output[outOff++] = (byte)(input[inOff++] ^ buf[idx]);
+				idx = (idx + 1) & 3;
 			}
 		}
 

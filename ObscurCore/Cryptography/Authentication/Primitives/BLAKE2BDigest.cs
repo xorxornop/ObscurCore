@@ -84,6 +84,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		{
 			var fullResult = _core.HashFinal();
 			Array.Copy(fullResult, 0, output, outOff, outputSize);
+			Reset ();
 			return outputSize;
 		}
 

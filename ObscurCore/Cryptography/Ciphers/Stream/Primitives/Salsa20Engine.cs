@@ -38,41 +38,19 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		*/
 		private int _cW0, _cW1, _cW2;
 
-		/**
-		* initialise a Salsa20 cipher.
-		*
-		* @param forEncryption whether or not we are for encryption.
-		* @param params the parameters required to set up the cipher.
-		* @exception ArgumentException if the params argument is
-		* inappropriate.
-		*/
-		public void Init(
-			bool				forEncryption, 
-			ICipherParameters	parameters)
-		{
-			/* 
-			* Salsa20 encryption and decryption is completely
-			* symmetrical, so the 'forEncryption' is 
-			* irrelevant. (Like 90% of stream ciphers)
-			*/
 
-			var ivParams = parameters as ParametersWithIV;
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			if (iv == null) 
+				throw new ArgumentNullException("iv", "Salsa20 initialisation requires an IV.");
+			if (iv.Length != 8)
+				throw new ArgumentException("Salsa20 requires exactly 8 bytes of IV.", "iv");
 
-			if (ivParams == null)
-				throw new ArgumentException("Salsa20 Init requires an IV", "parameters");
-
-			byte[] iv = ivParams.GetIV();
-
-			if (iv == null || iv.Length != 8)
-				throw new ArgumentException("Salsa20 requires exactly 8 bytes of IV");
-
-			var key = ivParams.Parameters as KeyParameter;
-
-			if (key == null)
-				throw new ArgumentException("Salsa20 Init requires a key", "parameters");
-
-			_workingKey = key.GetKey();
 			_workingIv = iv;
+
+			if (key == null) 
+				throw new ArgumentNullException("key", "Salsa20 initialisation requires a key.");
+
+			_workingKey = key;
 
 			setKey(_workingKey, _workingIv);
 		}

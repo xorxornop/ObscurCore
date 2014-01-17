@@ -51,26 +51,17 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             get { return 4*bytesPerWord; }
         }
 
-        /**
-        * initialise a RC5-32 cipher.
-        *
-        * @param forEncryption whether or not we are for encryption.
-        * @param parameters the parameters required to set up the cipher.
-        * @exception ArgumentException if the parameters argument is
-        * inappropriate.
-        */
-        public void Init(
-            bool				forEncryption,
-            ICipherParameters	parameters)
-        {
-            if (!(parameters is KeyParameter))
-                throw new ArgumentException("invalid parameter passed to RC6 init - " + parameters.GetType().ToString());
 
-            this.forEncryption = forEncryption;
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			if (key == null) {
+				throw new ArgumentNullException ("key");
+			} else if (!key.Length.IsBetween(16, 32)) {
+				throw new ArgumentException ("Key length incompatible.", "key");
+			}
 
-			KeyParameter p = (KeyParameter)parameters;
-			SetKey(p.GetKey());
-        }
+			this.forEncryption = encrypting;
+			SetKey(key);
+		}
 
         public int ProcessBlock(
             byte[]	input,

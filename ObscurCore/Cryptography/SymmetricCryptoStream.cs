@@ -75,7 +75,6 @@ namespace ObscurCore.Cryptography
 			if (key.IsNullOrZeroLength()) 
 				throw new ArgumentException("No key provided.", "key");
 
-			ICipherParameters cipherParams = null;
 		    switch (config.Type) {
                 case SymmetricCipherType.None:
 					throw new ConfigurationInvalidException("Type: None/null value is never set in a valid cipher configuration.");
@@ -93,23 +92,21 @@ namespace ObscurCore.Cryptography
                     if(!Athena.Cryptography.BlockCiphers[blockCipherEnum].AllowableBlockSizes.Contains(config.BlockSizeBits)) 
                         throw new NotSupportedException("Specified block size is unsupported.");
 
-					var blockWrapper = new BlockCipherConfigurationWrapper(config);
-					var blockCipher = Source.CreateBlockCipher(blockCipherEnum, blockWrapper.BlockSizeBits);
-					BlockCipherMode blockModeEnum = blockWrapper.Mode;
-					byte[] blockIV = blockWrapper.IV;
-					cipherParams = Source.CreateBlockCipherParameters(blockCipherEnum, key, blockIV);
+					var blockConfigWrapper = new BlockCipherConfigurationWrapper(config);
+					var blockCipher = Source.CreateBlockCipher(blockCipherEnum, blockConfigWrapper.BlockSizeBits);
+					BlockCipherMode blockModeEnum = blockConfigWrapper.Mode;
+					byte[] blockIV = blockConfigWrapper.IV;
 					// Overlay the cipher with the mode of operation
-					blockCipher = Source.OverlayBlockCipherWithMode(blockCipher, blockModeEnum,
-						config.BlockSizeBits);
+					blockCipher = Source.OverlayBlockCipherWithMode(blockCipher, blockModeEnum);
 
 					IBlockCipherPadding padding = null;
-					BlockCipherPadding paddingEnum = blockWrapper.Padding;
+					BlockCipherPadding paddingEnum = blockConfigWrapper.Padding;
 					if (paddingEnum != BlockCipherPadding.None) {
 						padding = Source.CreatePadding(paddingEnum);
 						padding.Init(StratCom.EntropySource);
 					}
 					
-					blockCipher.Init(encrypting, cipherParams);
+					blockCipher.Init(encrypting, key, blockIV);
 					_cipher = new BlockCipherWrapper(encrypting, blockCipher, padding);
 					
 		            break;
@@ -118,11 +115,9 @@ namespace ObscurCore.Cryptography
 					var streamWrapper = new StreamCipherConfigurationWrapper (config);
 					var streamCipherEnum = streamWrapper.StreamCipher;
 					var streamNonce = streamWrapper.Nonce;
-					// Requested a stream cipher.
-					cipherParams = Source.CreateStreamCipherParameters (streamCipherEnum, key, streamNonce);
 					// Instantiate the cipher
 					var streamCipher = Source.CreateStreamCipher (streamCipherEnum);
-					streamCipher.Init (encrypting, cipherParams);
+					streamCipher.Init (encrypting, key, streamNonce);
 					_cipher = new StreamCipherWrapper (encrypting, streamCipher, strideIncreaseFactor : 2);
 
 		            break;

@@ -41,34 +41,26 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             get { return digest; }
         }
 
-        public void Init(ICipherParameters parameters)
-        {
-            digest.Reset();
+		public void Init (byte[] key) {
+			digest.Reset();
 
-            byte[] key = ((KeyParameter)parameters).GetKey();
 			int keyLength = key.Length;
-
-            if (keyLength > blockLength)
-            {
-                digest.BlockUpdate(key, 0, key.Length);
-                digest.DoFinal(inputPad, 0);
+			if (keyLength > blockLength) {
+				digest.BlockUpdate(key, 0, key.Length);
+				digest.DoFinal(inputPad, 0);
 
 				keyLength = digestSize;
-            }
-            else
-            {
+			} else {
 				Array.Copy(key, 0, inputPad, 0, keyLength);
-            }
-
+			}
 			Array.Clear(inputPad, keyLength, blockLength - keyLength);
-            Array.Copy(inputPad, 0, outputPad, 0, blockLength);
-
+			Array.Copy(inputPad, 0, outputPad, 0, blockLength);
 			xor(inputPad, IPAD);
 			xor(outputPad, OPAD);
 
 			// Initialise the digest
 			digest.BlockUpdate(inputPad, 0, inputPad.Length);
-        }
+		}
 
         public int MacSize {
             get { return digestSize; }

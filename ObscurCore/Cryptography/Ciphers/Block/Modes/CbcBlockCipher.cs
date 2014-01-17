@@ -8,75 +8,51 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
     public class CbcBlockCipher
 		: IBlockCipher
     {
-        private byte[]			IV, cbcV, cbcNextV;
-		private int				blockSize;
-        private IBlockCipher	cipher;
-        private bool			encrypting;
+		private bool					_encrypting;
+		private byte[] 					_cbcV;
+		private byte[]					_cbcNextV;
 
-        /**
-        * Basic constructor.
-        *
-        * @param cipher the block cipher to be used as the basis of chaining.
-        */
-        public CbcBlockCipher(
-            IBlockCipher cipher)
+		private readonly byte[]			_iv;
+		private readonly int			_blockSize;
+		private readonly IBlockCipher	_cipher;
+        
+
+        public CbcBlockCipher(IBlockCipher cipher)
         {
-            this.cipher = cipher;
-            this.blockSize = cipher.BlockSize;
-
-            this.IV = new byte[blockSize];
-            this.cbcV = new byte[blockSize];
-            this.cbcNextV = new byte[blockSize];
+            this._cipher = cipher;
+            this._blockSize = cipher.BlockSize;
+            this._iv = new byte[_blockSize];
+            this._cbcV = new byte[_blockSize];
+            this._cbcNextV = new byte[_blockSize];
         }
 
         public IBlockCipher UnderlyingCipher {
-            get { return cipher; }
+            get { return _cipher; }
         }
 
-        /**
-        * Initialise the cipher and, possibly, the initialisation vector (IV).
-        * If an IV isn't passed as part of the parameter, the IV will be all zeros.
-        *
-        * @param forEncryption if true the cipher is initialised for
-        *  encryption, if false for decryption.
-        * @param param the key and other data required by the cipher.
-        * @exception ArgumentException if the parameters argument is
-        * inappropriate.
-        */
-        public void Init(
-            bool forEncryption,
-            ICipherParameters parameters)
-        {
-            this.encrypting = forEncryption;
+		/// <summary>
+		/// Initialise the cipher. 
+		/// If a supplied IV is short, it is handled in FIPS fashion.
+		/// </summary>
+		/// <param name="encrypting">If set to <c>true</c> encrypting.</param>
+		/// <param name="key">Key for the cipher.</param>
+		/// <param name="iv">Initialisation vector for the cipher mode.</param>
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			if(iv.IsNullOrZeroLength()) {
+				throw new ArgumentException ("CBC block cipher mode requires an initialisation vector for security.");
+			}
 
-            if (parameters is ParametersWithIV)
-            {
-                ParametersWithIV ivParam = (ParametersWithIV)parameters;
-                byte[]      iv = ivParam.GetIV();
-
-                if (iv.Length != blockSize)
-                {
-                    throw new ArgumentException("initialisation vector must be the same length as block size");
-                }
-
-                Array.Copy(iv, 0, IV, 0, iv.Length);
-
-				parameters = ivParam.Parameters;
-            }
-
+			this._encrypting = encrypting;
+			// Prepend the supplied IV with zeros (as per FIPS PUB 81)
+			Array.Copy(iv, 0, _iv, _iv.Length - iv.Length, iv.Length);
+			Array.Clear(_iv, 0, _iv.Length - iv.Length);
 			Reset();
+			_cipher.Init (encrypting, key, null); // Streaming mode - cipher always used in encryption mode
+		}
 
-			cipher.Init(encrypting, parameters);
-        }
-
-		/**
-        * return the algorithm name and mode.
-        *
-        * @return the name of the underlying algorithm followed by "/CBC".
-        */
         public string AlgorithmName
         {
-            get { return cipher.AlgorithmName + "/CBC"; }
+            get { return _cipher.AlgorithmName + "/CBC"; }
         }
 
 		public bool IsPartialBlockOkay
@@ -84,50 +60,30 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 			get { return false; }
 		}
 
-		/**
-        * return the block size of the underlying cipher.
-        *
-        * @return the block size of the underlying cipher.
-        */
-
         public int BlockSize {
-            get { return cipher.BlockSize; }
+			get { return _blockSize; }
         }
 
-        /**
-        * Process one block of input from the array in and write it to
-        * the out array.
-        *
-        * @param in the array containing the input data.
-        * @param inOff offset into the in array the data starts at.
-        * @param out the array the output data will be copied into.
-        * @param outOff the offset into the out array the output will start at.
-        * @exception DataLengthException if there isn't enough data in in, or
-        * space in out.
-        * @exception InvalidOperationException if the cipher isn't initialised.
-        * @return the number of bytes processed and produced.
-        */
         public int ProcessBlock(
             byte[]	input,
             int		inOff,
             byte[]	output,
             int		outOff)
         {
-            return (encrypting)
+            return (_encrypting)
 				?	EncryptBlock(input, inOff, output, outOff)
 				:	DecryptBlock(input, inOff, output, outOff);
         }
 
-        /**
-        * reset the chaining vector back to the IV and reset the underlying
-        * cipher.
-        */
+		/// <summary>
+		/// Reset the cipher to the same state as it was after the last init (if there was one).
+		/// </summary>
         public void Reset()
         {
-            Array.Copy(IV, 0, cbcV, 0, IV.Length);
-			Array.Clear(cbcNextV, 0, cbcNextV.Length);
+            Array.Copy(_iv, 0, _cbcV, 0, _iv.Length);
+			Array.Clear(_cbcNextV, 0, _cbcNextV.Length);
 
-            cipher.Reset();
+            _cipher.Reset();
         }
 
         /**
@@ -148,7 +104,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             byte[]      outBytes,
             int         outOff)
         {
-            if ((inOff + blockSize) > input.Length)
+            if ((inOff + _blockSize) > input.Length)
             {
                 throw new DataLengthException("input buffer too short");
             }
@@ -157,17 +113,17 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             * XOR the cbcV and the input,
             * then encrypt the cbcV
             */
-            for (int i = 0; i < blockSize; i++)
+            for (int i = 0; i < _blockSize; i++)
             {
-                cbcV[i] ^= input[inOff + i];
+                _cbcV[i] ^= input[inOff + i];
             }
 
-            int length = cipher.ProcessBlock(cbcV, 0, outBytes, outOff);
+            int length = _cipher.ProcessBlock(_cbcV, 0, outBytes, outOff);
 
             /*
             * copy ciphertext to cbcV
             */
-            Array.Copy(outBytes, outOff, cbcV, 0, cbcV.Length);
+            Array.Copy(outBytes, outOff, _cbcV, 0, _cbcV.Length);
 
             return length;
         }
@@ -190,21 +146,21 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             byte[]      outBytes,
             int         outOff)
         {
-            if ((inOff + blockSize) > input.Length)
+            if ((inOff + _blockSize) > input.Length)
             {
                 throw new DataLengthException("input buffer too short");
             }
 
-            Array.Copy(input, inOff, cbcNextV, 0, blockSize);
+            Array.Copy(input, inOff, _cbcNextV, 0, _blockSize);
 
-            int length = cipher.ProcessBlock(input, inOff, outBytes, outOff);
+            int length = _cipher.ProcessBlock(input, inOff, outBytes, outOff);
 
             /*
             * XOR the cbcV and the output
             */
-            for (int i = 0; i < blockSize; i++)
+            for (int i = 0; i < _blockSize; i++)
             {
-                outBytes[outOff + i] ^= cbcV[i];
+                outBytes[outOff + i] ^= _cbcV[i];
             }
 
             /*
@@ -212,9 +168,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             */
             byte[]  tmp;
 
-            tmp = cbcV;
-            cbcV = cbcNextV;
-            cbcNextV = tmp;
+            tmp = _cbcV;
+            _cbcV = _cbcNextV;
+            _cbcNextV = tmp;
 
             return length;
         }

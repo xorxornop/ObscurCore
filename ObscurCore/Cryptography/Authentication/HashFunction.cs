@@ -71,11 +71,6 @@
         /// <summary>
         /// Output size of 192 bits.
         /// </summary>
-        Tiger,
-
-        /// <summary>
-        /// Strong function with a 512 bit output. Recommended by the NESSIE project.
-        /// </summary>
-        Whirlpool
+        Tiger
     }
 }

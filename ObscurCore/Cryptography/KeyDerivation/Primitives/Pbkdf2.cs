@@ -17,8 +17,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 using System;
 using System.IO;
-using System.Security.Cryptography;
 
+using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Extensions.BitPacking;
 
 namespace ObscurCore.Cryptography.KeyDerivation.Primitives
@@ -27,7 +27,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 	{
 		#region PBKDF2
 		byte[] _saltBuffer, _digest, _digestT1;
-		KeyedHashAlgorithm _hmacAlgorithm;
+		IMac _hmacAlgorithm;
 		int _iterations;
 
 		/// <summary>
@@ -42,16 +42,16 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 		///     A unique salt means a unique PBKDF2 stream, even if the original key is identical.
 		/// </param>
 		/// <param name="iterations">The number of iterations to apply.</param>
-		public Pbkdf2(KeyedHashAlgorithm hmacAlgorithm, byte[] salt, int iterations)
+		public Pbkdf2(IMac hmacAlgorithm, byte[] salt, int iterations)
 		{
 			Helper.CheckNull("hmacAlgorithm", hmacAlgorithm);
 			Helper.CheckNull("salt", salt);
 			//Check.Length("salt", salt, 0, int.MaxValue - 4);
 			Helper.CheckRange("iterations", iterations, 1, int.MaxValue);
-			if (hmacAlgorithm.HashSize == 0 || hmacAlgorithm.HashSize % 8 != 0)
+			if (hmacAlgorithm.MacSize == 0)
 			{ throw new ArgumentException("Unsupported hash size.", "hmacAlgorithm"); }
 
-			int hmacLength = hmacAlgorithm.HashSize / 8;
+			int hmacLength = hmacAlgorithm.MacSize;
 			_saltBuffer = new byte[salt.Length + 4]; Array.Copy(salt, _saltBuffer, salt.Length);
 			_iterations = iterations; _hmacAlgorithm = hmacAlgorithm;
 			_digest = new byte[hmacLength]; _digestT1 = new byte[hmacLength];
@@ -90,7 +90,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 		/// <param name="iterations">The number of iterations to apply.</param>
 		/// <param name="derivedKeyLength">The desired length of the derived key.</param>
 		/// <returns>The derived key.</returns>
-		public static byte[] ComputeDerivedKey(KeyedHashAlgorithm hmacAlgorithm, byte[] salt, int iterations,
+		public static byte[] ComputeDerivedKey(IMac hmacAlgorithm, byte[] salt, int iterations,
 			int derivedKeyLength)
 		{
 			Helper.CheckRange("derivedKeyLength", derivedKeyLength, 0, int.MaxValue);
@@ -104,14 +104,22 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 		/// <summary>
 		/// Closes the stream, clearing memory and disposing of the HMAC algorithm.
 		/// </summary>
-		public override void Close()
-		{
-			Array.Clear(_saltBuffer, 0, _saltBuffer.Length);
-			Array.Clear(_digest, 0, _digest.Length);
-			Array.Clear(_digestT1, 0, _digestT1.Length);
+		protected override void Dispose (bool disposing) {
+			try {
+				if(disposing) {
+					Array.Clear(_saltBuffer, 0, _saltBuffer.Length);
+					Array.Clear(_digest, 0, _digest.Length);
+					Array.Clear(_digestT1, 0, _digestT1.Length);
+					_hmacAlgorithm.Reset ();
+				}
+			} finally {
+				base.Dispose (disposing);
+			}
+		}
 
-
-			_hmacAlgorithm.Clear();
+		public override void Close () {
+			this.Dispose (true);
+			GC.SuppressFinalize (this);
 		}
 
 		void ComputeBlock(uint pos)
@@ -131,10 +139,9 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 
 		void ComputeHmac(byte[] input, byte[] output)
 		{
-			_hmacAlgorithm.Initialize();
-			_hmacAlgorithm.TransformBlock(input, 0, input.Length, input, 0);
-			_hmacAlgorithm.TransformFinalBlock(new byte[0], 0, 0);
-			Array.Copy(_hmacAlgorithm.Hash, output, output.Length);
+			_hmacAlgorithm.Reset ();
+			_hmacAlgorithm.BlockUpdate (input, 0, input.Length);
+			_hmacAlgorithm.DoFinal (output, 0);
 		}
 		#endregion
 

@@ -65,10 +65,5 @@ namespace ObscurCore.Tests.Cryptography.Digests
         public void Tiger () {
             RunDigestTest(HashFunction.Tiger);
         }
-
-        [Test]
-        public void Whirlpool () {
-            RunDigestTest(HashFunction.Whirlpool);
-        }
     }
 }

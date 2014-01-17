@@ -605,15 +605,15 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			return BLOCK_SIZE;
 		}
 
-	    public void Init(
-			bool				forEncryption,
-			ICipherParameters	parameters)
-		{
-			if (!(parameters is KeyParameter))
-				throw new ArgumentException("only simple KeyParameter expected.");
 
-			setKey(forEncryption, ((KeyParameter)parameters).GetKey());
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			if (key == null) {
+				throw new ArgumentNullException ("key");
+			} else if (!key.Length.IsBetween(16, 32)) {
+				throw new ArgumentException ("Key length incompatible.", "key");
+			}
 
+			setKey (encrypting, key);
 			initialised = true;
 		}
 

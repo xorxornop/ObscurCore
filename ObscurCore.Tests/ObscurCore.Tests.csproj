@@ -63,7 +63,6 @@
     <Compile Include="Cryptography\BlockCiphers\NOEKEON.cs" />
     <Compile Include="Cryptography\BlockCiphers\RC6.cs" />
     <Compile Include="Cryptography\BlockCiphers\Serpent.cs" />
-    <Compile Include="Cryptography\BlockCiphers\TripleDES.cs" />
     <Compile Include="Cryptography\BlockCiphers\Twofish.cs" />
     <Compile Include="Cryptography\Digests\DigestTests.cs" />
     <Compile Include="Cryptography\DigestTestBase.cs" />
