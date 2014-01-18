@@ -27,12 +27,11 @@ namespace ObscurCore.Cryptography
 		/// <param name="b">Array to test for equality</param>
 		/// <returns>If arrays equal <c>true</c>, false otherwise.</returns>
 		public static bool SequenceEqualConstantTime (this byte[] a, byte[] b) {
-			int i = a.Length;
-			if (i != b.Length)
+			if (a.Length != b.Length)
 				return false;
+
 			int cmp = 0;
-			while (i != 0) {
-				--i;
+			for (int i = a.Length - 1; i >= 0; i--) {
 				cmp |= (a [i] ^ b [i]);
 			}
 			return cmp == 0;

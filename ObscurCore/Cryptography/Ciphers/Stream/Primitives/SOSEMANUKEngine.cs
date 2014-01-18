@@ -82,22 +82,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				throw new ArgumentException("Output buffer too short.");
             //CheckLimitExceeded();
 
+			if (_streamPtr < BufferLen) {
+				var blen = BufferLen - _streamPtr;
+				if (blen > len)
+					blen = len;
+				inBytes.XOR (inOff, _streamBuf, _streamPtr, outBytes, outOff, blen);
+				_streamPtr += blen;
+				inOff += blen;
+				outOff += blen;
+				len -= blen;
+			}
+
 			int remainder;
 			int blocks = Math.DivRem (len, BufferLen, out remainder);
 
 			for (int i = 0; i < blocks; i++) {
-				GenerateKeystream (_keyStream, 0, _keyStream.Length);
-				inBytes.XOR (inOff, _keyStream, 0, outBytes, outOff, BufferLen);
+				makeStreamBlock (_streamBuf, 0);
+				inBytes.XOR (inOff, _streamBuf, 0, outBytes, outOff, BufferLen);
 				inOff += BufferLen;
 				outOff += BufferLen;
 			}
 
 			if(remainder > 0) {
-				GenerateKeystream (_keyStream, 0, remainder);
-				for (int i = 0; i < remainder; i++) {
-					outBytes [outOff + i] = (byte) (inBytes [inOff + i] ^ _keyStream[i]);
-				}
+				makeStreamBlock (_streamBuf, 0);
+				inBytes.XOR (inOff, _streamBuf, 0, outBytes, outOff, remainder);
 			}
+			_streamPtr = remainder;
         }
 
         public void GetKeystream(byte[] buffer, int offset, int len) {

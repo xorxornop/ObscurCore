@@ -135,9 +135,6 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 		private void Init()
 		{
-			if (key.Length != 16)
-				throw new ArgumentException("The key must be 128 bits long");
-
 			_cnt = 0;
 
 			uint[] w = new uint[1280];
