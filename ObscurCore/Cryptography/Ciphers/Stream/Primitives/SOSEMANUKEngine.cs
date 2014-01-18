@@ -32,23 +32,23 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         private int lfsr5, lfsr6, lfsr7, lfsr8, lfsr9;
         private int fsmR1, fsmR2;
 
-        public void Init (bool forEncryption, ICipherParameters parameters) {
-            // forEncryption parameter is irrelevant for SOSEMANUK as operations are symmetrical, 
-            // but required by class interface
+        
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			if (iv == null) 
+				throw new ArgumentNullException("iv", "SOSEMANUK initialisation requires an IV.");
+			if (iv.Length != 16)
+				throw new ArgumentException("SOSEMANUK requires exactly 16 bytes (128 bits) of IV.", "iv");
 
-            var ivParams = parameters as ParametersWithIV;
-            if (ivParams == null) throw new ArgumentException("SOSEMANUK initialisation requires an IV.", "parameters");
-            _workingIV = ivParams.GetIV();
-            if (_workingIV == null || _workingIV.Length != 16)
-                throw new ArgumentException("SOSEMANUK requires exactly 16 bytes (128 bits) of IV.");
+			_workingIV = iv;
 
-            var key = ivParams.Parameters as KeyParameter;
-            if (key == null) throw new ArgumentException("SOSEMANUK initialisation requires a key.", "parameters");
-            _workingKey = key.GetKey();
-            if (_workingKey.Length != 32) throw new ArgumentException("SOSEMANUK requires exactly 32 bytes (256 bits) of key.", "parameters");
+			if (key == null) 
+				throw new ArgumentNullException("key", "SOSEMANUK initialisation requires a key.");
+			else if (key.Length != 32) throw new ArgumentException("SOSEMANUK requires exactly 32 bytes (256 bits) of key.", "key");
 
-            Reset();
-        }
+			_workingKey = key;
+
+			Reset ();
+		}
 
         public string AlgorithmName {
             get { return "SOSEMANUK"; }
@@ -82,16 +82,12 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				throw new ArgumentException("Output buffer too short.");
             //CheckLimitExceeded();
 
-
-
 			int remainder;
 			int blocks = Math.DivRem (len, BufferLen, out remainder);
 
 			for (int i = 0; i < blocks; i++) {
 				GenerateKeystream (_keyStream, 0, _keyStream.Length);
-				for (int j = 0; j < _keyStream.Length; j++) {
-					outBytes [outOff + j] = (byte) (inBytes [inOff + j] ^ _keyStream[i]);
-				}
+				inBytes.XOR (inOff, _keyStream, 0, outBytes, outOff, BufferLen);
 				inOff += BufferLen;
 				outOff += BufferLen;
 			}
