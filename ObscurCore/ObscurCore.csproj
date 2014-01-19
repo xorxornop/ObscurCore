@@ -153,8 +153,6 @@
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Rc4Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Salsa20Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\SosemanukEngine.cs" />
-    <Compile Include="Cryptography\Ciphers\Stream\Primitives\VmpcEngine.cs" />
-    <Compile Include="Cryptography\Ciphers\Stream\Primitives\VmpcKsa3Engine.cs" />
     <Compile Include="Cryptography\Entropy\DigestRandomGenerator.cs" />
     <Compile Include="Cryptography\Entropy\IRandomGenerator.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\ReversedWindowGenerator.cs" />

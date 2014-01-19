@@ -100,16 +100,6 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128, 192, 256 },
                     DefaultKeySize = 256
                 });   
-#if(INCLUDE_RIJNDAEL)
-                _blockCipherDirectory.Add(SymmetricBlockCipher.Rijndael, new SymmetricCipherDescription {
-                    Name = SymmetricBlockCipher.Rijndael.ToString(),
-                    DisplayName = "Rijndael",
-                    AllowableBlockSizes = new[] { 128, 192, 256 },
-                    DefaultBlockSize = 128,
-                    AllowableKeySizes = new[] { 128, 192, 256 },
-                    DefaultKeySize = 256
-                });
-#endif
                 _blockCipherDirectory.Add(SymmetricBlockCipher.Serpent, new SymmetricCipherDescription {
                     Name = SymmetricBlockCipher.Serpent.ToString(),
                     DisplayName = "Serpent",
@@ -173,12 +163,12 @@ namespace ObscurCore
                 });
 #if(INCLUDE_RC4)
                 _streamCipherDirectory.Add(SymmetricStreamCipher.Rc4, new SymmetricCipherDescription {
-                    Name = SymmetricStreamCipher.Rc4,
+					Name = SymmetricStreamCipher.Rc4.ToString(),
                     DisplayName = "RC4",
                     AllowableBlockSizes = new[] { -1 },
                     DefaultBlockSize = -1,
-                    AllowableIVSizes = new[] { 40, 56, 96, 128, 192, 256 },
-                    DefaultIVSize = 128,
+					AllowableIvSizes = new[] { -1 },
+					DefaultIvSize = 128,
                     AllowableKeySizes = new[] { 40, 56, 96, 128, 192, 256 },
                     DefaultKeySize = 128
                 });
@@ -203,28 +193,7 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 256 },
                     DefaultKeySize = 256
                 });
-#if(INCLUDE_VMPC)
-                _streamCipherDirectory.Add(SymmetricStreamCipher.Vmpc, new SymmetricCipherDescription {
-                    Name = SymmetricStreamCipher.Vmpc.ToString(),
-                    DisplayName = "Variably Modified Permutation Composition (VMPC)",
-                    AllowableBlockSizes = new[] { -1 },
-                    DefaultBlockSize = -1,
-                    AllowableIVSizes = new[] { 128, 192, 256 },
-                    DefaultIVSize = 256,
-                    AllowableKeySizes = new[] { 128, 192, 256 },
-                    DefaultKeySize = 256
-                });
-                _streamCipherDirectory.Add(SymmetricStreamCipher.Vmpc_Ksa3, new SymmetricCipherDescription {
-                    Name = SymmetricStreamCipher.Vmpc_Ksa3.ToString(),
-                    DisplayName = "Variably Modified Permutation Composition with Key Scheduling Algorithm 3 (VMPC-KSA3)",
-                    AllowableBlockSizes = new[] { -1 },
-                    DefaultBlockSize = -1,
-                    AllowableIVSizes = new[] { 128, 192, 256 },
-                    DefaultIVSize = 256,
-                    AllowableKeySizes = new[] { 128, 192, 256 },
-                    DefaultKeySize = 256
-                });
-#endif
+
                 // Add block cipher modes of operation
 
                 _blockCipherModeDirectory.Add(BlockCipherMode.Cbc, new SymmetricCipherModeDescription {

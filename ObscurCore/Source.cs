@@ -91,9 +91,6 @@ namespace ObscurCore
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Idea, blockSize => new IdeaEngine());
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Noekeon, blockSize => new NoekeonEngine());
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Rc6, blockSize => new Rc6Engine());
-#if INCLUDE_RIJNDAEL
-            EngineInstantiatorsBlock.Add(SymmetricBlockCiphers.Rijndael, blockSize => new RijndaelEngine(blockSize));
-#endif
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Serpent, blockSize => new SerpentEngine());
             EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Twofish, blockSize => new TwofishEngine());
 
@@ -105,14 +102,10 @@ namespace ObscurCore
 #endif
             EngineInstantiatorsStream.Add(SymmetricStreamCipher.Rabbit, () => new RabbitEngine());
 #if INCLUDE_RC4
-            _engineInstantiatorsStream.Add(SymmetricStreamCipher.Rc4, () => new Rc4Engine());
+			EngineInstantiatorsStream.Add(SymmetricStreamCipher.Rc4, () => new Rc4Engine());
 #endif
             EngineInstantiatorsStream.Add(SymmetricStreamCipher.Salsa20, () => new Salsa20Engine());
             EngineInstantiatorsStream.Add(SymmetricStreamCipher.Sosemanuk, () => new SosemanukEngine());
-#if INCLUDE_VMPC
-            EngineInstantiatorsBlock.Add(SymmetricStreamCiphers.VMPC, () => new VMPCEngine());
-            EngineInstantiatorsBlock.Add(SymmetricStreamCiphers.VMPC_KSA3, () => new VMPCKSA3Engine());
-#endif
 
             // ######################################## BLOCK MODES ########################################
             ModeInstantiatorsBlock.Add(BlockCipherMode.Cbc, (cipher) => new CbcBlockCipher(cipher));

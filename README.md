@@ -42,8 +42,10 @@ ObscurCore Packaging System
 **Please note that this part of the API is new and is subject to change on its way to a stable release. I'll try to minimise this, but the fact remains.**
 
 This feature is an automated system that acts somewhat like an very paranoid archive format.
-It allows you to bundle together collections of data and key agreements/actions.
-The index of the archive is encrypted too, as with the actual contents. Each item has its own unique encryption configuration, so you can have plausible deniability by using different keys on different items, and/or including decoy/fake items if needed. If deniability is not needed, one could use this feature by distributing a package to multiple recipients, with the different items encrypted with recipient-specific keys, so each sees only that which they are able to decrypt.
+It allows you to bundle together collections of messages, data, and key agreements/actions.
+
+The index of the archive is encrypted too, as with the actual contents. Each item has its own unique encryption configuration, so you can have plausible deniability by using different keys on different items, and/or including decoy/fake items if needed.
+If deniability is not needed, one could use this feature by distributing a package to multiple recipients, with the different items encrypted with recipient-specific keys, so each sees only that which they are able to decrypt.
 
 The index of the archive (where all the information about the items in the archive is kept), termed a *manifest* in ObscurCore nonclemature, is encrypted with a choice of schemes: 
 
@@ -60,7 +62,9 @@ The collection of items in the package is termed the "payload". There is a choic
 +	Frameshift
 +	Fabric
 
-Simple just concatenates them together in *random* order. Frameshift does the same but inserts *random* lengths of bytes before and after each item. Fabric multiplexes *random*-length stripes of each item, mixing them all up, much like the Rubberhose file system.
+Simple just concatenates them together in *random* order.
+Frameshift does the same but inserts *random* lengths of bytes before and after each item.
+Fabric multiplexes *random*-length stripes of each item, mixing them all up, much like the Rubberhose file system.
 
 ... Obviously, if it were *really* random, you'd never get your data back. No - rather, "random" is the output of a CSPRNG.
 
@@ -90,7 +94,7 @@ If a package is recieived from a sender for which you hold multiple keys on file
 
 Packages include the capability to communicate new keys (of any kind), or request invalidation of keys for subsequent communications. For example, you could send a symmetric key for manifests, so as to reduce overhead incurred by public key schemes.
 
-More to come... it is desired to be a very comprehensive system.
+More to come... it is designed to be a highly comprehensive system.
 
 
 Functionality exposed through streams
@@ -100,9 +104,9 @@ Functionality exposed through streams
 
 ### Encryption/decryption ###
 
-	var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCiphers.AES,
-		BlockCipherModes.CTR, BlockCipherPaddings.None);
-	using (var cs = new SymmetricCryptoStream(destStream, encrypting:true, config) ) {
+	var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCipher.Aes,
+		BlockCipherMode.Ctr, BlockCipherPadding.None);
+	using (var cs = new SymmetricCryptoStream(destStream, encrypting:true, config, key, closeOnDispose:false) ) {
 		sourceStream.CopyTo(cs);
 	}
 
@@ -113,40 +117,34 @@ These block ciphers are supported:
 +	Camellia
 +	CAST-5
 +	CAST-6
-+	GOST 28147-89 [disabled; optionally included]
 +	IDEA
 +	NOEKEON
 +	RC-6
-+	Rijndael [disabled; optionally included]
 +	Serpent
-+	TripleDES (3DES/DESEDE)
 +	Twofish
 
-... in CBC mode (variety of paddings provided), CTR, CFB, and OFB.
-Paddings available: ISO 10126-2, ISO/IEC 7816-4, PKCS7, TBC, and ANSI X.923.
+... in CTR, CBC mode (variety of paddings provided), CFB, and OFB.
+Paddings available for CBC mode: ISO 10126-2, ISO/IEC 7816-4, PKCS7, TBC, and ANSI X.923.
 
 And these stream ciphers:
 
 +	HC-128
 +	HC-256
-+	ISAAC [disabled; optionally included]
 +	Rabbit
 +	RC-4 [disabled; optionally included]
 +	Salsa20
 +	SOSEMANUK
-+	VMPC [disabled; optionally included]
-+	VMPC with KSA3 [disabled; optionally included]
 
 
 ### Hashing and MAC ###
 
 	byte[] hash = null;
-	using (var hs = new HashStream(destStream, writing:true, HashFunctions.BLAKE2B256, hash, closeOnDispose:true) ) {
+	using (var hs = new HashStream(destStream, writing:true, HashFunction.Blake2B256, hash, closeOnDispose:true) ) {
 		sourceStream.CopyTo(cs);
 	}
 
 	byte[] mac = null;
-	using (var ms = new MacStream(destStream, writing:true, MACFunctions.BLAKE2B256, mac, key, salt, config:null, closeOnDispose:true) ) {
+	using (var ms = new MacStream(destStream, writing:true, MacFunction.BlakeB256, mac, key, salt, config:null, closeOnDispose:true) ) {
 		sourceStream.CopyTo(cs);
 	}
 
@@ -164,7 +162,6 @@ Here's all the hash functions supported (HashFunctions enumeration) :
 +	SHA-2-256
 +	SHA-2-512
 +	Tiger
-+	Whirlpool
 
 And here's all the MAC functions (MACFunctions enumeration) :
 
@@ -192,7 +189,7 @@ Primitives
 		Parallelism = 2
 	};
 	var configBytes = config.SerialiseDto();
-	var derivedKey = Source.DeriveKeyWithKDF(KeyDerivationFunctions.Scrypt, key, salt, outputSizeBits, configBytes);
+	var derivedKey = Source.DeriveKeyWithKDF(KeyDerivationFunction.Scrypt, key, salt, outputSizeBits, configBytes);
 
 These are in serious need of a convenience method. It's on the list.
 

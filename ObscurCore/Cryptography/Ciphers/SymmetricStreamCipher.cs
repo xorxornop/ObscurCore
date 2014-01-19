@@ -1,4 +1,19 @@
-﻿namespace ObscurCore.Cryptography.Ciphers
+﻿//
+//  Copyright 2014  Matthew Ducker
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//        http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
+namespace ObscurCore.Cryptography.Ciphers
 {
     /// <summary>
     /// Symmetric stream ciphers able to be used in an ObscurCore CryptoStream.
@@ -16,13 +31,6 @@
         /// Same as <seealso cref="Hc128"/>, but 256-bit key.
         /// </summary>
         Hc256,
-#if INCLUDE_ISAAC
-    /// <summary>
-    /// Fast, classic pseudorandom number generator and stream cipher designed by Robert J. Jenkins Jr. in 1996. 
-    /// Used in UNIX for "shred" utility for securely overwriting data.
-    /// </summary>
-        Isaac,
-#endif
         /// <summary>
         /// 128-bit key high performance software-optimised stream cipher. 
         /// eSTREAM Phase 3 candidate. Patented, but free for non-commercial use.
@@ -43,18 +51,6 @@
         /// 256-bit key stream cipher designed for high performance and low resource use in software. 
         /// eSTREAM Phase 3 candidate. Free for any use.
         /// </summary>
-        Sosemanuk,
-
-#if INCLUDE_VMPC
-    /// <summary>
-    /// Variably Modified Permutation Composition. Very simple implementation, high performance stream cipher.
-    /// </summary><seealso cref="VMPC_KSA3"/>
-		Vmpc,
-
-        /// <summary>
-        /// Variant of VMPC with a strengthened key setup procedure.
-        /// </summary><seealso cref="VMPC"/>
-        Vmpc_Ksa3
-#endif
+        Sosemanuk
     }
 }

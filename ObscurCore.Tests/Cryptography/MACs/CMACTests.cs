@@ -42,12 +42,7 @@ namespace ObscurCore.Tests.Cryptography.MACs
         public void CMAC_CAST6 () {
              RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Cast6.ToString()), null, CreateRandomBytes(256));
         }
-#if(INCLUDE_GOST28147)
-        [Test]
-        public void CMAC_GOST28147 () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.GOST28147.ToString()), null, CreateRandomBytes(256));
-        }
-#endif
+
         [Test]
         public void CMAC_IDEA () {
 			RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Idea.ToString()));
@@ -62,12 +57,7 @@ namespace ObscurCore.Tests.Cryptography.MACs
         public void CMAC_RC6 () {
 			RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Rc6.ToString()), null, CreateRandomBytes(256));
         }
-#if(INCLUDE_RIJNDAEL)
-        [Test]
-        public void CMAC_Rijndael () {
-			RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCiphers.Rijndael.ToString()));
-        }
-#endif
+
         [Test]
         public void CMAC_Serpent () {
 			RunMACTest(function, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Serpent.ToString()), null, CreateRandomBytes(256));

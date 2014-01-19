@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
@@ -18,38 +19,33 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         private int		y;
         private byte[]	workingKey;
 
-        /**
-        * initialise a RC4 cipher.
-        *
-        * @param forEncryption whether or not we are for encryption.
-        * @param parameters the parameters required to set up the cipher.
-        * @exception ArgumentException if the parameters argument is
-        * inappropriate.
-        */
-        public void Init(
-            bool				forEncryption,
-            ICipherParameters	parameters)
-        {
-            if (parameters is KeyParameter)
-            {
-                /*
-                * RC4 encryption and decryption is completely
-                * symmetrical, so the 'forEncryption' is
-                * irrelevant.
-                */
-                workingKey = ((KeyParameter)parameters).GetKey();
-                SetKey(workingKey);
+		/// <summary>
+		/// Initialise the cipher.
+		/// </summary>
+		/// <param name="forEncryption">No effect for this cipher.</param>
+		/// <param name="encrypting">If set to <c>true</c> encrypting.</param>
+		/// <param name="key">Key for the cipher (required).</param>
+		/// <param name="iv">Not applicable for this cipher.</param>
+		/// <exception cref="ArgumentException">If the parameter argument is invalid (e.g. incorrect length).</exception>
+		public void Init (bool encrypting, byte[] key, byte[] iv) {
+			if (key == null) 
+				throw new ArgumentNullException("key", "RC4 initialisation requires a key.");
+			if (!Athena.Cryptography.StreamCiphers[SymmetricStreamCipher.Rc4].AllowableKeySizes.Contains(key.Length * 8))
+				throw new ArgumentException("Incompatible key size supplied.", "key");
 
-                return;
-            }
+			SetKey (key);
+		}
 
-            throw new ArgumentException("invalid parameter passed to RC4 init - " + parameters.GetType().ToString());
-        }
 
 		public string AlgorithmName
         {
             get { return "RC4"; }
         }
+
+		public int StateSize
+		{
+			get { return StateLength; }
+		}
 
 		public byte ReturnByte(
 			byte input)

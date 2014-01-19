@@ -32,10 +32,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
     <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
-    <DefineConstants>INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
+    <DefineConstants>INCLUDE_UNSAFE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
     <Optimize>true</Optimize>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <WarningLevel>4</WarningLevel>
@@ -99,8 +97,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cryptography\BlockCiphers\GOST28147.cs" />
-    <Compile Include="Cryptography\BlockCiphers\Rijndael.cs" />
     <None Include="packages.config" />
     <None Include="Packaging\Serialisation\Compression.cs" />
   </ItemGroup>

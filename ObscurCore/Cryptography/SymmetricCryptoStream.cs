@@ -55,10 +55,6 @@ namespace ObscurCore.Cryptography
 		private byte[] _tempBuffer;
 		private readonly RingByteBuffer _outBuffer;
 
-
-	    public SymmetricCryptoStream(Stream binding, bool encrypting, SymmetricCipherConfiguration config)
-	        : this(binding, encrypting, config, null, true) {}
-
 	    /// <summary>Initialises the stream and its associated cipher for operation automatically from provided configuration object.</summary>
 		/// <param name="binding">Stream to be written/read to/from.</param>
 		/// <param name="encrypting">Specifies whether the stream is for writing (encrypting) or reading (decryption).</param>

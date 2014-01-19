@@ -31,7 +31,6 @@
     </CustomCommands>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
@@ -39,7 +38,7 @@
     <WarningLevel>4</WarningLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="AfterBuild" name="Precompile" command="mono precompile.exe ../bin/${ProjectConfigName}/${TargetName} -o:../bin/${ProjectConfigName}/${ProjectName}Serialiser.dll -t:${ProjectName}Serialiser" workingdir="${ProjectDir}/precompiler" pauseExternalConsole="True" />
+        <Command type="AfterBuild" name="Precompile" command="mono precompile.exe ../bin/${ProjectConfigName}/${TargetName} -o:../bin/${ProjectConfigName}/${ProjectName}Serialiser.dll -t:${ProjectName}Serialiser" workingdir="${ProjectDir}/precompiler" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
@@ -50,8 +49,6 @@
     <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <WarningLevel>4</WarningLevel>
