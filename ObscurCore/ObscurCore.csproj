@@ -236,6 +236,7 @@
     <Compile Include="DataLengthException.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Hc128Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\CtrBlockCipher.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Primitives\XSalsa20Engine.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />

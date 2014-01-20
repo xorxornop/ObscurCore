@@ -180,9 +180,19 @@ namespace ObscurCore
                     DefaultBlockSize = -1,
                     AllowableIvSizes = new[] { 64 },
                     DefaultIvSize = 64,
-                    AllowableKeySizes = new[] { 256 },
+					AllowableKeySizes = new[] { 128, 256 },
                     DefaultKeySize = 256
                 });
+				_streamCipherDirectory.Add(SymmetricStreamCipher.XSalsa20, new SymmetricCipherDescription {
+					Name = SymmetricStreamCipher.XSalsa20.ToString(),
+					DisplayName = "XSalsa20",
+					AllowableBlockSizes = new[] { -1 },
+					DefaultBlockSize = -1,
+					AllowableIvSizes = new[] { 192 },
+					DefaultIvSize = 192,
+					AllowableKeySizes = new[] { 128, 256 },
+					DefaultKeySize = 256
+				});
                 _streamCipherDirectory.Add(SymmetricStreamCipher.Sosemanuk, new SymmetricCipherDescription {
                     Name = SymmetricStreamCipher.Sosemanuk.ToString(),
                     DisplayName = "SOSEMANUK",

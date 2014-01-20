@@ -105,6 +105,7 @@ namespace ObscurCore
 			EngineInstantiatorsStream.Add(SymmetricStreamCipher.Rc4, () => new Rc4Engine());
 #endif
             EngineInstantiatorsStream.Add(SymmetricStreamCipher.Salsa20, () => new Salsa20Engine());
+			EngineInstantiatorsStream.Add(SymmetricStreamCipher.XSalsa20, () => new XSalsa20Engine());
             EngineInstantiatorsStream.Add(SymmetricStreamCipher.Sosemanuk, () => new SosemanukEngine());
 
             // ######################################## BLOCK MODES ########################################

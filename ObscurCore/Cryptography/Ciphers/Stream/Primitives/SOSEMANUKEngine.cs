@@ -26,8 +26,6 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                                 _workingIV;
         private bool	        _initialised;
 
-		private byte[] _keyStream = new byte[BufferLen];
-
         private int lfsr0, lfsr1, lfsr2, lfsr3, lfsr4;
         private int lfsr5, lfsr6, lfsr7, lfsr8, lfsr9;
         private int fsmR1, fsmR2;

@@ -57,6 +57,12 @@ namespace ObscurCore.Tests.Cryptography.StreamCiphers
             RunEqualityTest(config);
         }
 
+		[Test]
+		public void XSalsa20_256 () {
+			var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.XSalsa20);
+			RunEqualityTest(config);
+		}
+
         [Test]
         public void SOSEMANUK () {
             var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Sosemanuk);

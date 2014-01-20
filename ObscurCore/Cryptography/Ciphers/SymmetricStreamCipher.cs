@@ -23,14 +23,17 @@ namespace ObscurCore.Cryptography.Ciphers
         None,
 
         /// <summary>
-        /// Stream cipher designed for fast operation in software. Simplified version of <seealso cref="Hc256"/>.
+		/// Stream cipher designed for fast operation in software. 
+		/// Simplified version of <seealso cref="Hc256"/>. 
+		/// eSTREAM Phase 3 finalist.
         /// </summary>
         Hc128,
 
         /// <summary>
-        /// Same as <seealso cref="Hc128"/>, but 256-bit key.
+		/// Stream cipher designed for fast operation in software. 256-bit key.
         /// </summary>
         Hc256,
+
         /// <summary>
         /// 128-bit key high performance software-optimised stream cipher. 
         /// eSTREAM Phase 3 candidate. Patented, but free for non-commercial use.
@@ -46,6 +49,11 @@ namespace ObscurCore.Cryptography.Ciphers
         /// 256-bit key stream cipher. eSTREAM Phase 3 candidate. Unpatented, free for any use.
         /// </summary>
         Salsa20,
+
+		/// <summary>
+		/// 256-bit key stream cipher. Improved version of <seealso cref="Salsa20"/>. Unpatented, free for any use.
+		/// </summary>
+		XSalsa20,
 
         /// <summary>
         /// 256-bit key stream cipher designed for high performance and low resource use in software. 
