@@ -63,14 +63,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 		private void Init()
 		{
-			if (key.Length != 32 && key.Length != 16)
-				throw new ArgumentException("The key must be 128/256 bits long");
-
-			if (iv.Length < 16)
-				throw new ArgumentException("The IV must be at least 128 bits long");
-
-			if (key.Length != 32)
-	        {
+			if (key.Length != 32) {
 				byte[] k = new byte[32];
 
 				Array.Copy(key, 0, k, 0, key.Length);
@@ -79,8 +72,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				key = k;
 			}
 
-			if (iv.Length < 32)
-			{
+			if (iv.Length < 32) {
 				byte[] newIV = new byte[32];
 
 				Array.Copy(iv, 0, newIV, 0, iv.Length);
@@ -136,13 +128,20 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 
 		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			this.iv = iv ?? new byte[0];
 			if(key == null) {
 				throw new ArgumentNullException("key", "HC-256 initialisation requires a key.");
-			} else if (key.Length != 32) {
-				throw new ArgumentException ("HC-256 requires an exactly 32 byte key.");
+			} else if (key.Length != 16 && key.Length != 32) {
+				throw new ArgumentException ("HC-256 requires a 16 or 32 byte key.");
 			}
 			this.key = key;
+
+			if(iv == null) {
+				throw new ArgumentNullException("iv", "HC-256 initialisation requires an IV.");
+			} else if (!key.Length.IsBetween(16, 32)) {
+				throw new ArgumentException ("HC-256 requires a 16 to 32 byte IV.", "iv");
+			}
+			this.iv = iv;
+
 			Init ();
 			initialised = true;
 		}
@@ -192,10 +191,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 							uint* inLongPtr = (uint*)(inPtr + inOff);
 							uint* outLongPtr = (uint*)(outPtr + outOff);
 							for (int i = 0; i < blocks; i++) {
-								outLongPtr [0] = inLongPtr [0] ^ Step ();
-								inLongPtr++;
-								outLongPtr++;
+								outLongPtr [i] = inLongPtr [i] ^ Step ();
 							}
+							inLongPtr += blocks;;
+							outLongPtr += blocks;
 						}
 					}
 				}
@@ -250,4 +249,5 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return (x >> bits) | (x << -bits);
 		}
 	}
+	
 }

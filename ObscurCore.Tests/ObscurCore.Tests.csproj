@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
+    <DefineConstants>DEBUG;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_RC4;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -51,17 +51,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cryptography\CipherTestBase.cs" />
-    <Compile Include="Cryptography\BlockCiphers\AES.cs" />
-    <Compile Include="Cryptography\BlockCiphers\Blowfish.cs" />
-    <Compile Include="Cryptography\BlockCiphers\CAST5.cs" />
-    <Compile Include="Cryptography\BlockCiphers\CAST6.cs" />
-    <Compile Include="Cryptography\BlockCiphers\Camellia.cs" />
-    <Compile Include="Cryptography\BlockCiphers\IDEA.cs" />
-    <Compile Include="Cryptography\BlockCiphers\NOEKEON.cs" />
-    <Compile Include="Cryptography\BlockCiphers\RC6.cs" />
-    <Compile Include="Cryptography\BlockCiphers\Serpent.cs" />
-    <Compile Include="Cryptography\BlockCiphers\Twofish.cs" />
     <Compile Include="Cryptography\Digests\DigestTests.cs" />
     <Compile Include="Cryptography\DigestTestBase.cs" />
     <Compile Include="Cryptography\Entropy\CSPRNGTests.cs" />
@@ -71,7 +60,6 @@
     <Compile Include="Cryptography\MACs\HMACTests.cs" />
     <Compile Include="Cryptography\MACs\MACTests.cs" />
     <Compile Include="Cryptography\MACTestBase.cs" />
-    <Compile Include="Cryptography\StreamCiphers\StreamCipherTests.cs" />
     <Compile Include="Cryptography\KeyProvider.cs" />
     <Compile Include="Packaging\Packages.cs" />
     <Compile Include="Packaging\Payload.cs" />
@@ -83,6 +71,27 @@
     <Compile Include="Packaging\Serialisation\SymmetricCipherConfiguration.cs" />
     <Compile Include="IOTestBase.cs" />
     <Compile Include="Packaging\Utilities.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\AES.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\Blowfish.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\Camellia.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\CAST5.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\CAST6.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\IDEA.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\NOEKEON.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\RC6.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\Serpent.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\Threefish.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\Twofish.cs" />
+    <Compile Include="Cryptography\Ciphers\BlockCipherTestBase.cs" />
+    <Compile Include="Cryptography\Ciphers\CipherTestBase.cs" />
+    <Compile Include="Cryptography\Ciphers\StreamCipherTestBase.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Hc256.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Hc128.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Salsa20.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\XSalsa20.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Rc4.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Rabbit.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Sosemanuk.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />
@@ -99,5 +108,8 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Packaging\Serialisation\Compression.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Cryptography\Ciphers\" />
   </ItemGroup>
 </Project>

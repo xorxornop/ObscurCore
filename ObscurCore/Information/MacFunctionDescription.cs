@@ -18,7 +18,7 @@ namespace ObscurCore.Information
     public sealed class MacFunctionDescription
     {
         /// <summary>
-        /// Name of the MAC function (must be a member of MACFunctionDirectory).
+        /// Name of the MAC function.
         /// </summary>
         public string Name { get; internal set; }
         /// <summary>

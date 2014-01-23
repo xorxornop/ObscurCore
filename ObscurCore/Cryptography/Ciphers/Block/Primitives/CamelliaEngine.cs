@@ -1,4 +1,5 @@
 using System;
+using ObscurCore.Cryptography;
 
 namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 {
@@ -609,7 +610,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 		public void Init (bool encrypting, byte[] key, byte[] iv) {
 			if (key == null) {
 				throw new ArgumentNullException ("key");
-			} else if (!key.Length.IsBetween(16, 32)) {
+			} else if (key.Length != 16 && key.Length != 24 && key.Length != 32) {
 				throw new ArgumentException ("Key length incompatible.", "key");
 			}
 

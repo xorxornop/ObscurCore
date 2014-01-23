@@ -15,15 +15,24 @@
 
 namespace ObscurCore.Cryptography.Ciphers
 {
-    interface ICipherWrapper
+	public interface ICipherWrapper
     {
         bool Encrypting { get; }
+
+		/// <summary>
+		/// The size of each discrete cipher operation in bytes. 
+		/// Calls may fail or have undefined behaviour if ProcessBytes(...) 
+		/// is called with sizes other than this. ProcessFinal calls can be 
+		/// this size or shorter.
+		/// </summary>
+		/// <value>The size of a cipher operation.</value>
         int OperationSize { get; }
 
 		/// <summary>
-		/// Description/name of the cipher construction, e.g. AES/CTR, or Blowfish/CBC/PKCS7.
+		/// Description/name of the cipher construction, e.g. AES/CTR, Blowfish/CBC/PKCS7, 
+		/// or XSalsa20 etc.
 		/// </summary>
-		/// <value>The name of the algorithm.</value>
+		/// <value>The name of the cipher algorithm.</value>
 		string AlgorithmName { get; }
 
         int ProcessBytes(byte[] input, int inputOffset, byte[] output, int outputOffset);

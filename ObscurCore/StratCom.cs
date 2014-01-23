@@ -25,7 +25,7 @@ namespace ObscurCore
     public static class StratCom
     {
         private const int InitialSeedSize = 64; // bytes
-        public static readonly SecureRandom EntropySource = SecureRandom.GetInstance("SHA256PRNG");
+		public static readonly SecureRandom EntropySource = SecureRandom.GetInstance("SHA256PRNG");
 
         internal static readonly DTOSerialiser Serialiser = new DTOSerialiser();
 

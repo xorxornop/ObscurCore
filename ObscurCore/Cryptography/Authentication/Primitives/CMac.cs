@@ -90,15 +90,13 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			this._cipher = new CbcBlockCipher(cipher);
 			this.macSize = macSizeInBits / 8;
 
-			_mac = new byte[cipher.BlockSize];
-
-			_buf = new byte[cipher.BlockSize];
-
 			_zeroes = new byte[cipher.BlockSize];
-
 			_nullCbcIv = new byte[cipher.BlockSize];
 
+			_buf = new byte[cipher.BlockSize];
 			_bufOff = 0;
+
+			_mac = new byte[this.macSize];
 		}
 
 		public string AlgorithmName
@@ -106,20 +104,31 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			get { return _cipher.AlgorithmName; }
 		}
 
+		private static int ShiftLeft(byte[] block, byte[] output)
+		{
+			int i = block.Length;
+			uint bit = 0;
+			while (--i >= 0)
+			{
+				uint b = block[i];
+				output[i] = (byte)((b << 1) | bit);
+				bit = (b >> 7) & 1;
+			}
+			return (int)bit;
+		}
+
 		private static byte[] doubleLu(
 			byte[] inBytes)
 		{
-			int FirstBit = (inBytes[0] & 0xFF) >> 7;
-			var ret = new byte[inBytes.Length];
-			for (int i = 0; i < inBytes.Length - 1; i++)
-			{
-				ret[i] = (byte)((inBytes[i] << 1) + ((inBytes[i + 1] & 0xFF) >> 7));
-			}
-			ret[inBytes.Length - 1] = (byte)(inBytes[inBytes.Length - 1] << 1);
-			if (FirstBit == 1)
-			{
-				ret[inBytes.Length - 1] ^= inBytes.Length == 16 ? Constant128 : Constant64;
-			}
+			byte[] ret = new byte[inBytes.Length];
+			int carry = ShiftLeft(inBytes, ret);
+			int xor = inBytes.Length == 16 ? Constant128 : Constant64;
+
+			/*			
+             * NOTE: This construction is an attempt at a constant-time implementation.
+             */
+			ret[inBytes.Length - 1] ^= (byte)(xor >> ((1 - carry) << 3));
+
 			return ret;
 		}
 

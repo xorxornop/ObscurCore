@@ -234,7 +234,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 			VerificationFunctionType functionType;
 			try {
 				functionType = keyConfirmation.FunctionType.ToEnum<VerificationFunctionType> ();
-			} catch (EnumerationValueUnknownException ex) {
+			} catch (EnumerationParsingException ex) {
 				throw new ConfigurationValueInvalidException ("Verification function type is unsupported/unknown.", ex);
 			}
 
@@ -250,7 +250,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 					KeyDerivationFunction kdfEnum;
 					try {
 						kdfEnum = keyConfirmation.FunctionName.ToEnum<KeyDerivationFunction> ();
-					} catch (EnumerationValueUnknownException ex) {
+					} catch (EnumerationParsingException ex) {
 						throw new ConfigurationValueInvalidException ("Key derivation function is unsupported/unknown.", ex);
 					}
 					validator = (key) => Source.DeriveKeyWithKdf (kdfEnum, key, keyConfirmation.Salt, 
@@ -260,7 +260,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 					MacFunction macFEnum;
 					try {
 						macFEnum = keyConfirmation.FunctionName.ToEnum<MacFunction> ();
-					} catch (EnumerationValueUnknownException ex) {
+					} catch (EnumerationParsingException ex) {
 						throw new ConfigurationValueInvalidException ("Key derivation function is unsupported/unknown.", ex);
 					}
 			        validator = (key) => {
@@ -277,7 +277,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 				HashFunction hashFEnum;
 					try {
 						hashFEnum = keyConfirmation.FunctionName.ToEnum<HashFunction> ();
-					} catch (EnumerationValueUnknownException ex) {
+					} catch (EnumerationParsingException ex) {
 						throw new ConfigurationValueInvalidException ("Hash/digest function is unsupported/unknown.", ex);
 					}
 					validator = (key) => {

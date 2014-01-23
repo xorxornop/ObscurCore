@@ -72,7 +72,10 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 			}
 			return ss;
 			#else
-			return Curve25519HansWolff.GetSharedSecret(privKey, pubKey);
+			//return Curve25519HansWolff.GetSharedSecret(privKey, pubKey);
+
+			return MontgomeryCurve25519.KeyExchange(pubKey, privKey); // TODO: CHANGE!
+
 			#endif
         }
 	}   

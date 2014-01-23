@@ -19,7 +19,6 @@ using System;
 using System.IO;
 
 using ObscurCore.Cryptography.Authentication;
-using ObscurCore.Extensions.BitPacking;
 
 namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 {

@@ -18,8 +18,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 using System;
 using System.Threading;
 
-using ObscurCore.Extensions.BitPacking;
-
 namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 {
 	public static class Scrypt

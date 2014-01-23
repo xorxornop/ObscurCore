@@ -3,27 +3,15 @@ using System.Text;
 
 namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 {
-	/**
-	* Class representing a simple version of a big decimal. A
-	* <code>SimpleBigDecimal</code> is basically a
-	* {@link java.math.BigInteger BigInteger} with a few digits on the right of
-	* the decimal point. The number of (binary) digits on the right of the decimal
-	* point is called the <code>scale</code> of the <code>SimpleBigDecimal</code>.
-	* Unlike in {@link java.math.BigDecimal BigDecimal}, the scale is not adjusted
-	* automatically, but must be set manually. All <code>SimpleBigDecimal</code>s
-	* taking part in the same arithmetic operation must have equal scale. The
-	* result of a multiplication of two <code>SimpleBigDecimal</code>s returns a
-	* <code>SimpleBigDecimal</code> with double scale.
-	*/
 	internal class SimpleBigDecimal
-		//	: Number
+	//	: Number
 	{
 		//	private static final long serialVersionUID = 1L;
 
 		private readonly BigInteger	bigInt;
 		private readonly int		scale;
 
-		/**
+		/*		*
 		* Returns a <code>SimpleBigDecimal</code> representing the same numerical
 		* value as <code>value</code>.
 		* @param value The value of the <code>SimpleBigDecimal</code> to be
@@ -37,7 +25,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return new SimpleBigDecimal(val.ShiftLeft(scale), scale);
 		}
 
-		/**
+		/*		*
 		* Constructor for <code>SimpleBigDecimal</code>. The value of the
 		* constructed <code>SimpleBigDecimal</code> Equals <code>bigInt / 
 		* 2<sup>scale</sup></code>.
@@ -183,7 +171,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 				return bigInt.ToString();
 
 			BigInteger floorBigInt = Floor();
-	        
+
 			BigInteger fract = bigInt.Subtract(floorBigInt.ShiftLeft(scale));
 			if (bigInt.SignValue < 0)
 			{
@@ -197,7 +185,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			string leftOfPoint = floorBigInt.ToString();
 
 			char[] fractCharArr = new char[scale];
-				string fractStr = fract.ToString(2);
+			string fractStr = fract.ToString(2);
 			int fractLen = fractStr.Length;
 			int zeroes = scale - fractLen;
 			for (int i = 0; i < zeroes; i++)
@@ -236,6 +224,5 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 		{
 			return bigInt.GetHashCode() ^ scale;
 		}
-
 	}
 }

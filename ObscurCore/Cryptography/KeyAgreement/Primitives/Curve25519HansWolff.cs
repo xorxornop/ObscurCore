@@ -75,11 +75,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 		/* sahn0:
 		* Using this class instead of long[10] to avoid bounds checks. */
 
-		private sealed class Long10
+		private struct Long10
 		{
-			public Long10()
-			{
-			}
 
 			public Long10(
 				long n0, long n1, long n2, long n3, long n4,

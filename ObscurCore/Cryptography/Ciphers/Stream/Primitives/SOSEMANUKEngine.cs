@@ -15,46 +15,58 @@
 
 using System;
 using ObscurCore.Cryptography.Entropy;
-using ObscurCore.Extensions.BitPacking;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
     public sealed class SosemanukEngine : IStreamCipher, ICsprngCompatible
     {
+		private const int BufferLen = 80;
+
+		/// <summary>
+		/// Internal buffer for partial blocks.
+		/// </summary>
+		private readonly byte[] _streamBuf = new byte[BufferLen];
+
+		/// <summary>
+		/// Points to the first stream byte which 
+		/// has been computed but not output.
+		/// </summary>
+		private int _streamPtr = BufferLen;
+
         // Stores engine state
+		private bool	        _initialised;
         private byte[]          _workingKey,
                                 _workingIV;
-        private bool	        _initialised;
 
-        private int lfsr0, lfsr1, lfsr2, lfsr3, lfsr4;
-        private int lfsr5, lfsr6, lfsr7, lfsr8, lfsr9;
-        private int fsmR1, fsmR2;
-
+        private uint lfsr0, lfsr1, lfsr2, lfsr3, lfsr4;
+        private uint lfsr5, lfsr6, lfsr7, lfsr8, lfsr9;
+        private uint fsmR1, fsmR2;
+		// Subkeys for Serpent24: 100 32-bit words.
+		private readonly uint[] _serpent24SubKeys = new uint[100];
         
 		public void Init (bool encrypting, byte[] key, byte[] iv) {
 			if (iv == null) 
 				throw new ArgumentNullException("iv", "SOSEMANUK initialisation requires an IV.");
-			if (iv.Length != 16)
-				throw new ArgumentException("SOSEMANUK requires exactly 16 bytes (128 bits) of IV.", "iv");
-
-			_workingIV = iv;
+			if (!iv.Length.IsBetween(4, 16))
+				throw new ArgumentException("SOSEMANUK requires 4 to 16 bytes (32 to 128 bits) of IV.", "iv");
 
 			if (key == null) 
 				throw new ArgumentNullException("key", "SOSEMANUK initialisation requires a key.");
-			else if (key.Length != 32) throw new ArgumentException("SOSEMANUK requires exactly 32 bytes (256 bits) of key.", "key");
+			else if (!key.Length.IsBetween(8, 32)) 
+				throw new ArgumentException("SOSEMANUK requires 8 to 32 bytes (64 to 256 bits) of key.", "key");
 
-			_workingKey = key;
-
-			Reset ();
+			KeySetup(key);
+			IVSetup(iv);
+			_initialised = true;
 		}
 
         public string AlgorithmName {
-            get { return "SOSEMANUK"; }
+			get { return Athena.Cryptography.StreamCiphers[SymmetricStreamCipher.Sosemanuk].DisplayName; }
         }
 
 		public int StateSize
 		{
-			get { return 80; }
+			get { return BufferLen; }
 		}
 
         public void Reset () {
@@ -64,21 +76,28 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         }
 
         public byte ReturnByte (byte input) {
-            if (!_initialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
-
+            if (!_initialised) 
+				throw new InvalidOperationException (AlgorithmName + " not initialised.");
             //CheckLimitExceeded();
-
-            var outByte = new byte[1];
-            GenerateKeystream(outByte, 0, 1);
-            return (byte)(outByte[0] ^ input);
+		
+			if (_streamPtr == BufferLen) {
+				makeStreamBlock (_streamBuf, 0);
+				_streamPtr = 0;
+			}
+			return (byte)(input ^ _streamBuf[_streamPtr++]);
         }
 
         public void ProcessBytes (byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff) {
-            if (!_initialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
-            if ((inOff + len) > inBytes.Length) throw new ArgumentException("Input buffer too short.");
+            if (!_initialised) 
+				throw new InvalidOperationException(AlgorithmName + " not initialised.");
+			if ((inOff + len) > inBytes.Length) 
+				throw new ArgumentException ("Input buffer too short.");
 			if ((outOff + len) > outBytes.Length) 
 				throw new ArgumentException("Output buffer too short.");
             //CheckLimitExceeded();
+
+			if (len == 0)
+				return;
 
 			if (_streamPtr < BufferLen) {
 				var blen = BufferLen - _streamPtr;
@@ -92,9 +111,9 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			}
 
 			int remainder;
-			int blocks = Math.DivRem (len, BufferLen, out remainder);
+			var blocks = Math.DivRem (len, BufferLen, out remainder);
 
-			for (int i = 0; i < blocks; i++) {
+			for (var i = 0; i < blocks; i++) {
 				makeStreamBlock (_streamBuf, 0);
 				inBytes.XOR (inOff, _streamBuf, 0, outBytes, outOff, BufferLen);
 				inOff += BufferLen;
@@ -104,8 +123,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			if(remainder > 0) {
 				makeStreamBlock (_streamBuf, 0);
 				inBytes.XOR (inOff, _streamBuf, 0, outBytes, outOff, remainder);
+				_streamPtr = remainder;
 			}
-			_streamPtr = remainder;
         }
 
         public void GetKeystream(byte[] buffer, int offset, int len) {
@@ -127,18 +146,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
         #region Private implementation
 
-        // Subkeys for Serpent24: 100 32-bit words.
-        private readonly int[] _serpent24SubKeys = new int[100];
-        private static readonly int[] MulAlpha = new int[256];
-        private static readonly int[] DivAlpha = new int[256];
-
-        /*
-         * Internal buffer for partial blocks. "streamPtr" points to the 
-         * first stream byte which has been computed but not output.
-         */
-        private const int BufferLen = 80;
-        private readonly byte[] _streamBuf = new byte[BufferLen];
-        private int _streamPtr = BufferLen;
+		private static readonly uint[] MulAlpha = new uint[256];
+		private static readonly uint[] DivAlpha = new uint[256];
 
         static SosemanukEngine() {
             /*
@@ -147,17 +156,17 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
              * conventionaly, but this is actually not used in our
              * computations.
              */
-            int[] expb = new int[256];
-            for (int i = 0, x = 0x01; i < 0xFF; i++) {
+			uint[] expb = new uint[256];
+			for (uint i = 0, x = 0x01; i < 0xFF; i++) {
                 expb[i] = x;
                 x <<= 1;
                 if (x > 0xFF)
                     x ^= 0x1A9;
             }
             expb[0xFF] = 0x00;
-            int[] logb = new int[256];
+			uint[] logb = new uint[256];
             for (var i = 0; i < 0x100; i++)
-                logb[expb[i]] = i;
+				logb[expb[i]] = (uint)i;
 
             /*
              * We now compute mulAlpha[] and divAlpha[]. For all
@@ -174,8 +183,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
              */
             MulAlpha[0x00] = 0x00000000;
             DivAlpha[0x00] = 0x00000000;
-            for (int x = 1; x < 0x100; x++) {
-                int ex = logb[x];
+            for (uint x = 1; x < 0x100; x++) {
+                uint ex = logb[x];
                 MulAlpha[x] = (expb[(ex + 23) % 255] << 24)
                     | (expb[(ex + 245) % 255] << 16)
                     | (expb[(ex + 48) % 255] << 8)
@@ -211,72 +220,72 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
         }
 
-        private static int RotLeft (int x, int rot) {
+        private static uint RotLeft (uint x, int rot) {
             return (x << rot) | (x >> (32 - rot));
         }
 
-        private static void Encode32LE (int val, byte[] buf, int off) {
+        private static void Encode32LE (uint val, byte[] buf, int off) {
             buf[off] = (byte) val;
             buf[off + 1] = (byte) (val >> 8);
             buf[off + 2] = (byte) (val >> 16);
             buf[off + 3] = (byte) (val >> 24);
         }
 
-        private static int Decode32LE (byte[] buf, int off) {
-            return (buf[off] & 0xFF)
-                | ((buf[off + 1] & 0xFF) << 8)
-                | ((buf[off + 2] & 0xFF) << 16)
-                | ((buf[off + 3] & 0xFF) << 24);
+        private static uint Decode32LE (byte[] buf, int off) {
+			return (buf[off] & (uint)0xFF)
+				| ((buf[off + 1] & (uint)0xFF) << 8)
+				| ((buf[off + 2] & (uint)0xFF) << 16)
+				| ((buf[off + 3] & (uint)0xFF) << 24);
         }
 
         private void makeStreamBlock(byte[] buf, int off)
 	    {
-		    int s0 = lfsr0;
-		    int s1 = lfsr1;
-		    int s2 = lfsr2;
-		    int s3 = lfsr3;
-		    int s4 = lfsr4;
-		    int s5 = lfsr5;
-		    int s6 = lfsr6;
-		    int s7 = lfsr7;
-		    int s8 = lfsr8;
-		    int s9 = lfsr9;
-		    int r1 = fsmR1;
-		    int r2 = fsmR2;
-		    int f0, f1, f2, f3, f4;
-		    int v0, v1, v2, v3;
-		    int tt;
+		    uint s0 = lfsr0;
+		    uint s1 = lfsr1;
+		    uint s2 = lfsr2;
+		    uint s3 = lfsr3;
+		    uint s4 = lfsr4;
+		    uint s5 = lfsr5;
+		    uint s6 = lfsr6;
+		    uint s7 = lfsr7;
+		    uint s8 = lfsr8;
+		    uint s9 = lfsr9;
+		    uint r1 = fsmR1;
+		    uint r2 = fsmR2;
+		    uint f0, f1, f2, f3, f4;
+		    uint v0, v1, v2, v3;
+		    uint tt;
 
 		    tt = r1;
 		    r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v0 = s0;
-		    s0 = ((s0 << 8) ^ MulAlpha[(int)((uint)s0 >> 24)])
-			    ^ ((int)((uint)s3 >> 8) ^ DivAlpha[s3 & 0xFF]) ^ s9;
+		    s0 = ((s0 << 8) ^ MulAlpha[(uint)((uint)s0 >> 24)])
+			    ^ ((uint)((uint)s3 >> 8) ^ DivAlpha[s3 & 0xFF]) ^ s9;
 		    f0 = (s9 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v1 = s1;
-		    s1 = ((s1 << 8) ^ MulAlpha[(int)((uint)s1 >> 24)])
-			    ^ ((int)((uint)s4 >> 8) ^ DivAlpha[s4 & 0xFF]) ^ s0;
+		    s1 = ((s1 << 8) ^ MulAlpha[(uint)((uint)s1 >> 24)])
+			    ^ ((uint)((uint)s4 >> 8) ^ DivAlpha[s4 & 0xFF]) ^ s0;
 		    f1 = (s0 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v2 = s2;
-		    s2 = ((s2 << 8) ^ MulAlpha[(int)((uint)s2 >> 24)])
-			    ^ ((int)((uint)s5 >> 8) ^ DivAlpha[s5 & 0xFF]) ^ s1;
+		    s2 = ((s2 << 8) ^ MulAlpha[(uint)((uint)s2 >> 24)])
+			    ^ ((uint)((uint)s5 >> 8) ^ DivAlpha[s5 & 0xFF]) ^ s1;
 		    f2 = (s1 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v3 = s3;
-		    s3 = ((s3 << 8) ^ MulAlpha[(int)((uint)s3 >> 24)])
-			    ^ ((int)((uint)s6 >> 8) ^ DivAlpha[s6 & 0xFF]) ^ s2;
+		    s3 = ((s3 << 8) ^ MulAlpha[(uint)((uint)s3 >> 24)])
+			    ^ ((uint)((uint)s6 >> 8) ^ DivAlpha[s6 & 0xFF]) ^ s2;
 		    f3 = (s2 + r1) ^ r2;
 
 		    /*
@@ -311,32 +320,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v0 = s4;
-		    s4 = ((s4 << 8) ^ MulAlpha[(int)((uint)s4 >> 24)])
-			    ^ ((int)((uint)s7 >> 8) ^ DivAlpha[s7 & 0xFF]) ^ s3;
+		    s4 = ((s4 << 8) ^ MulAlpha[(uint)((uint)s4 >> 24)])
+			    ^ ((uint)((uint)s7 >> 8) ^ DivAlpha[s7 & 0xFF]) ^ s3;
 		    f0 = (s3 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v1 = s5;
-		    s5 = ((s5 << 8) ^ MulAlpha[(int)((uint)s5 >> 24)])
-			    ^ ((int)((uint)s8 >> 8) ^ DivAlpha[s8 & 0xFF]) ^ s4;
+		    s5 = ((s5 << 8) ^ MulAlpha[(uint)((uint)s5 >> 24)])
+			    ^ ((uint)((uint)s8 >> 8) ^ DivAlpha[s8 & 0xFF]) ^ s4;
 		    f1 = (s4 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v2 = s6;
-		    s6 = ((s6 << 8) ^ MulAlpha[(int)((uint)s6 >> 24)])
-			    ^ ((int)((uint)s9 >> 8) ^ DivAlpha[s9 & 0xFF]) ^ s5;
+		    s6 = ((s6 << 8) ^ MulAlpha[(uint)((uint)s6 >> 24)])
+			    ^ ((uint)((uint)s9 >> 8) ^ DivAlpha[s9 & 0xFF]) ^ s5;
 		    f2 = (s5 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v3 = s7;
-		    s7 = ((s7 << 8) ^ MulAlpha[(int)((uint)s7 >> 24)])
-			    ^ ((int)((uint)s0 >> 8) ^ DivAlpha[s0 & 0xFF]) ^ s6;
+		    s7 = ((s7 << 8) ^ MulAlpha[(uint)((uint)s7 >> 24)])
+			    ^ ((uint)((uint)s0 >> 8) ^ DivAlpha[s0 & 0xFF]) ^ s6;
 		    f3 = (s6 + r1) ^ r2;
 
 		    /*
@@ -371,32 +380,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v0 = s8;
-		    s8 = ((s8 << 8) ^ MulAlpha[(int)((uint)s8 >> 24)])
-			    ^ ((int)((uint)s1 >> 8) ^ DivAlpha[s1 & 0xFF]) ^ s7;
+		    s8 = ((s8 << 8) ^ MulAlpha[(uint)((uint)s8 >> 24)])
+			    ^ ((uint)((uint)s1 >> 8) ^ DivAlpha[s1 & 0xFF]) ^ s7;
 		    f0 = (s7 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v1 = s9;
-		    s9 = ((s9 << 8) ^ MulAlpha[(int)((uint)s9 >> 24)])
-			    ^ ((int)((uint)s2 >> 8) ^ DivAlpha[s2 & 0xFF]) ^ s8;
+		    s9 = ((s9 << 8) ^ MulAlpha[(uint)((uint)s9 >> 24)])
+			    ^ ((uint)((uint)s2 >> 8) ^ DivAlpha[s2 & 0xFF]) ^ s8;
 		    f1 = (s8 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v2 = s0;
-		    s0 = ((s0 << 8) ^ MulAlpha[(int)((uint)s0 >> 24)])
-			    ^ ((int)((uint)s3 >> 8) ^ DivAlpha[s3 & 0xFF]) ^ s9;
+		    s0 = ((s0 << 8) ^ MulAlpha[(uint)((uint)s0 >> 24)])
+			    ^ ((uint)((uint)s3 >> 8) ^ DivAlpha[s3 & 0xFF]) ^ s9;
 		    f2 = (s9 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v3 = s1;
-		    s1 = ((s1 << 8) ^ MulAlpha[(int)((uint)s1 >> 24)])
-			    ^ ((int)((uint)s4 >> 8) ^ DivAlpha[s4 & 0xFF]) ^ s0;
+		    s1 = ((s1 << 8) ^ MulAlpha[(uint)((uint)s1 >> 24)])
+			    ^ ((uint)((uint)s4 >> 8) ^ DivAlpha[s4 & 0xFF]) ^ s0;
 		    f3 = (s0 + r1) ^ r2;
 
 		    /*
@@ -431,32 +440,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v0 = s2;
-		    s2 = ((s2 << 8) ^ MulAlpha[(int)((uint)s2 >> 24)])
-			    ^ ((int)((uint)s5 >> 8) ^ DivAlpha[s5 & 0xFF]) ^ s1;
+		    s2 = ((s2 << 8) ^ MulAlpha[(uint)((uint)s2 >> 24)])
+			    ^ ((uint)((uint)s5 >> 8) ^ DivAlpha[s5 & 0xFF]) ^ s1;
 		    f0 = (s1 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v1 = s3;
-		    s3 = ((s3 << 8) ^ MulAlpha[(int)((uint)s3 >> 24)])
-			    ^ ((int)((uint)s6 >> 8) ^ DivAlpha[s6 & 0xFF]) ^ s2;
+		    s3 = ((s3 << 8) ^ MulAlpha[(uint)((uint)s3 >> 24)])
+			    ^ ((uint)((uint)s6 >> 8) ^ DivAlpha[s6 & 0xFF]) ^ s2;
 		    f1 = (s2 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v2 = s4;
-		    s4 = ((s4 << 8) ^ MulAlpha[(int)((uint)s4 >> 24)])
-			    ^ ((int)((uint)s7 >> 8) ^ DivAlpha[s7 & 0xFF]) ^ s3;
+		    s4 = ((s4 << 8) ^ MulAlpha[(uint)((uint)s4 >> 24)])
+			    ^ ((uint)((uint)s7 >> 8) ^ DivAlpha[s7 & 0xFF]) ^ s3;
 		    f2 = (s3 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v3 = s5;
-		    s5 = ((s5 << 8) ^ MulAlpha[(int)((uint)s5 >> 24)])
-			    ^ ((int)((uint)s8 >> 8) ^ DivAlpha[s8 & 0xFF]) ^ s4;
+		    s5 = ((s5 << 8) ^ MulAlpha[(uint)((uint)s5 >> 24)])
+			    ^ ((uint)((uint)s8 >> 8) ^ DivAlpha[s8 & 0xFF]) ^ s4;
 		    f3 = (s4 + r1) ^ r2;
 
 		    /*
@@ -491,32 +500,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v0 = s6;
-		    s6 = ((s6 << 8) ^ MulAlpha[(int)((uint)s6 >> 24)])
-			    ^ ((int)((uint)s9 >> 8) ^ DivAlpha[s9 & 0xFF]) ^ s5;
+		    s6 = ((s6 << 8) ^ MulAlpha[(uint)((uint)s6 >> 24)])
+			    ^ ((uint)((uint)s9 >> 8) ^ DivAlpha[s9 & 0xFF]) ^ s5;
 		    f0 = (s5 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v1 = s7;
-		    s7 = ((s7 << 8) ^ MulAlpha[(int)((uint)s7 >> 24)])
-			    ^ ((int)((uint)s0 >> 8) ^ DivAlpha[s0 & 0xFF]) ^ s6;
+		    s7 = ((s7 << 8) ^ MulAlpha[(uint)((uint)s7 >> 24)])
+			    ^ ((uint)((uint)s0 >> 8) ^ DivAlpha[s0 & 0xFF]) ^ s6;
 		    f1 = (s6 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v2 = s8;
-		    s8 = ((s8 << 8) ^ MulAlpha[(int)((uint)s8 >> 24)])
-			    ^ ((int)((uint)s1 >> 8) ^ DivAlpha[s1 & 0xFF]) ^ s7;
+		    s8 = ((s8 << 8) ^ MulAlpha[(uint)((uint)s8 >> 24)])
+			    ^ ((uint)((uint)s1 >> 8) ^ DivAlpha[s1 & 0xFF]) ^ s7;
 		    f2 = (s7 + r1) ^ r2;
 
 		    tt = r1;
 		    r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
 		    r2 = RotLeft(tt * 0x54655307, 7);
 		    v3 = s9;
-		    s9 = ((s9 << 8) ^ MulAlpha[(int)((uint)s9 >> 24)])
-                ^ ((int) ((uint) s2 >> 8) ^ DivAlpha[s2 & 0xFF]) ^ s8;
+		    s9 = ((s9 << 8) ^ MulAlpha[(uint)((uint)s9 >> 24)])
+                ^ ((uint) ((uint) s2 >> 8) ^ DivAlpha[s2 & 0xFF]) ^ s8;
 		    f3 = (s8 + r1) ^ r2;
 
 		    /*
@@ -565,26 +574,37 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         /// Initialise the engine state with key material.
         /// </summary>
         private void KeySetup (byte[] key) {
-            int w0, w1, w2, w3, w4, w5, w6, w7;
-            int r0, r1, r2, r3, r4, tt;
-            int i = 0;
+			if (key.Length == 32) {
+				_workingKey = key;
+			} else {
+				_workingKey = new byte[32];
+				Array.Copy(key, 0, _workingKey, 0, key.Length);
+				_workingKey[key.Length] = 0x01;
+				for (int j = key.Length + 1; j < _workingKey.Length; j++) {
+					_workingKey [j] = 0x00;
+				}
+			}
 
-			w0 = key.LittleEndianToInt32 (0);
-			w1 = key.LittleEndianToInt32 (4);
-			w2 = key.LittleEndianToInt32 (8);
-			w3 = key.LittleEndianToInt32 (12);
-			w4 = key.LittleEndianToInt32 (16);
-			w5 = key.LittleEndianToInt32 (20);
-			w6 = key.LittleEndianToInt32 (24);
-			w7 = key.LittleEndianToInt32 (28);
+			uint w0, w1, w2, w3, w4, w5, w6, w7;
+            uint r0, r1, r2, r3, r4, tt;
+            uint i = 0;
 
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (0)));
+			w0 = _workingKey.LittleEndianToUInt32 (0);
+			w1 = _workingKey.LittleEndianToUInt32 (4);
+			w2 = _workingKey.LittleEndianToUInt32 (8);
+			w3 = _workingKey.LittleEndianToUInt32 (12);
+			w4 = _workingKey.LittleEndianToUInt32 (16);
+			w5 = _workingKey.LittleEndianToUInt32 (20);
+			w6 = _workingKey.LittleEndianToUInt32 (24);
+			w7 = _workingKey.LittleEndianToUInt32 (28);
+
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (0)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (0 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (0 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (0 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (0 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (0 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (0 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -613,13 +633,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r2;
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r4;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (4)));
+            tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (4)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (4 + 1)));
+            tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (4 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (4 + 2)));
+            tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (4 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (4 + 3)));
+            tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (4 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -645,13 +665,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r1;
             _serpent24SubKeys[i++] = r4;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (8)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (8)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (8 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (8 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (8 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (8 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (8 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (8 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -679,13 +699,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r0;
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r1;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (12)));
+            tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (12)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (12 + 1)));
+            tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (12 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (12 + 2)));
+            tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (12 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (12 + 3)));
+            tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (12 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -713,13 +733,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r4;
             _serpent24SubKeys[i++] = r2;
             _serpent24SubKeys[i++] = r0;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (16)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (16)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (16 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (16 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (16 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (16 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (16 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (16 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -749,13 +769,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r1;
             _serpent24SubKeys[i++] = r0;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (20)));
+            tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (20)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (20 + 1)));
+            tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (20 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (20 + 2)));
+            tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (20 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (20 + 3)));
+            tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (20 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -783,13 +803,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r1;
             _serpent24SubKeys[i++] = r4;
             _serpent24SubKeys[i++] = r2;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (24)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (24)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (24 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (24 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (24 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (24 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (24 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (24 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -818,13 +838,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r0;
             _serpent24SubKeys[i++] = r2;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (28)));
+            tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (28)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (28 + 1)));
+            tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (28 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (28 + 2)));
+            tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (28 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (28 + 3)));
+            tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (28 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -854,13 +874,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r4;
             _serpent24SubKeys[i++] = r0;
             _serpent24SubKeys[i++] = r3;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (32)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (32)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (32 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (32 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (32 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (32 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (32 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (32 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -889,13 +909,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r2;
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r4;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (36)));
+            tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (36)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (36 + 1)));
+            tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (36 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (36 + 2)));
+            tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (36 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (36 + 3)));
+            tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (36 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -921,13 +941,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r1;
             _serpent24SubKeys[i++] = r4;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (40)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (40)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (40 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (40 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (40 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (40 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (40 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (40 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -955,13 +975,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r0;
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r1;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (44)));
+            tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (44)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (44 + 1)));
+            tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (44 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (44 + 2)));
+            tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (44 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (44 + 3)));
+            tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (44 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -989,13 +1009,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r4;
             _serpent24SubKeys[i++] = r2;
             _serpent24SubKeys[i++] = r0;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (48)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (48)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (48 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (48 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (48 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (48 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (48 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (48 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -1025,13 +1045,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r1;
             _serpent24SubKeys[i++] = r0;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (52)));
+            tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (52)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (52 + 1)));
+            tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (52 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (52 + 2)));
+            tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (52 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (52 + 3)));
+            tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (52 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -1059,13 +1079,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r1;
             _serpent24SubKeys[i++] = r4;
             _serpent24SubKeys[i++] = r2;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (56)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (56)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (56 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (56 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (56 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (56 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (56 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (56 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -1094,13 +1114,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r0;
             _serpent24SubKeys[i++] = r2;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (60)));
+            tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (60)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (60 + 1)));
+            tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (60 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (60 + 2)));
+            tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (60 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (60 + 3)));
+            tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (60 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -1130,13 +1150,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r4;
             _serpent24SubKeys[i++] = r0;
             _serpent24SubKeys[i++] = r3;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (64)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (64)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (64 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (64 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (64 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (64 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (64 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (64 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -1165,13 +1185,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r2;
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r4;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (68)));
+            tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (68)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (68 + 1)));
+            tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (68 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (68 + 2)));
+            tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (68 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (68 + 3)));
+            tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (68 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -1197,13 +1217,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r1;
             _serpent24SubKeys[i++] = r4;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (72)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (72)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (72 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (72 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (72 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (72 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (72 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (72 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -1231,13 +1251,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r0;
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r1;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (76)));
+            tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (76)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (76 + 1)));
+            tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (76 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (76 + 2)));
+            tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (76 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (76 + 3)));
+            tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (76 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -1265,13 +1285,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r4;
             _serpent24SubKeys[i++] = r2;
             _serpent24SubKeys[i++] = r0;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (80)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (80)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (80 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (80 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (80 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (80 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (80 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (80 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -1301,13 +1321,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r1;
             _serpent24SubKeys[i++] = r0;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (84)));
+			tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (84)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (84 + 1)));
+			tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (84 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (84 + 2)));
+			tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (84 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (84 + 3)));
+			tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (84 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -1335,13 +1355,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r1;
             _serpent24SubKeys[i++] = r4;
             _serpent24SubKeys[i++] = r2;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (88)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (88)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (88 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (88 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (88 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (88 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (88 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (88 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -1370,13 +1390,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r3;
             _serpent24SubKeys[i++] = r0;
             _serpent24SubKeys[i++] = r2;
-            tt = (int) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (92)));
+            tt = (uint) (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (92)));
             w4 = RotLeft(tt, 11);
-            tt = (int) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (92 + 1)));
+            tt = (uint) (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (92 + 1)));
             w5 = RotLeft(tt, 11);
-            tt = (int) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (92 + 2)));
+            tt = (uint) (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (92 + 2)));
             w6 = RotLeft(tt, 11);
-            tt = (int) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (92 + 3)));
+            tt = (uint) (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (92 + 3)));
             w7 = RotLeft(tt, 11);
             r0 = w4;
             r1 = w5;
@@ -1406,13 +1426,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _serpent24SubKeys[i++] = r4;
             _serpent24SubKeys[i++] = r0;
             _serpent24SubKeys[i++] = r3;
-            tt = (int) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (96)));
+            tt = (uint) (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (96)));
             w0 = RotLeft(tt, 11);
-            tt = (int) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (96 + 1)));
+            tt = (uint) (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (96 + 1)));
             w1 = RotLeft(tt, 11);
-            tt = (int) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (96 + 2)));
+            tt = (uint) (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (96 + 2)));
             w2 = RotLeft(tt, 11);
-            tt = (int) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (96 + 3)));
+            tt = (uint) (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (96 + 3)));
             w3 = RotLeft(tt, 11);
             r0 = w0;
             r1 = w1;
@@ -1447,12 +1467,23 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         /// Initialise the engine state with initialisation vector material.
         /// </summary>
         private void IVSetup (byte[] iv) {
-            int r0, r1, r2, r3, r4;
+			if (iv == null)
+				_workingIV = new byte[0];
+			if (iv.Length == 16) {
+				_workingIV = iv;
+			} else {
+				_workingIV = new byte[16];
+				Array.Copy(iv, 0, _workingIV, 0, iv.Length);
+				for (int i = iv.Length; i < _workingIV.Length; i ++)
+					_workingIV[i] = 0x00;
+			}
 
-            r0 = Decode32LE(iv, 0);
-            r1 = Decode32LE(iv, 4);
-            r2 = Decode32LE(iv, 8);
-            r3 = Decode32LE(iv, 12);
+            uint r0, r1, r2, r3, r4;
+
+			r0 = Decode32LE(_workingIV, 0);
+			r1 = Decode32LE(_workingIV, 4);
+			r2 = Decode32LE(_workingIV, 8);
+			r3 = Decode32LE(_workingIV, 12);
 
             r0 ^= _serpent24SubKeys[0];
             r1 ^= _serpent24SubKeys[0 + 1];

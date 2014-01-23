@@ -15,7 +15,7 @@
 
 using System;
 using System.Text;
-using ObscurCore.Cryptography.Ciphers;
+using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.Authentication
@@ -25,7 +25,7 @@ namespace ObscurCore.Cryptography.Authentication
 		const MacFunction DefaultMacFunction = MacFunction.Blake2B256;
 		const HashFunction DefaultHmacFunction = HashFunction.Blake2B256;
 		const SymmetricBlockCipher DefaultCmacCipher = SymmetricBlockCipher.Aes;
-
+		const SymmetricBlockCipher DefaultPoly1305Cipher = SymmetricBlockCipher.Aes;
 
 		/// <summary>
 		/// Creates a new authentication configuration. 
@@ -45,12 +45,14 @@ namespace ObscurCore.Cryptography.Authentication
 					return CreateAuthenticationConfigurationHmac ();
 				case MacFunction.Cmac:
 					return CreateAuthenticationConfigurationCmac ();
+				case MacFunction.Poly1305:
+					return CreateAuthenticationConfigurationPoly1305 ();
 				default:
 					throw new NotImplementedException ();
 				}
 			}
 			return CreateAuthConf (macFEnum.ToString (), 
-				Athena.Cryptography.MacFunctions [DefaultMacFunction].OutputSize.Value, null);
+				Athena.Cryptography.MacFunctions [DefaultMacFunction].OutputSize.Value / 8, null);
 		}
 
 		/// <summary>
@@ -65,7 +67,7 @@ namespace ObscurCore.Cryptography.Authentication
 		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationHmac(HashFunction hmacEnum = DefaultHmacFunction) {
 			int outputSize = Athena.Cryptography.HashFunctions[hmacEnum].OutputSize;
 			byte[] functionConfig = Encoding.UTF8.GetBytes (hmacEnum.ToString ());
-			return CreateAuthConf(MacFunction.Hmac.ToString(), outputSize, functionConfig);
+			return CreateAuthConf(MacFunction.Hmac.ToString(), outputSize / 8, functionConfig);
 		}
 
 		/// <summary>
@@ -79,8 +81,24 @@ namespace ObscurCore.Cryptography.Authentication
 		/// <param name="cmacEnum">Cmac enum.</param>
 		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationCmac(SymmetricBlockCipher cmacEnum = DefaultCmacCipher) {
 			int outputSize = Athena.Cryptography.BlockCiphers [cmacEnum].DefaultBlockSize;
+
 			byte[] functionConfig = Encoding.UTF8.GetBytes (cmacEnum.ToString ());
-			return CreateAuthConf(MacFunction.Cmac.ToString(), outputSize, functionConfig);
+			return CreateAuthConf(MacFunction.Cmac.ToString(), outputSize / 8, functionConfig);
+		}
+
+		/// <summary>
+		/// Creates a new authentication configuration using Poly1305-{cipher} construction.
+		/// </summary>
+		/// <remarks>
+		/// The Poly1305 configuration generated may be used with a MacStream, 
+		/// e.g. package payload item authentication.
+		/// </remarks>
+		/// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
+		/// <param name="cmacEnum">Cmac enum.</param>
+		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationPoly1305(SymmetricBlockCipher cipherEnum = DefaultCmacCipher) {
+			int outputSize = Athena.Cryptography.BlockCiphers [cipherEnum].DefaultBlockSize;
+			byte[] functionConfig = Encoding.UTF8.GetBytes (cipherEnum.ToString ());
+			return CreateAuthConf(MacFunction.Poly1305.ToString(), outputSize / 8, functionConfig);
 		}
 
 		private static VerificationFunctionConfiguration CreateAuthConf(string functionName, int outputSize, byte[] functionConfig) {

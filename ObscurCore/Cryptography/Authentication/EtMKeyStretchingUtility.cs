@@ -15,8 +15,7 @@
 
 using System;
 using System.Text;
-
-using ObscurCore.Cryptography.Ciphers;
+using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.DTO;
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
-using ObscurCore.Cryptography.Ciphers;
+using ObscurCore.Cryptography.Ciphers.Block;
 
 namespace ObscurCore.Cryptography
 {

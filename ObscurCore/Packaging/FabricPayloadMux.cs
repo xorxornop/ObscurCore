@@ -17,9 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-
 using ObscurCore.Cryptography;
+using ObscurCore.Cryptography.Authentication;
 using ObscurCore.DTO;
+using RingByteBuffer;
 
 namespace ObscurCore.Packaging
 {
@@ -45,11 +46,11 @@ namespace ObscurCore.Packaging
 			{
 				this.Decorator = decorator;
 				this.Authenticator = authenticator;
-				this.Buffer = new Lazy<RingByteBufferStream> ( () => new RingByteBufferStream(bufferCapacity));
+				this.Buffer = new Lazy<RingBufferStream> ( () => new RingBufferStream(bufferCapacity, false));
 			}
 			public DecoratingStream Decorator { get; private set; }
 			public MacStream Authenticator { get; private set; }
-			public Lazy<RingByteBufferStream> Buffer { get; private set; }
+			public Lazy<RingBufferStream> Buffer { get; private set; }
 		}
 
         /// <summary>

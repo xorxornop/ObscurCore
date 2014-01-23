@@ -74,7 +74,7 @@ namespace ObscurCore.Packaging
 
 			authenticator = new MacStream (PayloadStream, Writing, item.Authentication, 
 				authenticationKey, closeOnDispose : false);
-			decorator = new SymmetricCryptoStream (authenticator, Writing, item.Encryption, 
+			decorator = new SymmetricCipherStream (authenticator, Writing, item.Encryption, 
 				encryptionKey, closeOnDispose:false);
 		}
 

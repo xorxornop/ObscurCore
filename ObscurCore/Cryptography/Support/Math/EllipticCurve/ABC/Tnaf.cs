@@ -2,13 +2,6 @@ using System;
 
 namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 {
-	/**
-	* Class holding methods for point multiplication based on the window
-	* &#964;-adic nonadjacent form (WTNAF). The algorithms are based on the
-	* paper "Improved Algorithms for Arithmetic on Anomalous Binary Curves"
-	* by Jerome A. Solinas. The paper first appeared in the Proceedings of
-	* Crypto 1997.
-	*/
 	internal class Tnaf
 	{
 		private static readonly BigInteger MinusOne = BigInteger.One.Negate();
@@ -16,27 +9,27 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 		private static readonly BigInteger MinusThree = BigInteger.Three.Negate();
 		private static readonly BigInteger Four = BigInteger.ValueOf(4);
 
-		/**
-		* The window width of WTNAF. The standard value of 4 is slightly less
-		* than optimal for running time, but keeps space requirements for
-		* precomputation low. For typical curves, a value of 5 or 6 results in
-		* a better running time. When changing this value, the
-		* <code>&#945;<sub>u</sub></code>'s must be computed differently, see
-		* e.g. "Guide to Elliptic Curve Cryptography", Darrel Hankerson,
-		* Alfred Menezes, Scott Vanstone, Springer-Verlag New York Inc., 2004,
-		* p. 121-122
-		*/
+		/*		*
+        * The window width of WTNAF. The standard value of 4 is slightly less
+        * than optimal for running time, but keeps space requirements for
+        * precomputation low. For typical curves, a value of 5 or 6 results in
+        * a better running time. When changing this value, the
+        * <code>&#945;<sub>u</sub></code>'s must be computed differently, see
+        * e.g. "Guide to Elliptic Curve Cryptography", Darrel Hankerson,
+        * Alfred Menezes, Scott Vanstone, Springer-Verlag New York Inc., 2004,
+        * p. 121-122
+        */
 		public const sbyte Width = 4;
 
-		/**
-		* 2<sup>4</sup>
-		*/
+		/*		*
+        * 2<sup>4</sup>
+        */
 		public const sbyte Pow2Width = 16;
 
-		/**
-		* The <code>&#945;<sub>u</sub></code>'s for <code>a=0</code> as an array
-		* of <code>ZTauElement</code>s.
-		*/
+		/*		*
+        * The <code>&#945;<sub>u</sub></code>'s for <code>a=0</code> as an array
+        * of <code>ZTauElement</code>s.
+        */
 		public static readonly ZTauElement[] Alpha0 =
 		{
 			null,
@@ -46,19 +39,19 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			new ZTauElement(BigInteger.One, MinusOne), null
 		};
 
-		/**
-		* The <code>&#945;<sub>u</sub></code>'s for <code>a=0</code> as an array
-		* of TNAFs.
-		*/
+		/*		*
+        * The <code>&#945;<sub>u</sub></code>'s for <code>a=0</code> as an array
+        * of TNAFs.
+        */
 		public static readonly sbyte[][] Alpha0Tnaf =
 		{
 			null, new sbyte[]{1}, null, new sbyte[]{-1, 0, 1}, null, new sbyte[]{1, 0, 1}, null, new sbyte[]{-1, 0, 0, 1}
 		};
 
-		/**
-		* The <code>&#945;<sub>u</sub></code>'s for <code>a=1</code> as an array
-		* of <code>ZTauElement</code>s.
-		*/
+		/*		*
+        * The <code>&#945;<sub>u</sub></code>'s for <code>a=1</code> as an array
+        * of <code>ZTauElement</code>s.
+        */
 		public static readonly ZTauElement[] Alpha1 =
 		{
 			null,
@@ -68,23 +61,23 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			new ZTauElement(BigInteger.One, BigInteger.One), null
 		};
 
-		/**
-		* The <code>&#945;<sub>u</sub></code>'s for <code>a=1</code> as an array
-		* of TNAFs.
-		*/
+		/*		*
+        * The <code>&#945;<sub>u</sub></code>'s for <code>a=1</code> as an array
+        * of TNAFs.
+        */
 		public static readonly sbyte[][] Alpha1Tnaf =
 		{
 			null, new sbyte[]{1}, null, new sbyte[]{-1, 0, 1}, null, new sbyte[]{1, 0, 1}, null, new sbyte[]{-1, 0, 0, -1}
 		};
 
-		/**
-		* Computes the norm of an element <code>&#955;</code> of
-		* <code><b>Z</b>[&#964;]</code>.
-		* @param mu The parameter <code>&#956;</code> of the elliptic curve.
-		* @param lambda The element <code>&#955;</code> of
-		* <code><b>Z</b>[&#964;]</code>.
-		* @return The norm of <code>&#955;</code>.
-		*/
+		/*		*
+        * Computes the norm of an element <code>&#955;</code> of
+        * <code><b>Z</b>[&#964;]</code>.
+        * @param mu The parameter <code>&#956;</code> of the elliptic curve.
+        * @param lambda The element <code>&#955;</code> of
+        * <code><b>Z</b>[&#964;]</code>.
+        * @return The norm of <code>&#955;</code>.
+        */
 		public static BigInteger Norm(sbyte mu, ZTauElement lambda)
 		{
 			BigInteger norm;
@@ -114,18 +107,18 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return norm;
 		}
 
-		/**
-		* Computes the norm of an element <code>&#955;</code> of
-		* <code><b>R</b>[&#964;]</code>, where <code>&#955; = u + v&#964;</code>
-		* and <code>u</code> and <code>u</code> are real numbers (elements of
-		* <code><b>R</b></code>). 
-		* @param mu The parameter <code>&#956;</code> of the elliptic curve.
-		* @param u The real part of the element <code>&#955;</code> of
-		* <code><b>R</b>[&#964;]</code>.
-		* @param v The <code>&#964;</code>-adic part of the element
-		* <code>&#955;</code> of <code><b>R</b>[&#964;]</code>.
-		* @return The norm of <code>&#955;</code>.
-		*/
+		/*		*
+        * Computes the norm of an element <code>&#955;</code> of
+        * <code><b>R</b>[&#964;]</code>, where <code>&#955; = u + v&#964;</code>
+        * and <code>u</code> and <code>u</code> are real numbers (elements of
+        * <code><b>R</b></code>). 
+        * @param mu The parameter <code>&#956;</code> of the elliptic curve.
+        * @param u The real part of the element <code>&#955;</code> of
+        * <code><b>R</b>[&#964;]</code>.
+        * @param v The <code>&#964;</code>-adic part of the element
+        * <code>&#955;</code> of <code><b>R</b>[&#964;]</code>.
+        * @return The norm of <code>&#955;</code>.
+        */
 		public static SimpleBigDecimal Norm(sbyte mu, SimpleBigDecimal u, SimpleBigDecimal v)
 		{
 			SimpleBigDecimal norm;
@@ -155,19 +148,19 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return norm;
 		}
 
-		/**
-		* Rounds an element <code>&#955;</code> of <code><b>R</b>[&#964;]</code>
-		* to an element of <code><b>Z</b>[&#964;]</code>, such that their difference
-		* has minimal norm. <code>&#955;</code> is given as
-		* <code>&#955; = &#955;<sub>0</sub> + &#955;<sub>1</sub>&#964;</code>.
-		* @param lambda0 The component <code>&#955;<sub>0</sub></code>.
-		* @param lambda1 The component <code>&#955;<sub>1</sub></code>.
-		* @param mu The parameter <code>&#956;</code> of the elliptic curve. Must
-		* equal 1 or -1.
-		* @return The rounded element of <code><b>Z</b>[&#964;]</code>.
-		* @throws ArgumentException if <code>lambda0</code> and
-		* <code>lambda1</code> do not have same scale.
-		*/
+		/*		*
+        * Rounds an element <code>&#955;</code> of <code><b>R</b>[&#964;]</code>
+        * to an element of <code><b>Z</b>[&#964;]</code>, such that their difference
+        * has minimal norm. <code>&#955;</code> is given as
+        * <code>&#955; = &#955;<sub>0</sub> + &#955;<sub>1</sub>&#964;</code>.
+        * @param lambda0 The component <code>&#955;<sub>0</sub></code>.
+        * @param lambda1 The component <code>&#955;<sub>1</sub></code>.
+        * @param mu The parameter <code>&#956;</code> of the elliptic curve. Must
+        * equal 1 or -1.
+        * @return The rounded element of <code><b>Z</b>[&#964;]</code>.
+        * @throws ArgumentException if <code>lambda0</code> and
+        * <code>lambda1</code> do not have same scale.
+        */
 		public static ZTauElement Round(SimpleBigDecimal lambda0,
 			SimpleBigDecimal lambda1, sbyte mu)
 		{
@@ -264,22 +257,22 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return new ZTauElement(q0, q1);
 		}
 
-		/**
-		* Approximate division by <code>n</code>. For an integer
-		* <code>k</code>, the value <code>&#955; = s k / n</code> is
-		* computed to <code>c</code> bits of accuracy.
-		* @param k The parameter <code>k</code>.
-		* @param s The curve parameter <code>s<sub>0</sub></code> or
-		* <code>s<sub>1</sub></code>.
-		* @param vm The Lucas Sequence element <code>V<sub>m</sub></code>.
-		* @param a The parameter <code>a</code> of the elliptic curve.
-		* @param m The bit length of the finite field
-		* <code><b>F</b><sub>m</sub></code>.
-		* @param c The number of bits of accuracy, i.e. the scale of the returned
-		* <code>SimpleBigDecimal</code>.
-		* @return The value <code>&#955; = s k / n</code> computed to
-		* <code>c</code> bits of accuracy.
-		*/
+		/*		*
+        * Approximate division by <code>n</code>. For an integer
+        * <code>k</code>, the value <code>&#955; = s k / n</code> is
+        * computed to <code>c</code> bits of accuracy.
+        * @param k The parameter <code>k</code>.
+        * @param s The curve parameter <code>s<sub>0</sub></code> or
+        * <code>s<sub>1</sub></code>.
+        * @param vm The Lucas Sequence element <code>V<sub>m</sub></code>.
+        * @param a The parameter <code>a</code> of the elliptic curve.
+        * @param m The bit length of the finite field
+        * <code><b>F</b><sub>m</sub></code>.
+        * @param c The number of bits of accuracy, i.e. the scale of the returned
+        * <code>SimpleBigDecimal</code>.
+        * @return The value <code>&#955; = s k / n</code> computed to
+        * <code>c</code> bits of accuracy.
+        */
 		public static SimpleBigDecimal ApproximateDivisionByN(BigInteger k,
 			BigInteger s, BigInteger vm, sbyte a, int m, int c)
 		{
@@ -303,14 +296,14 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return new SimpleBigDecimal(ls, c);
 		}
 
-		/**
-		* Computes the <code>&#964;</code>-adic NAF (non-adjacent form) of an
-		* element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>.
-		* @param mu The parameter <code>&#956;</code> of the elliptic curve.
-		* @param lambda The element <code>&#955;</code> of
-		* <code><b>Z</b>[&#964;]</code>.
-		* @return The <code>&#964;</code>-adic NAF of <code>&#955;</code>.
-		*/
+		/*		*
+        * Computes the <code>&#964;</code>-adic NAF (non-adjacent form) of an
+        * element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>.
+        * @param mu The parameter <code>&#956;</code> of the elliptic curve.
+        * @param lambda The element <code>&#955;</code> of
+        * <code><b>Z</b>[&#964;]</code>.
+        * @return The <code>&#964;</code>-adic NAF of <code>&#955;</code>.
+        */
 		public static sbyte[] TauAdicNaf(sbyte mu, ZTauElement lambda)
 		{
 			if (!((mu == 1) || (mu == -1))) 
@@ -382,33 +375,27 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return tnaf;
 		}
 
-		/**
-		* Applies the operation <code>&#964;()</code> to an
-		* <code>F2mPoint</code>. 
-		* @param p The F2mPoint to which <code>&#964;()</code> is applied.
-		* @return <code>&#964;(p)</code>
-		*/
+		/*		*
+        * Applies the operation <code>&#964;()</code> to an
+        * <code>F2mPoint</code>. 
+        * @param p The F2mPoint to which <code>&#964;()</code> is applied.
+        * @return <code>&#964;(p)</code>
+        */
 		public static F2mPoint Tau(F2mPoint p)
 		{
-			if (p.IsInfinity)
-				return p;
-
-			ECFieldElement x = p.X;
-			ECFieldElement y = p.Y;
-
-			return new F2mPoint(p.Curve, x.Square(), y.Square(), p.IsCompressed);
+			return p.Tau();
 		}
 
-		/**
-		* Returns the parameter <code>&#956;</code> of the elliptic curve.
-		* @param curve The elliptic curve from which to obtain <code>&#956;</code>.
-		* The curve must be a Koblitz curve, i.e. <code>a</code> Equals
-		* <code>0</code> or <code>1</code> and <code>b</code> Equals
-		* <code>1</code>. 
-		* @return <code>&#956;</code> of the elliptic curve.
-		* @throws ArgumentException if the given ECCurve is not a Koblitz
-		* curve.
-		*/
+		/*		*
+        * Returns the parameter <code>&#956;</code> of the elliptic curve.
+        * @param curve The elliptic curve from which to obtain <code>&#956;</code>.
+        * The curve must be a Koblitz curve, i.e. <code>a</code> Equals
+        * <code>0</code> or <code>1</code> and <code>b</code> Equals
+        * <code>1</code>. 
+        * @return <code>&#956;</code> of the elliptic curve.
+        * @throws ArgumentException if the given ECCurve is not a Koblitz
+        * curve.
+        */
 		public static sbyte GetMu(F2mCurve curve)
 		{
 			BigInteger a = curve.A.ToBigInteger();
@@ -429,20 +416,20 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return mu;
 		}
 
-		/**
-		* Calculates the Lucas Sequence elements <code>U<sub>k-1</sub></code> and
-		* <code>U<sub>k</sub></code> or <code>V<sub>k-1</sub></code> and
-		* <code>V<sub>k</sub></code>.
-		* @param mu The parameter <code>&#956;</code> of the elliptic curve.
-		* @param k The index of the second element of the Lucas Sequence to be
-		* returned.
-		* @param doV If set to true, computes <code>V<sub>k-1</sub></code> and
-		* <code>V<sub>k</sub></code>, otherwise <code>U<sub>k-1</sub></code> and
-		* <code>U<sub>k</sub></code>.
-		* @return An array with 2 elements, containing <code>U<sub>k-1</sub></code>
-		* and <code>U<sub>k</sub></code> or <code>V<sub>k-1</sub></code>
-		* and <code>V<sub>k</sub></code>.
-		*/
+		/*		*
+        * Calculates the Lucas Sequence elements <code>U<sub>k-1</sub></code> and
+        * <code>U<sub>k</sub></code> or <code>V<sub>k-1</sub></code> and
+        * <code>V<sub>k</sub></code>.
+        * @param mu The parameter <code>&#956;</code> of the elliptic curve.
+        * @param k The index of the second element of the Lucas Sequence to be
+        * returned.
+        * @param doV If set to true, computes <code>V<sub>k-1</sub></code> and
+        * <code>V<sub>k</sub></code>, otherwise <code>U<sub>k-1</sub></code> and
+        * <code>U<sub>k</sub></code>.
+        * @return An array with 2 elements, containing <code>U<sub>k-1</sub></code>
+        * and <code>U<sub>k</sub></code> or <code>V<sub>k-1</sub></code>
+        * and <code>V<sub>k</sub></code>.
+        */
 		public static BigInteger[] GetLucas(sbyte mu, int k, bool doV)
 		{
 			if (!(mu == 1 || mu == -1)) 
@@ -476,7 +463,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 					// mu == -1
 					s = u1.Negate();
 				}
-	            
+
 				u2 = s.Subtract(u0.ShiftLeft(1));
 				u0 = u1;
 				u1 = u2;
@@ -488,14 +475,14 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return retVal;
 		}
 
-		/**
-		* Computes the auxiliary value <code>t<sub>w</sub></code>. If the width is
-		* 4, then for <code>mu = 1</code>, <code>t<sub>w</sub> = 6</code> and for
-		* <code>mu = -1</code>, <code>t<sub>w</sub> = 10</code> 
-		* @param mu The parameter <code>&#956;</code> of the elliptic curve.
-		* @param w The window width of the WTNAF.
-		* @return the auxiliary value <code>t<sub>w</sub></code>
-		*/
+		/*		*
+        * Computes the auxiliary value <code>t<sub>w</sub></code>. If the width is
+        * 4, then for <code>mu = 1</code>, <code>t<sub>w</sub> = 6</code> and for
+        * <code>mu = -1</code>, <code>t<sub>w</sub> = 10</code> 
+        * @param mu The parameter <code>&#956;</code> of the elliptic curve.
+        * @param w The window width of the WTNAF.
+        * @return the auxiliary value <code>t<sub>w</sub></code>
+        */
 		public static BigInteger GetTw(sbyte mu, int w) 
 		{
 			if (w == 4)
@@ -524,14 +511,14 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			}
 		}
 
-		/**
-		* Computes the auxiliary values <code>s<sub>0</sub></code> and
-		* <code>s<sub>1</sub></code> used for partial modular reduction. 
-		* @param curve The elliptic curve for which to compute
-		* <code>s<sub>0</sub></code> and <code>s<sub>1</sub></code>.
-		* @throws ArgumentException if <code>curve</code> is not a
-		* Koblitz curve (Anomalous Binary Curve, ABC).
-		*/
+		/*		*
+        * Computes the auxiliary values <code>s<sub>0</sub></code> and
+        * <code>s<sub>1</sub></code> used for partial modular reduction. 
+        * @param curve The elliptic curve for which to compute
+        * <code>s<sub>0</sub></code> and <code>s<sub>1</sub></code>.
+        * @throws ArgumentException if <code>curve</code> is not a
+        * Koblitz curve (Anomalous Binary Curve, ABC).
+        */
 		public static BigInteger[] GetSi(F2mCurve curve)
 		{
 			if (!curve.IsKoblitz)
@@ -581,19 +568,19 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return si;
 		}
 
-		/**
-		* Partial modular reduction modulo
-		* <code>(&#964;<sup>m</sup> - 1)/(&#964; - 1)</code>.
-		* @param k The integer to be reduced.
-		* @param m The bitlength of the underlying finite field.
-		* @param a The parameter <code>a</code> of the elliptic curve.
-		* @param s The auxiliary values <code>s<sub>0</sub></code> and
-		* <code>s<sub>1</sub></code>.
-		* @param mu The parameter &#956; of the elliptic curve.
-		* @param c The precision (number of bits of accuracy) of the partial
-		* modular reduction.
-		* @return <code>&#961; := k partmod (&#964;<sup>m</sup> - 1)/(&#964; - 1)</code>
-		*/
+		/*		*
+        * Partial modular reduction modulo
+        * <code>(&#964;<sup>m</sup> - 1)/(&#964; - 1)</code>.
+        * @param k The integer to be reduced.
+        * @param m The bitlength of the underlying finite field.
+        * @param a The parameter <code>a</code> of the elliptic curve.
+        * @param s The auxiliary values <code>s<sub>0</sub></code> and
+        * <code>s<sub>1</sub></code>.
+        * @param mu The parameter &#956; of the elliptic curve.
+        * @param c The precision (number of bits of accuracy) of the partial
+        * modular reduction.
+        * @return <code>&#961; := k partmod (&#964;<sup>m</sup> - 1)/(&#964; - 1)</code>
+        */
 		public static ZTauElement PartModReduction(BigInteger k, int m, sbyte a,
 			BigInteger[] s, sbyte mu, sbyte c)
 		{
@@ -613,7 +600,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 
 			SimpleBigDecimal lambda0 = ApproximateDivisionByN(
 				k, s[0], vm, a, m, c);
-	        
+
 			SimpleBigDecimal lambda1 = ApproximateDivisionByN(
 				k, s[1], vm, a, m, c);
 
@@ -625,18 +612,18 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 
 			// r1 = s1*q0 - s0*q1
 			BigInteger r1 = s[1].Multiply(q.u).Subtract(s[0].Multiply(q.v));
-	        
+
 			return new ZTauElement(r0, r1);
 		}
 
-		/**
-		* Multiplies a {@link ObscurCore.Cryptography.BouncyCastle.math.ec.F2mPoint F2mPoint}
-		* by a <code>BigInteger</code> using the reduced <code>&#964;</code>-adic
-		* NAF (RTNAF) method.
-		* @param p The F2mPoint to Multiply.
-		* @param k The <code>BigInteger</code> by which to Multiply <code>p</code>.
-		* @return <code>k * p</code>
-		*/
+		/*		*
+        * Multiplies a {@link org.bouncycastle.math.ec.F2mPoint F2mPoint}
+        * by a <code>BigInteger</code> using the reduced <code>&#964;</code>-adic
+        * NAF (RTNAF) method.
+        * @param p The F2mPoint to Multiply.
+        * @param k The <code>BigInteger</code> by which to Multiply <code>p</code>.
+        * @return <code>k * p</code>
+        */
 		public static F2mPoint MultiplyRTnaf(F2mPoint p, BigInteger k)
 		{
 			F2mCurve curve = (F2mCurve) p.Curve;
@@ -649,15 +636,15 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return MultiplyTnaf(p, rho);
 		}
 
-		/**
-		* Multiplies a {@link ObscurCore.Cryptography.BouncyCastle.math.ec.F2mPoint F2mPoint}
-		* by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>
-		* using the <code>&#964;</code>-adic NAF (TNAF) method.
-		* @param p The F2mPoint to Multiply.
-		* @param lambda The element <code>&#955;</code> of
-		* <code><b>Z</b>[&#964;]</code>.
-		* @return <code>&#955; * p</code>
-		*/
+		/*		*
+        * Multiplies a {@link org.bouncycastle.math.ec.F2mPoint F2mPoint}
+        * by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>
+        * using the <code>&#964;</code>-adic NAF (TNAF) method.
+        * @param p The F2mPoint to Multiply.
+        * @param lambda The element <code>&#955;</code> of
+        * <code><b>Z</b>[&#964;]</code>.
+        * @return <code>&#955; * p</code>
+        */
 		public static F2mPoint MultiplyTnaf(F2mPoint p, ZTauElement lambda)
 		{
 			F2mCurve curve = (F2mCurve)p.Curve;
@@ -669,15 +656,15 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return q;
 		}
 
-		/**
-		* Multiplies a {@link ObscurCore.Cryptography.BouncyCastle.math.ec.F2mPoint F2mPoint}
-		* by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>
-		* using the <code>&#964;</code>-adic NAF (TNAF) method, given the TNAF
-		* of <code>&#955;</code>.
-		* @param p The F2mPoint to Multiply.
-		* @param u The the TNAF of <code>&#955;</code>..
-		* @return <code>&#955; * p</code>
-		*/
+		/*		*
+        * Multiplies a {@link org.bouncycastle.math.ec.F2mPoint F2mPoint}
+        * by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>
+        * using the <code>&#964;</code>-adic NAF (TNAF) method, given the TNAF
+        * of <code>&#955;</code>.
+        * @param p The F2mPoint to Multiply.
+        * @param u The the TNAF of <code>&#955;</code>..
+        * @return <code>&#955; * p</code>
+        */
 		public static F2mPoint MultiplyFromTnaf(F2mPoint p, sbyte[] u)
 		{
 			F2mCurve curve = (F2mCurve)p.Curve;
@@ -697,20 +684,20 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return q;
 		}
 
-		/**
-		* Computes the <code>[&#964;]</code>-adic window NAF of an element
-		* <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>.
-		* @param mu The parameter &#956; of the elliptic curve.
-		* @param lambda The element <code>&#955;</code> of
-		* <code><b>Z</b>[&#964;]</code> of which to compute the
-		* <code>[&#964;]</code>-adic NAF.
-		* @param width The window width of the resulting WNAF.
-		* @param pow2w 2<sup>width</sup>.
-		* @param tw The auxiliary value <code>t<sub>w</sub></code>.
-		* @param alpha The <code>&#945;<sub>u</sub></code>'s for the window width.
-		* @return The <code>[&#964;]</code>-adic window NAF of
-		* <code>&#955;</code>.
-		*/
+		/*		*
+        * Computes the <code>[&#964;]</code>-adic window NAF of an element
+        * <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>.
+        * @param mu The parameter &#956; of the elliptic curve.
+        * @param lambda The element <code>&#955;</code> of
+        * <code><b>Z</b>[&#964;]</code> of which to compute the
+        * <code>[&#964;]</code>-adic NAF.
+        * @param width The window width of the resulting WNAF.
+        * @param pow2w 2<sup>width</sup>.
+        * @param tw The auxiliary value <code>t<sub>w</sub></code>.
+        * @param alpha The <code>&#945;<sub>u</sub></code>'s for the window width.
+        * @return The <code>[&#964;]</code>-adic window NAF of
+        * <code>&#955;</code>.
+        */
 		public static sbyte[] TauAdicWNaf(sbyte mu, ZTauElement lambda,
 			sbyte width, BigInteger pow2w, BigInteger tw, ZTauElement[] alpha)
 		{
@@ -744,8 +731,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 				{
 					// uUnMod = r0 + r1*tw Mod 2^width
 					BigInteger uUnMod
-						= r0.Add(r1.Multiply(tw)).Mod(pow2w);
-	                
+					= r0.Add(r1.Multiply(tw)).Mod(pow2w);
+
 					sbyte uLocal;
 					// if uUnMod >= 2^(width - 1)
 					if (uUnMod.CompareTo(pow2wMin1) >= 0)
@@ -800,12 +787,12 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			return u;
 		}
 
-		/**
-		* Does the precomputation for WTNAF multiplication.
-		* @param p The <code>ECPoint</code> for which to do the precomputation.
-		* @param a The parameter <code>a</code> of the elliptic curve.
-		* @return The precomputation array for <code>p</code>. 
-		*/
+		/*		*
+        * Does the precomputation for WTNAF multiplication.
+        * @param p The <code>ECPoint</code> for which to do the precomputation.
+        * @param a The parameter <code>a</code> of the elliptic curve.
+        * @return The precomputation array for <code>p</code>. 
+        */
 		public static F2mPoint[] GetPreComp(F2mPoint p, sbyte a)
 		{
 			F2mPoint[] pu;
@@ -827,7 +814,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			{
 				pu[i] = Tnaf.MultiplyFromTnaf(p, alphaTnaf[i]);
 			}
-	        
+
 			return pu;
 		}
 	}

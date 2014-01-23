@@ -25,6 +25,8 @@ using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve;
 using ObscurCore.DTO;
 
+using ObscurCore.Support;
+
 namespace ObscurCore
 {
     /// <summary>
@@ -79,12 +81,14 @@ namespace ObscurCore
 		/// <typeparam name="T">Enumeration type.</typeparam>
 		public static T ToEnum<T>(this string stringValue, bool ignoreCase = true) where T : struct, IConvertible
         {
-            if (!typeof(T).IsEnum) throw new InvalidOperationException("T must be an enumeration type.");
+            if (!typeof(T).IsEnum) 
+				throw new InvalidOperationException("T must be an enumeration type.");
+
             T value;
             try {
                 value = (T)Enum.Parse(typeof(T), stringValue, ignoreCase);
             } catch (ArgumentException) {
-                throw new EnumerationValueUnknownException(stringValue, typeof(T));
+                throw new EnumerationParsingException(stringValue, typeof(T));
             }
             return value;
         }
@@ -112,37 +116,54 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Converts a hex-encoded string to a byte array
+		/// Converts a hex-encoded string to a byte array.
         /// </summary>
         /// <param name="hexSrc">Hex-encoded data</param>
-        /// <remarks>
-        /// Adapted from http://stackoverflow.com/questions/321370/convert-hex-string-to-byte-array
-        /// </remarks>
         public static byte[] HexToBinary(this string hexSrc) {
-            if (hexSrc == null) return null;
-            if (hexSrc.Length % 2 == 1) throw new ArgumentException("The binary key cannot have an odd number of digits");
-            var arr = new byte[hexSrc.Length >> 1];
-            var h2i = new Func<char, int>(c => (int) c - ((int) c < 58 ? 48 : 87));
-            for (var i = 0; i < (hexSrc.Length >> 1); ++i) {
-                arr[i] = (byte)((h2i(hexSrc[i << 1]) << 4) + (h2i(hexSrc[(i << 1) + 1])));
-            }
-            return arr;
+			if (hexSrc == null)
+				return null;
+			return Hex.Decode (hexSrc);
         }
 
-		public static int GetHashCode (this byte[] data) {
-			if (data == null) {
+		public static int GetHashCodeExt(this byte[] data)
+		{
+			if (data == null)
+			{
 				return 0;
 			}
+
 			int i = data.Length;
 			int hc = i + 1;
-			while (--i >= 0) {
+
+			while (--i >= 0)
+			{
 				hc *= 257;
 				hc ^= data[i];
 			}
+
 			return hc;
 		}
 
-		public static bool AreEqual(
+		public static int GetHashCodeExt(this int[] data)
+		{
+			if (data == null)
+			{
+				return 0;
+			}
+
+			int i = data.Length;
+			int hc = i + 1;
+
+			while (--i >= 0)
+			{
+				hc *= 257;
+				hc ^= data[i];
+			}
+
+			return hc;
+		}
+
+		public static bool SequenceEqual(
 			this byte[]	a,
 			byte[]	b)
 		{
@@ -152,10 +173,10 @@ namespace ObscurCore
 			if (a == null || b == null)
 				return false;
 
-			return HaveSameContents(a, b);
+			return SequenceEqual<byte>(a, b);
 		}
 
-		private static bool HaveSameContents(
+		private static bool SequenceEqualByteOptimised(
 			byte[]	a,
 			byte[]	b)
 		{
@@ -171,228 +192,52 @@ namespace ObscurCore
 			return true;
 		}
 
-		public static byte[] Clone(
-			this byte[] data)
+		public static bool SequenceEqual(this int[] a, int[] b) {
+			if (a == b)
+				return true;
+
+			if (a == null || b == null)
+				return false;
+
+			return SequenceEqual(a, b);
+		}
+
+		private static bool SequenceEqual<T> (T[] a, T[] b) where T: struct {
+			var i = a.Length;
+			if (i != b.Length)
+				return false;
+			while (i != 0) {
+				--i;
+				if (!a[i].Equals(b[i]))
+					return false;
+			}
+			return true;
+		}
+
+		public static byte[] CloneArray(this byte[] data)
 		{
 			return data == null ? null : (byte[]) data.Clone();
+		}
+
+		public static int[] CloneArray(this int[] data) {
+			return data == null ? null : (int[])data.Clone();
+		}
+
+		public static long[] CloneArray(this long[] data) {
+			return data == null ? null : (long[])data.Clone();
+		}
+
+		[CLSCompliantAttribute(false)]
+		public static ulong[] CloneArray(
+			this ulong[] data)
+		{
+			return data == null ? null : (ulong[]) data.Clone();
 		}
     }
 }
 
 namespace ObscurCore.Extensions
 {
-    namespace BitPacking
-    {
-        public static class BitPackingExtensions
-        {
-			// Big endian
-			// Int32
-
-			public static byte[] ToBigEndian(this Int32 n) {
-				byte[] bs = new byte[sizeof (Int32)];
-				n.ToBigEndian(bs);
-				return bs;
-			}
-
-			public static void ToBigEndian(this Int32 n, byte[] bs) {
-				bs[0] = (byte) (n >> 24);
-				bs[1] = (byte) (n >> 16);
-				bs[2] = (byte) (n >> 8);
-				bs[3] = (byte) (n);
-			}
-
-			public static void ToBigEndian(this Int32 n, byte[] bs, int off) {
-				bs[off] = (byte) (n >> 24);
-				bs[++off] = (byte) (n >> 16);
-				bs[++off] = (byte) (n >> 8);
-				bs[++off] = (byte) (n);
-			}
-
-			public static Int32 BigEndianToInt32(this byte[] bs) {
-				return (Int32) bs[0] << 24 
-					| (Int32) bs[1] << 16 
-					| (Int32) bs[2] << 8 
-					| (Int32) bs[3];
-			}
-
-			public static Int32 BigEndianToInt32(this byte[] bs, int off) {
-				return (Int32) bs[off] << 24 
-					| (Int32) bs[off + 1] << 16 
-					| (Int32) bs[off + 2] << 8 
-					| (Int32) bs[off + 3];
-			}
-
-			// UInt32
-
-            public static byte[] ToBigEndian(this UInt32 n) {
-                byte[] bs = new byte[sizeof (UInt32)];
-                n.ToBigEndian(bs);
-                return bs;
-            }
-
-            public static void ToBigEndian(this UInt32 n, byte[] bs) {
-                bs[0] = (byte) (n >> 24);
-                bs[1] = (byte) (n >> 16);
-                bs[2] = (byte) (n >> 8);
-                bs[3] = (byte) (n);
-            }
-
-            public static void ToBigEndian(this UInt32 n, byte[] bs, int off) {
-                bs[off] = (byte) (n >> 24);
-                bs[++off] = (byte) (n >> 16);
-                bs[++off] = (byte) (n >> 8);
-                bs[++off] = (byte) (n);
-            }
-
-            public static UInt32 BigEndianToUInt32(this byte[] bs) {
-				return (UInt32) bs[0] << 24 
-					| (UInt32) bs[1] << 16 
-					| (UInt32) bs[2] << 8 
-					| (UInt32) bs[3];
-            }
-
-            public static UInt32 BigEndianToUInt32(this byte[] bs, int off) {
-				return (UInt32) bs[off] << 24 
-					| (UInt32) bs[off + 1] << 16 
-					| (UInt32) bs[off + 2] << 8 
-					| (UInt32) bs[off + 3];
-            }
-
-			// UInt64
-
-			public static byte[] ToBigEndian(this UInt64 n) {
-				var bs = new byte[sizeof (UInt64)];
-				n.ToBigEndian(bs);
-				return bs;
-			}
-
-			public static void ToBigEndian(this UInt64 n, byte[] bs) {
-				((UInt32) (n >> 32)).ToBigEndian(bs, 0);
-				((UInt32) (n)).ToBigEndian(bs, 4);
-			}
-
-			public static void ToBigEndian(this UInt64 n, byte[] bs, int off) {
-				((UInt32) (n >> 32)).ToBigEndian(bs, off);
-				((UInt32) (n)).ToBigEndian(bs, off + 4);
-			}
-
-            public static UInt64 BigEndianToUInt64(this byte[] bs) {
-                UInt32 hi = bs.BigEndianToUInt32();
-                UInt32 lo = bs.BigEndianToUInt32(4);
-                return ((UInt64) hi << 32) | (UInt64) lo;
-            }
-
-            public static UInt64 BigEndianToUInt64(this byte[] bs, int off) {
-                UInt32 hi = bs.BigEndianToUInt32(off);
-                UInt32 lo = bs.BigEndianToUInt32(off + 4);
-                return ((UInt64) hi << 32) | (UInt64) lo;
-            }
-
-			// Little endian
-			// Int32
-
-			public static byte[] ToLittleEndian(this Int32 n) {
-				byte[] bs = new byte[sizeof (Int32)];
-				n.ToLittleEndian(bs);
-				return bs;
-			}
-
-			public static void ToLittleEndian(this Int32 n, byte[] bs) {
-				bs[0] = (byte) (n);
-				bs[1] = (byte) (n >> 8);
-				bs[2] = (byte) (n >> 16);
-				bs[3] = (byte) (n >> 24);
-			}
-
-			public static void ToLittleEndian(this Int32 n, byte[] bs, int off) {
-				bs[off] = (byte) (n);
-				bs[++off] = (byte) (n >> 8);
-				bs[++off] = (byte) (n >> 16);
-				bs[++off] = (byte) (n >> 24);
-			}
-
-			public static Int32 LittleEndianToInt32(this byte[] bs) {
-				return (Int32) bs[0] 
-					| (Int32) bs[1] << 8 
-					| (Int32) bs[2] << 16 
-					| (Int32) bs[3] << 24;
-			}
-
-			public static Int32 LittleEndianToInt32(this byte[] bs, int off) {
-				return (Int32) bs[off] 
-					| (Int32) bs[off + 1] << 8 
-					| (Int32) bs[off + 2] << 16 
-					| (Int32) bs[off + 3] << 24;
-			}
-
-			// UInt32
-
-            public static byte[] ToLittleEndian(this UInt32 n) {
-                byte[] bs = new byte[sizeof (UInt32)];
-                n.ToLittleEndian(bs);
-                return bs;
-            }
-
-            public static void ToLittleEndian(this UInt32 n, byte[] bs) {
-                bs[0] = (byte) (n);
-                bs[1] = (byte) (n >> 8);
-                bs[2] = (byte) (n >> 16);
-                bs[3] = (byte) (n >> 24);
-            }
-
-            public static void ToLittleEndian(this UInt32 n, byte[] bs, int off) {
-                bs[off] = (byte) (n);
-                bs[++off] = (byte) (n >> 8);
-                bs[++off] = (byte) (n >> 16);
-                bs[++off] = (byte) (n >> 24);
-            }
-
-            public static UInt32 LittleEndianToUInt32(this byte[] bs) {
-				return (UInt32) bs[0] 
-					| (UInt32) bs[1] << 8 
-					| (UInt32) bs[2] << 16 
-					| (UInt32) bs[3] << 24;
-            }
-
-            public static UInt32 LittleEndianToUInt32(this byte[] bs, int off) {
-				return (UInt32) bs[off] 
-					| (UInt32) bs[off + 1] << 8 
-					| (UInt32) bs[off + 2] << 16 
-					| (UInt32) bs[off + 3] << 24;
-            }
-
-			// UInt64
-
-			public static byte[] ToLittleEndian(this UInt64 n) {
-				byte[] bs = new byte[sizeof (UInt64)];
-				n.ToLittleEndian(bs);
-				return bs;
-			}
-
-			public static void ToLittleEndian(this UInt64 n, byte[] bs) {
-				((UInt32) n).ToLittleEndian(bs, 0);
-				((UInt32) (n >> 32)).ToLittleEndian(bs, 4);
-			}
-
-			public static void ToLittleEndian(this UInt64 n, byte[] bs, int off) {
-				((UInt32) n).ToLittleEndian(bs, off);
-				((UInt32) (n >> 32)).ToLittleEndian(bs, off + 4);
-			}
-
-            public static UInt64 LittleEndianToUInt64(this byte[] bs) {
-                UInt32 lo = bs.LittleEndianToUInt32(0);
-                UInt32 hi = bs.LittleEndianToUInt32(4);
-                return ((UInt64) hi << 32) | (UInt64) lo;
-            }
-
-            public static UInt64 LittleEndianToUInt64(this byte[] bs, int off) {
-                UInt32 lo = bs.LittleEndianToUInt32(off);
-                UInt32 hi = bs.LittleEndianToUInt32(off + 4);
-                return ((UInt64) hi << 32) | (UInt64) lo;
-            }
-        }
-    }
-
     namespace EllipticCurve
     {
         public static class ECKeyConfigurationExtensions

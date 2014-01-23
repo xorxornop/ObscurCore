@@ -17,8 +17,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-
 using ObscurCore.Cryptography;
+using ObscurCore.Cryptography.Authentication;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Packaging

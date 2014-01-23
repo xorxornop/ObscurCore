@@ -33,18 +33,20 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         byte ReturnByte(byte input);
 
 		/// <summary>
-		/// Process a block of bytes from <c>input</c> putting the result into <c>output</c>.
+		/// Process bytes from <c>input</c> and put the result into <c>output</c>.
 		/// </summary>
 		/// <param name="input">The input byte array.</param>
 		/// <param name="inOff">
-		/// The offset into <c>input</c> where the data to be processed starts.
+		/// The offset into <paramref>input</paramref> where the data to be processed starts.
 		/// </param>
 		/// <param name="length">The number of bytes to be processed.</param>
 		/// <param name="output">The output buffer the processed bytes go into.</param>
 		/// <param name="outOff">
-		/// The offset into <c>output</c> the processed data starts at.
+		/// The offset into <paramref>output</paramref> the processed data starts at.
 		/// </param>
-		/// <exception cref="DataLengthException">If the output buffer is too small.</exception>
+		/// <exception cref="DataLengthException">
+		/// If input or output buffers are of insufficient length to read/write input/output.
+		/// </exception>
         void ProcessBytes(byte[] input, int inOff, int length, byte[] output, int outOff);
 
 		/// <summary>

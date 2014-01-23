@@ -4,9 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Ciphers;
+using ObscurCore.Cryptography.Ciphers.Block;
+using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Tests.Packaging

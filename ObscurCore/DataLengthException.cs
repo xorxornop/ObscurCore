@@ -32,6 +32,8 @@ namespace ObscurCore
 		public DataLengthException(string message) : base(message) {}
 		public DataLengthException(string message, Exception inner) : base(message, inner) {}
 
+		public DataLengthException(string message, string parameter) : base(message + "\nParameter '" + parameter + "' is at fault.") {}
+
 		protected DataLengthException(
 			SerializationInfo info,
 			StreamingContext context) : base(info, context) {}

@@ -16,20 +16,31 @@
 using System;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Support;
-using ObscurCore.Extensions.BitPacking;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
 	public sealed class RabbitEngine : IStreamCipher, ICsprngCompatible
     {
+		private const int KEYSTREAM_LENGTH = 16;
+
+		private static uint[] A = new uint[] { 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D,
+			0xD34D34D3 };
+
         // Stores engine state
         private byte[]          _workingKey,
                                 _workingIV;
 
         private bool	        _initialised;
-		private readonly uint[] _state 			= new uint[8],
-								_counter  		= new uint[8];
-		private uint 			_counterArray;
+
+		private static uint rotl(uint value, int shift) {
+			return value << shift | value >> 32 - shift;
+		}
+
+		private uint[] X = new uint[8];
+		private uint[] C = new uint[8];
+		private byte b = 0;
+
+
 
 		private byte[] 			_keyStream 		= new byte[16];
 		private int 			_keyStreamPtr 	= 16;
@@ -131,10 +142,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 							uint* outLongPtr = (uint*)(outPtr + outOff);
 							for (int i = 0; i < blocks; i++) {
 								NextState();
-								outLongPtr[0] = inLongPtr[0] ^ _state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16);
-								outLongPtr[1] = inLongPtr[1] ^ _state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16);
-								outLongPtr[2] = inLongPtr[2] ^ _state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16);
-								outLongPtr[3] = inLongPtr[3] ^ _state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16);
+								outLongPtr[0] = inLongPtr[0] ^ X[6] ^ (X[3] >> 16) ^ (X[1] << 16);
+								outLongPtr[1] = inLongPtr[1] ^ X[4] ^ (X[1] >> 16) ^ (X[7] << 16);
+								outLongPtr[2] = inLongPtr[2] ^ X[2] ^ (X[7] >> 16) ^ (X[5] << 16);
+								outLongPtr[3] = inLongPtr[3] ^ X[0] ^ (X[5] >> 16) ^ (X[3] << 16);
 								inLongPtr += 4;
 								outLongPtr += 4;
 							}
@@ -146,10 +157,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			} else {
 				for (int i = 0; i < blocks; i++) {
 					NextState();
-					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 0) ^ _state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16), outBytes, outOff + 0);
-					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ _state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16), outBytes, outOff + 4);
-					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ _state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16), outBytes, outOff + 8);
-					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ _state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16), outBytes, outOff + 12);
+					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 0) ^ X[6] ^ (X[3] >> 16) ^ (X[1] << 16), outBytes, outOff + 0);
+					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ X[4] ^ (X[1] >> 16) ^ (X[7] << 16), outBytes, outOff + 4);
+					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ X[2] ^ (X[7] >> 16) ^ (X[5] << 16), outBytes, outOff + 8);
+					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ X[0] ^ (X[5] >> 16) ^ (X[3] << 16), outBytes, outOff + 12);
 					inOff += 16;
 					outOff += 16;
 				}
@@ -157,10 +168,30 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			#else
 			for (int i = 0; i < blocks; i++) {
 				NextState();
-				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 0) ^ _state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16), outBytes, outOff + 0);
-				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ _state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16), outBytes, outOff + 4);
-				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ _state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16), outBytes, outOff + 8);
-				Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ _state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16), outBytes, outOff + 12);
+				uint x = Pack.LE_To_UInt32(inBytes, inOff + 0) ^ X[6] ^ X[3] >> 16 ^ X[1] << 16;
+				Pack.UInt32_To_LE(x, outBytes, outOff + 0);
+//				outBytes[outOff + 0] = (byte)((x >> 24) ^ inBytes[inOff + 0]);
+//				outBytes[outOff + 1] = (byte)((x >> 16) ^ inBytes[inOff + 1]);
+//				outBytes[outOff + 2] = (byte)((x >> 8) ^ inBytes[inOff + 2]);
+//				outBytes[outOff + 3] = (byte)(x ^ inBytes[inOff + 3]);
+				x = Pack.LE_To_UInt32(inBytes, inOff + 4) ^ X[4] ^ X[1] >> 16 ^ X[7] << 16;
+				Pack.UInt32_To_LE(x, outBytes, outOff + 4);
+//				outBytes[outOff + 4] = (byte)((x >> 24) ^ inBytes[inOff + 4]);
+//				outBytes[outOff + 5] = (byte)((x >> 16) ^ inBytes[inOff + 5]);
+//				outBytes[outOff + 6] = (byte)((x >> 8) ^ inBytes[inOff + 6]);
+//				outBytes[outOff + 7] = (byte)(x ^ inBytes[inOff + 7]);
+				x = Pack.LE_To_UInt32(inBytes, inOff + 8) ^ X[2] ^ X[7] >> 16 ^ X[5] << 16;
+				Pack.UInt32_To_LE(x, outBytes, outOff + 8);
+//				outBytes[outOff + 8] = (byte)((x >> 24) ^ inBytes[inOff + 8]);
+//				outBytes[outOff + 9]= (byte)((x >> 16) ^ inBytes[inOff + 9]);
+//				outBytes[outOff + 10] = (byte)((x >> 8) ^ inBytes[inOff + 10]);
+//				outBytes[outOff + 11] = (byte)(x ^ inBytes[inOff + 11]);
+				x = Pack.LE_To_UInt32(inBytes, inOff + 12) ^ X[0] ^ X[5] >> 16 ^ X[3] << 16;
+				Pack.UInt32_To_LE(x, outBytes, outOff + 12);
+//				outBytes[outOff + 12] = (byte)((x >> 24) ^ inBytes[inOff + 12]);
+//				outBytes[outOff + 13] = (byte)((x >> 16) ^ inBytes[inOff + 13]);
+//				outBytes[outOff + 14] = (byte)((x >> 8) ^ inBytes[inOff + 14]);
+//				outBytes[outOff + 15] = (byte)(x ^ inBytes[inOff + 15]);
 				inOff += 16;
 				outOff += 16;
 			}
@@ -201,10 +232,30 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 		private void GenerateKeystream(byte[] buffer, int offset) {
 			NextState();
-			Pack.UInt32_To_LE((_state[0] ^ (_state[5] >> 16) ^ (_state[3] << 16)), buffer, offset + 0);
-			Pack.UInt32_To_LE((_state[2] ^ (_state[7] >> 16) ^ (_state[5] << 16)), buffer, offset + 4);
-			Pack.UInt32_To_LE((_state[4] ^ (_state[1] >> 16) ^ (_state[7] << 16)), buffer, offset + 8);
-			Pack.UInt32_To_LE((_state[6] ^ (_state[3] >> 16) ^ (_state[1] << 16)), buffer, offset + 12);
+			uint x = X[6] ^ X[3] >> 16 ^ X[1] << 16;
+			Pack.UInt32_To_LE(x, buffer, offset + 0);
+//			buffer[offset + 0] = (byte) (x >> 24);
+//			buffer[offset + 1] = (byte) (x >> 16);
+//			buffer[offset + 2] = (byte) (x >> 8);
+//			buffer[offset + 3] = (byte) x;
+			x = X[4] ^ X[1] >> 16 ^ X[7] << 16;
+			Pack.UInt32_To_LE(x, buffer, offset + 4);
+//			buffer[offset + 4] = (byte) (x >> 24);
+//			buffer[offset + 5] = (byte) (x >> 16);
+//			buffer[offset + 6] = (byte) (x >> 8);
+//			buffer[offset + 7] = (byte) x;
+			x = X[2] ^ X[7] >> 16 ^ X[5] << 16;
+			Pack.UInt32_To_LE(x, buffer, offset + 8);
+//			buffer[offset + 8] = (byte) (x >> 24);
+//			buffer[offset + 9] = (byte) (x >> 16);
+//			buffer[offset + 10] = (byte) (x >> 8);
+//			buffer[offset + 11] = (byte) x;
+			x = X[0] ^ X[5] >> 16 ^ X[3] << 16;
+			Pack.UInt32_To_LE(x, buffer, offset + 12);
+//			buffer[offset + 12] = (byte) (x >> 24);
+//			buffer[offset + 13] = (byte) (x >> 16);
+//			buffer[offset + 14] = (byte) (x >> 8);
+//			buffer[offset + 15] = (byte) x;
 		}
 
         #region Private implementation
@@ -213,126 +264,103 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         /// Initialise the engine state with key material.
         /// </summary>
         private void KeySetup (byte[] key) {
-            var k = new uint[4];
-
-            // Generate four subkeys
-            k[0] = BitConverter.ToUInt32(key, 0);
-            k[1] = BitConverter.ToUInt32(key, 4);
-            k[2] = BitConverter.ToUInt32(key, 8);
-            k[3] = BitConverter.ToUInt32(key, 12);
-
-            // Generate initial state variables
-            _state[0] = k[0];
-            _state[2] = k[1];
-            _state[4] = k[2];
-            _state[6] = k[3];
-            _state[1] = (k[3] << 16) | (k[2] >> 16);
-            _state[3] = (k[0] << 16) | (k[3] >> 16);
-            _state[5] = (k[1] << 16) | (k[0] >> 16);
-            _state[7] = (k[2] << 16) | (k[1] >> 16);
-
-            // Generate initial counter values
-            _counter[0] = RotLeft(k[2], 16);
-            _counter[2] = RotLeft(k[3], 16);
-            _counter[4] = RotLeft(k[0], 16);
-            _counter[6] = RotLeft(k[1], 16);
-            _counter[1] = (k[0] & 0xFFFF0000) | (k[1] & 0xFFFF);
-            _counter[3] = (k[1] & 0xFFFF0000) | (k[2] & 0xFFFF);
-            _counter[5] = (k[2] & 0xFFFF0000) | (k[3] & 0xFFFF);
-            _counter[7] = (k[3] & 0xFFFF0000) | (k[0] & 0xFFFF);
-
-            // Clear carry bit
-            _counterArray = 0;
-
-            // Iterate the system four times
-			NextState();
-			NextState();
-			NextState();
-			NextState();
-
-            // Iterate the counters
-            for (var j = 0; j < 8; j++) _counter[j] ^= _state[(j + 4) & 0x7];
+			ushort[] sKey = new ushort[key.Length>>1];
+			for (int i = 0; i < sKey.Length; ++i) {
+				sKey [i] = (ushort)((key [i << 1] << 8) | key [(2 << 1) + 1]);
+			}
+			setupKey(sKey);
         }
+
+		public void setupKey(ushort[] key) {
+			/*			 unroll */
+			X[0] = (uint)key[1] << 16 | (uint)(key[0] & 0xFFFF);
+			X[1] = (uint)key[6] << 16 | (uint)(key[5] & 0xFFFF);
+			X[2] = (uint)key[3] << 16 | (uint)(key[2] & 0xFFFF);
+			X[3] = (uint)key[0] << 16 | (uint)(key[7] & 0xFFFF);
+			X[4] = (uint)key[5] << 16 | (uint)(key[4] & 0xFFFF);
+			X[5] = (uint)key[2] << 16 | (uint)(key[1] & 0xFFFF);
+			X[6] = (uint)key[7] << 16 | (uint)(key[6] & 0xFFFF);
+			X[7] = (uint)key[4] << 16 | (uint)(key[3] & 0xFFFF);
+			/*			 unroll */
+			C[0] = (uint)key[4] << 16 | (uint)(key[5] & 0xFFFF);
+			C[1] = (uint)key[1] << 16 | (uint)(key[2] & 0xFFFF);
+			C[2] = (uint)key[6] << 16 | (uint)(key[7] & 0xFFFF);
+			C[3] = (uint)key[3] << 16 | (uint)(key[4] & 0xFFFF);
+			C[4] = (uint)key[0] << 16 | (uint)(key[1] & 0xFFFF);
+			C[5] = (uint)key[5] << 16 | (uint)(key[6] & 0xFFFF);
+			C[6] = (uint)key[2] << 16 | (uint)(key[3] & 0xFFFF);
+			C[7] = (uint)key[7] << 16 | (uint)(key[0] & 0xFFFF);
+			NextState();
+			NextState();
+			NextState();
+			NextState();
+			/*			 unroll */
+			C[0] ^= X[4];
+			C[1] ^= X[5];
+			C[2] ^= X[6];
+			C[3] ^= X[7];
+			C[4] ^= X[0];
+			C[5] ^= X[1];
+			C[6] ^= X[2];
+			C[7] ^= X[3];
+		}
 
         /// <summary>
         /// Initialise the engine state with initialisation vector material.
         /// </summary>
         private void IVSetup (byte[] iv) {
-            if (iv.Length != 8) throw new ArgumentException("IV must be 8 bytes in length.");
-            var i = new uint[4];
+            if (iv.Length != 8) 
+				throw new ArgumentException("IV must be 8 bytes in length.");
 
-            // Generate four subvectors
-            i[0] = BitConverter.ToUInt32(iv, 0);
-            i[2] = BitConverter.ToUInt32(iv, 4);
-            i[1] = (i[0] << 16) | (i[2] & 0xFFFF0000);
-            i[3] = (i[2] << 16) | (i[0] & 0x0000FFFF);
-
-            // Modify counter values
-            var subIndex = 0;
-            for (var index = 0; index < 8; index++) {
-                _counter[index] ^= i[subIndex];
-                if (++subIndex > 3) subIndex = 0;
-            }
-
-            // Iterate the system four times
-			NextState();
-			NextState();
-			NextState();
-			NextState();
+			ushort[] sIV = new ushort[iv.Length >> 1];
+			for(int i = 0; i < sIV.Length; i++) {
+				sIV[i] = (ushort)((iv[i << 1] << 8) | iv[(2 << 1) + 1]);
+			}
+			setupIVPost (sIV);
         }
 
-        private static uint RotLeft (uint state, int rot) {
-            return (state << rot) | (state >> (32 - rot));
-        }
+		private void setupIVPost(ushort[] iv) {
+			/*			 unroll */
+			C[0] ^= (uint)iv[1] << 16 | (uint)(iv[0] & 0xFFFF);
+			C[1] ^= (uint)iv[3] << 16 | (uint)(iv[1] & 0xFFFF);
+			C[2] ^= (uint)iv[3] << 16 | (uint)(iv[2] & 0xFFFF);
+			C[3] ^= (uint)iv[2] << 16 | (uint)(iv[0] & 0xFFFF);
+			C[4] ^= (uint)iv[1] << 16 | (uint)(iv[0] & 0xFFFF);
+			C[5] ^= (uint)iv[3] << 16 | (uint)(iv[1] & 0xFFFF);
+			C[6] ^= (uint)iv[3] << 16 | (uint)(iv[2] & 0xFFFF);
+			C[7] ^= (uint)iv[2] << 16 | (uint)(iv[0] & 0xFFFF);
+
+			// Iterate the system four times
+			NextState();
+			NextState();
+			NextState();
+			NextState();
+		}
+
 
         private void NextState () {
-            // Temporary variables
-            uint[] cOld = new uint[8];
-
-            /* Save old counter values */
-            for (var i = 0; i < 8; i++) cOld[i] = _counter[i];
-
-            /* Calculate new counter values */
-            _counter[0] += constants[0] + _counterArray;
-            for (var i = 1; i < 8; i++) {
-                _counter[i] += constants[i] + Convert.ToUInt32(_counter[i - 1] < cOld[i - 1]);
-            }
-            _counterArray = Convert.ToUInt32(_counter[7] < cOld[7]);
-
-            /* Calculate the g-functions */
-			uint g0 = GFunc(_state[0] + _counter[0]);
-			uint g1 = GFunc(_state[1] + _counter[1]);
-			uint g2 = GFunc(_state[2] + _counter[2]);
-			uint g3 = GFunc(_state[3] + _counter[3]);
-			uint g4 = GFunc(_state[4] + _counter[4]);
-			uint g5 = GFunc(_state[5] + _counter[5]);
-			uint g6 = GFunc(_state[6] + _counter[6]);
-			uint g7 = GFunc(_state[7] + _counter[7]);
-
-            /* Calculate new state values */
-			_state[0] = g0 + RotLeft(g7, 16) + RotLeft(g6, 16);
-			_state[1] = g1 + RotLeft(g0, 8) + g7;
-			_state[2] = g2 + RotLeft(g1, 16) + RotLeft(g0, 16);
-			_state[3] = g3 + RotLeft(g2, 8) + g1;
-			_state[4] = g4 + RotLeft(g3, 16) + RotLeft(g2, 16);
-			_state[5] = g5 + RotLeft(g4, 8) + g3;
-			_state[6] = g6 + RotLeft(g5, 16) + RotLeft(g4, 16);
-			_state[7] = g7 + RotLeft(g6, 8) + g5;
-        }
-
-        /// <summary>
-        /// Square a 32-bit unsigned integer to obtain the 64-bit result 
-        /// and return the upper 32 bits XOR the lower 32 bits.
-        /// </summary>
-        private static uint GFunc (uint state) {
-            // Construct high and low argument for squaring
-            uint a = state & 0xFFFF;
-            uint b = state >> 16;
-            // Calculate high and low result of squaring
-            uint h = ((((a * a) >> 17) + (a * b)) >> 15) + b * b;
-            uint l = state * state;
-            // Return high XOR low
-            return h ^ l;
+			/* counter update */
+			for(int j = 0; j < 8; ++j) {
+				ulong t = (C[j] & 0xFFFFFFFFul) + (A[j] & 0xFFFFFFFFul) + b;
+				b = (byte) (t >> 32);
+				C[j] = (uint) (t & 0xFFFFFFFF);
+			}
+			/*			 next state function */
+			uint[] G = new uint[8];
+			for(int j = 0; j < 8; ++j) {
+				// TODO: reduce this to use 32 bits only
+				ulong t = X[j] + C[j] & 0xFFFFFFFFul;
+				G[j] = (uint) ((t *= t) ^ t >> 32);
+			}
+			/*			 unroll */
+			X[0] = G[0] + rotl(G[7], 16) + rotl(G[6], 16);
+			X[1] = G[1] + rotl(G[0], 8) + G[7];
+			X[2] = G[2] + rotl(G[1], 16) + rotl(G[0], 16);
+			X[3] = G[3] + rotl(G[2], 8) + G[1];
+			X[4] = G[4] + rotl(G[3], 16) + rotl(G[2], 16);
+			X[5] = G[5] + rotl(G[4], 8) + G[3];
+			X[6] = G[6] + rotl(G[5], 16) + rotl(G[4], 16);
+			X[7] = G[7] + rotl(G[6], 8) + G[5];
         }
         #endregion
     }

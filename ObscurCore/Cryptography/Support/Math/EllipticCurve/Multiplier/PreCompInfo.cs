@@ -5,7 +5,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 	* algorithms. Used as a Memento (see GOF patterns) for
 	* <code>WNafMultiplier</code>.
 	*/
-	internal interface PreCompInfo
+	public interface PreCompInfo
 	{
 	}
 }

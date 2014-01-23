@@ -15,6 +15,7 @@
 		BrainpoolP256r1,
         BrainpoolP256t1,
 		BrainpoolP320r1,
+		BrainpoolP384t1,
 		BrainpoolP384r1,
 		BrainpoolP512r1,
 	}

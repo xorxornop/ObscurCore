@@ -9,30 +9,34 @@ namespace ObscurCore.Cryptography.Support.Math
 	[Serializable]
 	public class BigInteger
 	{
-		// The primes b/w 2 and ~2^10
-		/*
-				3   5   7   11  13  17  19  23  29
-			31  37  41  43  47  53  59  61  67  71
-			73  79  83  89  97  101 103 107 109 113
-			127 131 137 139 149 151 157 163 167 173
-			179 181 191 193 197 199 211 223 227 229
-			233 239 241 251 257 263 269 271 277 281
-			283 293 307 311 313 317 331 337 347 349
-			353 359 367 373 379 383 389 397 401 409
-			419 421 431 433 439 443 449 457 461 463
-			467 479 487 491 499 503 509 521 523 541
-			547 557 563 569 571 577 587 593 599 601
-			607 613 617 619 631 641 643 647 653 659
-			661 673 677 683 691 701 709 719 727 733
-			739 743 751 757 761 769 773 787 797 809
-			811 821 823 827 829 839 853 857 859 863
-			877 881 883 887 907 911 919 929 937 941
-			947 953 967 971 977 983 991 997
-			1009 1013 1019 1021 1031
-		*/
+		// The first few odd primes
+		/*		
+                3   5   7   11  13  17  19  23  29
+            31  37  41  43  47  53  59  61  67  71
+            73  79  83  89  97  101 103 107 109 113
+            127 131 137 139 149 151 157 163 167 173
+            179 181 191 193 197 199 211 223 227 229
+            233 239 241 251 257 263 269 271 277 281
+            283 293 307 311 313 317 331 337 347 349
+            353 359 367 373 379 383 389 397 401 409
+            419 421 431 433 439 443 449 457 461 463
+            467 479 487 491 499 503 509 521 523 541
+            547 557 563 569 571 577 587 593 599 601
+            607 613 617 619 631 641 643 647 653 659
+            661 673 677 683 691 701 709 719 727 733
+            739 743 751 757 761 769 773 787 797 809
+            811 821 823 827 829 839 853 857 859 863
+            877 881 883 887 907 911 919 929 937 941
+            947 953 967 971 977 983 991 997 1009
+            1013 1019 1021 1031 1033 1039 1049 1051
+            1061 1063 1069 1087 1091 1093 1097 1103
+            1109 1117 1123 1129 1151 1153 1163 1171
+            1181 1187 1193 1201 1213 1217 1223 1229
+            1231 1237 1249 1259 1277 1279 1283 1289
+        */
 
 		// Each list has a product < 2^31
-		private static readonly int[][] primeLists = new int[][]
+		internal static readonly int[][] primeLists = new int[][]
 		{
 			new int[]{ 3, 5, 7, 11, 13, 17, 19, 23 },
 			new int[]{ 29, 31, 37, 41, 43 },
@@ -96,35 +100,89 @@ namespace ObscurCore.Cryptography.Support.Math
 
 			new int[]{ 997, 1009, 1013 },
 			new int[]{ 1019, 1021, 1031 },
+			new int[]{ 1033, 1039, 1049 },
+			new int[]{ 1051, 1061, 1063 },
+			new int[]{ 1069, 1087, 1091 },
+
+			new int[]{ 1093, 1097, 1103 },
+			new int[]{ 1109, 1117, 1123 },
+			new int[]{ 1129, 1151, 1153 },
+			new int[]{ 1163, 1171, 1181 },
+			new int[]{ 1187, 1193, 1201 },
+
+			new int[]{ 1213, 1217, 1223 },
+			new int[]{ 1229, 1231, 1237 },
+			new int[]{ 1249, 1259, 1277 },
+			new int[]{ 1279, 1283, 1289 },
 		};
 
-		private static readonly int[] primeProducts;
+		internal static readonly int[] primeProducts;
 
-		private const long IMASK = 0xffffffffL;
-		private static readonly ulong UIMASK = (ulong)IMASK;
+		private const long IMASK = 0xFFFFFFFFL;
+		private const ulong UIMASK = 0xFFFFFFFFUL;
 
 		private static readonly int[] ZeroMagnitude = new int[0];
 		private static readonly byte[] ZeroEncoding = new byte[0];
 
-		public static readonly BigInteger Zero = new BigInteger(0, ZeroMagnitude, false);
-		public static readonly BigInteger One = createUValueOf(1);
-		public static readonly BigInteger Two = createUValueOf(2);
-		public static readonly BigInteger Three = createUValueOf(3);
-		public static readonly BigInteger Ten = createUValueOf(10);
+		private static readonly BigInteger[] SMALL_CONSTANTS = new BigInteger[17];
+		public static readonly BigInteger Zero;
+		public static readonly BigInteger One;
+		public static readonly BigInteger Two;
+		public static readonly BigInteger Three;
+		public static readonly BigInteger Ten;
 
-		private static readonly int chunk2 = 1; // TODO Parse 64 bits at a time
-		private static readonly BigInteger radix2 = ValueOf(2);
-		private static readonly BigInteger radix2E = radix2.Pow(chunk2);
+		//private readonly static byte[] BitCountTable =
+		//{
+		//    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
+		//    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+		//    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+		//    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+		//    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+		//    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+		//    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+		//    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+		//    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+		//    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+		//    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+		//    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+		//    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+		//    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+		//    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+		//    4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
+		//};
 
-		private static readonly int chunk10 = 19;
-		private static readonly BigInteger radix10 = ValueOf(10);
-		private static readonly BigInteger radix10E = radix10.Pow(chunk10);
+		private readonly static byte[] BitLengthTable =
+		{
+			0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
+			5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+			6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+			6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
+		};
 
-		private static readonly int chunk16 = 16;
-		private static readonly BigInteger radix16 = ValueOf(16);
-		private static readonly BigInteger radix16E = radix16.Pow(chunk16);
+		// TODO Parse radix-2 64 bits at a time and radix-8 63 bits at a time
+		private const int chunk2 = 1, chunk8 = 1, chunk10 = 19, chunk16 = 16;
+		private static readonly BigInteger radix2, radix2E, radix8, radix8E, radix10, radix10E, radix16, radix16E;
 
 		private static readonly Random RandomSource = new Random();
+
+		/*		
+         * These are the threshold bit-lengths (of an exponent) where we increase the window size.
+         * They are calculated according to the expected savings in multiplications.
+         * Some squares will also be saved on average, but we offset these against the extra storage costs.
+         */
+		private static readonly int[] ExpWindowThresholds = { 7, 25, 81, 241, 673, 1793, 4609, Int32.MaxValue };
 
 		private const int BitsPerByte = 8;
 		private const int BitsPerInt = 32;
@@ -132,13 +190,39 @@ namespace ObscurCore.Cryptography.Support.Math
 
 		static BigInteger()
 		{
+			Zero = new BigInteger(0, ZeroMagnitude, false);
+			Zero.nBits = 0; Zero.nBitLength = 0;
+
+			SMALL_CONSTANTS[0] = Zero;
+			for (uint i = 1; i < SMALL_CONSTANTS.Length; ++i)
+			{
+				SMALL_CONSTANTS[i] = CreateUValueOf(i);
+			}
+
+			One = SMALL_CONSTANTS[1];
+			Two = SMALL_CONSTANTS[2];
+			Three = SMALL_CONSTANTS[3];
+			Ten = SMALL_CONSTANTS[10];
+
+			radix2 = ValueOf(2);
+			radix2E = radix2.Pow(chunk2);
+
+			radix8 = ValueOf(8);
+			radix8E = radix8.Pow(chunk8);
+
+			radix10 = ValueOf(10);
+			radix10E = radix10.Pow(chunk10);
+
+			radix16 = ValueOf(16);
+			radix16E = radix16.Pow(chunk16);
+
 			primeProducts = new int[primeLists.Length];
 
 			for (int i = 0; i < primeLists.Length; ++i)
 			{
 				int[] primeList = primeLists[i];
-				int product = 1;
-				for (int j = 0; j < primeList.Length; ++j)
+				int product = primeList[0];
+				for (int j = 1; j < primeList.Length; ++j)
 				{
 					product *= primeList[j];
 				}
@@ -146,20 +230,16 @@ namespace ObscurCore.Cryptography.Support.Math
 			}
 		}
 
-		private int sign; // -1 means -ve; +1 means +ve; 0 means 0;
 		private int[] magnitude; // array of ints with [0] being the most significant
+		private int sign; // -1 means -ve; +1 means +ve; 0 means 0;
 		private int nBits = -1; // cache BitCount() value
-		private int nBitLength = -1; // cache calcBitLength() value
-		private long mQuote = -1L; // -m^(-1) mod b, b = 2^32 (see Montgomery mult.)
+		private int nBitLength = -1; // cache BitLength() value
+		private int mQuote = 0; // -m^(-1) mod b, b = 2^32 (see Montgomery mult.), 0 when uninitialised
 
 		private static int GetByteLength(
 			int nBits)
 		{
 			return (nBits + BitsPerByte - 1) / BitsPerByte;
-		}
-
-		private BigInteger()
-		{
 		}
 
 		private BigInteger(
@@ -177,7 +257,7 @@ namespace ObscurCore.Cryptography.Support.Math
 
 				if (i == mag.Length)
 				{
-//					this.sign = 0;
+					this.sign = 0;
 					this.magnitude = ZeroMagnitude;
 				}
 				else
@@ -223,29 +303,36 @@ namespace ObscurCore.Cryptography.Support.Math
 
 			switch (radix)
 			{
-				case 2:
-					// Is there anyway to restrict to binary digits?
-					style = NumberStyles.Integer;
-					chunk = chunk2;
-					r = radix2;
-					rE = radix2E;
-					break;
-				case 10:
-					// This style seems to handle spaces and minus sign already (our processing redundant?)
-					style = NumberStyles.Integer;
-					chunk = chunk10;
-					r = radix10;
-					rE = radix10E;
-					break;
-				case 16:
-					// TODO Should this be HexNumber?
-					style = NumberStyles.AllowHexSpecifier;
-					chunk = chunk16;
-					r = radix16;
-					rE = radix16E;
-					break;
-				default:
-					throw new FormatException("Only bases 2, 10, or 16 allowed");
+			case 2:
+				// Is there anyway to restrict to binary digits?
+				style = NumberStyles.Integer;
+				chunk = chunk2;
+				r = radix2;
+				rE = radix2E;
+				break;
+			case 8:
+				// Is there anyway to restrict to octal digits?
+				style = NumberStyles.Integer;
+				chunk = chunk8;
+				r = radix8;
+				rE = radix8E;
+				break;
+			case 10:
+				// This style seems to handle spaces and minus sign already (our processing redundant?)
+				style = NumberStyles.Integer;
+				chunk = chunk10;
+				r = radix10;
+				rE = radix10E;
+				break;
+			case 16:
+				// TODO Should this be HexNumber?
+				style = NumberStyles.AllowHexSpecifier;
+				chunk = chunk16;
+				r = radix16;
+				rE = radix16E;
+				break;
+			default:
+				throw new FormatException("Only bases 2, 8, 10, or 16 allowed");
 			}
 
 
@@ -254,25 +341,25 @@ namespace ObscurCore.Cryptography.Support.Math
 
 			if (str[0] == '-')
 			{
-				if (str.Length == 1)
-					throw new FormatException("Zero length BigInteger");
+			if (str.Length == 1)
+				throw new FormatException("Zero length BigInteger");
 
-				sign = -1;
-				index = 1;
+			sign = -1;
+			index = 1;
 			}
 
 			// strip leading zeros from the string str
 			while (index < str.Length && Int32.Parse(str[index].ToString(), style) == 0)
 			{
-				index++;
+			index++;
 			}
 
 			if (index >= str.Length)
 			{
-				// zero value - we're done
-				sign = 0;
-				magnitude = ZeroMagnitude;
-				return;
+			// zero value - we're done
+			sign = 0;
+			magnitude = ZeroMagnitude;
+			return;
 			}
 
 			//////
@@ -288,81 +375,97 @@ namespace ObscurCore.Cryptography.Support.Math
 
 			if (next <= str.Length)
 			{
-				do
+			do
+			{
+				string s = str.Substring(index, chunk);
+				ulong i = ulong.Parse(s, style);
+				BigInteger bi = CreateUValueOf(i);
+
+				switch (radix)
 				{
-					string s = str.Substring(index, chunk);
-					ulong i = ulong.Parse(s, style);
-					BigInteger bi = createUValueOf(i);
+				case 2:
+					// TODO Need this because we are parsing in radix 10 above
+					if (i >= 2)
+						throw new FormatException("Bad character in radix 2 string: " + s);
 
-					switch (radix)
-					{
-						case 2:
-							// TODO Need this because we are parsing in radix 10 above
-							if (i > 1)
-								throw new FormatException("Bad character in radix 2 string: " + s);
+					// TODO Parse 64 bits at a time
+					b = b.ShiftLeft(1);
+					break;
+				case 8:
+					// TODO Need this because we are parsing in radix 10 above
+					if (i >= 8)
+						throw new FormatException("Bad character in radix 8 string: " + s);
 
-							// TODO Parse 64 bits at a time
-							b = b.ShiftLeft(1);
-							break;
-						case 16:
-							b = b.ShiftLeft(64);
-							break;
-						default:
-							b = b.Multiply(rE);
-							break;
-					}
-
-					b = b.Add(bi);
-
-					index = next;
-					next += chunk;
+					// TODO Parse 63 bits at a time
+					b = b.ShiftLeft(3);
+					break;
+				case 16:
+					b = b.ShiftLeft(64);
+					break;
+				default:
+					b = b.Multiply(rE);
+					break;
 				}
-				while (next <= str.Length);
+
+				b = b.Add(bi);
+
+				index = next;
+				next += chunk;
+			}
+			while (next <= str.Length);
 			}
 
 			if (index < str.Length)
 			{
-				string s = str.Substring(index);
-				ulong i = ulong.Parse(s, style);
-				BigInteger bi = createUValueOf(i);
+			string s = str.Substring(index);
+			ulong i = ulong.Parse(s, style);
+			BigInteger bi = CreateUValueOf(i);
 
-				if (b.sign > 0)
+			if (b.sign > 0)
+			{
+				if (radix == 2)
 				{
-					if (radix == 2)
-					{
-						// NB: Can't reach here since we are parsing one char at a time
-						Debug.Assert(false);
+					// NB: Can't reach here since we are parsing one char at a time
+					Debug.Assert(false);
 
-						// TODO Parse all bits at once
+					// TODO Parse all bits at once
 //						b = b.ShiftLeft(s.Length);
-					}
-					else if (radix == 16)
-					{
-						b = b.ShiftLeft(s.Length << 2);
-					}
-					else
-					{
-						b = b.Multiply(r.Pow(s.Length));
-					}
+				}
+				else if (radix == 8)
+				{
+					// NB: Can't reach here since we are parsing one char at a time
+					Debug.Assert(false);
 
-					b = b.Add(bi);
+					// TODO Parse all bits at once
+//						b = b.ShiftLeft(s.Length * 3);
+				}
+				else if (radix == 16)
+				{
+					b = b.ShiftLeft(s.Length << 2);
 				}
 				else
 				{
-					b = bi;
+					b = b.Multiply(r.Pow(s.Length));
 				}
+
+				b = b.Add(bi);
+			}
+			else
+			{
+				b = bi;
+			}
 			}
 
 			// Note: This is the previous (slower) algorithm
-			//			while (index < value.Length)
-			//            {
-			//				char c = value[index];
-			//				string s = c.ToString();
-			//				int i = Int32.Parse(s, style);
-			//
-			//                b = b.Multiply(r).Add(ValueOf(i));
-			//                index++;
-			//            }
+//			while (index < value.Length)
+//            {
+//				char c = value[index];
+//				string s = c.ToString();
+//				int i = Int32.Parse(s, style);
+//
+//                b = b.Multiply(r).Add(ValueOf(i));
+//                index++;
+//            }
 
 			magnitude = b.magnitude;
 		}
@@ -504,7 +607,7 @@ namespace ObscurCore.Cryptography.Support.Math
 
 			if (sign == 0)
 			{
-				//this.sign = 0;
+				this.sign = 0;
 				this.magnitude = ZeroMagnitude;
 			}
 			else
@@ -527,7 +630,7 @@ namespace ObscurCore.Cryptography.Support.Math
 
 			if (sizeInBits == 0)
 			{
-//				this.sign = 0;
+				this.sign = 0;
 				this.magnitude = ZeroMagnitude;
 				return;
 			}
@@ -537,13 +640,12 @@ namespace ObscurCore.Cryptography.Support.Math
 			random.NextBytes(b);
 
 			// strip off any excess bits in the MSB
-			b[0] &= rndMask[BitsPerByte * nBytes - sizeInBits];
+			int xBits = BitsPerByte * nBytes - sizeInBits;
+			b[0] &= (byte)(255U >> xBits);
 
 			this.magnitude = MakeMagnitude(b, 0, b.Length);
 			this.sign = this.magnitude.Length < 1 ? 0 : 1;
 		}
-
-		private static readonly byte[] rndMask = { 255, 127, 63, 31, 15, 7, 3, 1 };
 
 		public BigInteger(
 			int		bitLength,
@@ -559,8 +661,8 @@ namespace ObscurCore.Cryptography.Support.Math
 			if (bitLength == 2)
 			{
 				this.magnitude = random.Next(2) == 0
-					?	Two.magnitude
-					:	Three.magnitude;
+				                 ?	Two.magnitude
+				                 :	Three.magnitude;
 				return;
 			}
 
@@ -568,7 +670,7 @@ namespace ObscurCore.Cryptography.Support.Math
 			byte[] b = new byte[nBytes];
 
 			int xBits = BitsPerByte * nBytes - bitLength;
-			byte mask = rndMask[xBits];
+			byte mask = (byte)(255U >> xBits);
 
 			for (;;)
 			{
@@ -585,7 +687,7 @@ namespace ObscurCore.Cryptography.Support.Math
 
 				this.magnitude = MakeMagnitude(b, 0, b.Length);
 				this.nBits = -1;
-				this.mQuote = -1L;
+				this.mQuote = 0;
 
 				if (certainty < 1)
 					break;
@@ -600,7 +702,7 @@ namespace ObscurCore.Cryptography.Support.Math
 						int n = 33 + random.Next(bitLength - 2);
 						this.magnitude[this.magnitude.Length - (n >> 5)] ^= (1 << (n & 31));
 						this.magnitude[this.magnitude.Length - 1] ^= ((random.Next() + 1) << 1);
-						this.mQuote = -1L;
+						this.mQuote = 0;
 
 						if (CheckProbablePrime(certainty, random))
 							return;
@@ -614,9 +716,9 @@ namespace ObscurCore.Cryptography.Support.Math
 			return sign >= 0 ? this : Negate();
 		}
 
-		/**
-		 * return a = a + b - b preserved.
-		 */
+		/*		*
+         * return a = a + b - b preserved.
+         */
 		private static int[] AddMagnitudes(
 			int[] a,
 			int[] b)
@@ -709,12 +811,12 @@ namespace ObscurCore.Cryptography.Support.Math
 			}
 
 			int[] aMag = this.sign > 0
-				? this.magnitude
-				: Add(One).magnitude;
+			             ? this.magnitude
+			             : Add(One).magnitude;
 
 			int[] bMag = value.sign > 0
-				? value.magnitude
-				: value.Add(One).magnitude;
+			             ? value.magnitude
+			             : value.Add(One).magnitude;
 
 			bool resultNeg = sign < 0 && value.sign < 0;
 			int resultLength = System.Math.Max(aMag.Length, bMag.Length);
@@ -777,12 +879,9 @@ namespace ObscurCore.Cryptography.Support.Math
 					else
 					{
 						int sum = 0;
-						for (int i = 0; i < magnitude.Length; i++)
+						for (int i = 0; i < magnitude.Length; ++i)
 						{
-							sum += bitCounts[(byte) magnitude[i]];
-							sum += bitCounts[(byte)(magnitude[i] >> 8)];
-							sum += bitCounts[(byte)(magnitude[i] >> 16)];
-							sum += bitCounts[(byte)(magnitude[i] >> 24)];
+							sum += BitCnt(magnitude[i]);
 						}
 						nBits = sum;
 					}
@@ -792,23 +891,19 @@ namespace ObscurCore.Cryptography.Support.Math
 			}
 		}
 
-		private readonly static byte[] bitCounts =
+		public static int BitCnt(int i)
 		{
-			0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1,
-			2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4,
-			4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3,
-			4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5,
-			3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2,
-			3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3,
-			3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6,
-			7, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6,
-			5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5,
-			6, 6, 7, 6, 7, 7, 8
-		};
+			uint u = (uint)i;
+			u = u - ((u >> 1) & 0x55555555);
+			u = (u & 0x33333333) + ((u >> 2) & 0x33333333);
+			u = (u + (u >> 4)) & 0x0f0f0f0f;
+			u += (u >> 8);
+			u += (u >> 16);
+			u &= 0x3f;
+			return (int)u;
+		}
 
-		private int calcBitLength(
-			int		indx,
-			int[]	mag)
+		private static int CalcBitLength(int sign, int indx, int[]	mag)
 		{
 			for (;;)
 			{
@@ -852,8 +947,8 @@ namespace ObscurCore.Cryptography.Support.Math
 				if (nBitLength == -1)
 				{
 					nBitLength = sign == 0
-						? 0
-						: calcBitLength(0, magnitude);
+					             ? 0
+					             : CalcBitLength(sign, 0, magnitude);
 				}
 
 				return nBitLength;
@@ -863,38 +958,20 @@ namespace ObscurCore.Cryptography.Support.Math
 		//
 		// BitLen(value) is the number of bits in value.
 		//
-		private static int BitLen(
-			int w)
+		private static int BitLen(int w)
 		{
-			// Binary search - decision tree (5 tests, rarely 6)
-			return (w < 1 << 15 ? (w < 1 << 7
-				? (w < 1 << 3 ? (w < 1 << 1
-				? (w < 1 << 0 ? (w < 0 ? 32 : 0) : 1)
-				: (w < 1 << 2 ? 2 : 3)) : (w < 1 << 5
-				? (w < 1 << 4 ? 4 : 5)
-				: (w < 1 << 6 ? 6 : 7)))
-				: (w < 1 << 11
-				? (w < 1 << 9 ? (w < 1 << 8 ? 8 : 9) : (w < 1 << 10 ? 10 : 11))
-				: (w < 1 << 13 ? (w < 1 << 12 ? 12 : 13) : (w < 1 << 14 ? 14 : 15)))) : (w < 1 << 23 ? (w < 1 << 19
-				? (w < 1 << 17 ? (w < 1 << 16 ? 16 : 17) : (w < 1 << 18 ? 18 : 19))
-				: (w < 1 << 21 ? (w < 1 << 20 ? 20 : 21) : (w < 1 << 22 ? 22 : 23))) : (w < 1 << 27
-				? (w < 1 << 25 ? (w < 1 << 24 ? 24 : 25) : (w < 1 << 26 ? 26 : 27))
-				: (w < 1 << 29 ? (w < 1 << 28 ? 28 : 29) : (w < 1 << 30 ? 30 : 31)))));
+			uint v = (uint)w;
+			uint t = v >> 24;
+			if (t != 0)
+				return 24 + BitLengthTable[t];
+			t = v >> 16;
+			if (t != 0)
+				return 16 + BitLengthTable[t];
+			t = v >> 8;
+			if (t != 0)
+				return 8 + BitLengthTable[t];
+			return BitLengthTable[v];
 		}
-
-//		private readonly static byte[] bitLengths =
-//		{
-//			0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
-//			5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-//			6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-//			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-//			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8,
-//			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-//			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-//			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-//			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-//			8, 8, 8, 8, 8, 8, 8, 8
-//		};
 
 		private bool QuickPow2Check()
 		{
@@ -907,10 +984,10 @@ namespace ObscurCore.Cryptography.Support.Math
 			return CompareTo((BigInteger)obj);
 		}
 
-		/**
-		 * unsigned comparison on two arrays - note the arrays may
-		 * start with leading zeros.
-		 */
+		/*		*
+         * unsigned comparison on two arrays - note the arrays may
+         * start with leading zeros.
+         */
 		private static int CompareTo(
 			int		xIndx,
 			int[]	x,
@@ -961,15 +1038,15 @@ namespace ObscurCore.Cryptography.Support.Math
 			BigInteger value)
 		{
 			return sign < value.sign ? -1
-				: sign > value.sign ? 1
-				: sign == 0 ? 0
-				: sign * CompareNoLeadingZeroes(0, magnitude, 0, value.magnitude);
+					: sign > value.sign ? 1
+					: sign == 0 ? 0
+					: sign * CompareNoLeadingZeroes(0, magnitude, 0, value.magnitude);
 		}
 
-		/**
-		 * return z = x / y - done in place (z value preserved, x contains the
-		 * remainder)
-		 */
+		/*		*
+         * return z = x / y - done in place (z value preserved, x contains the
+         * remainder)
+         */
 		private int[] Divide(
 			int[]	x,
 			int[]	y)
@@ -993,8 +1070,8 @@ namespace ObscurCore.Cryptography.Support.Math
 
 			if (xyCmp > 0)
 			{
-				int yBitLength = calcBitLength(yStart, y);
-				int xBitLength = calcBitLength(xStart, x);
+				int yBitLength = CalcBitLength(1, yStart, y);
+				int xBitLength = CalcBitLength(1, xStart, x);
 				int shift = xBitLength - yBitLength;
 
 				int[] iCount;
@@ -1037,7 +1114,7 @@ namespace ObscurCore.Cryptography.Support.Math
 								return count;
 						}
 
-						//xBitLength = calcBitLength(xStart, x);
+						//xBitLength = CalcBitLength(xStart, x);
 						xBitLength = 32 * (x.Length - xStart - 1) + BitLen(x[xStart]);
 
 						if (xBitLength <= yBitLength)
@@ -1166,17 +1243,19 @@ namespace ObscurCore.Cryptography.Support.Math
 			if (biggie == null)
 				return false;
 
-			if (biggie.sign != sign || biggie.magnitude.Length != magnitude.Length)
-				return false;
+			return sign == biggie.sign && IsEqualMagnitude(biggie);
+		}
 
+		private bool IsEqualMagnitude(BigInteger x)
+		{
+			int[] xMag = x.magnitude;
+			if (magnitude.Length != x.magnitude.Length)
+				return false;
 			for (int i = 0; i < magnitude.Length; i++)
 			{
-				if (biggie.magnitude[i] != magnitude[i])
-				{
+				if (magnitude[i] != x.magnitude[i])
 					return false;
-				}
 			}
-
 			return true;
 		}
 
@@ -1235,17 +1314,22 @@ namespace ObscurCore.Cryptography.Support.Math
 		{
 			get
 			{
-				return sign == 0 ? 0
-					: sign > 0 ? magnitude[magnitude.Length - 1]
-					: -magnitude[magnitude.Length - 1];
+				if (sign == 0)
+					return 0;
+
+				int n = magnitude.Length;
+
+				int v = magnitude[n - 1];
+
+				return sign < 0 ? -v : v;
 			}
 		}
 
-		/**
-		 * return whether or not a BigInteger is probably prime with a
-		 * probability of 1 - (1/2)**certainty.
-		 * <p>From Knuth Vol 2, pg 395.</p>
-		 */
+		/*		*
+         * return whether or not a BigInteger is probably prime with a
+         * probability of 1 - (1/2)**certainty.
+         * <p>From Knuth Vol 2, pg 395.</p>
+         */
 		public bool IsProbablePrime(
 			int certainty)
 		{
@@ -1312,9 +1396,7 @@ namespace ObscurCore.Cryptography.Support.Math
 //			return rbTest;
 		}
 
-		internal bool RabinMillerTest(
-			int		certainty,
-			Random	random)
+		public bool RabinMillerTest(int certainty, Random random)
 		{
 			Debug.Assert(certainty > 0);
 			Debug.Assert(BitLength > 2);
@@ -1322,36 +1404,38 @@ namespace ObscurCore.Cryptography.Support.Math
 
 			// let n = 1 + d . 2^s
 			BigInteger n = this;
-			BigInteger nMinusOne = n.Subtract(One);
-			int s = nMinusOne.GetLowestSetBit();
-			BigInteger r = nMinusOne.ShiftRight(s);
-
+			int s = n.GetLowestSetBitMaskFirst(-1 << 1);
 			Debug.Assert(s >= 1);
+			BigInteger r = n.ShiftRight(s);
+
+			// NOTE: Avoid conversion to/from Montgomery form and check for R/-R as result instead
+
+			BigInteger montRadix = One.ShiftLeft(32 * n.magnitude.Length).Remainder(n);
+			BigInteger minusMontRadix = n.Subtract(montRadix);
 
 			do
 			{
-				// TODO Make a method for random BigIntegers in range 0 < x < n)
-				// - Method can be optimized by only replacing examined bits at each trial
 				BigInteger a;
 				do
 				{
 					a = new BigInteger(n.BitLength, random);
 				}
-				while (a.CompareTo(One) <= 0 || a.CompareTo(nMinusOne) >= 0);
+				while (a.sign == 0 || a.CompareTo(n) >= 0
+					|| a.IsEqualMagnitude(montRadix) || a.IsEqualMagnitude(minusMontRadix));
 
-				BigInteger y = a.ModPow(r, n);
+				BigInteger y = ModPowMonty(a, r, n, false);
 
-				if (!y.Equals(One))
+				if (!y.Equals(montRadix))
 				{
 					int j = 0;
-					while (!y.Equals(nMinusOne))
+					while (!y.Equals(minusMontRadix))
 					{
 						if (++j == s)
 							return false;
 
-						y = y.ModPow(Two, n);
+						y = ModPowMonty(y, Two, n, false);
 
-						if (y.Equals(One))
+						if (y.Equals(montRadix))
 							return false;
 					}
 				}
@@ -1459,15 +1543,12 @@ namespace ObscurCore.Cryptography.Support.Math
 				if (sign == 0)
 					return 0;
 
-				long v;
-				if (magnitude.Length > 1)
+				int n = magnitude.Length;
+
+				long v = magnitude[n - 1] & IMASK;
+				if (n > 1)
 				{
-					v = ((long)magnitude[magnitude.Length - 2] << 32)
-						| (magnitude[magnitude.Length - 1] & IMASK);
-				}
-				else
-				{
-					v = (magnitude[magnitude.Length - 1] & IMASK);
+					v |= (magnitude[n - 2] & IMASK) << 32;
 				}
 
 				return sign < 0 ? -v : v;
@@ -1541,77 +1622,135 @@ namespace ObscurCore.Cryptography.Support.Math
 //				}
 //			}
 
-			BigInteger x = new BigInteger();
-			BigInteger gcd = ExtEuclid(this.Mod(m), m, x, null);
+			if (m.QuickPow2Check())
+			{
+				return ModInversePow2(m);
+			}
+
+			BigInteger d = this.Remainder(m);
+			BigInteger x;
+			BigInteger gcd = ExtEuclid(d, m, out x);
 
 			if (!gcd.Equals(One))
 				throw new ArithmeticException("Numbers not relatively prime.");
 
 			if (x.sign < 0)
 			{
-				x.sign = 1;
-				//x = m.Subtract(x);
-				x.magnitude = doSubBigLil(m.magnitude, x.magnitude);
+				x = x.Add(m);
 			}
 
 			return x;
 		}
 
-		/**
-		 * Calculate the numbers u1, u2, and u3 such that:
-		 *
-		 * u1 * a + u2 * b = u3
-		 *
-		 * where u3 is the greatest common divider of a and b.
-		 * a and b using the extended Euclid algorithm (refer p. 323
-		 * of The Art of Computer Programming vol 2, 2nd ed).
-		 * This also seems to have the side effect of calculating
-		 * some form of multiplicative inverse.
-		 *
-		 * @param a    First number to calculate gcd for
-		 * @param b    Second number to calculate gcd for
-		 * @param u1Out      the return object for the u1 value
-		 * @param u2Out      the return object for the u2 value
-		 * @return     The greatest common divisor of a and b
-		 */
-		private static BigInteger ExtEuclid(
-			BigInteger	a,
-			BigInteger	b,
-			BigInteger	u1Out,
-			BigInteger	u2Out)
+		private BigInteger ModInversePow2(BigInteger m)
 		{
-			BigInteger u1 = One;
-			BigInteger u3 = a;
-			BigInteger v1 = Zero;
-			BigInteger v3 = b;
+			Debug.Assert(m.SignValue > 0);
+			Debug.Assert(m.BitCount == 1);
 
-			while (v3.sign > 0)
+			if (!TestBit(0))
 			{
-				BigInteger[] q = u3.DivideAndRemainder(v3);
-
-				BigInteger tmp = v1.Multiply(q[0]);
-				BigInteger tn = u1.Subtract(tmp);
-				u1 = v1;
-				v1 = tn;
-
-				u3 = v3;
-				v3 = q[1];
+				throw new ArithmeticException("Numbers not relatively prime.");
 			}
 
-			if (u1Out != null)
+			int pow = m.BitLength - 1;
+
+			long inv64 = ModInverse64(LongValue);
+			if (pow < 64)
 			{
-				u1Out.sign = u1.sign;
-				u1Out.magnitude = u1.magnitude;
+				inv64 &= ((1L << pow) - 1);
 			}
 
-			if (u2Out != null)
+			BigInteger x = BigInteger.ValueOf(inv64);
+
+			if (pow > 64)
 			{
-				BigInteger tmp = u1.Multiply(a);
-				tmp = u3.Subtract(tmp);
-				BigInteger res = tmp.Divide(b);
-				u2Out.sign = res.sign;
-				u2Out.magnitude = res.magnitude;
+				BigInteger d = this.Remainder(m);
+				int bitsCorrect = 64;
+
+				do
+				{
+					BigInteger t = x.Multiply(d).Remainder(m);
+					x = x.Multiply(Two.Subtract(t)).Remainder(m);
+					bitsCorrect <<= 1;
+				}
+				while (bitsCorrect < pow);
 			}
+
+			if (x.sign < 0)
+			{
+				x = x.Add(m);
+			}
+
+			return x;
+		}
+
+		private static int ModInverse32(int d)
+		{
+			// Newton's method with initial estimate "correct to 4 bits"
+			Debug.Assert((d & 1) != 0);
+			int x = d + (((d + 1) & 4) << 1);   // d.x == 1 mod 2**4
+			Debug.Assert(((d * x) & 15) == 1);
+			x *= 2 - d * x;                     // d.x == 1 mod 2**8
+			x *= 2 - d * x;                     // d.x == 1 mod 2**16
+			x *= 2 - d * x;                     // d.x == 1 mod 2**32
+			Debug.Assert(d * x == 1);
+			return x;
+		}
+
+		private static long ModInverse64(long d)
+		{
+			// Newton's method with initial estimate "correct to 4 bits"
+			Debug.Assert((d & 1L) != 0);
+			long x = d + (((d + 1L) & 4L) << 1);    // d.x == 1 mod 2**4
+			Debug.Assert(((d * x) & 15L) == 1L);
+			x *= 2 - d * x;                         // d.x == 1 mod 2**8
+			x *= 2 - d * x;                         // d.x == 1 mod 2**16
+			x *= 2 - d * x;                         // d.x == 1 mod 2**32
+			x *= 2 - d * x;                         // d.x == 1 mod 2**64
+			Debug.Assert(d * x == 1L);
+			return x;
+		}
+
+		/*		*
+         * Calculate the numbers u1, u2, and u3 such that:
+         *
+         * u1 * a + u2 * b = u3
+         *
+         * where u3 is the greatest common divider of a and b.
+         * a and b using the extended Euclid algorithm (refer p. 323
+         * of The Art of Computer Programming vol 2, 2nd ed).
+         * This also seems to have the side effect of calculating
+         * some form of multiplicative inverse.
+         *
+         * @param a    First number to calculate gcd for
+         * @param b    Second number to calculate gcd for
+         * @param u1Out      the return object for the u1 value
+         * @return     The greatest common divisor of a and b
+         */
+		private static BigInteger ExtEuclid(BigInteger a, BigInteger b, out BigInteger u1Out)
+		{
+			BigInteger u1 = One, v1 = Zero;
+			BigInteger u3 = a, v3 = b;
+
+			if (v3.sign > 0)
+			{
+				for (;;)
+				{
+					BigInteger[] q = u3.DivideAndRemainder(v3);
+					u3 = v3;
+					v3 = q[1];
+
+					BigInteger oldU1 = u1;
+					u1 = v1;
+
+					if (v3.sign <= 0)
+						break;
+
+					v1 = oldU1.Subtract(v1.Multiply(q[0]));
+				}
+			}
+
+			u1Out = u1;
 
 			return u3;
 		}
@@ -1622,9 +1761,7 @@ namespace ObscurCore.Cryptography.Support.Math
 			Array.Clear(x, 0, x.Length);
 		}
 
-		public BigInteger ModPow(
-			BigInteger exponent,
-			BigInteger m)
+		public BigInteger ModPow(BigInteger e, BigInteger m)
 		{
 			if (m.sign < 1)
 				throw new ArithmeticException("Modulus must be positive");
@@ -1632,164 +1769,303 @@ namespace ObscurCore.Cryptography.Support.Math
 			if (m.Equals(One))
 				return Zero;
 
-			if (exponent.sign == 0)
+			if (e.sign == 0)
 				return One;
 
 			if (sign == 0)
 				return Zero;
 
-			int[] zVal = null;
-			int[] yAccum = null;
-			int[] yVal;
+			bool negExp = e.sign < 0;
+			if (negExp)
+				e = e.Negate();
 
-			// Montgomery exponentiation is only possible if the modulus is odd,
-			// but AFAIK, this is always the case for crypto algo's
-			bool useMonty = ((m.magnitude[m.magnitude.Length - 1] & 1) == 1);
-			long mQ = 0;
-			if (useMonty)
+			BigInteger result = this.Mod(m);
+			if (!e.Equals(One))
 			{
-				mQ = m.GetMQuote();
-
-				// tmp = this * R mod m
-				BigInteger tmp = ShiftLeft(32 * m.magnitude.Length).Mod(m);
-				zVal = tmp.magnitude;
-
-				useMonty = (zVal.Length <= m.magnitude.Length);
-
-				if (useMonty)
+				if ((m.magnitude[m.magnitude.Length - 1] & 1) == 0)
 				{
-					yAccum = new int[m.magnitude.Length + 1];
-					if (zVal.Length < m.magnitude.Length)
-					{
-						int[] longZ = new int[m.magnitude.Length];
-						zVal.CopyTo(longZ, longZ.Length - zVal.Length);
-						zVal = longZ;
-					}
-				}
-			}
-
-			if (!useMonty)
-			{
-				if (magnitude.Length <= m.magnitude.Length)
-				{
-					//zAccum = new int[m.magnitude.Length * 2];
-					zVal = new int[m.magnitude.Length];
-					magnitude.CopyTo(zVal, zVal.Length - magnitude.Length);
+					result = ModPowBarrett(result, e, m);
 				}
 				else
 				{
-					//
-					// in normal practice we'll never see this...
-					//
-					BigInteger tmp = Remainder(m);
-
-					//zAccum = new int[m.magnitude.Length * 2];
-					zVal = new int[m.magnitude.Length];
-					tmp.magnitude.CopyTo(zVal, zVal.Length - tmp.magnitude.Length);
-				}
-
-				yAccum = new int[m.magnitude.Length * 2];
-			}
-
-			yVal = new int[m.magnitude.Length];
-
-			//
-			// from LSW to MSW
-			//
-			for (int i = 0; i < exponent.magnitude.Length; i++)
-			{
-				int v = exponent.magnitude[i];
-				int bits = 0;
-
-				if (i == 0)
-				{
-					while (v > 0)
-					{
-						v <<= 1;
-						bits++;
-					}
-
-					//
-					// first time in initialise y
-					//
-					zVal.CopyTo(yVal, 0);
-
-					v <<= 1;
-					bits++;
-				}
-
-				while (v != 0)
-				{
-					if (useMonty)
-					{
-						// Montgomery square algo doesn't exist, and a normal
-						// square followed by a Montgomery reduction proved to
-						// be almost as heavy as a Montgomery mulitply.
-						MultiplyMonty(yAccum, yVal, yVal, m.magnitude, mQ);
-					}
-					else
-					{
-						Square(yAccum, yVal);
-						Remainder(yAccum, m.magnitude);
-						Array.Copy(yAccum, yAccum.Length - yVal.Length, yVal, 0, yVal.Length);
-						ZeroOut(yAccum);
-					}
-					bits++;
-
-					if (v < 0)
-					{
-						if (useMonty)
-						{
-							MultiplyMonty(yAccum, yVal, zVal, m.magnitude, mQ);
-						}
-						else
-						{
-							Multiply(yAccum, yVal, zVal);
-							Remainder(yAccum, m.magnitude);
-							Array.Copy(yAccum, yAccum.Length - yVal.Length, yVal, 0,
-								yVal.Length);
-							ZeroOut(yAccum);
-						}
-					}
-
-					v <<= 1;
-				}
-
-				while (bits < 32)
-				{
-					if (useMonty)
-					{
-						MultiplyMonty(yAccum, yVal, yVal, m.magnitude, mQ);
-					}
-					else
-					{
-						Square(yAccum, yVal);
-						Remainder(yAccum, m.magnitude);
-						Array.Copy(yAccum, yAccum.Length - yVal.Length, yVal, 0, yVal.Length);
-						ZeroOut(yAccum);
-					}
-					bits++;
+					result = ModPowMonty(result, e, m, true);
 				}
 			}
 
-			if (useMonty)
-			{
-				// Return y * R^(-1) mod m by doing y * 1 * R^(-1) mod m
-				ZeroOut(zVal);
-				zVal[zVal.Length - 1] = 1;
-				MultiplyMonty(yAccum, yVal, zVal, m.magnitude, mQ);
-			}
+			if (negExp)
+				result = result.ModInverse(m);
 
-			BigInteger result = new BigInteger(1, yVal, true);
-
-			return exponent.sign > 0
-				?	result
-				:	result.ModInverse(m);
+			return result;
 		}
 
-		/**
-		 * return w with w = x * x - w is assumed to have enough space.
-		 */
+		private static BigInteger ModPowBarrett(BigInteger b, BigInteger e, BigInteger m)
+		{
+			int k = m.magnitude.Length;
+			BigInteger mr = One.ShiftLeft((k + 1) << 5);
+			BigInteger yu = One.ShiftLeft(k << 6).Divide(m);
+
+			// Sliding window from MSW to LSW
+			int extraBits = 0, expLength = e.BitLength;
+			while (expLength > ExpWindowThresholds[extraBits])
+			{
+				++extraBits;
+			}
+
+			int numPowers = 1 << extraBits;
+			BigInteger[] oddPowers = new BigInteger[numPowers];
+			oddPowers[0] = b;
+
+			BigInteger b2 = ReduceBarrett(b.Square(), m, mr, yu);
+
+			for (int i = 1; i < numPowers; ++i)
+			{
+				oddPowers[i] = ReduceBarrett(oddPowers[i - 1].Multiply(b2), m, mr, yu);
+			}
+
+			int[] windowList = GetWindowList(e.magnitude, extraBits);
+			Debug.Assert(windowList.Length > 0);
+
+			int window = windowList[0];
+			int mult = window & 0xFF, lastZeroes = window >> 8;
+
+			BigInteger y;
+			if (mult == 1)
+			{
+				y = b2;
+				--lastZeroes;
+			}
+			else
+			{
+				y = oddPowers[mult >> 1];
+			}
+
+			int windowPos = 1;
+			while ((window = windowList[windowPos++]) != -1)
+			{
+				mult = window & 0xFF;
+
+				int bits = lastZeroes + BitLengthTable[mult];
+				for (int j = 0; j < bits; ++j)
+				{
+					y = ReduceBarrett(y.Square(), m, mr, yu);
+				}
+
+				y = ReduceBarrett(y.Multiply(oddPowers[mult >> 1]), m, mr, yu);
+
+				lastZeroes = window >> 8;
+			}
+
+			for (int i = 0; i < lastZeroes; ++i)
+			{
+				y = ReduceBarrett(y.Square(), m, mr, yu);
+			}
+
+			return y;
+		}
+
+		private static BigInteger ReduceBarrett(BigInteger x, BigInteger m, BigInteger mr, BigInteger yu)
+		{
+			int xLen = x.BitLength, mLen = m.BitLength;
+			if (xLen < mLen)
+				return x;
+
+			if (xLen - mLen > 1)
+			{
+				int k = m.magnitude.Length;
+
+				BigInteger q1 = x.DivideWords(k - 1);
+				BigInteger q2 = q1.Multiply(yu); // TODO Only need partial multiplication here
+				BigInteger q3 = q2.DivideWords(k + 1);
+
+				BigInteger r1 = x.RemainderWords(k + 1);
+				BigInteger r2 = q3.Multiply(m); // TODO Only need partial multiplication here
+				BigInteger r3 = r2.RemainderWords(k + 1);
+
+				x = r1.Subtract(r3);
+				if (x.sign < 0)
+				{
+					x = x.Add(mr);
+				}
+			}
+
+			while (x.CompareTo(m) >= 0)
+			{
+				x = x.Subtract(m);
+			}
+
+			return x;
+		}
+
+		private static BigInteger ModPowMonty(BigInteger b, BigInteger e, BigInteger m, bool convert)
+		{
+			int n = m.magnitude.Length;
+			int powR = 32 * n;
+			bool smallMontyModulus = m.BitLength + 2 <= powR;
+			uint mDash = (uint)m.GetMQuote();
+
+			// tmp = this * R mod m
+			if (convert)
+			{
+				b = b.ShiftLeft(powR).Remainder(m);
+			}
+
+			int[] yAccum = new int[n + 1];
+
+			int[] zVal = b.magnitude;
+			Debug.Assert(zVal.Length <= n);
+			if (zVal.Length < n)
+			{
+				int[] tmp = new int[n];
+				zVal.CopyTo(tmp, n - zVal.Length);
+				zVal = tmp;
+			}
+
+			// Sliding window from MSW to LSW
+
+			int extraBits = 0;
+
+			// Filter the common case of small RSA exponents with few bits set
+			if (e.magnitude.Length > 1 || e.BitCount > 2)
+			{
+				int expLength = e.BitLength;
+				while (expLength > ExpWindowThresholds[extraBits])
+				{
+					++extraBits;
+				}
+			}
+
+			int numPowers = 1 << extraBits;
+			int[][] oddPowers = new int[numPowers][];
+			oddPowers[0] = zVal;
+
+			int[] zSquared = zVal.CloneArray ();
+			SquareMonty(yAccum, zSquared, m.magnitude, mDash, smallMontyModulus);
+
+			for (int i = 1; i < numPowers; ++i)
+			{
+				oddPowers [i] = oddPowers [i - 1].CloneArray ();
+				MultiplyMonty(yAccum, oddPowers[i], zSquared, m.magnitude, mDash, smallMontyModulus);
+			}
+
+			int[] windowList = GetWindowList(e.magnitude, extraBits);
+			Debug.Assert(windowList.Length > 1);
+
+			int window = windowList[0];
+			int mult = window & 0xFF, lastZeroes = window >> 8;
+
+			int[] yVal;
+			if (mult == 1)
+			{
+				yVal = zSquared;
+				--lastZeroes;
+			}
+			else
+			{
+				yVal = oddPowers[mult >> 1].CloneArray();
+			}
+
+			int windowPos = 1;
+			while ((window = windowList[windowPos++]) != -1)
+			{
+				mult = window & 0xFF;
+
+				int bits = lastZeroes + BitLengthTable[mult];
+				for (int j = 0; j < bits; ++j)
+				{
+					SquareMonty(yAccum, yVal, m.magnitude, mDash, smallMontyModulus);
+				}
+
+				MultiplyMonty(yAccum, yVal, oddPowers[mult >> 1], m.magnitude, mDash, smallMontyModulus);
+
+				lastZeroes = window >> 8;
+			}
+
+			for (int i = 0; i < lastZeroes; ++i)
+			{
+				SquareMonty(yAccum, yVal, m.magnitude, mDash, smallMontyModulus);
+			}
+
+			if (convert)
+			{
+				// Return y * R^(-1) mod m
+				MontgomeryReduce(yVal, m.magnitude, mDash);
+			}
+			else if (smallMontyModulus && CompareTo(0, yVal, 0, m.magnitude) >= 0)
+			{
+				Subtract(0, yVal, 0, m.magnitude);
+			}
+
+			return new BigInteger(1, yVal, true);
+		}
+
+		private static int[] GetWindowList(int[] mag, int extraBits)
+		{
+			int v = mag[0];
+			Debug.Assert(v != 0);
+
+			int leadingBits = BitLen(v);
+
+			int resultSize = (((mag.Length - 1) << 5) + leadingBits) / (1 + extraBits) + 2;
+			int[] result = new int[resultSize];
+			int resultPos = 0;
+
+			int bitPos = 33 - leadingBits;
+			v <<= bitPos;
+
+			int mult = 1, multLimit = 1 << extraBits;
+			int zeroes = 0;
+
+			int i = 0;
+			for (; ; )
+			{
+				for (; bitPos < 32; ++bitPos)
+				{
+					if (mult < multLimit)
+					{
+						mult = (mult << 1) | (int)((uint)v >> 31);
+					}
+					else if (v < 0)
+					{
+						result[resultPos++] = CreateWindowEntry(mult, zeroes);
+						mult = 1;
+						zeroes = 0;
+					}
+					else
+					{
+						++zeroes;
+					}
+
+					v <<= 1;
+				}
+
+				if (++i == mag.Length)
+				{
+					result[resultPos++] = CreateWindowEntry(mult, zeroes);
+					break;
+				}
+
+				v = mag[i];
+				bitPos = 0;
+			}
+
+			result[resultPos] = -1;
+			return result;
+		}
+
+		private static int CreateWindowEntry(int mult, int zeroes)
+		{
+			while ((mult & 1) == 0)
+			{
+				mult >>= 1;
+				++zeroes;
+			}
+
+			return mult | (zeroes << 8);
+		}
+
+		/*		*
+         * return w with w = x * x - w is assumed to have enough space.
+         */
 		private static int[] Square(
 			int[]	w,
 			int[]	x)
@@ -1798,76 +2074,63 @@ namespace ObscurCore.Cryptography.Support.Math
 //			if (w.Length != 2 * x.Length)
 //				throw new ArgumentException("no I don't think so...");
 
-			ulong u1, u2, c;
+			ulong c;
 
 			int wBase = w.Length - 1;
 
-			for (int i = x.Length - 1; i != 0; i--)
+			for (int i = x.Length - 1; i > 0; --i)
 			{
-				ulong v = (ulong)(uint) x[i];
+				ulong v = (uint)x[i];
 
-				u1 = v * v;
-				u2 = u1 >> 32;
-				u1 = (uint) u1;
+				c = v * v + (uint)w[wBase];
+				w[wBase] = (int)c;
+				c >>= 32;
 
-				u1 += (ulong)(uint) w[wBase];
-
-				w[wBase] = (int)(uint) u1;
-				c = u2 + (u1 >> 32);
-
-				for (int j = i - 1; j >= 0; j--)
+				for (int j = i - 1; j >= 0; --j)
 				{
-					--wBase;
-					u1 = v * (ulong)(uint) x[j];
-					u2 = u1 >> 31; // multiply by 2!
-					u1 = (uint)(u1 << 1); // multiply by 2!
-					u1 += c + (ulong)(uint) w[wBase];
+					ulong prod = v * (uint)x[j];
 
-					w[wBase] = (int)(uint) u1;
-					c = u2 + (u1 >> 32);
+					c += ((uint)w[--wBase] & UIMASK) + ((uint)prod << 1);
+					w[wBase] = (int)c;
+					c = (c >> 32) + (prod >> 31);
 				}
 
-				c += (ulong)(uint) w[--wBase];
-				w[wBase] = (int)(uint) c;
+				c += (uint)w[--wBase];
+				w[wBase] = (int)c;
 
 				if (--wBase >= 0)
 				{
-					w[wBase] = (int)(uint)(c >> 32);
+					w[wBase] = (int)(c >> 32);
 				}
 				else
 				{
-					Debug.Assert((uint)(c >> 32) == 0);
+					Debug.Assert((c >> 32) == 0);
 				}
+
 				wBase += i;
 			}
 
-			u1 = (ulong)(uint) x[0];
-			u1 = u1 * u1;
-			u2 = u1 >> 32;
-			u1 = u1 & IMASK;
+			c = (uint)x[0];
 
-			u1 += (ulong)(uint) w[wBase];
+			c = c * c + (uint)w[wBase];
+			w[wBase] = (int)c;
 
-			w[wBase] = (int)(uint) u1;
 			if (--wBase >= 0)
 			{
-				w[wBase] = (int)(uint)(u2 + (u1 >> 32) + (ulong)(uint) w[wBase]);
+				w[wBase] += (int)(c >> 32);
 			}
 			else
 			{
-				Debug.Assert((uint)(u2 + (u1 >> 32)) == 0);
+				Debug.Assert((c >> 32) == 0);
 			}
 
 			return w;
 		}
 
-		/**
-		 * return x with x = y * z - x is assumed to have enough space.
-		 */
-		private static int[] Multiply(
-			int[]	x,
-			int[]	y,
-			int[]	z)
+		/*		*
+         * return x with x = y * z - x is assumed to have enough space.
+         */
+		private static int[] Multiply(int[]	x, int[] y, int[] z)
 		{
 			int i = z.Length;
 
@@ -1876,215 +2139,296 @@ namespace ObscurCore.Cryptography.Support.Math
 
 			int xBase = x.Length - y.Length;
 
-			for (;;)
+			do
 			{
 				long a = z[--i] & IMASK;
 				long val = 0;
 
-				for (int j = y.Length - 1; j >= 0; j--)
+				if (a != 0)
 				{
-					val += a * (y[j] & IMASK) + (x[xBase + j] & IMASK);
+					for (int j = y.Length - 1; j >= 0; j--)
+					{
+						val += a * (y[j] & IMASK) + (x[xBase + j] & IMASK);
 
-					x[xBase + j] = (int)val;
+						x[xBase + j] = (int)val;
 
-					val = (long)((ulong)val >> 32);
+						val = (long)((ulong)val >> 32);
+					}
 				}
 
 				--xBase;
 
-				if (i < 1)
+				if (xBase >= 0)
 				{
-					if (xBase >= 0)
-					{
-						x[xBase] = (int)val;
-					}
-					else
-					{
-						Debug.Assert(val == 0);
-					}
-					break;
+					x[xBase] = (int)val;
 				}
-
-				x[xBase] = (int)val;
+				else
+				{
+					Debug.Assert(val == 0);
+				}
 			}
+			while (i > 0);
 
 			return x;
 		}
 
-		private static long FastExtEuclid(
-			long	a,
-			long	b,
-			long[]	uOut)
+		/*		*
+         * Calculate mQuote = -m^(-1) mod b with b = 2^32 (32 = word size)
+         */
+		private int GetMQuote()
 		{
-			long u1 = 1;
-			long u3 = a;
-			long v1 = 0;
-			long v3 = b;
-
-			while (v3 > 0)
-			{
-				long q, tn;
-
-				q = u3 / v3;
-
-				tn = u1 - (v1 * q);
-				u1 = v1;
-				v1 = tn;
-
-				tn = u3 - (v3 * q);
-				u3 = v3;
-				v3 = tn;
-			}
-
-			uOut[0] = u1;
-			uOut[1] = (u3 - (u1 * a)) / b;
-
-			return u3;
-		}
-
-		private static long FastModInverse(
-			long	v,
-			long	m)
-		{
-			if (m < 1)
-				throw new ArithmeticException("Modulus must be positive");
-
-			long[] x = new long[2];
-			long gcd = FastExtEuclid(v, m, x);
-
-			if (gcd != 1)
-				throw new ArithmeticException("Numbers not relatively prime.");
-
-			if (x[0] < 0)
-			{
-				x[0] += m;
-			}
-
-			return x[0];
-		}
-
-//		private static BigInteger MQuoteB = One.ShiftLeft(32);
-//		private static BigInteger MQuoteBSub1 = MQuoteB.Subtract(One);
-
-		/**
-		 * Calculate mQuote = -m^(-1) mod b with b = 2^32 (32 = word size)
-		 */
-		private long GetMQuote()
-		{
-			Debug.Assert(this.sign > 0);
-
-			if (mQuote != -1)
+			if (mQuote != 0)
 			{
 				return mQuote; // already calculated
 			}
 
-			if (magnitude.Length == 0 || (magnitude[magnitude.Length - 1] & 1) == 0)
-			{
-				return -1; // not for even numbers
-			}
+			Debug.Assert(this.sign > 0);
 
-			long v = (((~this.magnitude[this.magnitude.Length - 1]) | 1) & 0xffffffffL);
-			mQuote = FastModInverse(v, 0x100000000L);
+			int d = -magnitude[magnitude.Length - 1];
 
-			return mQuote;
+			Debug.Assert((d & 1) != 0);
+
+			return mQuote = ModInverse32(d);
 		}
 
-		/**
-		 * Montgomery multiplication: a = x * y * R^(-1) mod m
-		 * <br/>
-		 * Based algorithm 14.36 of Handbook of Applied Cryptography.
-		 * <br/>
-		 * <li> m, x, y should have length n </li>
-		 * <li> a should have length (n + 1) </li>
-		 * <li> b = 2^32, R = b^n </li>
-		 * <br/>
-		 * The result is put in x
-		 * <br/>
-		 * NOTE: the indices of x, y, m, a different in HAC and in Java
-		 */
-		private static void MultiplyMonty(
-			int[]	a,
-			int[]	x,
-			int[]	y,
-			int[]	m,
-			long	mQuote)
-			// mQuote = -m^(-1) mod b
+		private static void MontgomeryReduce(int[] x, int[] m, uint mDash) // mDash = -m^(-1) mod b
 		{
-			if (m.Length == 1)
+			// NOTE: Not a general purpose reduction (which would allow x up to twice the bitlength of m)
+			Debug.Assert(x.Length == m.Length);
+
+			int n = m.Length;
+
+			for (int i = n - 1; i >= 0; --i)
 			{
-				x[0] = (int)MultiplyMontyNIsOne((uint)x[0], (uint)y[0], (uint)m[0], (ulong)mQuote);
+				uint x0 = (uint)x[n - 1];
+				ulong t = x0 * mDash;
+
+				ulong carry = t * (uint)m[n - 1] + x0;
+				Debug.Assert((uint)carry == 0);
+				carry >>= 32;
+
+				for (int j = n - 2; j >= 0; --j)
+				{
+					carry += t * (uint)m[j] + (uint)x[j];
+					x[j + 1] = (int)carry;
+					carry >>= 32;
+				}
+
+				x[0] = (int)carry;
+				Debug.Assert(carry >> 32 == 0);
+			}
+
+			if (CompareTo(0, x, 0, m) >= 0)
+			{
+				Subtract(0, x, 0, m);
+			}
+		}
+
+		/*		*
+         * Montgomery multiplication: a = x * y * R^(-1) mod m
+         * <br/>
+         * Based algorithm 14.36 of Handbook of Applied Cryptography.
+         * <br/>
+         * <li> m, x, y should have length n </li>
+         * <li> a should have length (n + 1) </li>
+         * <li> b = 2^32, R = b^n </li>
+         * <br/>
+         * The result is put in x
+         * <br/>
+         * NOTE: the indices of x, y, m, a different in HAC and in Java
+         */
+		private static void MultiplyMonty(int[]	a, int[] x, int[] y, int[] m, uint mDash, bool smallMontyModulus)
+		// mDash = -m^(-1) mod b
+		{
+			int n = m.Length;
+
+			if (n == 1)
+			{
+				x[0] = (int)MultiplyMontyNIsOne((uint)x[0], (uint)y[0], (uint)m[0], mDash);
 				return;
 			}
 
-			int n = m.Length;
-			int nMinus1 = n - 1;
-			long y_0 = y[nMinus1] & IMASK;
+			uint y0 = (uint)y[n - 1];
+			int aMax;
 
-			// 1. a = 0 (Notation: a = (a_{n} a_{n-1} ... a_{0})_{b} )
-			Array.Clear(a, 0, n + 1);
-
-			// 2. for i from 0 to (n - 1) do the following:
-			for (int i = n; i > 0; i--)
 			{
-				long x_i = x[i - 1] & IMASK;
+				ulong xi = (uint)x[n - 1];
 
-				// 2.1 u = ((a[0] + (x[i] * y[0]) * mQuote) mod b
-				long u = ((((a[n] & IMASK) + ((x_i * y_0) & IMASK)) & IMASK) * mQuote) & IMASK;
+				ulong carry = xi * y0;
+				ulong t = (uint)carry * mDash;
 
-				// 2.2 a = (a + x_i * y + u * m) / b
-				long prod1 = x_i * y_0;
-				long prod2 = u * (m[nMinus1] & IMASK);
-				long tmp = (a[n] & IMASK) + (prod1 & IMASK) + (prod2 & IMASK);
-				long carry = (long)((ulong)prod1 >> 32) + (long)((ulong)prod2 >> 32) + (long)((ulong)tmp >> 32);
-				for (int j = nMinus1; j > 0; j--)
+				ulong prod2 = t * (uint)m[n - 1];
+				carry += (uint)prod2;
+				Debug.Assert((uint)carry == 0);
+				carry = (carry >> 32) + (prod2 >> 32);
+
+				for (int j = n - 2; j >= 0; --j)
 				{
-					prod1 = x_i * (y[j - 1] & IMASK);
-					prod2 = u * (m[j - 1] & IMASK);
-					tmp = (a[j] & IMASK) + (prod1 & IMASK) + (prod2 & IMASK) + (carry & IMASK);
-					carry = (long)((ulong)carry >> 32) + (long)((ulong)prod1 >> 32) +
-						(long)((ulong)prod2 >> 32) + (long)((ulong)tmp >> 32);
-					a[j + 1] = (int)tmp; // division by b
+					ulong prod1 = xi * (uint)y[j];
+					prod2 = t * (uint)m[j];
+
+					carry += (prod1 & UIMASK) + (uint)prod2;
+					a[j + 2] = (int)carry;
+					carry = (carry >> 32) + (prod1 >> 32) + (prod2 >> 32);
 				}
-				carry += (a[0] & IMASK);
+
 				a[1] = (int)carry;
-				a[0] = (int)((ulong)carry >> 32); // OJO!!!!!
+				aMax = (int)(carry >> 32);
 			}
 
-			// 3. if x >= m the x = x - m
-			if (CompareTo(0, a, 0, m) >= 0)
+			for (int i = n - 2; i >= 0; --i)
+			{
+				uint a0 = (uint)a[n];
+				ulong xi = (uint)x[i];
+
+				ulong prod1 = xi * y0;
+				ulong carry = (prod1 & UIMASK) + a0;
+				ulong t = (uint)carry * mDash;
+
+				ulong prod2 = t * (uint)m[n - 1];
+				carry += (uint)prod2;
+				Debug.Assert((uint)carry == 0);
+				carry = (carry >> 32) + (prod1 >> 32) + (prod2 >> 32);
+
+				for (int j = n - 2; j >= 0; --j)
+				{
+					prod1 = xi * (uint)y[j];
+					prod2 = t * (uint)m[j];
+
+					carry += (prod1 & UIMASK) + (uint)prod2 + (uint)a[j + 1];
+					a[j + 2] = (int)carry;
+					carry = (carry >> 32) + (prod1 >> 32) + (prod2 >> 32);
+				}
+
+				carry += (uint)aMax;
+				a[1] = (int)carry;
+				aMax = (int)(carry >> 32);
+			}
+
+			a[0] = aMax;
+
+			if (!smallMontyModulus && CompareTo(0, a, 0, m) >= 0)
 			{
 				Subtract(0, a, 0, m);
 			}
 
-			// put the result in x
 			Array.Copy(a, 1, x, 0, n);
 		}
 
-		private static uint MultiplyMontyNIsOne(
-			uint	x,
-			uint	y,
-			uint	m,
-			ulong	mQuote)
+		private static void SquareMonty(int[] a, int[] x, int[] m, uint mDash, bool smallMontyModulus)
+		// mDash = -m^(-1) mod b
 		{
-			ulong um = m;
-			ulong prod1 = (ulong)x * (ulong)y;
-			ulong u = (prod1 * mQuote) & UIMASK;
-			ulong prod2 = u * um;
-			ulong tmp = (prod1 & UIMASK) + (prod2 & UIMASK);
-			ulong carry = (prod1 >> 32) + (prod2 >> 32) + (tmp >> 32);
+			int n = m.Length;
 
+			if (n == 1)
+			{
+				uint xVal = (uint)x[0];
+				x[0] = (int)MultiplyMontyNIsOne(xVal, xVal, (uint)m[0], mDash);
+				return;
+			}
+
+			ulong x0 = (uint)x[n - 1];
+			int aMax;
+
+			{
+				ulong carry = x0 * x0;
+				ulong t = (uint)carry * mDash;
+
+				ulong prod2 = t * (uint)m[n - 1];
+				carry += (uint)prod2;
+				Debug.Assert((uint)carry == 0);
+				carry = (carry >> 32) + (prod2 >> 32);
+
+				for (int j = n - 2; j >= 0; --j)
+				{
+					ulong prod1 = x0 * (uint)x[j];
+					prod2 = t * (uint)m[j];
+
+					carry += (prod2 & UIMASK) + ((uint)prod1 << 1);
+					a[j + 2] = (int)carry;
+					carry = (carry >> 32) + (prod1 >> 31) + (prod2 >> 32);
+				}
+
+				a[1] = (int)carry;
+				aMax = (int)(carry >> 32);
+			}
+
+			for (int i = n - 2; i >= 0; --i)
+			{
+				uint a0 = (uint)a[n];
+				ulong t = a0 * mDash;
+
+				ulong carry = t * (uint)m[n - 1] + a0;
+				Debug.Assert((uint)carry == 0);
+				carry >>= 32;
+
+				for (int j = n - 2; j > i; --j)
+				{
+					carry += t * (uint)m[j] + (uint)a[j + 1];
+					a[j + 2] = (int)carry;
+					carry >>= 32;
+				}
+
+				ulong xi = (uint)x[i];
+
+				{
+					ulong prod1 = xi * xi;
+					ulong prod2 = t * (uint)m[i];
+
+					carry += (prod1 & UIMASK) + (uint)prod2 + (uint)a[i + 1];
+					a[i + 2] = (int)carry;
+					carry = (carry >> 32) + (prod1 >> 32) + (prod2 >> 32);
+				}
+
+				for (int j = i - 1; j >= 0; --j)
+				{
+					ulong prod1 = xi * (uint)x[j];
+					ulong prod2 = t * (uint)m[j];
+
+					carry += (prod2 & UIMASK) + ((uint)prod1 << 1) + (uint)a[j + 1];
+					a[j + 2] = (int)carry;
+					carry = (carry >> 32) + (prod1 >> 31) + (prod2 >> 32);
+				}
+
+				carry += (uint)aMax;
+				a[1] = (int)carry;
+				aMax = (int)(carry >> 32);
+			}
+
+			a[0] = aMax;
+
+			if (!smallMontyModulus && CompareTo(0, a, 0, m) >= 0)
+			{
+				Subtract(0, a, 0, m);
+			}
+
+			Array.Copy(a, 1, x, 0, n);
+		}
+
+		private static uint MultiplyMontyNIsOne(uint x, uint y, uint m, uint mDash)
+		{
+			ulong carry = (ulong)x * y;
+			uint t = (uint)carry * mDash;
+			ulong um = m;
+			ulong prod2 = um * t;
+			carry += (uint)prod2;
+			Debug.Assert((uint)carry == 0);
+			carry = (carry >> 32) + (prod2 >> 32);
 			if (carry > um)
 			{
 				carry -= um;
 			}
-
-			return (uint)(carry & UIMASK);
+			Debug.Assert(carry < um);
+			return (uint)carry;
 		}
 
 		public BigInteger Multiply(
 			BigInteger val)
 		{
-			if (sign == 0 || val.sign == 0)
+			if (val == this)
+				return Square();
+
+			if ((sign & val.sign) == 0)
 				return Zero;
 
 			if (val.QuickPow2Check()) // val is power of two
@@ -2099,19 +2443,27 @@ namespace ObscurCore.Cryptography.Support.Math
 				return this.sign > 0 ? result : result.Negate();
 			}
 
-			int resLength = (this.BitLength + val.BitLength) / BitsPerInt + 1;
+			int resLength = magnitude.Length + val.magnitude.Length;
 			int[] res = new int[resLength];
 
-			if (val == this)
-			{
-				Square(res, this.magnitude);
-			}
-			else
-			{
-				Multiply(res, this.magnitude, val.magnitude);
-			}
+			Multiply(res, this.magnitude, val.magnitude);
 
-			return new BigInteger(sign * val.sign, res, true);
+			int resSign = sign ^ val.sign ^ 1;
+			return new BigInteger(resSign, res, true);
+		}
+
+		public BigInteger Square()
+		{
+			if (sign == 0)
+				return Zero;
+			if (this.QuickPow2Check())
+				return ShiftLeft(Abs().BitLength - 1);
+			int resLength = magnitude.Length << 1;
+			if ((uint)magnitude[0] >> 16 == 0)
+				--resLength;
+			int[] res = new int[resLength];
+			Square(res, magnitude);
+			return new BigInteger(1, res, false);
 		}
 
 		public BigInteger Negate()
@@ -2147,19 +2499,27 @@ namespace ObscurCore.Cryptography.Support.Math
 
 		public BigInteger Pow(int exp)
 		{
-			if (exp < 0)
+			if (exp <= 0)
 			{
-				throw new ArithmeticException("Negative exponent");
-			}
+				if (exp < 0)
+					throw new ArithmeticException("Negative exponent");
 
-			if (exp == 0)
-			{
 				return One;
 			}
 
-			if (sign == 0 || Equals(One))
+			if (sign == 0)
 			{
 				return this;
+			}
+
+			if (QuickPow2Check())
+			{
+				long powOf2 = (long)exp * (BitLength - 1);
+				if (powOf2 > Int32.MaxValue)
+				{
+					throw new ArithmeticException("Result too large");
+				}
+				return One.ShiftLeft((int)powOf2); 
 			}
 
 			BigInteger y = One;
@@ -2201,10 +2561,10 @@ namespace ObscurCore.Cryptography.Support.Math
 			return (int) acc;
 		}
 
-		/**
-		 * return x = x % y - done in place (y value preserved)
-		 */
-		private int[] Remainder(
+		/*		*
+         * return x = x % y - done in place (y value preserved)
+         */
+		private static int[] Remainder(
 			int[] x,
 			int[] y)
 		{
@@ -2226,8 +2586,8 @@ namespace ObscurCore.Cryptography.Support.Math
 
 			if (xyCmp > 0)
 			{
-				int yBitLength = calcBitLength(yStart, y);
-				int xBitLength = calcBitLength(xStart, x);
+				int yBitLength = CalcBitLength(1, yStart, y);
+				int xBitLength = CalcBitLength(1, xStart, x);
 				int shift = xBitLength - yBitLength;
 
 				int[] c;
@@ -2259,7 +2619,7 @@ namespace ObscurCore.Cryptography.Support.Math
 								return x;
 						}
 
-						//xBitLength = calcBitLength(xStart, x);
+						//xBitLength = CalcBitLength(xStart, x);
 						xBitLength = 32 * (x.Length - xStart - 1) + BitLen(x[xStart]);
 
 						if (xBitLength <= yBitLength)
@@ -2336,7 +2696,7 @@ namespace ObscurCore.Cryptography.Support.Math
 
 					return rem == 0
 						?	Zero
-						:	new BigInteger(sign, new int[]{ rem }, false);
+							:	new BigInteger(sign, new int[]{ rem }, false);
 				}
 			}
 
@@ -2370,18 +2730,40 @@ namespace ObscurCore.Cryptography.Support.Math
 
 			Array.Copy(this.magnitude, this.magnitude.Length - numWords, result, 0, numWords);
 
-			int hiBits = n % 32;
-			if (hiBits != 0)
+			int excessBits = (numWords << 5) - n;
+			if (excessBits > 0)
 			{
-				result[0] &= ~(-1 << hiBits);
+				result[0] &= (int)(UInt32.MaxValue >> excessBits);
 			}
 
 			return result;
 		}
 
-		/**
-		 * do a left shift - this returns a new array.
-		 */
+		private BigInteger DivideWords(int w)
+		{
+			Debug.Assert(w >= 0);
+			int n = magnitude.Length;
+			if (w >= n)
+				return Zero;
+			int[] mag = new int[n - w];
+			Array.Copy(magnitude, 0, mag, 0, n - w);
+			return new BigInteger(sign, mag, false);
+		}
+
+		private BigInteger RemainderWords(int w)
+		{
+			Debug.Assert(w >= 0);
+			int n = magnitude.Length;
+			if (w >= n)
+				return this;
+			int[] mag = new int[w];
+			Array.Copy(magnitude, n - w, mag, 0, w);
+			return new BigInteger(sign, mag, false);
+		}
+
+		/*		*
+         * do a left shift - this returns a new array.
+         */
 		private static int[] ShiftLeft(
 			int[]	mag,
 			int		n)
@@ -2427,6 +2809,19 @@ namespace ObscurCore.Cryptography.Support.Math
 			return newMag;
 		}
 
+		private static int ShiftLeftOneInPlace(int[] x, int carry)
+		{
+			Debug.Assert(carry == 0 || carry == 1);
+			int pos = x.Length;
+			while (--pos >= 0)
+			{
+				uint val = (uint)x[pos];
+				x[pos] = (int)(val << 1) | carry;
+				carry = (int)(val >> 31);
+			}
+			return carry;
+		}
+
 		public BigInteger ShiftLeft(
 			int n)
 		{
@@ -2444,8 +2839,8 @@ namespace ObscurCore.Cryptography.Support.Math
 			if (this.nBits != -1)
 			{
 				result.nBits = sign > 0
-					?	this.nBits
-					:	this.nBits + n;
+				               ?	this.nBits
+				               :	this.nBits + n;
 			}
 
 			if (this.nBitLength != -1)
@@ -2456,9 +2851,9 @@ namespace ObscurCore.Cryptography.Support.Math
 			return result;
 		}
 
-		/**
-		 * do a right shift - this does it in place.
-		 */
+		/*		*
+         * do a right shift - this does it in place.
+         */
 		private static void ShiftRightInPlace(
 			int		start,
 			int[]	mag,
@@ -2499,9 +2894,9 @@ namespace ObscurCore.Cryptography.Support.Math
 			}
 		}
 
-		/**
-		 * do a right shift by one - this does it in place.
-		 */
+		/*		*
+         * do a right shift by one - this does it in place.
+         */
 		private static void ShiftRightOneInPlace(
 			int		start,
 			int[]	mag)
@@ -2519,7 +2914,7 @@ namespace ObscurCore.Cryptography.Support.Math
 			mag[start] = (int)((uint)mag[start] >> 1);
 		}
 
-        public BigInteger ShiftRight(
+		public BigInteger ShiftRight(
 			int n)
 		{
 			if (n == 0)
@@ -2573,9 +2968,9 @@ namespace ObscurCore.Cryptography.Support.Math
 			get { return sign; }
 		}
 
-		/**
-		 * returns x = x - y - we assume x is >= y
-		 */
+		/*		*
+         * returns x = x - y - we assume x is >= y
+         */
 		private static int[] Subtract(
 			int		xStart,
 			int[]	x,
@@ -2667,8 +3062,8 @@ namespace ObscurCore.Cryptography.Support.Math
 				return unsigned ? ZeroEncoding : new byte[1];
 
 			int nBits = (unsigned && sign > 0)
-				?	BitLength
-				:	BitLength + 1;
+			            ?	BitLength
+			            :	BitLength + 1;
 
 			int nBytes = GetByteLength(nBits);
 			byte[] bytes = new byte[nBytes];
@@ -2745,19 +3140,19 @@ namespace ObscurCore.Cryptography.Support.Math
 			return ToString(10);
 		}
 
-		public string ToString(
-			int radix)
+		public string ToString(int radix)
 		{
-			// TODO Make this method work for other radices (ideally 2 <= radix <= 16)
+			// TODO Make this method work for other radices (ideally 2 <= radix <= 36 as in Java)
 
 			switch (radix)
 			{
-				case 2:
-				case 10:
-				case 16:
-					break;
-				default:
-					throw new FormatException("Only bases 2, 10, 16 are allowed");
+			case 2:
+			case 8:
+			case 10:
+			case 16:
+				break;
+			default:
+				throw new FormatException("Only bases 2, 8, 10, 16 are allowed");
 			}
 
 			// NB: Can only happen to internally managed instances
@@ -2767,87 +3162,127 @@ namespace ObscurCore.Cryptography.Support.Math
 			if (sign == 0)
 				return "0";
 
-			Debug.Assert(magnitude.Length > 0);
+
+			// NOTE: This *should* be unnecessary, since the magnitude *should* never have leading zero digits
+			int firstNonZero = 0;
+			while (firstNonZero < magnitude.Length)
+			{
+			if (magnitude[firstNonZero] != 0)
+			{
+				break;
+			}
+			++firstNonZero;
+			}
+
+			if (firstNonZero == magnitude.Length)
+			{
+			return "0";
+			}
+
 
 			StringBuilder sb = new StringBuilder();
-
-			if (radix == 16)
-			{
-				sb.Append(magnitude[0].ToString("x"));
-
-				for (int i = 1; i < magnitude.Length; i++)
-				{
-					sb.Append(magnitude[i].ToString("x8"));
-				}
-			}
-			else if (radix == 2)
-			{
-				sb.Append('1');
-
-				for (int i = BitLength - 2; i >= 0; --i)
-				{
-					sb.Append(TestBit(i) ? '1' : '0');
-				}
-			}
-			else
-			{
-				// This is algorithm 1a from chapter 4.4 in Seminumerical Algorithms, slow but it works
-				IList S = new ArrayList();
-				BigInteger bs = ValueOf(radix);
-
-				// The sign is handled separatly.
-				// Notice however that for this to work, radix 16 _MUST_ be a special case,
-				// unless we want to enter a recursion well. In their infinite wisdom, why did not
-				// the Sun engineers made a c'tor for BigIntegers taking a BigInteger as parameter?
-				// (Answer: Becuase Sun's BigIntger is clonable, something bouncycastle's isn't.)
-//				BigInteger u = new BigInteger(Abs().ToString(16), 16);
-				BigInteger u = this.Abs();
-				BigInteger b;
-
-				while (u.sign != 0)
-				{
-					b = u.Mod(bs);
-					if (b.sign == 0)
-					{
-						S.Add("0");
-					}
-					else
-					{
-						// see how to interact with different bases
-						S.Add(b.magnitude[0].ToString("d"));
-					}
-					u = u.Divide(bs);
-				}
-
-				// Then pop the stack
-                for (int i = S.Count - 1; i >= 0; --i)
-                {
-                    sb.Append((string)S[i]);
-                }
-			}
-
-			string s = sb.ToString();
-
-			Debug.Assert(s.Length > 0);
-
-			// Strip leading zeros. (We know this number is not all zeroes though)
-			if (s[0] == '0')
-			{
-				int nonZeroPos = 0;
-				while (s[++nonZeroPos] == '0') {}
-
-				s = s.Substring(nonZeroPos);
-			}
-
 			if (sign == -1)
 			{
-				s = "-" + s;
+			sb.Append('-');
 			}
 
-			return s;
+			switch (radix)
+			{
+			case 2:
+				{
+					int pos = firstNonZero;
+					sb.Append(Convert.ToString(magnitude[pos], 2));
+					while (++pos < magnitude.Length)
+					{
+						AppendZeroExtendedString(sb, Convert.ToString(magnitude[pos], 2), 32);
+					}
+					break;
+				}
+			case 8:
+				{
+					int mask = (1 << 30) - 1;
+					BigInteger u = this.Abs();
+					int bits = u.BitLength;
+					IList S = new ArrayList();
+					while (bits > 30)
+					{
+						S.Add(Convert.ToString(u.IntValue & mask, 8));
+						u = u.ShiftRight(30);
+						bits -= 30;
+					}
+					sb.Append(Convert.ToString(u.IntValue, 8));
+					for (int i = S.Count - 1; i >= 0; --i)
+					{
+						AppendZeroExtendedString(sb, (string)S[i], 10);
+					}
+					break;
+				}
+			case 16:
+				{
+					int pos = firstNonZero;
+					sb.Append(Convert.ToString(magnitude[pos], 16));
+					while (++pos < magnitude.Length)
+					{
+						AppendZeroExtendedString(sb, Convert.ToString(magnitude[pos], 16), 8);
+					}
+					break;
+				}
+				// TODO This could work for other radices if there is an alternative to Convert.ToString method
+				//default:
+			case 10:
+				{
+					BigInteger q = this.Abs();
+					if (q.BitLength < 64)
+					{
+						sb.Append(Convert.ToString(q.LongValue, radix));
+						break;
+					}
+
+					// Based on algorithm 1a from chapter 4.4 in Seminumerical Algorithms (Knuth)
+
+					// Work out the largest power of 'rdx' that is a positive 64-bit integer
+					// TODO possibly cache power/exponent against radix?
+					long limit = Int64.MaxValue / radix;
+					long power = radix;
+					int exponent = 1;
+					while (power <= limit)
+					{
+						power *= radix;
+						++exponent;
+					}
+
+					BigInteger bigPower = BigInteger.ValueOf(power);
+
+					IList S = new ArrayList ();
+					while (q.CompareTo(bigPower) >= 0)
+					{
+						BigInteger[] qr = q.DivideAndRemainder(bigPower);
+						S.Add(Convert.ToString(qr[1].LongValue, radix));
+						q = qr[0];
+					}
+
+					sb.Append(Convert.ToString(q.LongValue, radix));
+					for (int i = S.Count - 1; i >= 0; --i)
+					{
+						AppendZeroExtendedString(sb, (string)S[i], exponent);
+					}
+					break;
+				}
+			}
+
+			return sb.ToString();
 		}
 
-		private static BigInteger createUValueOf(
+		private static void AppendZeroExtendedString(StringBuilder sb, string s, int minLength)
+		{
+			for (int len = s.Length; len < minLength; ++len)
+			{
+				sb.Append('0');
+			}
+			sb.Append(s);
+		}
+
+		private static BigInteger CreateUValueOf(
 			ulong value)
 		{
 			int msw = (int)(value >> 32);
@@ -2870,48 +3305,29 @@ namespace ObscurCore.Cryptography.Support.Math
 			return Zero;
 		}
 
-		private static BigInteger createValueOf(
+		private static BigInteger CreateValueOf(
 			long value)
 		{
 			if (value < 0)
 			{
 				if (value == long.MinValue)
-					return createValueOf(~value).Not();
+					return CreateValueOf(~value).Not();
 
-				return createValueOf(-value).Negate();
+				return CreateValueOf(-value).Negate();
 			}
 
-			return createUValueOf((ulong)value);
-
-//			// store value into a byte array
-//			byte[] b = new byte[8];
-//			for (int i = 0; i < 8; i++)
-//			{
-//				b[7 - i] = (byte)value;
-//				value >>= 8;
-//			}
-//
-//			return new BigInteger(b);
+			return CreateUValueOf((ulong)value);
 		}
 
 		public static BigInteger ValueOf(
 			long value)
 		{
-			switch (value)
+			if (value >= 0 && value < SMALL_CONSTANTS.Length)
 			{
-				case 0:
-					return Zero;
-				case 1:
-					return One;
-				case 2:
-					return Two;
-				case 3:
-					return Three;
-				case 10:
-					return Ten;
+				return SMALL_CONSTANTS[value];
 			}
 
-			return createValueOf(value);
+			return CreateValueOf(value);
 		}
 
 		public int GetLowestSetBit()
@@ -2919,34 +3335,35 @@ namespace ObscurCore.Cryptography.Support.Math
 			if (this.sign == 0)
 				return -1;
 
-			int w = magnitude.Length;
+			return GetLowestSetBitMaskFirst(-1);
+		}
 
-			while (--w > 0)
+		private int GetLowestSetBitMaskFirst(int firstWordMask)
+		{
+			int w = magnitude.Length, offset = 0;
+
+			uint word = (uint)(magnitude[--w] & firstWordMask);
+			Debug.Assert(magnitude[0] != 0);
+
+			while (word == 0)
 			{
-				if (magnitude[w] != 0)
-					break;
+				word = (uint)magnitude[--w];
+				offset += 32;
 			}
 
-			int word = (int) magnitude[w];
-			Debug.Assert(word != 0);
-
-			int b = (word & 0x0000FFFF) == 0
-				?	(word & 0x00FF0000) == 0
-					?	7
-					:	15
-				:	(word & 0x000000FF) == 0
-					?	23
-					:	31;
-
-			while (b > 0)
+			while ((word & 0xFF) == 0)
 			{
-				if ((word << b) == int.MinValue)
-					break;
-
-				b--;
+				word >>= 8;
+				offset += 8;
 			}
 
-			return ((magnitude.Length - w) * 32 - (b + 1));
+			while ((word & 1) == 0)
+			{
+				word >>= 1;
+				++offset;
+			}
+
+			return offset;
 		}
 
 		public bool TestBit(
@@ -2976,12 +3393,12 @@ namespace ObscurCore.Cryptography.Support.Math
 				return this;
 
 			int[] aMag = this.sign > 0
-				? this.magnitude
-				: Add(One).magnitude;
+			             ? this.magnitude
+			             : Add(One).magnitude;
 
 			int[] bMag = value.sign > 0
-				? value.magnitude
-				: value.Add(One).magnitude;
+			             ? value.magnitude
+			             : value.Add(One).magnitude;
 
 			bool resultNeg = sign < 0 || value.sign < 0;
 			int resultLength = System.Math.Max(aMag.Length, bMag.Length);
@@ -3034,12 +3451,12 @@ namespace ObscurCore.Cryptography.Support.Math
 				return this;
 
 			int[] aMag = this.sign > 0
-				? this.magnitude
-				: Add(One).magnitude;
+			             ? this.magnitude
+			             : Add(One).magnitude;
 
 			int[] bMag = value.sign > 0
-				? value.magnitude
-				: value.Add(One).magnitude;
+			             ? value.magnitude
+			             : value.Add(One).magnitude;
 
 			// TODO Can just replace with sign != value.sign?
 			bool resultNeg = (sign < 0 && value.sign >= 0) || (sign >= 0 && value.sign < 0);

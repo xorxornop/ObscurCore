@@ -22,6 +22,8 @@ using System.Text;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Ciphers;
+using ObscurCore.Cryptography.Ciphers.Block;
+using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.Cryptography.KeyAgreement;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.KeyConfirmation;
@@ -354,7 +356,10 @@ namespace ObscurCore
 		/// Creates a new PayloadItem DTO object, but does not add it to the manifest, returning it instead.
 		/// </summary>
 		/// <returns>A payload item.</returns>
-		/// <remarks>Default encryption is AES-256/CTR with random IV and key.</remarks>
+		/// <remarks>
+		/// Default encryption is AES-256/CTR with random IV and key.
+		/// Default authentication is 
+		/// </remarks>
 		/// <param name="itemData">Function supplying a stream of the item data.</param>
 		/// <param name="itemType">Type of the item, e.g., Utf8 (text) or Binary (data/file).</param>
 		/// <param name="externalLength">External length (outside the payload) of the item.</param>
@@ -372,7 +377,8 @@ namespace ObscurCore
 				RelativePath = relativePath,
 				Encryption = !skipCrypto ? SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration
 				             (SymmetricBlockCipher.Aes, BlockCipherMode.Ctr, BlockCipherPadding.None) : null,
-				Authentication = !skipCrypto ? AuthenticationConfigurationFactory.CreateAuthenticationConfiguration() : null
+				Authentication = !skipCrypto ? 
+				                 AuthenticationConfigurationFactory.CreateAuthenticationConfigurationPoly1305(SymmetricBlockCipher.Aes) : null
 			};
 
 			if(!skipCrypto) {
@@ -687,7 +693,7 @@ namespace ObscurCore
 				using (var authenticator = new MacStream (manifestTemp, true, _manifestCryptoConfig.Authentication, 
 					out manifestMac, workingMAuthKey, false)) 
 				{
-					using (var cs = new SymmetricCryptoStream (authenticator, true, _manifestCryptoConfig.SymmetricCipher, 
+					using (var cs = new SymmetricCipherStream (authenticator, true, _manifestCryptoConfig.SymmetricCipher, 
 						workingMEncryptionKey, false)) 
 					{
 						_manifest.SerialiseDto(cs);
@@ -995,7 +1001,7 @@ namespace ObscurCore
 				using(var authenticator = new MacStream(_readingStream, false, _manifestCryptoConfig.Authentication, 
 					out manifestMac, workingMAuthKey, closeOnDispose : false)) 
 				{
-					using(var cs = new SymmetricCryptoStream(authenticator, false, _manifestCryptoConfig.SymmetricCipher, 
+					using(var cs = new SymmetricCipherStream(authenticator, false, _manifestCryptoConfig.SymmetricCipher, 
 						workingMEncryptionKey, closeOnDispose : false))
 					{
 					cs.ReadExactlyTo (decryptedManifestStream, manifestLength, true);

@@ -14,7 +14,6 @@
 //    limitations under the License.
 
 using System;
-using ObscurCore.Extensions.BitPacking;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
@@ -26,7 +25,6 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		public XSalsa20Engine (int rounds = DEFAULT_ROUNDS) : base(rounds)
 		{	
 		}
-
 
 		public override void Init (bool encrypting, byte[] key, byte[] iv) {
 			if (iv == null) 
@@ -41,6 +39,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			}
 
 			SetKey(key, iv);
+			Reset ();
+			initialised = true;
 		}
 
 		protected override void SetKey (byte[] keyBytes, byte[] ivBytes) {
@@ -48,27 +48,29 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			base.SetKey (keyBytes, ivBytes);
 
 			// Pack next 64 bits of IV into engine state instead of counter
-			_engineState[8] = ivBytes.LittleEndianToInt32(8);
-			_engineState[9] = ivBytes.LittleEndianToInt32(12);
+			engineState[8] = ivBytes.LittleEndianToUInt32(8);
+			engineState[9] = ivBytes.LittleEndianToUInt32(12);
 
 			// Process engine state to generate Salsa20 key
-			int[] hsalsa20Out = new int[_engineState.Length];
-			base.SalsaCore(_rounds, _engineState, hsalsa20Out);
+			var hsalsa20Out = new uint[engineState.Length];
+			SalsaCore(rounds, engineState, hsalsa20Out);
 
 			// Set new key, removing addition in last round of salsaCore
-			_engineState[1] = hsalsa20Out[0] - _engineState[0];
-			_engineState[2] = hsalsa20Out[5] - _engineState[5];
-			_engineState[3] = hsalsa20Out[10] - _engineState[10];
-			_engineState[4] = hsalsa20Out[15] - _engineState[15];
+			engineState[1] = hsalsa20Out[0] - engineState[0];
+			engineState[2] = hsalsa20Out[5] - engineState[5];
+			engineState[3] = hsalsa20Out[10] - engineState[10];
+			engineState[4] = hsalsa20Out[15] - engineState[15];
 
-			_engineState[11] = hsalsa20Out[6] - _engineState[6];
-			_engineState[12] = hsalsa20Out[7] - _engineState[7];
-			_engineState[13] = hsalsa20Out[8] - _engineState[8];
-			_engineState[14] = hsalsa20Out[9] - _engineState[9];
+			engineState[11] = hsalsa20Out[6] - engineState[6];
+			engineState[12] = hsalsa20Out[7] - engineState[7];
+			engineState[13] = hsalsa20Out[8] - engineState[8];
+			engineState[14] = hsalsa20Out[9] - engineState[9];
 
 			// Last 64 bits of input IV
-			_engineState[6] = ivBytes.LittleEndianToInt32(16);
-			_engineState[7] = ivBytes.LittleEndianToInt32(20);
+			engineState[6] = ivBytes.LittleEndianToUInt32(16);
+			engineState[7] = ivBytes.LittleEndianToUInt32(20);
+
+			ResetCounter();
 		}
 	}
 }

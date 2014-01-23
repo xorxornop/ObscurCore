@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using ObscurCore.Cryptography;
+using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
 
@@ -92,7 +93,7 @@ namespace ObscurCore.Packaging
 				// Verify the authenticity of the item ciphertext and configuration
 				if(!itemAuthenticator.Mac.SequenceEqualConstantTime(item.Authentication.VerifiedOutput)) {
 					// Verification failed!
-					throw new CiphertextAuthenticationException ();
+					throw new CiphertextAuthenticationException ("Payload item not authenticated.");
 				}
 			}
 

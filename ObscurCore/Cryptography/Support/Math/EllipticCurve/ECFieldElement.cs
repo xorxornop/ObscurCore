@@ -9,6 +9,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		public abstract string FieldName { get; }
 		public abstract int FieldSize { get; }
 		public abstract ECFieldElement Add(ECFieldElement b);
+		public abstract ECFieldElement AddOne();
 		public abstract ECFieldElement Subtract(ECFieldElement b);
 		public abstract ECFieldElement Multiply(ECFieldElement b);
 		public abstract ECFieldElement Divide(ECFieldElement b);
@@ -17,23 +18,37 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		public abstract ECFieldElement Invert();
 		public abstract ECFieldElement Sqrt();
 
-		public override bool Equals(
-			object obj)
+		public virtual int BitLength
 		{
-			if (obj == this)
-				return true;
-
-			ECFieldElement other = obj as ECFieldElement;
-
-			if (other == null)
-				return false;
-
-			return Equals(other);
+			get { return ToBigInteger().BitLength; }
 		}
 
-		protected internal bool Equals(
-			ECFieldElement other)
+		public virtual bool IsOne
 		{
+			get { return BitLength == 1; }
+		}
+
+		public virtual bool IsZero
+		{
+			get { return 0 == ToBigInteger().SignValue; }
+		}
+
+		public virtual bool TestBitZero()
+		{
+			return ToBigInteger().TestBit(0);
+		}
+
+		public override bool Equals(object obj)
+		{
+			return Equals(obj as ECFieldElement);
+		}
+
+		public virtual bool Equals(ECFieldElement other)
+		{
+			if (this == other)
+				return true;
+			if (null == other)
+				return false;
 			return ToBigInteger().Equals(other.ToBigInteger());
 		}
 
@@ -44,23 +59,51 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 
 		public override string ToString()
 		{
-			return this.ToBigInteger().ToString(2);
+			return this.ToBigInteger().ToString(16);
+		}
+
+		public virtual byte[] GetEncoded()
+		{
+			return BigIntegers.AsUnsignedByteArray((FieldSize + 7) / 8, ToBigInteger());
 		}
 	}
 
 	public class FpFieldElement
 		: ECFieldElement
 	{
-		private readonly BigInteger q, x;
+		private readonly BigInteger q, r, x;
 
-		public FpFieldElement(
-			BigInteger	q,
-			BigInteger	x)
+		internal static BigInteger CalculateResidue(BigInteger p)
 		{
-			if (x.CompareTo(q) >= 0)
-				throw new ArgumentException("x value too large in field element");
+			int bitLength = p.BitLength;
+			if (bitLength >= 96)
+			{
+				BigInteger firstWord = p.ShiftRight(bitLength - 64);
+				if (firstWord.LongValue == -1L)
+				{
+					return BigInteger.One.ShiftLeft(bitLength).Subtract(p);
+				}
+				if ((bitLength & 7) == 0)
+				{
+					return BigInteger.One.ShiftLeft(bitLength << 1).Divide(p).Negate();
+				}
+			}
+			return null;
+		}
+
+		[Obsolete("Use ECCurve.FromBigInteger to construct field elements")]
+		public FpFieldElement(BigInteger q, BigInteger x)
+			: this(q, CalculateResidue(q), x)
+		{
+		}
+
+		internal FpFieldElement(BigInteger q, BigInteger r, BigInteger x)
+		{
+			if (x == null || x.SignValue < 0 || x.CompareTo(q) >= 0)
+				throw new ArgumentException("value invalid in Fp field element", "x");
 
 			this.q = q;
+			this.r = r;
 			this.x = x;
 		}
 
@@ -69,11 +112,11 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return x;
 		}
 
-		/**
-		 * return the field name for this field.
-		 *
-		 * @return the string "Fp".
-		 */
+		/*		*
+         * return the field name for this field.
+         *
+         * @return the string "Fp".
+         */
 		public override string FieldName
 		{
 			get { return "Fp"; }
@@ -92,47 +135,58 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		public override ECFieldElement Add(
 			ECFieldElement b)
 		{
-			return new FpFieldElement(q, x.Add(b.ToBigInteger()).Mod(q));
+			return new FpFieldElement(q, r, ModAdd(x, b.ToBigInteger()));
+		}
+
+		public override ECFieldElement AddOne()
+		{
+			BigInteger x2 = x.Add(BigInteger.One);
+			if (x2.CompareTo(q) == 0)
+			{
+				x2 = BigInteger.Zero;
+			}
+			return new FpFieldElement(q, r, x2);
 		}
 
 		public override ECFieldElement Subtract(
 			ECFieldElement b)
 		{
-			return new FpFieldElement(q, x.Subtract(b.ToBigInteger()).Mod(q));
+			return new FpFieldElement(q, r, ModSubtract(x, b.ToBigInteger()));
 		}
 
 		public override ECFieldElement Multiply(
 			ECFieldElement b)
 		{
-			return new FpFieldElement(q, x.Multiply(b.ToBigInteger()).Mod(q));
+			return new FpFieldElement(q, r, ModMult(x, b.ToBigInteger()));
 		}
 
 		public override ECFieldElement Divide(
 			ECFieldElement b)
 		{
-			return new FpFieldElement(q, x.Multiply(b.ToBigInteger().ModInverse(q)).Mod(q));
+			return new FpFieldElement(q, r, ModMult(x, ModInverse(b.ToBigInteger())));
 		}
 
 		public override ECFieldElement Negate()
 		{
-			return new FpFieldElement(q, x.Negate().Mod(q));
+			return x.SignValue == 0 ? this : new FpFieldElement(q, r, q.Subtract(x));
 		}
 
 		public override ECFieldElement Square()
 		{
-			return new FpFieldElement(q, x.Multiply(x).Mod(q));
+			return new FpFieldElement(q, r, ModMult(x, x));
 		}
 
 		public override ECFieldElement Invert()
 		{
-			return new FpFieldElement(q, x.ModInverse(q));
+			// TODO Modular inversion can be faster for a (Generalized) Mersenne Prime.
+			return new FpFieldElement(q, r, ModInverse(x));
 		}
 
 		// D.1.4 91
-		/**
-		 * return a sqrt root - the routine verifies that the calculation
-		 * returns the right value - if none exists it returns null.
-		 */
+		/*		*
+         * return a sqrt root - the routine verifies that the calculation
+         * returns the right value - if none exists it returns null.
+         */
 		public override ECFieldElement Sqrt()
 		{
 			if (!q.TestBit(0))
@@ -143,7 +197,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			{
 				// TODO Can this be optimised (inline the Square?)
 				// z = g^(u+1) + p, p = 4u + 3
-				ECFieldElement z = new FpFieldElement(q, x.ModPow(q.ShiftRight(2).Add(BigInteger.One), q));
+				ECFieldElement z = new FpFieldElement(q, r, x.ModPow(q.ShiftRight(2).Add(BigInteger.One), q));
 
 				return z.Square().Equals(this) ? z : null;
 			}
@@ -158,26 +212,26 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			BigInteger u = qMinusOne.ShiftRight(2);
 			BigInteger k = u.ShiftLeft(1).Add(BigInteger.One);
 
-			BigInteger Q = this.x;
-			BigInteger fourQ = Q.ShiftLeft(2).Mod(q);
+			BigInteger X = this.x;
+			BigInteger fourX = ModDouble(ModDouble(X)); ;
 
 			BigInteger U, V;
+			Random rand = new Random();
 			do
 			{
-				Random rand = new Random();
 				BigInteger P;
 				do
 				{
 					P = new BigInteger(q.BitLength, rand);
 				}
 				while (P.CompareTo(q) >= 0
-					|| !(P.Multiply(P).Subtract(fourQ).ModPow(legendreExponent, q).Equals(qMinusOne)));
+					|| !(ModMult(P, P).Subtract(fourX).ModPow(legendreExponent, q).Equals(qMinusOne)));
 
-				BigInteger[] result = fastLucasSequence(q, P, Q, k);
+				BigInteger[] result = LucasSequence(P, X, k);
 				U = result[0];
 				V = result[1];
 
-				if (V.Multiply(V).Mod(q).Equals(fourQ))
+				if (ModMult(V, V).Equals(fourX))
 				{
 					// Integer division by 2, mod q
 					if (V.TestBit(0))
@@ -187,71 +241,17 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 
 					V = V.ShiftRight(1);
 
-					Debug.Assert(V.Multiply(V).Mod(q).Equals(x));
+					Debug.Assert(ModMult(V, V).Equals(X));
 
-					return new FpFieldElement(q, V);
+					return new FpFieldElement(q, r, V);
 				}
 			}
 			while (U.Equals(BigInteger.One) || U.Equals(qMinusOne));
 
 			return null;
-
-
-//			BigInteger qMinusOne = q.Subtract(BigInteger.One);
-//
-//			BigInteger legendreExponent = qMinusOne.ShiftRight(1);
-//			if (!(x.ModPow(legendreExponent, q).Equals(BigInteger.One)))
-//				return null;
-//
-//			Random rand = new Random();
-//			BigInteger fourX = x.ShiftLeft(2);
-//
-//			BigInteger r;
-//			do
-//			{
-//				r = new BigInteger(q.BitLength, rand);
-//			}
-//			while (r.CompareTo(q) >= 0
-//				|| !(r.Multiply(r).Subtract(fourX).ModPow(legendreExponent, q).Equals(qMinusOne)));
-//
-//			BigInteger n1 = qMinusOne.ShiftRight(2);
-//			BigInteger n2 = n1.Add(BigInteger.One);
-//
-//			BigInteger wOne = WOne(r, x, q);
-//			BigInteger wSum = W(n1, wOne, q).Add(W(n2, wOne, q)).Mod(q);
-//			BigInteger twoR = r.ShiftLeft(1);
-//
-//			BigInteger root = twoR.ModPow(q.Subtract(BigInteger.Two), q)
-//				.Multiply(x).Mod(q)
-//				.Multiply(wSum).Mod(q);
-//
-//			return new FpFieldElement(q, root);
 		}
 
-//		private static BigInteger W(BigInteger n, BigInteger wOne, BigInteger p)
-//		{
-//			if (n.Equals(BigInteger.One))
-//				return wOne;
-//
-//			bool isEven = !n.TestBit(0);
-//			n = n.ShiftRight(1);
-//			if (isEven)
-//			{
-//				BigInteger w = W(n, wOne, p);
-//				return w.Multiply(w).Subtract(BigInteger.Two).Mod(p);
-//			}
-//			BigInteger w1 = W(n.Add(BigInteger.One), wOne, p);
-//			BigInteger w2 = W(n, wOne, p);
-//			return w1.Multiply(w2).Subtract(wOne).Mod(p);
-//		}
-//
-//		private BigInteger WOne(BigInteger r, BigInteger x, BigInteger p)
-//		{
-//			return r.Multiply(r).Multiply(x.ModPow(q.Subtract(BigInteger.Two), q)).Subtract(BigInteger.Two).Mod(p);
-//		}
-
-		private static BigInteger[] fastLucasSequence(
-			BigInteger	p,
+		private BigInteger[] LucasSequence(
 			BigInteger	P,
 			BigInteger	Q,
 			BigInteger	k)
@@ -271,71 +271,143 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 
 			for (int j = n - 1; j >= s + 1; --j)
 			{
-				Ql = Ql.Multiply(Qh).Mod(p);
+				Ql = ModMult(Ql, Qh);
 
 				if (k.TestBit(j))
 				{
-					Qh = Ql.Multiply(Q).Mod(p);
-					Uh = Uh.Multiply(Vh).Mod(p);
-					Vl = Vh.Multiply(Vl).Subtract(P.Multiply(Ql)).Mod(p);
-					Vh = Vh.Multiply(Vh).Subtract(Qh.ShiftLeft(1)).Mod(p);
+					Qh = ModMult(Ql, Q);
+					Uh = ModMult(Uh, Vh);
+					Vl = ModReduce(Vh.Multiply(Vl).Subtract(P.Multiply(Ql)));
+					Vh = ModReduce(Vh.Multiply(Vh).Subtract(Qh.ShiftLeft(1)));
 				}
 				else
 				{
 					Qh = Ql;
-					Uh = Uh.Multiply(Vl).Subtract(Ql).Mod(p);
-					Vh = Vh.Multiply(Vl).Subtract(P.Multiply(Ql)).Mod(p);
-					Vl = Vl.Multiply(Vl).Subtract(Ql.ShiftLeft(1)).Mod(p);
+					Uh = ModReduce(Uh.Multiply(Vl).Subtract(Ql));
+					Vh = ModReduce(Vh.Multiply(Vl).Subtract(P.Multiply(Ql)));
+					Vl = ModReduce(Vl.Multiply(Vl).Subtract(Ql.ShiftLeft(1)));
 				}
 			}
 
-			Ql = Ql.Multiply(Qh).Mod(p);
-			Qh = Ql.Multiply(Q).Mod(p);
-			Uh = Uh.Multiply(Vl).Subtract(Ql).Mod(p);
-			Vl = Vh.Multiply(Vl).Subtract(P.Multiply(Ql)).Mod(p);
-			Ql = Ql.Multiply(Qh).Mod(p);
+			Ql = ModMult(Ql, Qh);
+			Qh = ModMult(Ql, Q);
+			Uh = ModReduce(Uh.Multiply(Vl).Subtract(Ql));
+			Vl = ModReduce(Vh.Multiply(Vl).Subtract(P.Multiply(Ql)));
+			Ql = ModMult(Ql, Qh);
 
 			for (int j = 1; j <= s; ++j)
 			{
-				Uh = Uh.Multiply(Vl).Mod(p);
-				Vl = Vl.Multiply(Vl).Subtract(Ql.ShiftLeft(1)).Mod(p);
-				Ql = Ql.Multiply(Ql).Mod(p);
+				Uh = ModMult(Uh, Vl);
+				Vl = ModReduce(Vl.Multiply(Vl).Subtract(Ql.ShiftLeft(1)));
+				Ql = ModMult(Ql, Ql);
 			}
 
-			return new BigInteger[]{ Uh, Vl };
+			return new BigInteger[] { Uh, Vl };
 		}
 
-//		private static BigInteger[] verifyLucasSequence(
-//			BigInteger	p,
-//			BigInteger	P,
-//			BigInteger	Q,
-//			BigInteger	k)
-//		{
-//			BigInteger[] actual = fastLucasSequence(p, P, Q, k);
-//			BigInteger[] plus1 = fastLucasSequence(p, P, Q, k.Add(BigInteger.One));
-//			BigInteger[] plus2 = fastLucasSequence(p, P, Q, k.Add(BigInteger.Two));
-//
-//			BigInteger[] check = stepLucasSequence(p, P, Q, actual, plus1);
-//
-//			Debug.Assert(check[0].Equals(plus2[0]));
-//			Debug.Assert(check[1].Equals(plus2[1]));
-//
-//			return actual;
-//		}
-//
-//		private static BigInteger[] stepLucasSequence(
-//			BigInteger		p,
-//			BigInteger		P,
-//			BigInteger		Q,
-//			BigInteger[]	backTwo,
-//			BigInteger[]	backOne)
-//		{
-//			return new BigInteger[]
-//			{
-//				P.Multiply(backOne[0]).Subtract(Q.Multiply(backTwo[0])).Mod(p),
-//				P.Multiply(backOne[1]).Subtract(Q.Multiply(backTwo[1])).Mod(p)
-//			};
-//		}
+		protected virtual BigInteger ModAdd(BigInteger x1, BigInteger x2)
+		{
+			BigInteger x3 = x1.Add(x2);
+			if (x3.CompareTo(q) >= 0)
+			{
+				x3 = x3.Subtract(q);
+			}
+			return x3;
+		}
+
+		protected virtual BigInteger ModDouble(BigInteger x)
+		{
+			BigInteger _2x = x.ShiftLeft(1);
+			if (_2x.CompareTo(q) >= 0)
+			{
+				_2x = _2x.Subtract(q);
+			}
+			return _2x;
+		}
+
+		protected virtual BigInteger ModInverse(BigInteger x)
+		{
+			// Our BigInteger.ModInverse performance is quite poor, so use the new Nat/Mod classes here
+			//return x.ModInverse(q);
+			int len = (FieldSize + 31) >> 5;
+			uint[] p = Nat.FromBigInteger(len, q);
+			uint[] n = Nat.FromBigInteger(len, x);
+			uint[] z = Nat.Create(len);
+			Mod.Invert(p, n, z);
+			return Nat.ToBigInteger(len, z);
+		}
+
+		protected virtual BigInteger ModMult(BigInteger x1, BigInteger x2)
+		{
+			return ModReduce(x1.Multiply(x2));
+		}
+
+		protected virtual BigInteger ModReduce(BigInteger x)
+		{
+			if (r == null)
+			{
+				x = x.Mod(q);
+			}
+			else
+			{
+				bool negative = x.SignValue < 0;
+				if (negative)
+				{
+					x = x.Abs();
+				}
+				int qLen = q.BitLength;
+				if (r.SignValue > 0)
+				{
+					BigInteger qMod = BigInteger.One.ShiftLeft(qLen);
+					bool rIsOne = r.Equals(BigInteger.One);
+					while (x.BitLength > (qLen + 1))
+					{
+						BigInteger u = x.ShiftRight(qLen);
+						BigInteger v = x.Remainder(qMod);
+						if (!rIsOne)
+						{
+							u = u.Multiply(r);
+						}
+						x = u.Add(v);
+					}
+				}
+				else
+				{
+					int d = ((qLen - 1) & 31) + 1;
+					BigInteger mu = r.Negate();
+					BigInteger u = mu.Multiply(x.ShiftRight(qLen - d));
+					BigInteger quot = u.ShiftRight(qLen + d);
+					BigInteger v = quot.Multiply(q);
+					BigInteger bk1 = BigInteger.One.ShiftLeft(qLen + d);
+					v = v.Remainder(bk1);
+					x = x.Remainder(bk1);
+					x = x.Subtract(v);
+					if (x.SignValue < 0)
+					{
+						x = x.Add(bk1);
+					}
+				}
+				while (x.CompareTo(q) >= 0)
+				{
+					x = x.Subtract(q);
+				}
+				if (negative && x.SignValue != 0)
+				{
+					x = q.Subtract(x);
+				}
+			}
+			return x;
+		}
+
+		protected virtual BigInteger ModSubtract(BigInteger x1, BigInteger x2)
+		{
+			BigInteger x3 = x1.Subtract(x2);
+			if (x3.SignValue < 0)
+			{
+				x3 = x3.Add(q);
+			}
+			return x3;
+		}
 
 		public override bool Equals(
 			object obj)
@@ -351,7 +423,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return Equals(other);
 		}
 
-		protected internal bool Equals(
+		public virtual bool Equals(
 			FpFieldElement other)
 		{
 			return q.Equals(other.q) && base.Equals(other);
@@ -813,95 +885,92 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 //		}
 //	}
 
-	/**
-	 * Class representing the Elements of the finite field
-	 * <code>F<sub>2<sup>m</sup></sub></code> in polynomial basis (PB)
-	 * representation. Both trinomial (Tpb) and pentanomial (Ppb) polynomial
-	 * basis representations are supported. Gaussian normal basis (GNB)
-	 * representation is not supported.
-	 */
+	/*	*
+     * Class representing the Elements of the finite field
+     * <code>F<sub>2<sup>m</sup></sub></code> in polynomial basis (PB)
+     * representation. Both trinomial (Tpb) and pentanomial (Ppb) polynomial
+     * basis representations are supported. Gaussian normal basis (GNB)
+     * representation is not supported.
+     */
 	public class F2mFieldElement
 		: ECFieldElement
 	{
-		/**
-		 * Indicates gaussian normal basis representation (GNB). Number chosen
-		 * according to X9.62. GNB is not implemented at present.
-		 */
+		/*		*
+         * Indicates gaussian normal basis representation (GNB). Number chosen
+         * according to X9.62. GNB is not implemented at present.
+         */
 		public const int Gnb = 1;
 
-		/**
-		 * Indicates trinomial basis representation (Tpb). Number chosen
-		 * according to X9.62.
-		 */
+		/*		*
+         * Indicates trinomial basis representation (Tpb). Number chosen
+         * according to X9.62.
+         */
 		public const int Tpb = 2;
 
-		/**
-		 * Indicates pentanomial basis representation (Ppb). Number chosen
-		 * according to X9.62.
-		 */
+		/*		*
+         * Indicates pentanomial basis representation (Ppb). Number chosen
+         * according to X9.62.
+         */
 		public const int Ppb = 3;
 
-		/**
-		 * Tpb or Ppb.
-		 */
+		/*		*
+         * Tpb or Ppb.
+         */
 		private int representation;
 
-		/**
-		 * The exponent <code>m</code> of <code>F<sub>2<sup>m</sup></sub></code>.
-		 */
+		/*		*
+         * The exponent <code>m</code> of <code>F<sub>2<sup>m</sup></sub></code>.
+         */
 		private int m;
 
-		/**
-		 * Tpb: The integer <code>k</code> where <code>x<sup>m</sup> +
-		 * x<sup>k</sup> + 1</code> represents the reduction polynomial
-		 * <code>f(z)</code>.<br/>
-		 * Ppb: The integer <code>k1</code> where <code>x<sup>m</sup> +
-		 * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-		 * represents the reduction polynomial <code>f(z)</code>.<br/>
-		 */
-		private int k1;
+		///**
+		// * Tpb: The integer <code>k</code> where <code>x<sup>m</sup> +
+		// * x<sup>k</sup> + 1</code> represents the reduction polynomial
+		// * <code>f(z)</code>.<br/>
+		// * Ppb: The integer <code>k1</code> where <code>x<sup>m</sup> +
+		// * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
+		// * represents the reduction polynomial <code>f(z)</code>.<br/>
+		// */
+		//private int k1;
 
-		/**
-		 * Tpb: Always set to <code>0</code><br/>
-		 * Ppb: The integer <code>k2</code> where <code>x<sup>m</sup> +
-		 * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-		 * represents the reduction polynomial <code>f(z)</code>.<br/>
-		 */
-		private int k2;
+		///**
+		// * Tpb: Always set to <code>0</code><br/>
+		// * Ppb: The integer <code>k2</code> where <code>x<sup>m</sup> +
+		// * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
+		// * represents the reduction polynomial <code>f(z)</code>.<br/>
+		// */
+		//private int k2;
 
-		/**
-			* Tpb: Always set to <code>0</code><br/>
-			* Ppb: The integer <code>k3</code> where <code>x<sup>m</sup> +
-			* x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-			* represents the reduction polynomial <code>f(z)</code>.<br/>
-			*/
-		private int k3;
+		///**
+		//    * Tpb: Always set to <code>0</code><br/>
+		//    * Ppb: The integer <code>k3</code> where <code>x<sup>m</sup> +
+		//    * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
+		//    * represents the reduction polynomial <code>f(z)</code>.<br/>
+		//    */
+		//private int k3;
 
-		/**
-		 * The <code>IntArray</code> holding the bits.
-		 */
-		private IntArray x;
+		private int[] ks;
 
-		/**
-		 * The number of <code>int</code>s required to hold <code>m</code> bits.
-		 */
-		private readonly int t;
+		/*		*
+         * The <code>LongArray</code> holding the bits.
+         */
+		private LongArray x;
 
-		/**
-			* Constructor for Ppb.
-			* @param m  The exponent <code>m</code> of
-			* <code>F<sub>2<sup>m</sup></sub></code>.
-			* @param k1 The integer <code>k1</code> where <code>x<sup>m</sup> +
-			* x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-			* represents the reduction polynomial <code>f(z)</code>.
-			* @param k2 The integer <code>k2</code> where <code>x<sup>m</sup> +
-			* x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-			* represents the reduction polynomial <code>f(z)</code>.
-			* @param k3 The integer <code>k3</code> where <code>x<sup>m</sup> +
-			* x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-			* represents the reduction polynomial <code>f(z)</code>.
-			* @param x The BigInteger representing the value of the field element.
-			*/
+		/*		*
+            * Constructor for Ppb.
+            * @param m  The exponent <code>m</code> of
+            * <code>F<sub>2<sup>m</sup></sub></code>.
+            * @param k1 The integer <code>k1</code> where <code>x<sup>m</sup> +
+            * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
+            * represents the reduction polynomial <code>f(z)</code>.
+            * @param k2 The integer <code>k2</code> where <code>x<sup>m</sup> +
+            * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
+            * represents the reduction polynomial <code>f(z)</code>.
+            * @param k3 The integer <code>k3</code> where <code>x<sup>m</sup> +
+            * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
+            * represents the reduction polynomial <code>f(z)</code>.
+            * @param x The BigInteger representing the value of the field element.
+            */
 		public F2mFieldElement(
 			int			m,
 			int			k1,
@@ -909,13 +978,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			int			k3,
 			BigInteger	x)
 		{
-			// t = m / 32 rounded up to the next integer
-			this.t = (m + 31) >> 5;
-			this.x = new IntArray(x, t);
-
 			if ((k2 == 0) && (k3 == 0))
 			{
 				this.representation = Tpb;
+				this.ks = new int[] { k1 };
 			}
 			else
 			{
@@ -925,26 +991,22 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 					throw new ArgumentException("k2 must be larger than 0");
 
 				this.representation = Ppb;
+				this.ks = new int[] { k1, k2, k3 };
 			}
 
-			if (x.SignValue < 0)
-				throw new ArgumentException("x value cannot be negative");
-
 			this.m = m;
-			this.k1 = k1;
-			this.k2 = k2;
-			this.k3 = k3;
+			this.x = new LongArray(x);
 		}
 
-		/**
-			* Constructor for Tpb.
-			* @param m  The exponent <code>m</code> of
-			* <code>F<sub>2<sup>m</sup></sub></code>.
-			* @param k The integer <code>k</code> where <code>x<sup>m</sup> +
-			* x<sup>k</sup> + 1</code> represents the reduction
-			* polynomial <code>f(z)</code>.
-			* @param x The BigInteger representing the value of the field element.
-			*/
+		/*		*
+            * Constructor for Tpb.
+            * @param m  The exponent <code>m</code> of
+            * <code>F<sub>2<sup>m</sup></sub></code>.
+            * @param k The integer <code>k</code> where <code>x<sup>m</sup> +
+            * x<sup>k</sup> + 1</code> represents the reduction
+            * polynomial <code>f(z)</code>.
+            * @param x The BigInteger representing the value of the field element.
+            */
 		public F2mFieldElement(
 			int			m,
 			int			k,
@@ -954,23 +1016,32 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			// Set k1 to k, and set k2 and k3 to 0
 		}
 
-		private F2mFieldElement(int m, int k1, int k2, int k3, IntArray x)
+		private F2mFieldElement(int m, int[] ks, LongArray x)
 		{
-			t = (m + 31) >> 5;
-			this.x = x;
 			this.m = m;
-			this.k1 = k1;
-			this.k2 = k2;
-			this.k3 = k3;
+			this.representation = (ks.Length == 1) ? Tpb : Ppb;
+			this.ks = ks;
+			this.x = x;
+		}
 
-			if ((k2 == 0) && (k3 == 0))
-			{
-				this.representation = Tpb;
-			}
-			else
-			{
-				this.representation = Ppb;
-			}
+		public override int BitLength
+		{
+			get { return x.Degree(); }
+		}
+
+		public override bool IsOne
+		{
+			get { return x.IsOne(); }
+		}
+
+		public override bool IsZero
+		{
+			get { return x.IsZero(); }
+		}
+
+		public override bool TestBitZero()
+		{
+			return x.TestBitZero();
 		}
 
 		public override BigInteger ToBigInteger()
@@ -988,17 +1059,17 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			get { return m; }
 		}
 
-		/**
-		* Checks, if the ECFieldElements <code>a</code> and <code>b</code>
-		* are elements of the same field <code>F<sub>2<sup>m</sup></sub></code>
-		* (having the same representation).
-		* @param a field element.
-		* @param b field element to be compared.
-		* @throws ArgumentException if <code>a</code> and <code>b</code>
-		* are not elements of the same field
-		* <code>F<sub>2<sup>m</sup></sub></code> (having the same
-		* representation).
-		*/
+		/*		*
+        * Checks, if the ECFieldElements <code>a</code> and <code>b</code>
+        * are elements of the same field <code>F<sub>2<sup>m</sup></sub></code>
+        * (having the same representation).
+        * @param a field element.
+        * @param b field element to be compared.
+        * @throws ArgumentException if <code>a</code> and <code>b</code>
+        * are not elements of the same field
+        * <code>F<sub>2<sup>m</sup></sub></code> (having the same
+        * representation).
+        */
 		public static void CheckFieldElements(
 			ECFieldElement	a,
 			ECFieldElement	b)
@@ -1012,19 +1083,15 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			F2mFieldElement aF2m = (F2mFieldElement)a;
 			F2mFieldElement bF2m = (F2mFieldElement)b;
 
-			if ((aF2m.m != bF2m.m) || (aF2m.k1 != bF2m.k1)
-				|| (aF2m.k2 != bF2m.k2) || (aF2m.k3 != bF2m.k3))
-			{
-				throw new ArgumentException("Field elements are not "
-					+ "elements of the same field F2m");
-			}
-
 			if (aF2m.representation != bF2m.representation)
 			{
 				// Should never occur
-				throw new ArgumentException(
-					"One of the field "
-					+ "elements are not elements has incorrect representation");
+				throw new ArgumentException("One of the F2m field elements has incorrect representation");
+			}
+
+			if ((aF2m.m != bF2m.m) || !aF2m.ks.SequenceEqual(bF2m.ks))
+			{
+				throw new ArgumentException("Field elements are not elements of the same field F2m");
 			}
 		}
 
@@ -1034,10 +1101,15 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			// No check performed here for performance reasons. Instead the
 			// elements involved are checked in ECPoint.F2m
 			// checkFieldElements(this, b);
-			IntArray iarrClone = (IntArray) this.x.Copy();
-			F2mFieldElement bF2m = (F2mFieldElement) b;
-			iarrClone.AddShifted(bF2m.x, 0);
-			return new F2mFieldElement(m, k1, k2, k3, iarrClone);
+			LongArray iarrClone = this.x.Copy();
+			F2mFieldElement bF2m = (F2mFieldElement)b;
+			iarrClone.AddShiftedByWords(bF2m.x, 0);
+			return new F2mFieldElement(m, ks, iarrClone);
+		}
+
+		public override ECFieldElement AddOne()
+		{
+			return new F2mFieldElement(m, ks, x.AddOne());
 		}
 
 		public override ECFieldElement Subtract(
@@ -1050,17 +1122,14 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		public override ECFieldElement Multiply(
 			ECFieldElement b)
 		{
-			// Right-to-left comb multiplication in the IntArray
+			// Right-to-left comb multiplication in the LongArray
 			// Input: Binary polynomials a(z) and b(z) of degree at most m-1
 			// Output: c(z) = a(z) * b(z) mod f(z)
 
 			// No check performed here for performance reasons. Instead the
 			// elements involved are checked in ECPoint.F2m
 			// checkFieldElements(this, b);
-			F2mFieldElement bF2m = (F2mFieldElement) b;
-			IntArray mult = x.Multiply(bF2m.x, m);
-			mult.Reduce(m, new int[]{k1, k2, k3});
-			return new F2mFieldElement(m, k1, k2, k3, mult);
+			return new F2mFieldElement(m, ks, x.ModMultiply(((F2mFieldElement)b).x, m, ks));
 		}
 
 		public override ECFieldElement Divide(
@@ -1079,138 +1148,82 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 
 		public override ECFieldElement Square()
 		{
-			IntArray squared = x.Square(m);
-			squared.Reduce(m, new int[]{k1, k2, k3});
-			return new F2mFieldElement(m, k1, k2, k3, squared);
+			return new F2mFieldElement(m, ks, x.ModSquare(m, ks));
 		}
 
 		public override ECFieldElement Invert()
 		{
-			// Inversion in F2m using the extended Euclidean algorithm
-			// Input: A nonzero polynomial a(z) of degree at most m-1
-			// Output: a(z)^(-1) mod f(z)
-
-			// u(z) := a(z)
-            IntArray uz = (IntArray)this.x.Copy();
-
-			// v(z) := f(z)
-			IntArray vz = new IntArray(t);
-			vz.SetBit(m);
-			vz.SetBit(0);
-			vz.SetBit(this.k1);
-			if (this.representation == Ppb)
-			{
-				vz.SetBit(this.k2);
-				vz.SetBit(this.k3);
-			}
-
-			// g1(z) := 1, g2(z) := 0
-			IntArray g1z = new IntArray(t);
-			g1z.SetBit(0);
-			IntArray g2z = new IntArray(t);
-
-			// while u != 0
-			while (uz.GetUsedLength() > 0)
-//            while (uz.bitLength() > 1)
-			{
-				// j := deg(u(z)) - deg(v(z))
-				int j = uz.BitLength - vz.BitLength;
-
-				// If j < 0 then: u(z) <-> v(z), g1(z) <-> g2(z), j := -j
-				if (j < 0)
-				{
-                    IntArray uzCopy = uz;
-					uz = vz;
-					vz = uzCopy;
-
-                    IntArray g1zCopy = g1z;
-					g1z = g2z;
-					g2z = g1zCopy;
-
-					j = -j;
-				}
-
-				// u(z) := u(z) + z^j * v(z)
-				// Note, that no reduction modulo f(z) is required, because
-				// deg(u(z) + z^j * v(z)) <= max(deg(u(z)), j + deg(v(z)))
-				// = max(deg(u(z)), deg(u(z)) - deg(v(z)) + deg(v(z))
-				// = deg(u(z))
-				// uz = uz.xor(vz.ShiftLeft(j));
-				// jInt = n / 32
-				int jInt = j >> 5;
-				// jInt = n % 32
-				int jBit = j & 0x1F;
-				IntArray vzShift = vz.ShiftLeft(jBit);
-				uz.AddShifted(vzShift, jInt);
-
-				// g1(z) := g1(z) + z^j * g2(z)
-//                g1z = g1z.xor(g2z.ShiftLeft(j));
-				IntArray g2zShift = g2z.ShiftLeft(jBit);
-				g1z.AddShifted(g2zShift, jInt);
-			}
-			return new F2mFieldElement(this.m, this.k1, this.k2, this.k3, g2z);
+			return new F2mFieldElement(this.m, this.ks, this.x.ModInverse(m, ks));
 		}
 
 		public override ECFieldElement Sqrt()
 		{
-			throw new ArithmeticException("Not implemented");
+			LongArray root = this.x;
+			if (root.IsOne() || root.IsZero())
+				return this;
+
+			for (int i = 1; i < m; ++i)
+			{
+				root = root.ModSquare(m, ks);
+			}
+			return new F2mFieldElement(m, ks, root);
 		}
 
-		/**
-			* @return the representation of the field
-			* <code>F<sub>2<sup>m</sup></sub></code>, either of
-			* {@link F2mFieldElement.Tpb} (trinomial
-			* basis representation) or
-			* {@link F2mFieldElement.Ppb} (pentanomial
-			* basis representation).
-			*/
+		/*		*
+            * @return the representation of the field
+            * <code>F<sub>2<sup>m</sup></sub></code>, either of
+            * {@link F2mFieldElement.Tpb} (trinomial
+            * basis representation) or
+            * {@link F2mFieldElement.Ppb} (pentanomial
+            * basis representation).
+            */
 		public int Representation
 		{
 			get { return this.representation; }
 		}
 
-		/**
-			* @return the degree <code>m</code> of the reduction polynomial
-			* <code>f(z)</code>.
-			*/
+		/*		*
+            * @return the degree <code>m</code> of the reduction polynomial
+            * <code>f(z)</code>.
+            */
 		public int M
 		{
 			get { return this.m; }
 		}
 
-		/**
-			* @return Tpb: The integer <code>k</code> where <code>x<sup>m</sup> +
-			* x<sup>k</sup> + 1</code> represents the reduction polynomial
-			* <code>f(z)</code>.<br/>
-			* Ppb: The integer <code>k1</code> where <code>x<sup>m</sup> +
-			* x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-			* represents the reduction polynomial <code>f(z)</code>.<br/>
-			*/
+		/*		*
+            * @return Tpb: The integer <code>k</code> where <code>x<sup>m</sup> +
+            * x<sup>k</sup> + 1</code> represents the reduction polynomial
+            * <code>f(z)</code>.<br/>
+            * Ppb: The integer <code>k1</code> where <code>x<sup>m</sup> +
+            * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
+            * represents the reduction polynomial <code>f(z)</code>.<br/>
+            */
 		public int K1
 		{
-			get { return this.k1; }
+			get { return this.ks[0]; }
 		}
 
-		/**
-			* @return Tpb: Always returns <code>0</code><br/>
-			* Ppb: The integer <code>k2</code> where <code>x<sup>m</sup> +
-			* x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-			* represents the reduction polynomial <code>f(z)</code>.<br/>
-			*/
+		/*		*
+            * @return Tpb: Always returns <code>0</code><br/>
+            * Ppb: The integer <code>k2</code> where <code>x<sup>m</sup> +
+            * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
+            * represents the reduction polynomial <code>f(z)</code>.<br/>
+            */
 		public int K2
 		{
-			get { return this.k2; }
+			get { return this.ks.Length >= 2 ? this.ks[1] : 0; }
 		}
 
-		/**
-			* @return Tpb: Always set to <code>0</code><br/>
-			* Ppb: The integer <code>k3</code> where <code>x<sup>m</sup> +
-			* x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-			* represents the reduction polynomial <code>f(z)</code>.<br/>
-			*/
+		/*		*
+            * @return Tpb: Always set to <code>0</code><br/>
+            * Ppb: The integer <code>k3</code> where <code>x<sup>m</sup> +
+            * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
+            * represents the reduction polynomial <code>f(z)</code>.<br/>
+            */
 		public int K3
 		{
-			get { return this.k3; }
+			get { return this.ks.Length >= 3 ? this.ks[2] : 0; }
 		}
 
 		public override bool Equals(
@@ -1227,25 +1240,18 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return Equals(other);
 		}
 
-		protected bool Equals(
+		public virtual bool Equals(
 			F2mFieldElement other)
 		{
-			return m == other.m
-				&& k1 == other.k1
-				&& k2 == other.k2
-				&& k3 == other.k3
-				&& representation == other.representation
-				&& base.Equals(other);
+			return ((this.m == other.m)
+				&& (this.representation == other.representation)
+				&& this.ks.SequenceEqual(other.ks)
+				&& (this.x.Equals(other.x)));
 		}
 
 		public override int GetHashCode()
 		{
-			return m.GetHashCode()
-				^	k1.GetHashCode()
-				^	k2.GetHashCode()
-				^	k3.GetHashCode()
-				^	representation.GetHashCode()
-				^	base.GetHashCode();
+			return x.GetHashCode () ^ m ^ ks.GetHashCodeExt ();
 		}
 	}
 }

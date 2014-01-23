@@ -20,7 +20,12 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 	/// </summary>
     public interface IBlockCipher
     {
-		/// <summary>Name of the algorithm that the cipher implements.</summary>
+		/// <summary>
+		/// Name of the algorithm(s) that the cipher implements, 
+		/// in order of their implementation. For example, this may 
+		/// include modes and paddings implemented on ciphers, e.g. 
+		/// AES/CTR (no padding), or AES/CBC/PKCS7 (padded).
+		/// </summary>
 		string AlgorithmName { get; }
 
 		/// <summary>
@@ -41,15 +46,15 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 		/// <summary>
 		/// Process one block of input from the array in and write it to the out array.
 		/// </summary>
-		/// <param name="inBuf">The input buffer.</param>
-		/// <param name="inOff">The offset into <paramref>inBuf</paramref> that the input block begins.</param>
-		/// <param name="outBuf">The output buffer.</param>
-		/// <param name="outOff">The offset into <paramref>outBuf</paramref> to write the output block.</param>
+		/// <param name="input">The input buffer.</param>
+		/// <param name="inOff">The offset into <paramref>input</paramref> that the input block begins.</param>
+		/// <param name="output">The output buffer.</param>
+		/// <param name="outOff">The offset into <paramref>output</paramref> to write the output block.</param>
 		/// <exception cref="DataLengthException">
 		/// If input or output buffers are of insufficient length to read/write input/output.
 		/// </exception>
-		/// <returns>The number of bytes processed and produced.</returns>
-		int ProcessBlock(byte[] inBuf, int inOff, byte[] outBuf, int outOff);
+		/// <returns>The number of bytes put in output.</returns>
+		int ProcessBlock(byte[] input, int inOff, byte[] output, int outOff);
 
 		/// <summary>
 		/// Reset the cipher to the same state as it was after the last init (if there was one).

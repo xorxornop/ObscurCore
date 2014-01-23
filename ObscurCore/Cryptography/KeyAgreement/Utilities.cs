@@ -1,3 +1,4 @@
+using System;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve;
@@ -23,7 +24,20 @@ namespace ObscurCore.Cryptography.KeyAgreement
 				new ECPublicKeyParameters(algorithm, q, parameters),
 				new ECPrivateKeyParameters(algorithm, d, parameters));
 		}
-		
+
+		public static int GetFieldSize(ECPrivateKeyParameters d) {
+			return (d.Parameters.Curve.FieldSize + 7) / 8;
+		}
+
+		internal static ECPublicKeyParameters GetCorrespondingPublicKey(
+			ECPrivateKeyParameters privKey)
+		{
+			ECDomainParameters parameters = privKey.Parameters;
+			ECPoint q = parameters.G.Multiply(privKey.D);
+
+			return new ECPublicKeyParameters(privKey.AlgorithmName, q, parameters);
+		}
+
 		/// <summary>
 		/// Calculates the shared secret in a Diffie-Hellman scheme with cofactor multiplication.
 		/// </summary>
@@ -33,7 +47,11 @@ namespace ObscurCore.Cryptography.KeyAgreement
 		public static BigInteger CalculateDhcSecret(ECDomainParameters domain, 
 		    ECPublicKeyParameters Q, ECPrivateKeyParameters d)
         {
-			return Q.Q.Multiply(domain.H.Multiply(d.D)).X.ToBigInteger();
+			BigInteger hd = domain.H.Multiply(d.D).Mod(domain.N);
+			ECPoint P = Q.Q.Multiply(hd).Normalize();
+			if (P.IsInfinity)
+				throw new InvalidOperationException("Infinity is not a valid agreement value for ECDHC");
+			return P.AffineXCoord.ToBigInteger();
 		}
 		
 		/// <summary>
@@ -42,7 +60,10 @@ namespace ObscurCore.Cryptography.KeyAgreement
         /// <param name="Q">Public component of an EC keypair.</param>
         /// <param name="d">Private component of an EC keypair.</param>
 		public static BigInteger CalculateDhSecret(ECPublicKeyParameters Q, ECPrivateKeyParameters d) {
-			return Q.Q.Multiply(d.D).X.ToBigInteger();
+			ECPoint P = Q.Q.Multiply(d.D).Normalize();
+			if (P.IsInfinity)
+				throw new InvalidOperationException("Infinity is not a valid agreement value for ECDH");
+			return P.AffineXCoord.ToBigInteger ();
 		}
 	}
 }

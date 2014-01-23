@@ -17,7 +17,9 @@ using System.Collections.Generic;
 using System.Text;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
-using ObscurCore.Cryptography.Ciphers;
+//using ObscurCore.Cryptography.Ciphers;
+using ObscurCore.Cryptography.Ciphers.Block;
+using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.Information;
@@ -108,6 +110,14 @@ namespace ObscurCore
                     AllowableKeySizes = new[] { 128, 192, 256 },
                     DefaultKeySize = 256
                 });
+				_blockCipherDirectory.Add(SymmetricBlockCipher.Threefish, new SymmetricCipherDescription {
+					Name = SymmetricBlockCipher.Threefish.ToString(),
+					DisplayName = "Threefish",
+					AllowableBlockSizes = new[] { 256, 512, 1024 },
+					DefaultBlockSize = 256,
+					AllowableKeySizes = new[] { 256, 512, 1024 },
+					DefaultKeySize = 256
+				});
                 _blockCipherDirectory.Add(SymmetricBlockCipher.Twofish, new SymmetricCipherDescription {
                     Name = SymmetricBlockCipher.Twofish.ToString(),
                     DisplayName = "Twofish",
@@ -122,7 +132,7 @@ namespace ObscurCore
                 _streamCipherDirectory.Add(SymmetricStreamCipher.Hc128, new SymmetricCipherDescription {
                     Name = SymmetricStreamCipher.Hc128.ToString(),
                     DisplayName = "HC-128",
-                    AllowableBlockSizes = new[] { -1 },
+					AllowableBlockSizes = null,
                     DefaultBlockSize = -1,
                     AllowableIvSizes = new[] { 128 },
                     DefaultIvSize = 128,
@@ -132,21 +142,21 @@ namespace ObscurCore
                 _streamCipherDirectory.Add(SymmetricStreamCipher.Hc256, new SymmetricCipherDescription {
                     Name = SymmetricStreamCipher.Hc256.ToString(),
                     DisplayName = "HC-256",
-                    AllowableBlockSizes = new[] { -1 },
+					AllowableBlockSizes = null,
                     DefaultBlockSize = -1,
-                    AllowableIvSizes = new[] { 256 },
+					AllowableIvSizes = new[] { 128, 256 },
                     DefaultIvSize = 256,
-                    AllowableKeySizes = new[] { 256 },
+					AllowableKeySizes = new[] { 128, 256 },
                     DefaultKeySize = 256
                 });
 #if INCLUDE_ISAAC
                 _streamCipherDirectory.Add(SymmetricStreamCiphers.Isaac, new SymmetricCipherDescription {
                     Name = SymmetricStreamCiphers.Isaac.ToString(),
                     DisplayName = "Indirection, Shift, Accumulate, Add, and Count (ISAAC)",
-                    AllowableBlockSizes = new[] { -1 },
+					AllowableBlockSizes = null,
                     DefaultBlockSize = -1,
-                    AllowableIVSizes = new[] { 256 },
-                    DefaultIVSize = 256,
+					AllowableIVSizes = new[] { -1 },
+					DefaultIVSize = -1,
                     AllowableKeySizes = new[] { 256 },
                     DefaultKeySize = 256
                 });
@@ -154,7 +164,7 @@ namespace ObscurCore
                 _streamCipherDirectory.Add(SymmetricStreamCipher.Rabbit, new SymmetricCipherDescription {
                     Name = SymmetricStreamCipher.Rabbit.ToString(),
                     DisplayName = "Rabbit",
-                    AllowableBlockSizes = new[] { -1 },
+					AllowableBlockSizes = null,
                     DefaultBlockSize = -1,
                     AllowableIvSizes = new[] { 64 },
                     DefaultIvSize = 64,
@@ -165,18 +175,18 @@ namespace ObscurCore
                 _streamCipherDirectory.Add(SymmetricStreamCipher.Rc4, new SymmetricCipherDescription {
 					Name = SymmetricStreamCipher.Rc4.ToString(),
                     DisplayName = "RC4",
-                    AllowableBlockSizes = new[] { -1 },
+					AllowableBlockSizes = null,
                     DefaultBlockSize = -1,
-					AllowableIvSizes = new[] { -1 },
-					DefaultIvSize = 128,
-                    AllowableKeySizes = new[] { 40, 56, 96, 128, 192, 256 },
+					AllowableIvSizes = null,
+					DefaultIvSize = -1,
+					AllowableKeySizes = new[] { 40, 56, 64, 72, 96, 128, 192, 256 },
                     DefaultKeySize = 128
                 });
 #endif
                 _streamCipherDirectory.Add(SymmetricStreamCipher.Salsa20, new SymmetricCipherDescription {
                     Name = SymmetricStreamCipher.Salsa20.ToString(),
                     DisplayName = "Salsa20",
-                    AllowableBlockSizes = new[] { -1 },
+					AllowableBlockSizes = null,
                     DefaultBlockSize = -1,
                     AllowableIvSizes = new[] { 64 },
                     DefaultIvSize = 64,
@@ -186,21 +196,21 @@ namespace ObscurCore
 				_streamCipherDirectory.Add(SymmetricStreamCipher.XSalsa20, new SymmetricCipherDescription {
 					Name = SymmetricStreamCipher.XSalsa20.ToString(),
 					DisplayName = "XSalsa20",
-					AllowableBlockSizes = new[] { -1 },
+					AllowableBlockSizes = null,
 					DefaultBlockSize = -1,
-					AllowableIvSizes = new[] { 192 },
+					AllowableIvSizes = new[] { 64, 128, 192 },
 					DefaultIvSize = 192,
-					AllowableKeySizes = new[] { 128, 256 },
+					AllowableKeySizes = new[] { 80, 128, 256 },
 					DefaultKeySize = 256
 				});
                 _streamCipherDirectory.Add(SymmetricStreamCipher.Sosemanuk, new SymmetricCipherDescription {
                     Name = SymmetricStreamCipher.Sosemanuk.ToString(),
                     DisplayName = "SOSEMANUK",
-                    AllowableBlockSizes = new[] { -1 },
+					AllowableBlockSizes = null,
                     DefaultBlockSize = -1,
-                    AllowableIvSizes = new[] { 128 },
+					AllowableIvSizes = new[] { 32, 48, 64, 80, 96, 112, 128 },
                     DefaultIvSize = 128,
-                    AllowableKeySizes = new[] { 256 },
+					AllowableKeySizes = new[] { 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256 },
                     DefaultKeySize = 256
                 });
 

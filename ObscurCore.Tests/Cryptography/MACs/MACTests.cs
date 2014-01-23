@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
+using ObscurCore.Cryptography.Ciphers.Block;
 
 namespace ObscurCore.Tests.Cryptography.MACs
 {
@@ -51,8 +52,9 @@ namespace ObscurCore.Tests.Cryptography.MACs
         }
 
 		[Test]
-		public void Poly1305 () {
-			RunMACTest(MacFunction.Poly1305);
+		public void Poly1305_AES () {
+			RunMACTest(MacFunction.Poly1305, System.Text.Encoding.UTF8.GetBytes(SymmetricBlockCipher.Aes.ToString()),
+				null, CreateRandomBytes(128));
 		}
     }
 }
