@@ -1938,12 +1938,12 @@ namespace ObscurCore.Cryptography.Support.Math
 			int[][] oddPowers = new int[numPowers][];
 			oddPowers[0] = zVal;
 
-			int[] zSquared = zVal.CloneArray ();
+			int[] zSquared = zVal.DeepCopy ();
 			SquareMonty(yAccum, zSquared, m.magnitude, mDash, smallMontyModulus);
 
 			for (int i = 1; i < numPowers; ++i)
 			{
-				oddPowers [i] = oddPowers [i - 1].CloneArray ();
+				oddPowers [i] = oddPowers [i - 1].DeepCopy ();
 				MultiplyMonty(yAccum, oddPowers[i], zSquared, m.magnitude, mDash, smallMontyModulus);
 			}
 
@@ -1961,7 +1961,7 @@ namespace ObscurCore.Cryptography.Support.Math
 			}
 			else
 			{
-				yVal = oddPowers[mult >> 1].CloneArray();
+				yVal = oddPowers[mult >> 1].DeepCopy();
 			}
 
 			int windowPos = 1;

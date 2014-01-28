@@ -47,7 +47,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		public void Init (bool encrypting, byte[] key, byte[] iv) {
 			if (iv == null) 
 				throw new ArgumentNullException("iv", "SOSEMANUK initialisation requires an IV.");
-			if (!iv.Length.IsBetween(4, 16))
+			else if (!iv.Length.IsBetween(4, 16))
 				throw new ArgumentException("SOSEMANUK requires 4 to 16 bytes (32 to 128 bits) of IV.", "iv");
 
 			if (key == null) 
@@ -96,9 +96,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				throw new ArgumentException("Output buffer too short.");
             //CheckLimitExceeded();
 
-			if (len == 0)
+			if (len < 1)
 				return;
 
+			// Any left over from last time?
 			if (_streamPtr < BufferLen) {
 				var blen = BufferLen - _streamPtr;
 				if (blen > len)

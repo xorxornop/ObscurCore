@@ -69,7 +69,7 @@ Fabric multiplexes *random*-length stripes of each item, mixing them all up, muc
 ... Obviously, if it were *really* random, you'd never get your data back. No - rather, "random" is the output of a CSPRNG.
 
 
-All items and their configurations, along with the manifest and its configuration, are authenticated with a MAC in the Encrypt-then-MAC (EtM) scheme, which provides strong verification and minimum information leakage. Upon detection of any alteration, all operations are aborted.
+All items and their configurations, along with the manifest and its configuration, are authenticated with a MAC in the **Encrypt-then-MAC (EtM)** scheme, which provides strong verification and minimum information leakage. Upon detection of any alteration, all operations are aborted.
 
 
 Here's an example using the packager:
@@ -81,9 +81,9 @@ Here's an example using the packager:
     }
 
 The above...
-*	Creates the package with frameshifting payload layout (default)
+*	Creates the package with frameshifting payload layout (default) and a SOSEMANUK-based CSPRNG
 *	Sets up key confirmation for the manifest with BLAKE2B-256 (default)
-*	Adds a file to a package with AES-256/CTR encryption (random key, default) and BLAKE2B-256 EtM authentication (random key, default)
+*	Adds a file to a package with AES-256/CTR encryption (random key, default) and Poly1305-AES EtM authentication (random key and nonce, default)
 *	Derives a package/manifest key (from the supplied one) with scrypt KDF
 *	Writes it out to the output stream
 
@@ -122,6 +122,7 @@ These block ciphers are supported:
 +	RC-6
 +	Serpent
 +	Twofish
++	Threefish
 
 ... in CTR, CBC mode (variety of paddings provided), CFB, and OFB.
 Paddings available for CBC mode: ISO 10126-2, ISO/IEC 7816-4, PKCS7, TBC, and ANSI X.923.
@@ -131,8 +132,10 @@ And these stream ciphers:
 +	HC-128
 +	HC-256
 +	Rabbit
-+	RC-4 [disabled; optionally included]
++	RC-4 *[disabled; optionally included]*
 +	Salsa20
++	ChaCha
++	XSalsa20
 +	SOSEMANUK
 
 
@@ -148,34 +151,27 @@ And these stream ciphers:
 		sourceStream.CopyTo(cs);
 	}
 
-Here's all the hash functions supported (HashFunctions enumeration) :
+Here's all the hash/digest functions supported (*HashFunction* enumeration) :
 
-+	BLAKE-2B-256
-+	BLAKE-2B-384
-+	BLAKE-2B-512
-+	Keccak-224 (SHA-3-224)
-+	Keccak-256 (SHA-3-256)
-+	Keccak-384 (SHA-3-384)
-+	Keccak-512 (SHA-3-512)
++	BLAKE-2B-256 / 384 / 512
++	Keccak-224 / 256 / 384 / 512 (SHA-3-224 / 256 / 384 / 512)
 +	RIPEMD-160
 +	SHA-1
-+	SHA-2-256
-+	SHA-2-512
++	SHA-2-256 / 512
 +	Tiger
 
-And here's all the MAC functions (MACFunctions enumeration) :
+And here's all the MAC functions (*MacFunction* enumeration) :
 
-+	BLAKE-2B-256
-+	BLAKE-2B-384
-+	BLAKE-2B-512
-+	Keccak-224 (SHA-3-224)
-+	Keccak-256 (SHA-3-256)
-+	Keccak-384 (SHA-3-384)
-+	Keccak-512 (SHA-3-512)
++	BLAKE-2B-256 / 384 / 512
++	Keccak-224 / 256 / 384 / 512 (SHA-3-224 / 256 / 384 / 512)
++	Skein
++	Poly1305
 +	*CMAC*
 +	*HMAC*
 
-With CMAC, you can use any symmetric block cipher (see above in Encryption section) with block size of 64 or 128 bits - which is all of them, currently. HMAC can use any hash/digest function. So that expands the selection significantly.
+CMAC can use any symmetric block cipher (see above in Encryption section) with a block size of 64 or 128 bits. 
+Poly1305 can use any symmetric block cipher (see above in Encryption section) with a block size of 128 bits.
+HMAC can use any hash/digest function.
 
 
 Primitives
@@ -219,6 +215,14 @@ And calculating shared secret:
 	responderSS = Curve25519UM1Exchange.Respond(_publicKeySender, _privateKeyRecipient, eph);
 
 
+### Signatures ###
+
+No concrete implementation is yet in place. ECDSA is being added. 
+The preferred example of this is Ed25519.
+DSA proper (using RSA) will most likely not be added due to concerns with security and efficiency.
+Watch this space.
+
+
 Some words on Streams
 ---------------------
 
@@ -249,12 +253,13 @@ and in stream ciphers:
 
 +	HC-128
 +	SOSEMANUK
-+	Salsa20
++	XSalsa20
 
 In hash and MAC functions:
 
 +	BLAKE2B
-+	Keccak
++	Poly1305-AES
++	Keccak/SHA-3
 
 In KDFs:
 

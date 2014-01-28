@@ -1994,7 +1994,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 
 		public LongArray Copy()
 		{
-			return new LongArray(m_ints.CloneArray());
+			return new LongArray(m_ints.DeepCopy());
 		}
 
 		public override string ToString()

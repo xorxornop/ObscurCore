@@ -91,7 +91,7 @@ namespace ObscurCore.Packaging
 				item.Authentication.VerifiedOutput = itemAuthenticator.Mac;
 			} else {
 				// Verify the authenticity of the item ciphertext and configuration
-				if(!itemAuthenticator.Mac.SequenceEqualConstantTime(item.Authentication.VerifiedOutput)) {
+				if (!itemAuthenticator.Mac.SequenceEqualConstantTime(item.Authentication.VerifiedOutput)) {
 					// Verification failed!
 					throw new CiphertextAuthenticationException ("Payload item not authenticated.");
 				}

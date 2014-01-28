@@ -167,12 +167,12 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			byte[]	output,
 			int		outOff)
 		{
-			if (!initialised)
-				throw new InvalidOperationException(AlgorithmName + " not initialised");
-			if ((inOff + len) > input.Length)
-				throw new DataLengthException("input buffer too short");
-			if ((outOff + len) > output.Length)
-				throw new DataLengthException("output buffer too short");
+			if (!initialised) 
+				throw new InvalidOperationException(AlgorithmName + " not initialised.");
+			if ((inOff + len) > input.Length) 
+				throw new ArgumentException ("Input buffer too short.");
+			if ((outOff + len) > output.Length) 
+				throw new ArgumentException("Output buffer too short.");
 
 			// Process leftover keystream
 			for (; idx != 0; idx = (idx + 1) & 3) {
@@ -188,13 +188,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				unsafe {
 					fixed (byte* inPtr = input) {
 						fixed (byte* outPtr = output) {
-							uint* inLongPtr = (uint*)(inPtr + inOff);
-							uint* outLongPtr = (uint*)(outPtr + outOff);
+							uint* inUintPtr = (uint*)(inPtr + inOff);
+							uint* outUintPtr = (uint*)(outPtr + outOff);
 							for (int i = 0; i < blocks; i++) {
-								outLongPtr [i] = inLongPtr [i] ^ Step ();
+								outUintPtr [i] = inUintPtr [i] ^ Step ();
 							}
-							inLongPtr += blocks;;
-							outLongPtr += blocks;
 						}
 					}
 				}

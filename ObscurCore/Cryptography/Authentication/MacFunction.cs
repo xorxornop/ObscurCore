@@ -58,7 +58,7 @@ namespace ObscurCore.Cryptography.Authentication
 
 		Poly1305,
 
-		SipHash,
+//		SipHash,
 
         /// <summary>
         /// Also called OMAC1. 

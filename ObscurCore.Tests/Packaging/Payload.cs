@@ -55,7 +55,6 @@ namespace ObscurCore.Tests.Packaging
 		}
 
 #if(INCLUDE_FABRIC)
-        // TODO: Add a part to the test which does SequenceEqual on each file, comparing pre and post-mux states.
         [Test]
 		public void Fabric () {
 			var items = Utilities.GetItemsStreamExample(SourceFiles);

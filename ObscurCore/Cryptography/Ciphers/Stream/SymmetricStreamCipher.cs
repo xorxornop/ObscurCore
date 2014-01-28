@@ -30,12 +30,12 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         Hc128,
 
         /// <summary>
-		/// Stream cipher designed for fast operation in software. 256-bit key.
+		/// Stream cipher designed for fast operation in software.
         /// </summary>
         Hc256,
 
         /// <summary>
-        /// 128-bit key high performance software-optimised stream cipher. 
+		/// Software-optimised stream cipher. 
         /// eSTREAM Phase 3 candidate. Patented, but free for non-commercial use.
         /// </summary>
         Rabbit,
@@ -45,19 +45,24 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
     /// </summary>
 		Rc4,
 #endif
-        /// <summary>
-        /// 256-bit key stream cipher. eSTREAM Phase 3 candidate. Unpatented, free for any use.
+		/// <summary>
+		/// Stream cipher by Daniel J. Bernstein. eSTREAM Phase 3 candidate.
         /// </summary>
         Salsa20,
 
 		/// <summary>
-		/// 256-bit key stream cipher. Improved version of <seealso cref="Salsa20"/>. Unpatented, free for any use.
+		/// Stream cipher by Daniel J. Bernstein. Modified version of <seealso cref="Salsa20"/>.
+		/// </summary>
+		ChaCha,
+
+		/// <summary>
+		/// Stream cipher by Daniel J. Bernstein. Improved version of <seealso cref="Salsa20"/>.
 		/// </summary>
 		XSalsa20,
 
         /// <summary>
-        /// 256-bit key stream cipher designed for high performance and low resource use in software. 
-        /// eSTREAM Phase 3 candidate. Free for any use.
+		/// Stream cipher designed for high performance and efficient use in software. 
+        /// eSTREAM Phase 3 candidate.
         /// </summary>
         Sosemanuk
     }

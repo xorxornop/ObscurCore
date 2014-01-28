@@ -92,6 +92,7 @@
     <Compile Include="Cryptography\Ciphers\Stream\Rc4.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Rabbit.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Sosemanuk.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\ChaCha.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />

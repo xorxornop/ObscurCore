@@ -214,21 +214,21 @@ namespace ObscurCore
 			return true;
 		}
 
-		public static byte[] CloneArray(this byte[] data)
+		public static byte[] DeepCopy(this byte[] data)
 		{
 			return data == null ? null : (byte[]) data.Clone();
 		}
 
-		public static int[] CloneArray(this int[] data) {
+		public static int[] DeepCopy(this int[] data) {
 			return data == null ? null : (int[])data.Clone();
 		}
 
-		public static long[] CloneArray(this long[] data) {
+		public static long[] DeepCopy(this long[] data) {
 			return data == null ? null : (long[])data.Clone();
 		}
 
 		[CLSCompliantAttribute(false)]
-		public static ulong[] CloneArray(
+		public static ulong[] DeepCopy(
 			this ulong[] data)
 		{
 			return data == null ? null : (ulong[]) data.Clone();

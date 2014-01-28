@@ -217,13 +217,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				unsafe {
 					fixed (byte* inPtr = input) {
 						fixed (byte* outPtr = output) {
-							uint* inLongPtr = (uint*)(inPtr + inOff);
-							uint* outLongPtr = (uint*)(outPtr + outOff);
+							uint* inUintPtr = (uint*)(inPtr + inOff);
+							uint* outUintPtr = (uint*)(outPtr + outOff);
 							for (int i = 0; i < blocks; i++) {
-								outLongPtr [i] = inLongPtr [i] ^ Step ();
+								outUintPtr [i] = inUintPtr [i] ^ Step ();
 							}
-							inLongPtr += blocks;;
-							outLongPtr += blocks;
 						}
 					}
 				}

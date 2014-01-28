@@ -9,7 +9,7 @@ namespace ObscurCore.Cryptography.Support.Math.Field
 
         internal GF2Polynomial(int[] exponents)
         {
-			this.exponents = exponents.CloneArray ();
+			this.exponents = exponents.DeepCopy ();
         }
 
         public virtual int Degree
@@ -19,7 +19,7 @@ namespace ObscurCore.Cryptography.Support.Math.Field
 
         public virtual int[] GetExponentsPresent()
         {
-			return exponents.CloneArray ();
+			return exponents.DeepCopy ();
         }
 
         public override bool Equals(object obj)

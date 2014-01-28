@@ -149,7 +149,24 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
 		public void Update (byte input)
 		{
-			throw new NotImplementedException ();
+			_inputBuffer[_bytesFilled++] = input;
+
+			// Do a transform if the input buffer is filled
+			if (_bytesFilled == _cipherStateBytes)
+			{
+				// Copy input buffer to cipher input buffer
+				InputBufferToCipherInput();
+
+				// Process the block
+				ProcessBlock(_cipherStateBytes);
+
+				// Clear first flag, which will be set
+				// by Initialize() if this is the first transform
+				UbiParameters.IsFirstBlock = false;
+
+				// Reset buffer fill count
+				_bytesFilled = 0;
+			}
 		}
 
 		public void BlockUpdate (byte[] input, int inOff, int len) {

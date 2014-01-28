@@ -24,12 +24,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	{
 		public XSalsa20Engine (int rounds = DEFAULT_ROUNDS) : base(rounds)
 		{	
+			CipherName = "XSalsa20";
 		}
 
 		public override void Init (bool encrypting, byte[] key, byte[] iv) {
 			if (iv == null) 
 				throw new ArgumentNullException("iv", "XSalsa20 initialisation requires an IV.");
-			if (iv.Length != 24)
+			else if (iv.Length != 24)
 				throw new ArgumentException("XSalsa20 requires exactly 24 bytes of IV.", "iv");
 
 			if (key == null) 

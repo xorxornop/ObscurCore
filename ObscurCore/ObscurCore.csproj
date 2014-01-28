@@ -144,7 +144,6 @@
     <Compile Include="Cryptography\Ciphers\Block\IBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\IStreamCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Hc256Engine.cs" />
-    <Compile Include="Cryptography\Ciphers\Stream\Primitives\IsaacEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\RabbitEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Rc4Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Salsa20Engine.cs" />
@@ -202,7 +201,6 @@
     <Compile Include="Cryptography\KeyDerivation\Pbkdf2Module.cs" />
     <Compile Include="ConfigurationInvalidException.cs" />
     <Compile Include="ConfigurationValueInvalidException.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519Donna.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519HansWolff.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Poly1305Mac.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\StreamCipherWrapper.cs" />
@@ -327,6 +325,7 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\ZSignedDigitL2RMultiplier.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\ZSignedDigitR2LMultiplier.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\SipHashMac.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Primitives\ChaChaEngine.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />

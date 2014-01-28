@@ -49,7 +49,6 @@ namespace ObscurCore.Cryptography.Ciphers
             if (Athena.Cryptography.BlockCipherModes[mode].PaddingRequirement == PaddingRequirement.Always &&
                 padding == BlockCipherPadding.None)
             {
-                // TODO: Refine my logic!
                 throw new ArgumentException(mode +
                     " mode must be used with padding or errors will occur when plaintext length is not equal to or a multiple of the block size.");
             }

@@ -86,7 +86,6 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             var dsV = receiverPrivateKey;
             ECPublicKeyParameters QeU = ephemeralSenderPublicKey;
 			ECDomainParameters domain = QsU.Parameters;
-            // TODO: Verify QeU! Section 5.6.2.3.
 
 		    // Calculate shared static secret 'Zs'
 			var Zs = ECAgreementUtility.CalculateDhcSecret(domain, QsU, dsV); // EC-DHC

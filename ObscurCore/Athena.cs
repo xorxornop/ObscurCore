@@ -193,6 +193,16 @@ namespace ObscurCore
 					AllowableKeySizes = new[] { 128, 256 },
                     DefaultKeySize = 256
                 });
+				_streamCipherDirectory.Add(SymmetricStreamCipher.ChaCha, new SymmetricCipherDescription {
+					Name = SymmetricStreamCipher.ChaCha.ToString(),
+					DisplayName = "ChaCha",
+					AllowableBlockSizes = null,
+					DefaultBlockSize = -1,
+					AllowableIvSizes = new[] { 64 },
+					DefaultIvSize = 64,
+					AllowableKeySizes = new[] { 128, 256 },
+					DefaultKeySize = 256
+				});
 				_streamCipherDirectory.Add(SymmetricStreamCipher.XSalsa20, new SymmetricCipherDescription {
 					Name = SymmetricStreamCipher.XSalsa20.ToString(),
 					DisplayName = "XSalsa20",

@@ -49,7 +49,7 @@ namespace ObscurCore.Cryptography.Support
 			this.g = g.Normalize();
 			this.n = n;
 			this.h = h;
-			this.seed = seed.CloneArray();
+			this.seed = seed.DeepCopy();
 		}
 
 		public ECCurve Curve
@@ -74,7 +74,7 @@ namespace ObscurCore.Cryptography.Support
 
 		public byte[] GetSeed()
 		{
-			return seed.CloneArray();
+			return seed.DeepCopy();
 		}
 
 		public override bool Equals(

@@ -98,14 +98,12 @@ namespace ObscurCore
             // Stream engines
             EngineInstantiatorsStream.Add(SymmetricStreamCipher.Hc128, () => new Hc128Engine());
             EngineInstantiatorsStream.Add(SymmetricStreamCipher.Hc256, () => new Hc256Engine());
-#if INCLUDE_ISAAC
-            EngineInstantiatorsStream.Add(SymmetricStreamCipher.Isaac, () => new IsaacEngine());
-#endif
             EngineInstantiatorsStream.Add(SymmetricStreamCipher.Rabbit, () => new RabbitEngine());
 #if INCLUDE_RC4
 			EngineInstantiatorsStream.Add(SymmetricStreamCipher.Rc4, () => new Rc4Engine());
 #endif
             EngineInstantiatorsStream.Add(SymmetricStreamCipher.Salsa20, () => new Salsa20Engine());
+			EngineInstantiatorsStream.Add(SymmetricStreamCipher.ChaCha, () => new ChaChaEngine());
 			EngineInstantiatorsStream.Add(SymmetricStreamCipher.XSalsa20, () => new XSalsa20Engine());
             EngineInstantiatorsStream.Add(SymmetricStreamCipher.Sosemanuk, () => new SosemanukEngine());
 
@@ -679,17 +677,17 @@ namespace ObscurCore
 		/// <summary>
 		/// Creates a Poly1305 primitive using a symmetric block cipher primitive with a block size of 128 bits.
 		/// </summary>
-		/// <param name="hashEnum">Hash/digest primitive to use as the basis for the HMAC construction.</param>
+		/// <param name="cipherEnum">Cipher primitive to use as the basis for the Poly1305 construction.</param>
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
-		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
+		/// <param name="iv">Initialisation vector/nonce. Required.</param>
 		/// <returns>Pre-initialised HMAC primitive.</returns>
-		public static IMac CreatePoly1305Primitive(SymmetricBlockCipher cipherEnum, byte[] key, byte[] salt) {
+		public static IMac CreatePoly1305Primitive(SymmetricBlockCipher cipherEnum, byte[] key, byte[] iv) {
 			if(Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize != 128) {
 				throw new NotSupportedException ();
 			}
 
 			var macObj = new Poly1305Mac (CreateBlockCipher (cipherEnum));
-			macObj.Init (key, salt);
+			macObj.Init (key, iv);
 
 			return macObj;
 		}
