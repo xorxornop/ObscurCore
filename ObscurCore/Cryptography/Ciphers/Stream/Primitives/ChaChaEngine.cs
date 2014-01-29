@@ -78,10 +78,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			engineState[15] = Pack.LE_To_UInt32(ivBytes, 4);
 		}
 
-		protected override void GenerateKeyStream(byte[] output)
+		protected override void GenerateKeyStream(byte[] output, int offset)
 		{
 			ChaChaCoreNoChecks(rounds, engineState, x);
-			Pack.UInt32_To_LE(x, output, 0);
+			Pack.UInt32_To_LE(x, output, offset);
 		}
 
 		/// <summary>

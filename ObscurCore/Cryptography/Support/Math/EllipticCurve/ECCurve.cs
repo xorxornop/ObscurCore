@@ -67,8 +67,9 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			}
 		}
 
-		protected IFiniteField m_field;
+		protected readonly IFiniteField m_field;
 		protected ECFieldElement m_a, m_b;
+		protected BigInteger m_order, m_cofactor;
 
 		protected int m_coord = COORD_AFFINE;
 		protected ECMultiplier m_multiplier = null;
@@ -214,6 +215,16 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		public virtual ECFieldElement B
 		{
 			get { return m_b; }
+		}
+
+		public virtual BigInteger Order
+		{
+			get { return m_order; }
+		}
+
+		public virtual BigInteger Cofactor
+		{
+			get { return m_cofactor; }
 		}
 
 		public virtual int CoordinateSystem
@@ -852,19 +863,16 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return si;
 		}
 
-		protected override ECPoint DecompressPoint(
-			int			yTilde,
-			BigInteger	X1)
+		protected override ECPoint DecompressPoint(int yTilde, BigInteger X1)
 		{
-			ECFieldElement xp = FromBigInteger(X1);
-			ECFieldElement yp;
+			ECFieldElement xp = FromBigInteger(X1), yp;
 			if (xp.IsZero)
 			{
 				yp = m_b.Sqrt();
 			}
 			else
 			{
-				ECFieldElement beta = xp.Add(m_a).Add(m_b.Multiply(xp.Square().Invert()));
+				ECFieldElement beta = xp.Square().Invert().Multiply(B).Add(A).Add(xp);
 				ECFieldElement z = SolveQuadradicEquation(beta);
 
 				if (z == null)
@@ -875,18 +883,17 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 					z = z.AddOne();
 				}
 
-				yp = xp.Multiply(z);
-
 				switch (this.CoordinateSystem)
 				{
 				case COORD_LAMBDA_AFFINE:
 				case COORD_LAMBDA_PROJECTIVE:
 					{
-						yp = yp.Divide(xp).Add(xp);
+						yp = z.Add(xp);
 						break;
 					}
 				default:
 					{
+						yp = z.Multiply(xp);
 						break;
 					}
 				}

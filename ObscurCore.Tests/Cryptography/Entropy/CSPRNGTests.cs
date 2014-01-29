@@ -39,7 +39,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
             RunTestInt32(generator, ((csprng, output) =>
                 {
                     for (var i = 0; i < output.Length; i++) {
-                        output[i] = csprng.NextInt();
+						output[i] = Math.Abs(csprng.Next());
                     }
                 }),  out average, out time);
 
@@ -73,7 +73,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
             RunTestInt32(generator, ((csprng, output) =>
                 {
                     for (var i = 0; i < output.Length; i++) {
-                        output[i] = csprng.NextInt();
+						output[i] = Math.Abs(csprng.Next());
                     }
                 }),  out average, out time);
 

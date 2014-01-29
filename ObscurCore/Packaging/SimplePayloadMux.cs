@@ -48,8 +48,8 @@ namespace ObscurCore.Packaging
 			if (config == null)
 				throw new ArgumentNullException ("config");
 
-			SelectionSource = Source.CreateCsprng(config.PrimaryPrngName.ToEnum<CsPseudorandomNumberGenerator>(),
-		        config.PrimaryPrngConfiguration);
+			SelectionSource = Source.CreateCsprng(config.PrngName.ToEnum<CsPseudorandomNumberGenerator>(),
+		        config.PrngConfiguration);
 		    NextSource();
 		}
 

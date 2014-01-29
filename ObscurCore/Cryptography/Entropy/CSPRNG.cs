@@ -24,62 +24,99 @@ namespace ObscurCore.Cryptography.Entropy
 	{
         private readonly byte[] intBuf = new byte[4], dblBuf = new byte[8];
 
-		public override int Next (int maxValue) {
-		    var dbl = NextDouble();
-            var num = Math.Abs(dbl) * maxValue;
-		    num = Math.Round(num, MidpointRounding.ToEven);
-		    return (int) num;
+		protected internal static int Log2 (int number) {
+			int bits = 0;
+			if (number > 32767) {
+				number >>= 16;
+				bits += 16;
+			}
+			if (number > 127) {
+				number >>= 8;
+				bits += 8;
+			}
+			if (number > 7) {
+				number >>= 4;
+				bits += 4;
+			}
+			if (number > 1) {
+				number >>= 2;
+				bits += 2;
+			}
+			if (number > 0) {
+				bits++;
+			}
+			return bits;
 		}
 
-        public override int Next(int minValue, int maxValue)
-        {
-            var dbl = NextDouble();
-            var num = (Math.Abs(dbl) * (maxValue - minValue)) + minValue;
-		    num = Math.Round(num, MidpointRounding.ToEven);
-		    return (int) num;
+		/// <summary>
+		/// Takes 4 bytes from the CSPRNG and truncates the output to a specified number of bits. 
+		/// Truncated data is discarded. 
+		/// Caution: No input validation is performed.
+		/// </summary>
+		/// <returns>Truncated generated integer.</returns>
+		/// <param name="bitsToCollect">Bits to collect out of a possible 32.</param>
+		protected internal int NextBits (int bitsToCollect) {
+			uint mask = 0x00000001u << (bitsToCollect - 1);
+			uint num = NextUInt32 ();
+			return (int)(num & mask);
+		}
+
+		/// <summary>
+		/// Generate an integer between 0 and maxValue, inclusive.
+		/// </summary>
+		/// <param name="maxValue">Maximum value of output, inclusive.</param>
+		public override int Next (int maxValue) {
+			if (++maxValue <= 0) // maxValue now denotes an EXCLUSIVE maximum, rather than inclusive
+				throw new ArgumentException("n must be positive");
+
+			if ((maxValue & -maxValue) == maxValue)  // i.e., n is a power of 2
+				return (int)((maxValue * (long)NextBits(31)) >> 31);
+
+			int bits, val;
+			do {
+				bits = NextBits(31);
+				val = bits % maxValue;
+			} while (bits - val + (maxValue - 1) < 0);
+
+			return val;
+		}
+
+		/// <summary>
+		/// Generate an integer between minValue and maxValue, inclusive.
+		/// </summary>
+		/// <param name="minValue">Minimum value of output, inclusive.</param>
+		/// <param name="maxValue">Maximum value of output, inclusive.</param>
+		public override int Next(int minValue, int maxValue) {
+			int range = maxValue - minValue;
+			int num = minValue + Next (range);
+			return num;
         }
 
-        //public int NextUnbiasedInt32() {
-        //    var intBytes = new byte[4];
-        //    NextBytes(intBytes);
-
-        //    var result = 0;
-        //    for (var i = 0; i < 3; i++) {
-        //        result = (result << 8) | (intBytes[i] & 0xff);
-        //    }
-        //    result = (result << 8) | (intBytes[3] & 0x7f);
-
-        //    return result;
-        //}
-		
-		public int NextInt() {
-			/*var ary = new byte[4];
-            NextBytes(ary);
-            // The first bit has just as much a chance as being a 0 as it does a 1, with a CSPRNG source - right?
-            return BitConverter.ToInt32(ary, 0);*/
-			
-			return (int) (NextDouble() * Int32.MaxValue); // TODO: Compare the output of this method with that of the UInt32 one!
+		/// <summary>
+		/// Generate an integer.
+		/// </summary>
+		public override int Next() {
+			NextBytes(intBuf);
+			int num = intBuf.LittleEndianToInt32 ();
+			return num;
 		}
-		
+
+		/// <summary>
+		/// Generate an unsigned integer.
+		/// </summary>
 		public UInt32 NextUInt32() {
-			//var bytes = new byte[4];
-		    var bytes = intBuf;
-			NextBytes(bytes);
-			return BitConverter.ToUInt32(bytes, 0);
+			NextBytes(intBuf);
+			return intBuf.LittleEndianToUInt32 ();
 		}
 
 		public override double NextDouble () { return Sample(); }
 		
 		protected override double Sample () {
-			//var bytes = new byte[8];
-		    var bytes = dblBuf;
-			this.NextBytes(bytes);
-			//var ul = BitConverter.ToUInt64(bytes, 0) / (1 << 11); // original
-			var ul = BitConverter.ToUInt64(bytes, 0) >> 11; // cleaner version
+			NextBytes(dblBuf);
+			var ul = BitConverter.ToUInt64(dblBuf, 0) >> 11; // cleaner version
 			return ul / (double) (1UL << 53);
 		}
 
 	    public abstract override void NextBytes(byte[] buffer);
 	}
 }
-

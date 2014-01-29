@@ -60,10 +60,17 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			this.m_withCompression = withCompression;
 		}
 
+		public ECPoint GetDetachedPoint()
+		{
+			return Normalize().Detach();
+		}
+
 		public virtual ECCurve Curve
 		{
 			get { return m_curve; }
 		}
+
+		protected abstract ECPoint Detach();
 
 		protected virtual int CurveCoordinateSystem
 		{
@@ -505,6 +512,11 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		internal FpPoint(ECCurve curve, ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression)
 			: base(curve, x, y, zs, withCompression)
 		{
+		}
+
+		protected override ECPoint Detach()
+		{
+			return new FpPoint(null, AffineXCoord, AffineYCoord);
 		}
 
 		protected internal override bool CompressionYTilde
@@ -1168,6 +1180,11 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		{
 		}
 
+		protected override ECPoint Detach()
+		{
+			return new F2mPoint(null, AffineXCoord, AffineYCoord);
+		}
+
 		public override ECFieldElement YCoord
 		{
 			get
@@ -1181,12 +1198,11 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 					{
 						ECFieldElement X = RawXCoord, L = RawYCoord;
 
-						// TODO The X == 0 stuff needs further thought
 						if (this.IsInfinity || X.IsZero)
 							return L;
 
 						// Y is actually Lambda (X + Y/X) here; convert to affine value on the fly
-						ECFieldElement Y = L.Subtract(X).Multiply(X);
+						ECFieldElement Y = L.Add(X).Multiply(X);
 						if (ECCurve.COORD_LAMBDA_PROJECTIVE == coord)
 						{
 							ECFieldElement Z = RawZCoords[0];
@@ -1223,7 +1239,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 				case ECCurve.COORD_LAMBDA_PROJECTIVE:
 					{
 						// Y is actually Lambda (X + Y/X) here
-						return Y.Subtract(X).TestBitZero();
+						return Y.TestBitZero() != X.TestBitZero();
 					}
 				default:
 					{
@@ -1290,9 +1306,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 					ECFieldElement Y1 = this.RawYCoord;
 					ECFieldElement Y2 = b.RawYCoord;
 
-					if (X1.Equals(X2))
+					ECFieldElement dx = X1.Add(X2), dy = Y1.Add(Y2);
+					if (dx.IsZero)
 					{
-						if (Y1.Equals(Y2))
+						if (dy.IsZero)
 						{
 							return (F2mPoint)Twice();
 						}
@@ -1300,10 +1317,9 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 						return (F2mPoint)curve.Infinity;
 					}
 
-					ECFieldElement sumX = X1.Add(X2);
-					ECFieldElement L = Y1.Add(Y2).Divide(sumX);
+					ECFieldElement L = dy.Divide(dx);
 
-					ECFieldElement X3 = L.Square().Add(L).Add(sumX).Add(curve.A);
+					ECFieldElement X3 = L.Square().Add(L).Add(dx).Add(curve.A);
 					ECFieldElement Y3 = L.Multiply(X1.Add(X3)).Add(X3).Add(Y1);
 
 					return new F2mPoint(curve, X3, Y3, IsCompressed);
@@ -1317,14 +1333,14 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 
 					ECFieldElement U1 = Z1.Multiply(Y2);
 					ECFieldElement U2 = Z2IsOne ? Y1 : Y1.Multiply(Z2);
-					ECFieldElement U = U1.Subtract(U2);
+					ECFieldElement U = U1.Add(U2);
 					ECFieldElement V1 = Z1.Multiply(X2);
 					ECFieldElement V2 = Z2IsOne ? X1 : X1.Multiply(Z2);
-					ECFieldElement V = V1.Subtract(V2);
+					ECFieldElement V = V1.Add(V2);
 
-					if (V1.Equals(V2))
+					if (V.IsZero)
 					{
-						if (U1.Equals(U2))
+						if (U.IsZero)
 						{
 							return (F2mPoint)Twice();
 						}
@@ -1333,13 +1349,17 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 					}
 
 					ECFieldElement VSq = V.Square();
+					ECFieldElement VCu = VSq.Multiply(V);
 					ECFieldElement W = Z2IsOne ? Z1 : Z1.Multiply(Z2);
-					ECFieldElement A = U.Square().Add(U.Multiply(V).Add(VSq.Multiply(curve.A))).Multiply(W).Add(V.Multiply(VSq));
+					ECFieldElement uv = U.Add(V);
+					// TODO Delayed modular reduction for sum of products
+					ECFieldElement A = uv.Multiply(U).Add(VSq.Multiply(curve.A)).Multiply(W).Add(VCu);
 
 					ECFieldElement X3 = V.Multiply(A);
 					ECFieldElement VSqZ2 = Z2IsOne ? VSq : VSq.Multiply(Z2);
-					ECFieldElement Y3 = VSqZ2.Multiply(U.Multiply(X1).Add(Y1.Multiply(V))).Add(A.Multiply(U.Add(V)));
-					ECFieldElement Z3 = VSq.Multiply(V).Multiply(W);
+					// TODO Delayed modular reduction for sum of products
+					ECFieldElement Y3 = U.Multiply(X1).Add(Y1.Multiply(V)).Multiply(VSqZ2).Add(A.Multiply(uv));
+					ECFieldElement Z3 = VCu.Multiply(W);
 
 					return new F2mPoint(curve, X3, Y3, new ECFieldElement[] { Z3 }, IsCompressed);
 				}
@@ -1425,6 +1445,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 							ABZ2 = ABZ2.Multiply(Z2);
 						}
 
+						// TODO Delayed modular reduction for sum of products
 						L3 = AU2.Add(B).Square().Add(ABZ2.Multiply(L1.Add(Z1)));
 
 						Z3 = ABZ2;
@@ -1533,6 +1554,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 					ECFieldElement L1 = Y1.Divide(X1).Add(X1);
 
 					ECFieldElement X3 = L1.Square().Add(L1).Add(curve.A);
+					// TODO Delayed modular reduction for sum of products
 					ECFieldElement Y3 = X1.Square().Add(X3.Multiply(L1.AddOne()));
 
 					return new F2mPoint(curve, X3, Y3, IsCompressed);
@@ -1549,10 +1571,13 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 					ECFieldElement S = X1Sq.Add(Y1Z1);
 					ECFieldElement V = X1Z1;
 					ECFieldElement vSquared = V.Square();
-					ECFieldElement h = S.Square().Add(S.Multiply(V)).Add(curve.A.Multiply(vSquared));
+					ECFieldElement sv = S.Add(V);
+					// TODO Delayed modular reduction for sum of products
+					ECFieldElement h = sv.Multiply(S).Add(curve.A.Multiply(vSquared));
 
 					ECFieldElement X3 = V.Multiply(h);
-					ECFieldElement Y3 = h.Multiply(S.Add(V)).Add(X1Sq.Square().Multiply(V));
+					// TODO Delayed modular reduction for sum of products
+					ECFieldElement Y3 = h.Multiply(sv).Add(X1Sq.Square().Multiply(V));
 					ECFieldElement Z3 = V.Multiply(vSquared);
 
 					return new F2mPoint(curve, X3, Y3, new ECFieldElement[] { Z3 }, IsCompressed);
@@ -1568,12 +1593,12 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 					ECFieldElement aZ1Sq = Z1IsOne ? a : a.Multiply(Z1Sq);
 					ECFieldElement T = L1.Square().Add(L1Z1).Add(aZ1Sq);
 
-					ECFieldElement X3 = T.Square();
-					if (X3.IsZero)
+					if (T.IsZero)
 					{
-						return new F2mPoint(curve, X3, curve.B.Sqrt(), IsCompressed);
+						return new F2mPoint(curve, T, curve.B.Sqrt(), IsCompressed);
 					}
 
+					ECFieldElement X3 = T.Square();
 					ECFieldElement Z3 = Z1IsOne ? T : T.Multiply(Z1Sq);
 
 					ECFieldElement b = curve.B;
@@ -1606,7 +1631,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 					else
 					{
 						ECFieldElement X1Z1 = Z1IsOne ? X1 : X1.Multiply(Z1);
-						L3 = X1Z1.Square().Add(X3).Add(T.Multiply(L1Z1)).Add(Z3);
+						// TODO Delayed modular reduction for sum of products
+						L3 = X1Z1.Square().Add(T.Multiply(L1Z1)).Add(X3).Add(Z3);
 					}
 
 					return new F2mPoint(curve, X3, L3, new ECFieldElement[] { Z3 }, IsCompressed);
@@ -1618,61 +1644,78 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			}
 		}
 
-		//public override ECPoint TwicePlus(ECPoint b)
-		//{
-		//    if (this.IsInfinity)
-		//        return b;
-		//    if (b.IsInfinity)
-		//        return Twice();
+		public override ECPoint TwicePlus(ECPoint b)
+		{
+			if (this.IsInfinity)
+				return b;
+			if (b.IsInfinity)
+				return Twice();
 
-		//    ECCurve curve = this.Curve;
+			ECCurve curve = this.Curve;
 
-		//    ECFieldElement X1 = this.RawXCoord;
-		//    if (X1.IsZero)
-		//    {
-		//        // A point with X == 0 is it's own additive inverse
-		//        return b;
-		//    }
+			ECFieldElement X1 = this.RawXCoord;
+			if (X1.IsZero)
+			{
+				// A point with X == 0 is it's own additive inverse
+				return b;
+			}
 
-		//    int coord = curve.CoordinateSystem;
+			int coord = curve.CoordinateSystem;
 
-		//    switch (coord)
-		//    {
-		//        case ECCurve.COORD_LAMBDA_PROJECTIVE:
-		//        {
-		//            // NOTE: twicePlus() only optimized for lambda-affine argument
-		//            ECFieldElement X2 = b.RawXCoord, Z2 = b.RawZCoords[0];
-		//            if (X2.IsZero || !Z2.IsOne)
-		//            {
-		//                return Twice().Add(b);
-		//            }
+			switch (coord)
+			{
+			case ECCurve.COORD_LAMBDA_PROJECTIVE:
+				{
+					// NOTE: twicePlus() only optimized for lambda-affine argument
+					ECFieldElement X2 = b.RawXCoord, Z2 = b.RawZCoords[0];
+					if (X2.IsZero || !Z2.IsOne)
+					{
+						return Twice().Add(b);
+					}
 
-		//            ECFieldElement L1 = this.RawYCoord, Z1 = this.RawZCoords[0];
-		//            ECFieldElement L2 = b.RawYCoord;
+					ECFieldElement L1 = this.RawYCoord, Z1 = this.RawZCoords[0];
+					ECFieldElement L2 = b.RawYCoord;
 
-		//            ECFieldElement X1Sq = X1.Square();
-		//            ECFieldElement L1Sq = L1.Square();
-		//            ECFieldElement Z1Sq = Z1.Square();
-		//            ECFieldElement L1Z1 = L1.Multiply(Z1);
+					ECFieldElement X1Sq = X1.Square();
+					ECFieldElement L1Sq = L1.Square();
+					ECFieldElement Z1Sq = Z1.Square();
+					ECFieldElement L1Z1 = L1.Multiply(Z1);
 
-		//            ECFieldElement T = curve.A.Multiply(Z1Sq).Add(L1Sq).Add(L1Z1);
-		//            ECFieldElement L2plus1 = L2.AddOne();
-		//            ECFieldElement A = curve.A.Add(L2plus1).Multiply(Z1Sq).Add(L1Sq).Multiply(T).Add(X1Sq.Multiply(Z1Sq));
-		//            ECFieldElement X2Z1Sq = X2.Multiply(Z1Sq);
-		//            ECFieldElement B = X2Z1Sq.Add(T).Square();
+					ECFieldElement T = curve.A.Multiply(Z1Sq).Add(L1Sq).Add(L1Z1);
+					ECFieldElement L2plus1 = L2.AddOne();
+					// TODO Delayed modular reduction for sum of products
+					ECFieldElement A = curve.A.Add(L2plus1).Multiply(Z1Sq).Add(L1Sq).Multiply(T).Add(X1Sq.Multiply(Z1Sq));
+					ECFieldElement X2Z1Sq = X2.Multiply(Z1Sq);
+					ECFieldElement B = X2Z1Sq.Add(T).Square();
 
-		//            ECFieldElement X3 = A.Square().Multiply(X2Z1Sq);
-		//            ECFieldElement Z3 = A.Multiply(B).Multiply(Z1Sq);
-		//            ECFieldElement L3 = A.Add(B).Square().Multiply(T).Add(L2plus1.Multiply(Z3));
+					if (B.IsZero)
+					{
+						if (A.IsZero)
+						{
+							return b.Twice();
+						}
 
-		//            return new F2mPoint(curve, X3, L3, new ECFieldElement[] { Z3 }, IsCompressed);
-		//        }
-		//        default:
-		//        {
-		//            return Twice().Add(b);
-		//        }
-		//    }
-		//}
+						return curve.Infinity;
+					}
+
+					if (A.IsZero)
+					{
+						return new F2mPoint(curve, A, curve.B.Sqrt(), IsCompressed);
+					}
+
+					// TODO Delayed modular reduction for sum of products
+					ECFieldElement X3 = A.Square().Multiply(X2Z1Sq);
+					ECFieldElement Z3 = A.Multiply(B).Multiply(Z1Sq);
+					ECFieldElement L3 = A.Add(B).Square().Multiply(T).Add(L2plus1.Multiply(Z3));
+
+					return new F2mPoint(curve, X3, L3, new ECFieldElement[] { Z3 }, IsCompressed);
+				}
+			default:
+				{
+					return Twice().Add(b);
+				}
+			}
+		}
 
 		public override ECPoint Negate()
 		{

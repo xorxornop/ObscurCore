@@ -8,7 +8,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	/// <summary>
 	/// Implementation of Daniel J. Bernstein's Salsa20 stream cipher, Snuffle 2005
 	/// </summary>
-	public class Salsa20Engine : IStreamCipher
+	public class Salsa20Engine : IStreamCipher, ICsprngCompatible
 	{
 		/* Constants */
 		private const int STATE_SIZE = 16; // 16, 32 bit ints = 64 bytes
@@ -102,7 +102,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 			if (index == 0)
 			{
-				GenerateKeyStream(keyStream);
+				GenerateKeyStream(keyStream, 0);
 				AdvanceCounter();
 			}
 
@@ -158,7 +158,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			var blocks = Math.DivRem (len, STRIDE_SIZE, out remainder);
 
 			for (var i = 0; i < blocks; i++) {
-				GenerateKeyStream (keyStream);
+				GenerateKeyStream (keyStream, 0);
 				AdvanceCounter ();
 				inBytes.XOR (inOff, keyStream, 0, outBytes, outOff, STRIDE_SIZE);
 				inOff += STRIDE_SIZE;
@@ -166,23 +166,35 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			}
 
 			if(remainder > 0) {
-				GenerateKeyStream (keyStream);
+				GenerateKeyStream (keyStream, 0);
 				AdvanceCounter ();
 				inBytes.XOR (inOff, keyStream, 0, outBytes, outOff, remainder);
 				index = remainder;
 			}
+		}
 
-
-//			for (int i = 0; i < len; i++)
-//			{
-//				if (index == 0)
-//				{
-//					GenerateKeyStream(keyStream);
-//					AdvanceCounter();
-//				}
-//				outBytes[i+outOff] = (byte)(keyStream[index]^inBytes[i+inOff]);
-//				index = (index + 1) & 63;
-//			}
+		public void GetKeystream(byte[] buffer, int offset, int length) {
+			if (index > 0) {
+				var blen = STRIDE_SIZE - index;
+				if (blen > length)
+					blen = length;
+				Array.Copy(keyStream, index, buffer, offset, blen);
+				index += blen;
+				offset += blen;
+				length -= blen;
+			}
+			while (length > 0) {
+				if (length >= STRIDE_SIZE) {
+					GenerateKeyStream (buffer, offset);
+					offset += STRIDE_SIZE;
+					length -= STRIDE_SIZE;
+				} else {
+					GenerateKeyStream (keyStream, 0);
+					Array.Copy(keyStream, 0, buffer, offset, length);
+					index = length;
+					length = 0;
+				}
+			}
 		}
 
 		public void Reset()
@@ -229,9 +241,9 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			ResetCounter();
 		}
 
-		protected virtual void GenerateKeyStream(byte[] output) {
+		protected virtual void GenerateKeyStream(byte[] output, int offset) {
 			SalsaCoreNoChecks(rounds, engineState, x);
-			Pack.UInt32_To_LE(x, output, 0);
+			Pack.UInt32_To_LE(x, output, offset);
 		}
 
 		/// <summary>

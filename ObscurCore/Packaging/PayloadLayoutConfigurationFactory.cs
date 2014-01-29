@@ -29,8 +29,8 @@ namespace ObscurCore.Packaging
 		public static PayloadConfiguration CreateDefault(PayloadLayoutScheme schemeEnum) {
 			var config = new PayloadConfiguration {
                 SchemeName = schemeEnum.ToString(),
-				PrimaryPrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+				PrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
+				PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto()
 			};
 			
@@ -68,8 +68,8 @@ namespace ObscurCore.Packaging
 			            Minimum = fixedSize,
 			            Maximum = fixedSize,
 			        }.SerialiseDto(),
-				PrimaryPrngName = csprngEnum.ToString(),
-				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+				PrngName = csprngEnum.ToString(),
+				PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
                     csprngEnum).SerialiseDto()
 			};
 		    return config;
@@ -84,8 +84,8 @@ namespace ObscurCore.Packaging
 			            Minimum = (minPadding == null ? FrameshiftPayloadMux.MinimumPaddingLength : minPadding.Value),
 			            Maximum = (maxPadding == null ? FrameshiftPayloadMux.MaximumPaddingLength : maxPadding.Value)
 			        }.SerialiseDto(),
-				PrimaryPrngName = csprngEnum.ToString(),
-				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+				PrngName = csprngEnum.ToString(),
+				PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
                     csprngEnum).SerialiseDto()
 			};
             return config;
@@ -99,8 +99,8 @@ namespace ObscurCore.Packaging
 			            Minimum = fixedSize,
 			            Maximum = fixedSize,
 			        }.SerialiseDto(),
-				PrimaryPrngName = csprngEnum.ToString(),
-				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+				PrngName = csprngEnum.ToString(),
+				PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
                     csprngEnum).SerialiseDto()
 			};
 		    return config;
@@ -115,8 +115,8 @@ namespace ObscurCore.Packaging
 			            Minimum = (minStripe == null ? FabricPayloadMux.MinimumStripeLength : minStripe.Value),
 			            Maximum = (maxStripe == null ? FabricPayloadMux.MaximumStripeLength : maxStripe.Value)
 			        }.SerialiseDto(),
-				PrimaryPrngName = csprngEnum.ToString(),
-				PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+				PrngName = csprngEnum.ToString(),
+				PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
                     csprngEnum).SerialiseDto()
 			};
             return config;

@@ -58,14 +58,14 @@ namespace ObscurCore.Tests.Packaging
 				dec = sw.Elapsed;
 			}
 
-			Assert.Pass ("Packaging: {0} ms. Depackaging: {1} ms.", enc.Milliseconds, dec.Milliseconds);
+			Assert.Pass ("Packaging: {0} ms.\nDepackaging: {1} ms.", enc.Milliseconds, dec.Milliseconds);
 		}
 
 		// EC-UM1
 
 
 
-		// Curve25519
+		// Curve25519-UM1
 
 		[Test]
 		public void Curve25519UM1SimplePackage() {
@@ -119,7 +119,7 @@ namespace ObscurCore.Tests.Packaging
 				dec = sw.Elapsed;
 			}
 
-			Assert.Pass ("Packaging: {0} ms. Depackaging: {1} ms.", enc.Milliseconds, dec.Milliseconds);
+			Assert.Pass ("Packaging: {0} ms.\nDepackaging: {1} ms.", enc.Milliseconds, dec.Milliseconds);
 		}
 
     }

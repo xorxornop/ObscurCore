@@ -19,13 +19,12 @@ namespace ObscurCore.Tests.Cryptography
         }
     }
 
-
     /// <summary>
     /// Implementation of key provider for tests. Generates random keys.
     /// </summary>
     public class KeyProvider : IKeyProvider
     {
-        public KeyProvider(int keysToMake = 5) {
+		public KeyProvider(int keysToMake = 3) {
             var symKeys = new List<byte[]>();
             var c25519Keypairs = new List<Curve25519Keypair>();
 

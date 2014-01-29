@@ -242,10 +242,10 @@ namespace ObscurCore.Cryptography
 		}
 
 		public static void ToBigEndian(this Int32 n, byte[] bs, int off) {
-			bs[off] = (byte) (n >> 24);
-			bs[++off] = (byte) (n >> 16);
-			bs[++off] = (byte) (n >> 8);
-			bs[++off] = (byte) (n);
+			bs[off + 0] = (byte) (n >> 24);
+			bs[off + 1] = (byte) (n >> 16);
+			bs[off + 2] = (byte) (n >> 8);
+			bs[off + 3] = (byte) (n);
 		}
 
 		public static Int32 BigEndianToInt32(this byte[] bs) {
@@ -281,10 +281,10 @@ namespace ObscurCore.Cryptography
 
 		[CLSCompliantAttribute(false)]
 		public static void ToBigEndian(this UInt32 n, byte[] bs, int off) {
-			bs[off] = (byte) (n >> 24);
-			bs[++off] = (byte) (n >> 16);
-			bs[++off] = (byte) (n >> 8);
-			bs[++off] = (byte) (n);
+			bs[off + 0] = (byte) (n >> 24);
+			bs[off + 1] = (byte) (n >> 16);
+			bs[off + 2] = (byte) (n >> 8);
+			bs[off + 3] = (byte) (n);
 		}
 
 		[CLSCompliantAttribute(false)]
@@ -355,10 +355,10 @@ namespace ObscurCore.Cryptography
 		}
 
 		public static void ToLittleEndian(this Int32 n, byte[] bs, int off) {
-			bs[off] = (byte) (n);
-			bs[++off] = (byte) (n >> 8);
-			bs[++off] = (byte) (n >> 16);
-			bs[++off] = (byte) (n >> 24);
+			bs[off + 0] = (byte) (n);
+			bs[off + 1] = (byte) (n >> 8);
+			bs[off + 2] = (byte) (n >> 16);
+			bs[off + 3] = (byte) (n >> 24);
 		}
 
 		public static Int32 LittleEndianToInt32(this byte[] bs) {
@@ -394,10 +394,10 @@ namespace ObscurCore.Cryptography
 
 		[CLSCompliantAttribute(false)]
 		public static void ToLittleEndian(this UInt32 n, byte[] bs, int off) {
-			bs[off] = (byte) (n);
-			bs[++off] = (byte) (n >> 8);
-			bs[++off] = (byte) (n >> 16);
-			bs[++off] = (byte) (n >> 24);
+			bs[off + 0] = (byte) (n);
+			bs[off + 1] = (byte) (n >> 8);
+			bs[off + 2] = (byte) (n >> 16);
+			bs[off + 3] = (byte) (n >> 24);
 		}
 
 		[CLSCompliantAttribute(false)]

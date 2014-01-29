@@ -30,7 +30,7 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Name of the payload layout scheme, e.g. Frameshift.
         /// </summary>
-        [ProtoMember(1, IsRequired = true)]
+		[ProtoMember(1, IsRequired = true)]
         public string SchemeName { get; set; }
 		
         /// <summary>
@@ -45,34 +45,21 @@ namespace ObscurCore.DTO
         /// and other scheme-specific states.
         /// </summary>
         [ProtoMember(3, IsRequired = false)]
-        public string PrimaryPrngName { get; set; }
+        public string PrngName { get; set; }
 		
         /// <summary>
         /// Configuration for the primary PRNG.
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
         [ProtoMember(4, IsRequired = false)]
-        public byte[] PrimaryPrngConfiguration { get; set; }
-		
-        ///// <summary>
-        ///// Name of the secondary PRNG used for other tasks that the layout scheme may require. 
-        ///// </summary>		
-        //[ProtoMember(5)]
-        //public string SecondaryPrngName { get; set; }
-		
-        ///// <summary>
-        ///// Configuration for the secondary PRNG.
-        ///// </summary>
-        ///// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        //[ProtoMember(6)]
-        //public byte[] SecondaryPrngConfiguration { get; set; }
+        public byte[] PrngConfiguration { get; set; }
 
         /// <summary>
         /// Offset at which the payload may be found 
         /// relative to the manifest end in the bytestream. 
         /// This allows for payload I/O frameshifting to increase security.
         /// </summary>
-        [ProtoMember(7)]
+		[ProtoMember(5)]
         public int Offset { get; set; }
 
         public override bool Equals (object obj)
@@ -95,9 +82,9 @@ namespace ObscurCore.DTO
             return string.Equals(SchemeName, other.SchemeName) &&
                    (SchemeConfiguration == null ? other.SchemeConfiguration == null : 
                    SchemeConfiguration.SequenceEqual(other.SchemeConfiguration)) && 
-                   string.Equals(PrimaryPrngName, other.PrimaryPrngName) &&
-                   (PrimaryPrngConfiguration == null ? other.PrimaryPrngConfiguration == null : 
-                   PrimaryPrngConfiguration.SequenceEqual(other.PrimaryPrngConfiguration))/* && 
+                   string.Equals(PrngName, other.PrngName) &&
+                   (PrngConfiguration == null ? other.PrngConfiguration == null : 
+                   PrngConfiguration.SequenceEqual(other.PrngConfiguration))/* && 
                    string.Equals(SecondaryPRNGName, other.SecondaryPRNGName) && 
                    (SecondaryPRNGConfiguration == null ? other.SecondaryPRNGConfiguration == null : 
                    SecondaryPRNGConfiguration.SequenceEqual(other.SecondaryPRNGConfiguration))*/;
@@ -114,8 +101,8 @@ namespace ObscurCore.DTO
             unchecked {
                 int hashCode = SchemeName.GetHashCode(); // Must have scheme name
                 hashCode = (hashCode * 397) ^ (SchemeConfiguration != null ? SchemeConfiguration.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (PrimaryPrngName != null ? PrimaryPrngName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (PrimaryPrngConfiguration != null ? PrimaryPrngConfiguration.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PrngName != null ? PrngName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PrngConfiguration != null ? PrngConfiguration.GetHashCode() : 0);
                 /*
                 hashCode = (hashCode * 397) ^ (SecondaryPRNGName != null ? SecondaryPRNGName.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (SecondaryPRNGConfiguration != null ? SecondaryPRNGConfiguration.GetHashCode() : 0);
@@ -143,13 +130,13 @@ namespace ObscurCore.DTO
         /// Name of the PRNG used to select which item to read/write from/to the payload.
         /// </summary>
         /// <remarks>Convert this name to an enumeration when used internally.</remarks>
-        string PrimaryPrngName { get; }
+        string PrngName { get; }
 
         /// <summary>
         /// Configuration for the stream-selection PRNG.
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        byte[] PrimaryPrngConfiguration { get; }
+        byte[] PrngConfiguration { get; }
 
         ///// <summary>
         ///// Name of the PRNG used for other tasks that the layout scheme may require. 

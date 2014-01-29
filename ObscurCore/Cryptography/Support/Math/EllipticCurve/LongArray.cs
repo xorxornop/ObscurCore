@@ -1368,7 +1368,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 
 		private static int ReduceInPlace(long[] buf, int off, int len, int m, int[] ks)
 		{
-			int mLen = (int)((uint)(m + 63) >> 6);
+			int mLen = (m + 63) >> 6;
 			if (len < mLen)
 			{
 				return len;
@@ -1523,37 +1523,37 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return new LongArray(r, 0, ReduceInPlace(r, 0, r.Length, m, ks));
 		}
 
-		//    private LongArray modSquareN(int n, int m, int[] ks)
-		//    {
-		//        int len = GetUsedLength();
-		//        if (len == 0)
-		//        {
-		//            return this;
-		//        }
-		//
-		//        int mLen = (m + 63) >>> 6;
-		//        long[] r = new long[mLen << 1];
-		//        Array.Copy(m_ints, 0, r, 0, len);
-		//
-		//        while (--n >= 0)
-		//        {
-		//            squareInPlace(r, len, m, ks);
-		//            len = reduceInPlace(r, 0, r.Length, m, ks);
-		//        }
-		//
-		//        return new LongArray(r, 0, len);
-		//    }
-		//
-		//    private static void squareInPlace(long[] x, int xLen, int m, int[] ks)
-		//    {
-		//        int pos = xLen << 1;
-		//        while (--xLen >= 0)
-		//        {
-		//            long xVal = x[xLen];
-		//            x[--pos] = Interleave2_32to64((int)(xVal >>> 32));
-		//            x[--pos] = Interleave2_32to64((int)xVal);
-		//        }
-		//    }
+		public LongArray ModSquareN(int n, int m, int[] ks)
+		{
+			int len = GetUsedLength();
+			if (len == 0)
+			{
+				return this;
+			}
+
+			int mLen = (m + 63) >> 6;
+			long[] r = new long[mLen << 1];
+			Array.Copy(m_ints, 0, r, 0, len);
+
+			while (--n >= 0)
+			{
+				SquareInPlace(r, len, m, ks);
+				len = ReduceInPlace(r, 0, r.Length, m, ks);
+			}
+
+			return new LongArray(r, 0, len);
+		}
+
+		private static void SquareInPlace(long[] x, int xLen, int m, int[] ks)
+		{
+			int pos = xLen << 1;
+			while (--xLen >= 0)
+			{
+				long xVal = x[xLen];
+				x[--pos] = Interleave2_32to64((int)((ulong)xVal >> 32));
+				x[--pos] = Interleave2_32to64((int)xVal);
+			}
+		}
 
 		private static void Interleave(long[] x, int xOff, long[] z, int zOff, int count, int width)
 		{

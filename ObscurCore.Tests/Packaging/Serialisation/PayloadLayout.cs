@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using NUnit.Framework;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Entropy;
@@ -31,8 +31,8 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Minimum = FrameshiftPayloadMux.DefaultFixedPaddingLength,
 			            Maximum = FrameshiftPayloadMux.DefaultFixedPaddingLength
 			        }.SerialiseDto(),
-                PrimaryPrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-                PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                PrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
+                PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto<StreamCipherCsprngConfiguration>()
             };
 
@@ -53,8 +53,8 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Minimum = FrameshiftPayloadMux.MinimumPaddingLength,
 			            Maximum = FrameshiftPayloadMux.MaximumPaddingLength
 			        }.SerialiseDto(),
-                PrimaryPrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-                PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                PrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
+                PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto<StreamCipherCsprngConfiguration>()
             };
 
@@ -77,8 +77,8 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Minimum = FabricPayloadMux.DefaultFixedStripeLength,
 			            Maximum = FabricPayloadMux.DefaultFixedStripeLength
 			        }.SerialiseDto(),
-                PrimaryPrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-                PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                PrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
+                PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto()
             };
 
@@ -99,8 +99,8 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Minimum = FabricPayloadMux.MinimumStripeLength,
 			            Maximum = FabricPayloadMux.MaximumStripeLength
 			        }.SerialiseDto(),
-                PrimaryPrngName = CsPseudorandomNumberGenerator.Salsa20.ToString(),
-                PrimaryPrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+                PrngName = CsPseudorandomNumberGenerator.Salsa20.ToString(),
+                PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto()
             };
 
