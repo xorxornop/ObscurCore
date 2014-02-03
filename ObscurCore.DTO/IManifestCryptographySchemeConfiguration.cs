@@ -31,10 +31,20 @@ namespace ObscurCore.DTO
 		VerificationFunctionConfiguration Authentication { get; }
 
 		/// <summary>
+		/// Output of the authentication scheme given correct input data.
+		/// </summary>
+		byte[] AuthenticationVerifiedOutput { get; }
+
+		/// <summary>
 		/// Configuration for the key confirmation scheme used to validate the existence and 
 		/// validity of keying material at respondent's side without disclosing the key itself.
 		/// </summary>
         VerificationFunctionConfiguration KeyConfirmation { get; }
+
+		/// <summary>
+		/// Output of the key confirmation scheme given correct input data.
+		/// </summary>
+		byte[] KeyConfirmationVerifiedOutput { get; }
 
 		/// <summary>
 		/// Configuration for the scheme used to derive a key from the shared secret.

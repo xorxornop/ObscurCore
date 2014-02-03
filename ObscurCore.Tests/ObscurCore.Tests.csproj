@@ -54,7 +54,6 @@
     <Compile Include="Cryptography\Digests\DigestTests.cs" />
     <Compile Include="Cryptography\DigestTestBase.cs" />
     <Compile Include="Cryptography\Entropy\CSPRNGTests.cs" />
-    <Compile Include="Cryptography\KeyAgreements\Curve25519UM1.cs" />
     <Compile Include="Cryptography\KeyAgreements\UM1.cs" />
     <Compile Include="Cryptography\MACs\CMACTests.cs" />
     <Compile Include="Cryptography\MACs\HMACTests.cs" />
@@ -93,6 +92,7 @@
     <Compile Include="Cryptography\Ciphers\Stream\Rabbit.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Sosemanuk.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\ChaCha.cs" />
+    <Compile Include="Cryptography\KeyAgreements\JPake.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />

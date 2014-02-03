@@ -46,7 +46,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
 			int keyLength = key.Length;
 			if (keyLength > blockLength) {
-				digest.BlockUpdate(key, 0, key.Length);
+				digest.BlockUpdate(key, 0, keyLength);
 				digest.DoFinal(inputPad, 0);
 
 				keyLength = digestSize;

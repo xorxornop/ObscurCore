@@ -2,6 +2,13 @@ using System;
 
 namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 {
+	/**
+    * Class holding methods for point multiplication based on the window
+    * &#964;-adic nonadjacent form (WTNAF). The algorithms are based on the
+    * paper "Improved Algorithms for Arithmetic on Anomalous Binary Curves"
+    * by Jerome A. Solinas. The paper first appeared in the Proceedings of
+    * Crypto 1997.
+    */
 	internal class Tnaf
 	{
 		private static readonly BigInteger MinusOne = BigInteger.One.Negate();
@@ -527,7 +534,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC
 			int m = curve.M;
 			int a = curve.A.ToBigInteger().IntValue;
 			sbyte mu = curve.GetMu();
-			int h = curve.H.IntValue;
+			int h = curve.Cofactor.IntValue;
 			int index = m + 3 - a;
 			BigInteger[] ui = GetLucas(mu, index, false);
 

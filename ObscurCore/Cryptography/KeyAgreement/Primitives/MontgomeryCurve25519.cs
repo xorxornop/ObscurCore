@@ -135,7 +135,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 			if (privateKey.Count != 32)
 				throw new ArgumentException("privateKey.Count != 32");
 			MontgomeryOperations.scalarmult(sharedKey.Array, sharedKey.Offset, privateKey.Array, privateKey.Offset, publicKey.Array, publicKey.Offset);
-			KeyExchangeOutputHashNaCl(sharedKey.Array, sharedKey.Offset);
+			//KeyExchangeOutputHashNaCl(sharedKey.Array, sharedKey.Offset);
 		}
 
 		internal static void EdwardsToMontgomeryX(out FieldElement montgomeryX, ref FieldElement edwardsY, ref FieldElement edwardsZ)

@@ -49,8 +49,8 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 		/// <exception cref="ConfigurationValueInvalidException">
 		/// Confirmation configuration has an invalid element.
 		/// </exception>
-        public static byte[] ConfirmUM1HybridKey(IVerificationFunctionConfiguration keyConfirmation, EcKeyConfiguration ephemeralKey,
-			IEnumerable<EcKeyConfiguration> senderKeys, IEnumerable<EcKeyConfiguration> receiverKeys)
+		public static byte[] ConfirmUM1HybridKey(IVerificationFunctionConfiguration keyConfirmation, byte[] verifiedOutput, 
+			EcKeyConfiguration ephemeralKey, IEnumerable<EcKeyConfiguration> senderKeys, IEnumerable<EcKeyConfiguration> receiverKeys)
         {
             if (keyConfirmation == null) {
                 throw new ArgumentNullException("keyConfirmation", "No configuration supplied.");
@@ -79,9 +79,9 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 					"No viable receiver keys found - curve provider and/or curve name do not match ephemeral key.", "receiverKeys");
 			}
 
-            var validator = GetValidator(keyConfirmation);
+			var validator = GetValidator(keyConfirmation, verifiedOutput.Length);
 			var um1SecretFunc = new Func<EcKeyConfiguration, EcKeyConfiguration, byte[]>((pubKey, privKey) => 
-				UM1Exchange.Respond(pubKey.DecodeToPublicKey(), privKey.DecodeToPrivateKey(), ephemeralKey.DecodeToPublicKey()));
+				UM1Exchange.Respond(pubKey, privKey, ephemeralKey));
 
 			byte[] preKey = null;
 
@@ -92,7 +92,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 						foreach (var rKey in viableReceiverKeys) {
                             var ss = um1SecretFunc(sKey, rKey);
                             var validationOut = validator(ss);
-                            if (validationOut.SequenceEqual(keyConfirmation.VerifiedOutput)) {
+							if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
                                 preKey = ss;
                                 state.Stop();
                             }
@@ -104,7 +104,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                         foreach (var sKey in viableSenderKeys) {
                             var ss = um1SecretFunc(sKey, rKey);
                             var validationOut = validator(ss);
-                            if (validationOut.SequenceEqual(keyConfirmation.VerifiedOutput)) {
+							if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
                                 preKey = ss;
                                 state.Stop();
                             }
@@ -122,95 +122,25 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// Where appropriate, computes confirmations in parallel.
         /// </summary>
         /// <param name="keyConfirmation">Key confirmation configuration.</param>
-        /// <param name="ephemeralKey">Ephemeral key in the agreement.</param>
-        /// <param name="manifestKeysCurve25519Sender">Set of potential sender keys.</param>
-        /// <param name="manifestKeysCurve25519Receiver">Set of potential receiver keys.</param>
-        /// <returns>Valid key, or null if none are validated as being correct.</returns>
-		/// <exception cref="ArgumentNullException">Any of the parameters is null.</exception>
-		/// <exception cref="ArgumentException">
-		/// Sender or receiver key enumerations are of zero length.
-		/// </exception>
-		/// <exception cref="ConfigurationValueInvalidException">
-		/// Confirmation configuration has an invalid element.
-		/// </exception>
-        public static byte[] ConfirmCurve25519UM1HybridKey(IVerificationFunctionConfiguration keyConfirmation, byte[] ephemeralKey,
-			IEnumerable<byte[]> senderKeys, IEnumerable<byte[]> receiverKeys)
-        {
-			if (keyConfirmation == null) {
-				throw new ArgumentNullException ("keyConfirmation", "No configuration supplied.");
-			} else if (senderKeys == null) {
-				throw new ArgumentNullException ("ephemeralKey", "No ephemeral key supplied.");
-			} else if (senderKeys == null) {
-				throw new ArgumentNullException("senderKeys", "No potential sender keys supplied.");
-			} else if(receiverKeys == null) {
-				throw new ArgumentNullException("receiverKeys", "No potential receiver keys supplied.");
-            }
-
-            // See which mode (by-sender / by-recipient) is better to run in parallel
-			var keysCurve25519Sender = senderKeys as IList<byte[]> ?? senderKeys.ToList();
-			if(keysCurve25519Sender.Count == 0) {
-				throw new ArgumentException ("No potential sender keys supplied.", "senderKeys");
-			}
-			var keysCurve25519Recipient = receiverKeys as IList<byte[]> ?? receiverKeys.ToList();
-			if(keysCurve25519Sender.Count == 0) {
-				throw new ArgumentException ("No potential receiver keys supplied.", "receiverKeys");
-			}
-
-			var validator = GetValidator(keyConfirmation);
-			byte[] preKey = null;
-
-            if (keysCurve25519Sender.Count() > keysCurve25519Recipient.Count()) {
-                Parallel.ForEach(keysCurve25519Sender, (sKey, state) =>
-                    {
-                        foreach (var rKey in keysCurve25519Recipient) {
-                            var ss = Curve25519UM1Exchange.Respond(sKey, rKey, ephemeralKey);
-                            var validationOut = validator(ss);
-                            if (validationOut.SequenceEqual(keyConfirmation.VerifiedOutput)) {
-                                preKey = ss;
-                                state.Stop();
-                            }
-                        }
-                    });
-            } else {
-                Parallel.ForEach(keysCurve25519Recipient, (rKey, state) =>
-                    {
-                        foreach (var sKey in keysCurve25519Sender) {
-                            var ss = Curve25519UM1Exchange.Respond(sKey, rKey, ephemeralKey);
-                            var validationOut = validator(ss);
-                            if (validationOut.SequenceEqual(keyConfirmation.VerifiedOutput)) {
-                                preKey = ss;
-                                state.Stop();
-                            }
-                        }
-                    });
-            }
-
-            Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "ConfirmCurve25519UM1HybridKey", "Key output", 
-                preKey != null ? preKey.ToHexString() : "[null]"));
-            return preKey;
-        }
-
-        /// <summary>
-        /// Determines which (if any) key is valid from a set of potential keys. 
-        /// Where appropriate, computes confirmations in parallel.
-        /// </summary>
-        /// <param name="keyConfirmation">Key confirmation configuration.</param>
+		/// <param name="verifiedOutput">Known/verified output of the function if correct key is input.</param>
         /// <param name="potentialKeys">Set of potential keys.</param>
         /// <returns>Valid key, or null if none are validated as being correct.</returns>
-        public static byte[] ConfirmSymmetricKey(IVerificationFunctionConfiguration keyConfirmation, IEnumerable<byte[]> potentialKeys) {
+		public static byte[] ConfirmSymmetricKey(IVerificationFunctionConfiguration keyConfirmation, byte[] verifiedOutput, 
+			IEnumerable<byte[]> potentialKeys) 
+		{
             if (keyConfirmation == null) {
                 throw new ArgumentNullException("keyConfirmation", "No configuration supplied.");
             }
             if (potentialKeys == null) {
                 throw new ArgumentNullException("potentialKeys", "No potential keys supplied.");
             }
-            var validator = GetValidator(keyConfirmation);
+			var validator = GetValidator(keyConfirmation, verifiedOutput.Length);
             byte[] preKey = null;
 
             Parallel.ForEach(potentialKeys, (key, state) =>
                 {
                     var validationOut = validator(key);
-                    if (validationOut.SequenceEqual(keyConfirmation.VerifiedOutput)) {
+					if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
                         preKey = key;
                         // Terminate all other validation function instances - we have found the key
                         state.Stop();
@@ -227,10 +157,11 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 		/// </summary>
 		/// <returns>Callable validation function.</returns>
 		/// <param name="keyConfirmation">Key confirmation configuration defining validation method to be employed.</param>
+		/// <param name="outputSizeBytes">Expected length of output of verification function in bytes.</param>
 		/// <exception cref="ConfigurationValueInvalidException">
 		/// Some aspect of configuration invalid - detailed inside exception message.
 		/// </exception>
-        private static Func<byte[], byte[]> GetValidator(IVerificationFunctionConfiguration keyConfirmation) {
+		private static Func<byte[], byte[]> GetValidator(IVerificationFunctionConfiguration keyConfirmation, int outputSizeBytes) {
 			VerificationFunctionType functionType;
 			try {
 				functionType = keyConfirmation.FunctionType.ToEnum<VerificationFunctionType> ();
@@ -244,6 +175,8 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 				throw new ConfigurationValueInvalidException ("Verification function name cannot be null or empty.");
 			}
 
+			const string LengthIncompatibleString = "Expected length incompatible with function specified.";
+
             Func<byte[], byte[]> validator; // Used as an adaptor between different validation methods
 			switch (functionType) {
 				case VerificationFunctionType.Kdf:
@@ -254,18 +187,23 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 						throw new ConfigurationValueInvalidException ("Key derivation function is unsupported/unknown.", ex);
 					}
 					validator = (key) => Source.DeriveKeyWithKdf (kdfEnum, key, keyConfirmation.Salt, 
-						keyConfirmation.VerifiedOutput.Length, keyConfirmation.FunctionConfiguration);
+						outputSizeBytes, keyConfirmation.FunctionConfiguration);
 			        break;
 			    case VerificationFunctionType.Mac:
 					MacFunction macFEnum;
 					try {
 						macFEnum = keyConfirmation.FunctionName.ToEnum<MacFunction> ();
 					} catch (EnumerationParsingException ex) {
-						throw new ConfigurationValueInvalidException ("Key derivation function is unsupported/unknown.", ex);
+						throw new ConfigurationValueInvalidException ("MAC function is unsupported/unknown.", ex);
 					}
+
 			        validator = (key) => {
 						var macF = Source.CreateMacPrimitive (macFEnum, key, keyConfirmation.Salt, 
 							keyConfirmation.FunctionConfiguration);
+
+						if (outputSizeBytes != macF.MacSize)
+							throw new ArgumentException(LengthIncompatibleString, "outputSizeBytes");
+
 			            if(!keyConfirmation.AdditionalData.IsNullOrZeroLength()) 
 			                macF.BlockUpdate (keyConfirmation.AdditionalData, 0, keyConfirmation.AdditionalData.Length);
 			            var output = new byte[macF.MacSize];
@@ -281,7 +219,11 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 						throw new ConfigurationValueInvalidException ("Hash/digest function is unsupported/unknown.", ex);
 					}
 					validator = (key) => {
-					var hashF = Source.CreateHashPrimitive (hashFEnum);
+						var hashF = Source.CreateHashPrimitive (hashFEnum);
+
+						if (outputSizeBytes != hashF.DigestSize)
+							throw new ArgumentException(LengthIncompatibleString, "outputSizeBytes");
+
 			            if(!keyConfirmation.Salt.IsNullOrZeroLength()) 
 			                hashF.BlockUpdate (keyConfirmation.Salt, 0, keyConfirmation.Salt.Length);
 			            if(!keyConfirmation.AdditionalData.IsNullOrZeroLength()) 
@@ -306,7 +248,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 		/// <returns>A key confirmation as a verification configuration.</returns>
 		/// <param name="key">Key to confirm. Constitutes key prior to key derivation.</param>
 		/// <exception cref="ArgumentException">Key is null or zero-length.</exception>
-        public static VerificationFunctionConfiguration CreateDefaultManifestKeyConfirmation(byte[] key) {
+		public static VerificationFunctionConfiguration CreateDefaultManifestKeyConfirmation(byte[] key, out byte[] verifiedOutput) {
 			// TODO: Turn this method into a factory-type, using optional default values 
             const VerificationFunctionType functionType = VerificationFunctionType.Mac;
 			// Used when their respective type is selected (defaults)
@@ -360,24 +302,26 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                     if (config.Salt != null) hashP.BlockUpdate(config.Salt, 0, config.Salt.Length);
                     if (config.AdditionalData != null) hashP.BlockUpdate(config.AdditionalData, 0, config.AdditionalData.Length);
                     hashP.BlockUpdate(key, 0, key.Length);
-                    config.VerifiedOutput = new byte[hashP.DigestSize];
-                    hashP.DoFinal(config.VerifiedOutput, 0);
+					verifiedOutput = new byte[hashP.DigestSize];
+					hashP.DoFinal(verifiedOutput, 0);
                     break;
                 case VerificationFunctionType.Mac:
                     var macP = Source.CreateMacPrimitive(config.FunctionName.ToEnum<MacFunction>(), key, config.Salt,
                         config.FunctionConfiguration);
                     if (config.AdditionalData != null) macP.BlockUpdate(config.AdditionalData, 0, config.AdditionalData.Length);
-                    config.VerifiedOutput = new byte[macP.MacSize];
-                    macP.DoFinal(config.VerifiedOutput, 0);
+					verifiedOutput = new byte[macP.MacSize];
+					macP.DoFinal(verifiedOutput, 0);
                     break;
                 case VerificationFunctionType.Kdf:
-                    config.VerifiedOutput = Source.DeriveKeyWithKdf(config.FunctionName.ToEnum<KeyDerivationFunction>(), key,
+					verifiedOutput = Source.DeriveKeyWithKdf(config.FunctionName.ToEnum<KeyDerivationFunction>(), key,
 						config.Salt, 32, config.FunctionConfiguration);
                     break;
+				default:
+					throw new NotImplementedException ();
             }
 
 			Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "CreateDefaultManifestKeyConfirmation", "Verified output", 
-                config.VerifiedOutput.ToHexString()));
+				verifiedOutput.ToHexString()));
 
             return config;
         }

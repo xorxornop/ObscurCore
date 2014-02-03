@@ -59,15 +59,14 @@ namespace ObscurCore.Packaging
 			ItemCompletionRegister = new bool[PayloadItems.Count];
 		}
 
-
 		protected void CreateEtMSchemeStreams(PayloadItem item, out DecoratingStream decorator, out MacStream authenticator) {
 			byte[] encryptionKey, authenticationKey;
-			if(!item.EncryptionKey.IsNullOrZeroLength() && !item.AuthenticationKey.IsNullOrZeroLength()) {
+			if (item.EncryptionKey.IsNullOrZeroLength() == false && item.AuthenticationKey.IsNullOrZeroLength() == false) {
 				encryptionKey = item.EncryptionKey;
 				authenticationKey = item.AuthenticationKey;
-			} else if(PayloadItemPreKeys.ContainsKey(item.Identifier)) {
-				EtMKeyStretchingUtility.DeriveWorkingKeys (PayloadItemPreKeys [item.Identifier], item.Encryption.KeySizeBits / 8, 
-					item.Authentication, item.KeyDerivation, out encryptionKey, out authenticationKey);
+			} else if (PayloadItemPreKeys.ContainsKey(item.Identifier)) {
+				KeyStretchingUtility.DeriveWorkingKeys (PayloadItemPreKeys [item.Identifier], item.Encryption.KeySizeBits / 8, 
+					item.Authentication.KeySizeBits / 8, item.KeyDerivation, out encryptionKey, out authenticationKey);
 			} else {
 				throw new ItemKeyMissingException (item);
 			}

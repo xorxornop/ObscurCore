@@ -162,7 +162,7 @@ namespace ObscurCore.Cryptography
 			CheckIfCanDecorate ();
 			if (!Writing)
 				throw new InvalidOperationException (NotWritingError);
-			if(source == null) {
+			if (source == null) {
 				throw new ArgumentNullException ("source");
 			}
 
@@ -171,7 +171,7 @@ namespace ObscurCore.Cryptography
 
 			// Process any remainder
 			if (_operationBufferOffset > 0 && length > _operationSize) {
-				var gapLength = _operationSize - _operationBufferOffset;
+				int gapLength = _operationSize - _operationBufferOffset;
 
 				iterIn = source.Read (_operationBuffer, _operationBufferOffset, gapLength);
 				if(iterIn > gapLength) {
@@ -185,16 +185,21 @@ namespace ObscurCore.Cryptography
 				_outBuffer.Put(_tempBuffer, 0, iterOut);
 			}
 
-			while(totalOut + _outBuffer.Length < length) {
-				if(source.Read (_operationBuffer, _operationBufferOffset, _operationSize) < _operationSize) {
-					throw new EndOfStreamException ();
+			while (totalOut + _outBuffer.Length < length) {
+				iterIn = source.Read (_operationBuffer, 0, _operationSize);
+				totalIn += iterIn;
+
+				if (iterIn < _operationSize) {
+					_operationBufferOffset = iterIn;
+					int finalLength = _cipher.ProcessFinal(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);
+					_outBuffer.Put (_tempBuffer, 0, finalLength);
+					break;
 				}
-				totalIn += _operationSize;
 				iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
 				_outBuffer.Put (_tempBuffer, 0, iterOut);
 
 				// Prevent possible writebuffer overflow
-				if(_outBuffer.Spare < _operationSize) {
+				if (_outBuffer.Spare < _operationSize) {
 					iterOut = _outBuffer.Length;
 					// Write out the processed data to the stream binding
 					_outBuffer.TakeTo (DecoratorBinding, iterOut);
@@ -204,7 +209,7 @@ namespace ObscurCore.Cryptography
 
 			// Write out the processed data to the stream binding
 			iterOut = (int) (length - totalOut);
-			if(iterOut > 0) {
+			if (iterOut > 0) {
 				_outBuffer.TakeTo (DecoratorBinding, iterOut);
 				totalOut += iterOut;
 			}
@@ -230,7 +235,7 @@ namespace ObscurCore.Cryptography
 			int iterOut = 0;
 
 			// Process any leftovers
-			var gapLength = _operationSize - _operationBufferOffset;
+			int gapLength = _operationSize - _operationBufferOffset;
 			if (_operationBufferOffset > 0 && count > gapLength) {
 				Array.Copy(buffer, offset, _operationBuffer, _operationBufferOffset, 
 					gapLength);
@@ -246,7 +251,7 @@ namespace ObscurCore.Cryptography
 				return;
 
 			int remainder;
-			var operations = Math.DivRem(count, _operationSize, out remainder);
+			int operations = Math.DivRem(count, _operationSize, out remainder);
 
 			for (var i = 0; i < operations; i++) {
 				iterOut = _cipher.ProcessBytes(buffer, offset, _tempBuffer, 0);
@@ -289,12 +294,12 @@ namespace ObscurCore.Cryptography
 			if (!Writing)
 				throw new InvalidOperationException (NotWritingError);
 
-			if (_operationBufferOffset == _operationSize) {
+			if (_operationBufferOffset < _operationSize) {
+				_operationBuffer[_operationBufferOffset++] = b;
+			} else {
 				var iterOut = _cipher.ProcessBytes (_operationBuffer, 0, _tempBuffer, 0);
 				_outBuffer.Put (_tempBuffer, 0, iterOut);
 				_operationBufferOffset = 0;
-			} else {
-				_operationBuffer[_operationBufferOffset++] = b;
 			}
 
 			if (_outBuffer.Length > 0) 
@@ -317,7 +322,7 @@ namespace ObscurCore.Cryptography
 				BytesIn += iterIn;
 				_operationBufferOffset += iterIn;
 				if (iterIn == 0) {
-					var iterOut = FinishReading (_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);
+					int iterOut = FinishReading (_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);
 					_operationBufferOffset = 0;
 					_outBuffer.Put (_tempBuffer, 0, iterOut);
 					BytesOut++;
@@ -327,7 +332,7 @@ namespace ObscurCore.Cryptography
 
 			if (_operationBufferOffset == _operationSize) {
 				// Op buffer is full, process an op block
-				var iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+				int iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
 				_outBuffer.Put (_tempBuffer, 0, iterOut);
 				_operationBufferOffset = 0;
 			}
@@ -372,18 +377,38 @@ namespace ObscurCore.Cryptography
 				count -= iterOut;
 			}
 
-			if(!Finished) {
+			if(Finished == false) {
 				while (count > 0) {
 					iterIn = Binding.Read(_operationBuffer, _operationBufferOffset, _operationSize - _operationBufferOffset);
-					if (iterIn == 0) {
+					if (iterIn > 0) {
+						// Normal processing (mid-stream)
+						_operationBufferOffset += iterIn;
+						totalIn += iterIn;
+						if (_operationBufferOffset == _operationSize) {
+							if(count >= _operationSize) {
+								// Full operation
+								iterOut = _cipher.ProcessBytes(_operationBuffer, 0, buffer, offset);
+								totalOut += iterOut;
+								offset += iterOut;
+								count -= iterOut;
+							} else {
+								// Short operation
+								iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+								int subOp = buffer.Length - offset;
+								Array.Copy (_tempBuffer, 0, buffer, offset, subOp);
+								totalOut += subOp;
+								_outBuffer.Put (_tempBuffer, count, iterOut - subOp);
+								count = 0;
+							}
+							_operationBufferOffset = 0;
+						}
+					} else {
+						// End of stream - finish the decryption
 						// Copy the previous operation block in to provide overrun protection
 						Array.Copy (buffer, offset - _operationSize, _tempBuffer, 0, _operationSize);
-						// Finish the decryption - end of stream
 						iterOut = FinishReading(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, _operationSize);
-						if(iterOut < 0) {
-							// We need to modify the existing output because the last block was actually padded!
-							totalOut += iterOut; // iterOut is negative, so this is actually negation
-						} else {
+						if(iterOut > 0) {
+							// Process the final decrypted data
 							int remainingBufferSpace = buffer.Length - (offset + iterOut);
 							if (remainingBufferSpace < 0) {
 								// Not enough space in destination buffer
@@ -395,29 +420,12 @@ namespace ObscurCore.Cryptography
 								Array.Copy (_tempBuffer, _operationSize, buffer, offset, iterOut);
 								totalOut += iterOut;
 							}
+						} else {
+							// We need to modify the existing output because the last block was actually padded!
+							totalOut += iterOut; // iterOut is negative, so this is actually negation
 						}
 						count = 0;
 						_operationBufferOffset = 0;
-					} else {
-						// Normal processing (mid-stream)
-						_operationBufferOffset += iterIn;
-						totalIn += iterIn;
-						if (_operationBufferOffset == _operationSize) {
-							if(count < _operationSize) {
-								iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
-								int subOp = buffer.Length - offset;
-								Array.Copy (_tempBuffer, 0, buffer, offset, subOp);
-								totalOut += subOp;
-								_outBuffer.Put (_tempBuffer, count, iterOut - subOp);
-								count = 0;
-							} else {
-								iterOut = _cipher.ProcessBytes(_operationBuffer, 0, buffer, offset);
-								totalOut += iterOut;
-								offset += iterOut;
-								count -= iterOut;
-							}
-							_operationBufferOffset = 0;
-						}
 					}
 				}
 			}
@@ -546,8 +554,11 @@ namespace ObscurCore.Cryptography
 			}
 			doOperations:
 
-			long remainder;
-			var operations = Math.DivRem(length, (long)_operationSize, out remainder);
+			long remainderLong;
+			int operations = (int)Math.DivRem(length, (long)_operationSize, out remainderLong);
+			int remainder = (int)remainderLong;
+			// ^ Can be changed back to long if needed.
+			// Otherwise, though, we'll try to avoid pointless and costly repeated casts.
 
 			// Process all the whole blocks/operations
 			for (int i = 1; i <= operations; i++) {
@@ -569,7 +580,20 @@ namespace ObscurCore.Cryptography
 				totalOut += iterOut;
 			}
 
-			if (finishing) {
+			if (finishing == false) {
+				// Mid-stream
+				if (remainder > 0) {
+					// Any remainder bytes are stored (not decrypted)
+					iterIn = Binding.Read (_operationBuffer, _operationBufferOffset, (int)remainder);
+					totalIn += iterIn;
+					_operationBufferOffset += iterIn;
+					// End of stream detection
+					if (_operationBufferOffset < remainder) {
+						throw new EndOfStreamException ();
+					}
+				}
+			} else {
+				// Finishing
 				int totalRemaining = (int)remainder + _operationBufferOffset;
 				if (totalRemaining > _operationSize) {
 					int finalReadLength = _operationSize - _operationBufferOffset;
@@ -588,7 +612,6 @@ namespace ObscurCore.Cryptography
 					_operationBufferOffset = 0;
 				}
 				iterIn = Binding.Read(_operationBuffer, _operationBufferOffset, (int)remainder);
-
 				if (iterIn < remainder) {
 					BytesIn += totalIn;
 					BytesOut += totalOut;
@@ -600,17 +623,6 @@ namespace ObscurCore.Cryptography
 				destination.Write (_tempBuffer, 0, iterOut);
 				totalOut += iterOut;
 				_operationBufferOffset = 0;
-			} else {
-				if (remainder > 0) {
-					// Any remainder bytes are stored (not decrypted)
-					iterIn = Binding.Read (_operationBuffer, _operationBufferOffset, (int)remainder);
-					totalIn += iterIn;
-					_operationBufferOffset += iterIn;
-					// End of stream detection
-					if (_operationBufferOffset < remainder) {
-						throw new EndOfStreamException ();
-					}
-				}
 			}
 
 			BytesIn += totalIn;

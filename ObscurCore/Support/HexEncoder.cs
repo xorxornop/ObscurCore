@@ -6,37 +6,46 @@ namespace ObscurCore.Support
 	public class HexEncoder
 		: IEncoder
 	{
-		private static readonly byte[] encodingTable =
+		protected readonly byte[] encodingTable =
 		{
 			(byte)'0', (byte)'1', (byte)'2', (byte)'3', (byte)'4', (byte)'5', (byte)'6', (byte)'7',
 			(byte)'8', (byte)'9', (byte)'a', (byte)'b', (byte)'c', (byte)'d', (byte)'e', (byte)'f'
 		};
 
-		private static readonly byte[] decodingTable = ConstructDecodingTable(encodingTable);
+		/*		
+         * set up the decoding table.
+         */
+		protected readonly byte[] decodingTable = new byte[128];
 
-		private static byte[] ConstructDecodingTable(byte[] et)
+		protected void InitialiseDecodingTable()
 		{
-			byte[] dt = new byte[128];
-			for (int i = 0; i < et.Length; i++)
-			{
-				dt[et[i]] = (byte)i;
+			for (int i = 0; i < decodingTable.Length; i++) {
+				decodingTable [i] = (byte)0xFF;
 			}
 
-			dt['A'] = dt['a'];
-			dt['B'] = dt['b'];
-			dt['C'] = dt['c'];
-			dt['D'] = dt['d'];
-			dt['E'] = dt['e'];
-			dt['F'] = dt['f'];
+			for (int i = 0; i < encodingTable.Length; i++)
+			{
+				decodingTable[encodingTable[i]] = (byte)i;
+			}
 
-			return dt;
+			decodingTable['A'] = decodingTable['a'];
+			decodingTable['B'] = decodingTable['b'];
+			decodingTable['C'] = decodingTable['c'];
+			decodingTable['D'] = decodingTable['d'];
+			decodingTable['E'] = decodingTable['e'];
+			decodingTable['F'] = decodingTable['f'];
+		}
+
+		public HexEncoder()
+		{
+			InitialiseDecodingTable();
 		}
 
 		/*		*
-		* encode the input data producing a Hex output stream.
-		*
-		* @return the number of bytes produced.
-		*/
+        * encode the input data producing a Hex output stream.
+        *
+        * @return the number of bytes produced.
+        */
 		public int Encode(
 			byte[]	data,
 			int		off,
@@ -60,11 +69,11 @@ namespace ObscurCore.Support
 		}
 
 		/*		*
-		* decode the Hex encoded byte data writing it to the given output stream,
-		* whitespace characters will be ignored.
-		*
-		* @return the number of bytes produced.
-		*/
+        * decode the Hex encoded byte data writing it to the given output stream,
+        * whitespace characters will be ignored.
+        *
+        * @return the number of bytes produced.
+        */
 		public int Decode(
 			byte[]	data,
 			int		off,
@@ -102,6 +111,9 @@ namespace ObscurCore.Support
 
 				b2 = decodingTable[data[i++]];
 
+				if ((b1 | b2) >= 0x80)
+					throw new IOException("invalid characters encountered in Hex data");
+
 				outStream.WriteByte((byte)((b1 << 4) | b2));
 
 				outLen++;
@@ -111,11 +123,11 @@ namespace ObscurCore.Support
 		}
 
 		/*		*
-		* decode the Hex encoded string data writing it to the given output stream,
-		* whitespace characters will be ignored.
-		*
-		* @return the number of bytes produced.
-		*/
+        * decode the Hex encoded string data writing it to the given output stream,
+        * whitespace characters will be ignored.
+        *
+        * @return the number of bytes produced.
+        */
 		public int DecodeString(
 			string	data,
 			Stream	outStream)
@@ -151,6 +163,9 @@ namespace ObscurCore.Support
 				}
 
 				b2 = decodingTable[data[i++]];
+
+				if ((b1 | b2) >= 0x80)
+					throw new IOException("invalid characters encountered in Hex data");
 
 				outStream.WriteByte((byte)((b1 << 4) | b2));
 

@@ -17,15 +17,6 @@ namespace ObscurCore.DTO
         /// Uses UM1 to generate a secret value, which is further derived with a KDF. 
         /// This derived secret is used as a symmetric cipher key, and optionally, for key confirmation.
         /// </remarks>
-        UM1Hybrid,
-
-        /// <summary>
-        /// Unified Model 1 EC-hybrid (PKC-derived-key symmetric encryption) scheme that uses Curve25519 as its EC scheme.
-        /// </summary>
-        /// <remarks>
-        /// Uses Curve25519UM1 to generate a secret value, which is further derived with a KDF. 
-        /// This derived secret is used as a symmetric cipher key, and optionally, for key confirmation.
-        /// </remarks>
-        Curve25519UM1Hybrid
+        UM1Hybrid
     }
 }

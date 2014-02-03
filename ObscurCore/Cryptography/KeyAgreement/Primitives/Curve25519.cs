@@ -26,16 +26,20 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 		/// <param name="bytes">Seed entropy. Must be 32 bytes (256 bits) long.</param>
         /// <returns>Private key as bytes.</returns>
         public static byte[] CreatePrivateKey(byte[] bytes) {
-			if (bytes == null) 
-				throw new ArgumentNullException();
-			else if (bytes.Length != 32) 
-				throw new ArgumentException("Seed entropy must be 32 bytes (256 bits) in length.", "bytes");
-			var privateKey = new byte[32];
-			Buffer.BlockCopy(bytes, 0, privateKey, 0, 32);
-			privateKey[0] &= 0xF8;
-			privateKey[31] &= 0x7F;
-			privateKey[31] |= 0x40;
-			return privateKey;
+//			if (bytes == null) 
+//				throw new ArgumentNullException();
+//			else if (bytes.Length != 32) 
+//				throw new ArgumentException("Seed entropy must be 32 bytes (256 bits) in length.", "bytes");
+//			var privateKey = new byte[32];
+//			Buffer.BlockCopy(bytes, 0, privateKey, 0, 32);
+//			privateKey[0] &= 0xF8;
+//			privateKey[31] &= 0x7F;
+//			privateKey[31] |= 0x40;
+//
+
+			return Curve25519HansWolff.ClampPrivateKey (bytes);
+
+//			return privateKey;
         }
 
         /// <summary>

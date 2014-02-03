@@ -33,26 +33,6 @@ namespace ObscurCore
         public byte[] EncodedPrivateKey { get; set; }
 
         /// <summary>
-        /// Create an EC private key parameter object from the encoded key.
-        /// </summary>
-        internal ECPrivateKeyParameters PrivateKeyParameter {
-            get {
-                ECPrivateKeyParameters privateKey;
-                try {
-                    var domain = Source.GetEcDomainParameters(CurveName);
-                    privateKey = new ECPrivateKeyParameters("ECDHC", new BigInteger(EncodedPrivateKey), domain);
-
-                } catch (NotSupportedException) {
-                    throw new NotSupportedException(
-                        "EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
-                } catch (Exception) {
-                    throw new InvalidDataException("Unspecified error occured in decoding EC key.");
-                }
-                return privateKey;
-            }
-        }
-
-        /// <summary>
         /// Exports the public component of the keypair as an EcKeyConfiguration DTO object.
         /// </summary>
         /// <returns>Public key as EcKeyConfiguration DTO.</returns>
@@ -60,12 +40,12 @@ namespace ObscurCore
             var key = new byte[EncodedPublicKey.Length];
             Buffer.BlockCopy(EncodedPublicKey, 0, key, 0, key.Length);
             
-            return new EcKeyConfiguration
-                {
-                    CurveProviderName = CurveProviderName,
-                    CurveName = CurveName,
-                    EncodedKey = key
-                };
+			return new EcKeyConfiguration {
+				PublicComponent = true,
+                CurveProviderName = CurveProviderName,
+                CurveName = CurveName,
+                EncodedKey = key
+            };
         }
 
         /// <summary>
@@ -81,8 +61,8 @@ namespace ObscurCore
         /// </summary>
         /// <returns>Public key as EcKeyConfiguration DTO.</returns>
         public EcKeyConfiguration GetPrivateKey() {
-            var key = new byte[EncodedPublicKey.Length];
-            Buffer.BlockCopy(EncodedPublicKey, 0, key, 0, key.Length);
+			var key = new byte[EncodedPrivateKey.Length];
+			Buffer.BlockCopy(EncodedPrivateKey, 0, key, 0, key.Length);
             
             return new EcKeyConfiguration
                 {

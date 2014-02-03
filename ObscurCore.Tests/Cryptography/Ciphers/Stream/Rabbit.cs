@@ -18,10 +18,10 @@ namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 {
 	public class Rabbit : StreamCipherTestBase
 	{
-		private static readonly string MSG = "00000000000000000000000000000000" + 
-		                                     "00000000000000000000000000000000" + 
-		                                     "00000000000000000000000000000000" + 
-		                                     "00000000000000000000000000000000";
+//		private static readonly string MSG = "00000000000000000000000000000000" + 
+//		                                     "00000000000000000000000000000000" + 
+//		                                     "00000000000000000000000000000000" + 
+//		                                     "00000000000000000000000000000000";
 
 		public Rabbit () : base(ObscurCore.Cryptography.Ciphers.Stream.SymmetricStreamCipher.Rabbit)
 		{

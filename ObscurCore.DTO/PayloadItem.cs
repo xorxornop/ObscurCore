@@ -92,16 +92,16 @@ namespace ObscurCore.DTO
         public string RelativePath { get; set; }
 
         /// <summary>
-        /// Length of the item inside of the payload, excluding any additional length imparted by the payload layout scheme.
-        /// </summary>
-        [ProtoMember(3, IsRequired = true)]
-        public long InternalLength { get; set; }
-
-        /// <summary>
         /// Length of the item outside of the payload, unmodified, as it was before inclusion.
         /// </summary>
-        [ProtoMember(4, IsRequired = true)]
+		[ProtoMember(3, IsRequired = true)]
         public long ExternalLength { get; set; }
+
+		/// <summary>
+		/// Length of the item inside of the payload, excluding any additional length imparted by the payload layout scheme, if any.
+		/// </summary>
+		[ProtoMember(4, IsRequired = true)]
+		public long InternalLength { get; set; }
 
         // /// <summary>
         // /// Compression configuration for this payload item.
@@ -116,32 +116,52 @@ namespace ObscurCore.DTO
         public SymmetricCipherConfiguration Encryption { get; set; }
 
 		/// <summary>
-		/// Cryptographic key for encryption of the payload item.
+		/// Cryptographic key for encryption of the payload item. 
+		/// Required if key confirmation not used.
 		/// </summary>
-		[ProtoMember(7, IsRequired = true)]
+		[ProtoMember(7, IsRequired = false)]
 		public byte[] EncryptionKey { get; set; }
 
+		/// <summary>
+		/// Authentication configuration for the payload item. 
+		/// Must be of a MAC type.
+		/// </summary>
+		/// <value>The authentication.</value>
 		[ProtoMember(8, IsRequired = true)]
 		public VerificationFunctionConfiguration Authentication { get; set; }
 
 		/// <summary>
-		/// Cryptographic key for authentication of the payload item.
+		/// Cryptographic key for authentication of the payload item. 
+		/// Required if key confirmation not used.
 		/// </summary>
-		[ProtoMember(9, IsRequired = true)]
+		[ProtoMember(9, IsRequired = false)]
 		public byte[] AuthenticationKey { get; set; }
+
+		/// <summary>
+		/// Output of the authentication scheme given correct input data.
+		/// </summary>
+		[ProtoMember(10, IsRequired = true)]
+		public byte[] AuthenticationVerifiedOutput { get; set; }
 		
         /// <summary>
         /// Key confirmation configuration for this payload item. 
 		/// Used to validate the existence and validity of keying material 
 		/// at the respondent's side without disclosing the key itself.
         /// </summary>
-		[ProtoMember(10, IsRequired = false)]
+		[ProtoMember(11, IsRequired = false)]
 		public VerificationFunctionConfiguration KeyConfirmation { get; set; }
 
+		/// <summary>
+		/// Output of the key confirmation scheme given correct input data.
+		/// </summary>
+		[ProtoMember(12, IsRequired = false)]
+		public byte[] KeyConfirmationVerifiedOutput { get; set; }
+
         /// <summary>
-        /// Key derivation configuration for this payload item.
+		/// Key derivation configuration for this payload item. 
+		/// Required if key confirmation not used.
         /// </summary>
-		[ProtoMember(11, IsRequired = false)]
+		[ProtoMember(13, IsRequired = false)]
         public KeyDerivationConfiguration KeyDerivation { get; set; }
 
         public override bool Equals (object obj)

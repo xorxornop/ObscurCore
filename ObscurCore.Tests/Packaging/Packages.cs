@@ -63,41 +63,37 @@ namespace ObscurCore.Tests.Packaging
 
 		// EC-UM1
 
-
-
-		// Curve25519-UM1
-
 		[Test]
-		public void Curve25519UM1SimplePackage() {
-			Curve25519UM1PackageTest ("Curve25519UM1SimplePackage", ObscurCore.Packaging.PayloadLayoutScheme.Simple);
+		public void UM1SimplePackage() {
+			UM1PackageTest ("UM1SimplePackage", ObscurCore.Packaging.PayloadLayoutScheme.Simple);
 		}
 
 		[Test]
-		public void Curve25519UM1FrameshiftPackage() {
-			Curve25519UM1PackageTest ("Curve25519UM1FrameshiftPackage", ObscurCore.Packaging.PayloadLayoutScheme.Frameshift);
+		public void UM1FrameshiftPackage() {
+			UM1PackageTest ("UM1FrameshiftPackage", ObscurCore.Packaging.PayloadLayoutScheme.Frameshift);
 		}
 
 		#if INCLUDE_FABRIC
 		[Test]
-		public void Curve25519UM1FabricPackage() {
-			Curve25519UM1PackageTest ("Curve25519UM1FabricPackage", ObscurCore.Packaging.PayloadLayoutScheme.Fabric);
+		public void UM1FabricPackage() {
+			UM1PackageTest ("UM1FabricPackage", ObscurCore.Packaging.PayloadLayoutScheme.Fabric);
 		}
 		#endif
 
-		private void Curve25519UM1PackageTest(string testName, ObscurCore.Packaging.PayloadLayoutScheme scheme) {
+		private void UM1PackageTest(string testName, ObscurCore.Packaging.PayloadLayoutScheme scheme) {
 			// Process of writing destroys sender and receiver key variables passed in for security
 			// We must copy it to a local variable before reading the package back
-			var senderKeyEnumerated = KeyProviders.Alice.Curve25519Keypairs.First().Private;
-			var senderKey = new byte[senderKeyEnumerated.Length];
-			Array.Copy(senderKeyEnumerated, senderKey, senderKey.Length);
-			var receiverKeyEnumerated = KeyProviders.Bob.Curve25519Keypairs.Last().Public;
-			var receiverKey = new byte[receiverKeyEnumerated.Length];
-			Array.Copy(receiverKeyEnumerated, receiverKey, receiverKey.Length);
+			var senderKeyEnumerated = KeyProviders.Alice.EcKeypairs.First();
+			var senderKey = new byte[senderKeyEnumerated.EncodedPrivateKey.Length];
+			Array.Copy(senderKeyEnumerated.EncodedPrivateKey, senderKey, senderKey.Length);
+			var receiverKeyEnumerated = KeyProviders.Bob.EcKeypairs.Last();
+			var receiverKey = new byte[receiverKeyEnumerated.EncodedPublicKey.Length];
+			Array.Copy(receiverKeyEnumerated.EncodedPublicKey, receiverKey, receiverKey.Length);
 
 			TimeSpan enc, dec;
 			using (var ms = new MemoryStream ()) {
 				var sw = Stopwatch.StartNew ();
-				var package = new Package (senderKey, receiverKey, scheme);
+				var package = new Package (senderKeyEnumerated, receiverKeyEnumerated, scheme);
 				foreach (var file in IOTestBase.LargeBinaryFileList) {
 					package.AddFile (file.FullName);
 				}

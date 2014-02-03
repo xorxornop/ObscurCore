@@ -21,39 +21,31 @@ using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.Authentication
 {
-	public static class EtMKeyStretchingUtility
+	public static class KeyStretchingUtility
 	{
-		public static void DeriveWorkingKeys (byte[] preKey, int cipherKeySize, VerificationFunctionConfiguration authConfig, 
-			KeyDerivationConfiguration kdfConfig, out byte[] encryptionKey, out byte[] authenticationKey)
+		/// <summary>
+		/// Derives cipher (encryption) and MAC (authentication) keys 
+		/// from a single pre-key using a key derivation function.
+		/// </summary>
+		/// <param name="preKey">Pre-key to stretch.</param>
+		/// <param name="cipherKeySize">Cipher key size in bytes.</param>
+		/// <param name="macKeySize">MAC key size in bytes.</param>
+		/// <param name="kdfConfig">Key derivation function configuration.</param>
+		/// <param name="encryptionKey">Cipher key.</param>
+		/// <param name="macKey">Authentication key.</param>
+		public static void DeriveWorkingKeys (byte[] preKey, int cipherKeySize, int macKeySize, 
+			KeyDerivationConfiguration kdfConfig, out byte[] cipherKey, out byte[] macKey)
 		{
-			int authKeySize;
-			MacFunction manifestAuthFunction = authConfig.FunctionName.ToEnum<MacFunction> ();
-			switch (manifestAuthFunction) {
-			case MacFunction.Hmac:
-				HashFunction hmacFEnum = 
-					Encoding.UTF8.GetString (authConfig.FunctionConfiguration).ToEnum<HashFunction> ();
-				authKeySize = Athena.Cryptography.HashFunctions [hmacFEnum].OutputSize / 8;
-				break;
-			case MacFunction.Cmac:
-				SymmetricBlockCipher cmacFEnum = 
-					Encoding.UTF8.GetString (authConfig.FunctionConfiguration).ToEnum<SymmetricBlockCipher> ();
-				authKeySize = Athena.Cryptography.BlockCiphers [cmacFEnum].DefaultBlockSize / 8;
-				break;
-			default:
-				authKeySize = Athena.Cryptography.MacFunctions[manifestAuthFunction].OutputSize.Value / 8;
-				break;
-			}
-
 			// Derive the key which will be used for encrypting the manifest
 			byte[] stretchedWorkingMKeys = Source.DeriveKeyWithKdf(kdfConfig.SchemeName.ToEnum<KeyDerivationFunction>(),
-				preKey, kdfConfig.Salt, cipherKeySize + authKeySize,
+				preKey, kdfConfig.Salt, cipherKeySize + macKeySize,
 				kdfConfig.SchemeConfiguration);
 
 			// Retrieve the working encryption & authentication subkeys from the stretched manifest key
-			encryptionKey = new byte[cipherKeySize];
-			authenticationKey = new byte[authKeySize];
-			Array.Copy (stretchedWorkingMKeys, 0, encryptionKey, 0, cipherKeySize);
-			Array.Copy (stretchedWorkingMKeys, cipherKeySize, authenticationKey, 0, authKeySize);
+			cipherKey = new byte[cipherKeySize];
+			macKey = new byte[macKeySize];
+			Array.Copy (stretchedWorkingMKeys, 0, cipherKey, 0, cipherKeySize);
+			Array.Copy (stretchedWorkingMKeys, cipherKeySize, macKey, 0, macKeySize);
 
 			// Clear the pre-key and stretched manifest working combination key from memory
 			Array.Clear(preKey, 0, preKey.Length);

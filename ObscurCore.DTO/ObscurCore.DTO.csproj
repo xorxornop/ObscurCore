@@ -62,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CompressionConfiguration.cs" />
-    <Compile Include="Curve25519UM1ManifestCryptographyConfiguration.cs" />
     <Compile Include="EcKeyConfiguration.cs" />
     <Compile Include="VerificationFunctionType.cs" />
     <Compile Include="IDataTransferObject.cs" />
@@ -83,6 +82,11 @@
     <Compile Include="SymmetricManifestCryptographyConfiguration.cs" />
     <Compile Include="UM1ManifestCryptographyConfiguration.cs" />
     <Compile Include="VerificationFunctionConfiguration.cs" />
+    <Compile Include="JpakeRound1.cs" />
+    <Compile Include="JpakeRound2.cs" />
+    <Compile Include="JpakeRound3.cs" />
+    <Compile Include="AxolotlState.cs" />
+    <Compile Include="AxolotlExchange.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

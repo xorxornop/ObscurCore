@@ -2,6 +2,7 @@
 using System.Linq;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.DTO;
+using ObscurCore.Cryptography.KeyAgreement;
 
 namespace ObscurCore.Tests.Cryptography
 {
@@ -14,8 +15,8 @@ namespace ObscurCore.Tests.Cryptography
             Alice = new KeyProvider();
             Bob = new KeyProvider();
             // Assign each other's public keys as foreign key sources
-            Alice.ForeignCurve25519Keys = Bob.Curve25519Keypairs.Select(keypair => keypair.Public);
-            Bob.ForeignCurve25519Keys = Alice.Curve25519Keypairs.Select(keypair => keypair.Public);
+			Alice.ForeignEcKeys = Bob.EcKeypairs.Select(keypair => keypair.ExportPublicKey());
+			Bob.ForeignEcKeys = Alice.EcKeypairs.Select(keypair => keypair.ExportPublicKey());
         }
     }
 
@@ -24,9 +25,9 @@ namespace ObscurCore.Tests.Cryptography
     /// </summary>
     public class KeyProvider : IKeyProvider
     {
-		public KeyProvider(int keysToMake = 3) {
+		public KeyProvider(int keysToMake = 1) {
             var symKeys = new List<byte[]>();
-            var c25519Keypairs = new List<Curve25519Keypair>();
+			var ecKeypairs = new List<EcKeypair>();
 
             for (int i = 0; i < keysToMake; i++) {
                 var newKey = new byte[16];
@@ -37,41 +38,32 @@ namespace ObscurCore.Tests.Cryptography
                 StratCom.EntropySource.NextBytes(newKey);
                 var c25519PrivateKey = Curve25519.CreatePrivateKey(newKey);
                 var c25519PublicKey = Curve25519.CreatePublicKey(c25519PrivateKey);
-                var keypair = new Curve25519Keypair
-                    {
-                        Public = c25519PublicKey,
-                        Private = c25519PrivateKey
-                    };
-                c25519Keypairs.Add(keypair);
+				var keypair = new EcKeypair {
+					CurveProviderName = "DJB",
+					CurveName = DjbCurve.Curve25519.ToString(),
+					EncodedPublicKey = c25519PublicKey,
+					EncodedPrivateKey = c25519PrivateKey
+                };
+				ecKeypairs.Add(keypair);
             }
 
             SymmetricKeys = symKeys;
-            Curve25519Keypairs = c25519Keypairs;
+			EcKeypairs = ecKeypairs;
         }
 
         /// <summary>
         /// Symmetric key(s) that the local user owns.
         /// </summary>
-        public IEnumerable<byte[]> SymmetricKeys { get; private set; }
+		public IEnumerable<byte[]> SymmetricKeys { get; set; }
 
         /// <summary>
         /// Elliptic curve key(s) that the local user owns.
         /// </summary>
-        public IEnumerable<EcKeypair> EcKeypairs { get; private set; }
+		public IEnumerable<EcKeypair> EcKeypairs { get; set; }
 
         /// <summary>
         /// Elliptic curve public key(s) of foreign entities.
         /// </summary>
-        public IEnumerable<EcKeyConfiguration> ForeignEcKeys { get; private set; }
-
-        /// <summary>
-        /// Curve25519 keypairs that the local user owns.
-        /// </summary>
-        public IEnumerable<Curve25519Keypair> Curve25519Keypairs { get; private set; }
-
-        /// <summary>
-        /// Curve25519 public key(s) of foreign entities.
-        /// </summary>
-        public IEnumerable<byte[]> ForeignCurve25519Keys { get; internal set; }
+		public IEnumerable<EcKeyConfiguration> ForeignEcKeys { get; set; }
     }
 }

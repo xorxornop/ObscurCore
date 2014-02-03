@@ -226,12 +226,12 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 			for (int i = 0; i < r; i++)
 			{
 				for (int j = 0; j < scratch.Length; j++) { scratch[j] = x[j] ^ B[j + k]; }
-				Salsa20Core.Compute(8, scratch, 0, x, 0);
+				ObscurCore.Cryptography.Ciphers.Stream.Primitives.Salsa20Engine.Salsa(8, scratch, 0, x, 0);
 				Array.Copy(x, 0, y, m, 16);
 				k += 16;
 
 				for (int j = 0; j < scratch.Length; j++) { scratch[j] = x[j] ^ B[j + k]; }
-				Salsa20Core.Compute(8, scratch, 0, x, 0);
+				ObscurCore.Cryptography.Ciphers.Stream.Primitives.Salsa20Engine.Salsa(8, scratch, 0, x, 0);
 				Array.Copy(x, 0, y, m + n, 16);
 				k += 16;
 

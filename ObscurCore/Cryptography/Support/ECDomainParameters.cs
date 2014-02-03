@@ -110,5 +110,4 @@ namespace ObscurCore.Cryptography.Support
 				^	seed.GetHashCodeExt();
 		}
     }
-
 }

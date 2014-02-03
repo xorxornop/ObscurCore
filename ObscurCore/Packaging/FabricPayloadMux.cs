@@ -21,6 +21,7 @@ using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.DTO;
 using RingByteBuffer;
+using ObscurCore.Cryptography.Support;
 
 namespace ObscurCore.Packaging
 {
@@ -150,25 +151,33 @@ namespace ObscurCore.Packaging
 			if ((Writing && itemDecorator.BytesIn == item.ExternalLength && itemContainer.Buffer.Value.Length == 0) ||
 			   (!Writing && itemDecorator.BytesIn == item.InternalLength))
 			{
-				// Final stages of Encrypt-then-MAC authentication scheme
-				byte[] encryptionConfig = item.Encryption.SerialiseDto ();
-				// Authenticate the encryption configuration
-				itemAuthenticator.Update (encryptionConfig, 0, encryptionConfig.Length);
-				itemAuthenticator.Close ();
 				if (Writing) {
 					// Item is completely written out
 					Overhead += EmitTrailer (itemAuthenticator);
 					// Commit the MAC to item in payload manifest
-					item.Authentication.VerifiedOutput = itemAuthenticator.Mac;
+					item.AuthenticationVerifiedOutput = itemAuthenticator.Mac.DeepCopy();
 					// Commit the determined internal length to item in payload manifest
 					item.InternalLength = itemDecorator.BytesOut;
 				} else {
 					// Verify the authenticity of the item ciphertext and configuration
-					if (!itemAuthenticator.Mac.SequenceEqualConstantTime (item.Authentication.VerifiedOutput)) {
+					if (itemAuthenticator.Mac.SequenceEqualConstantTime (item.AuthenticationVerifiedOutput) == false) {
 						// Verification failed!1
 						throw new CiphertextAuthenticationException ("Payload item not authenticated.");
 					}
 				}
+
+				// Final stages of Encrypt-then-MAC authentication scheme
+				byte[] pathBytes = System.Text.Encoding.UTF8.GetBytes (item.RelativePath);
+				byte[] encryptionConfiguration = item.Encryption.SerialiseDto ();
+				byte[] authenticationConfiguration = item.Authentication.SerialiseDto ();
+				// Authenticate relative path, item lengths, and encryption + authentication configurations
+				itemAuthenticator.Update (pathBytes, 0, pathBytes.Length);
+				itemAuthenticator.Update (Pack.UInt32_To_LE((uint)item.ExternalLength), 0, 4);
+				itemAuthenticator.Update (Pack.UInt32_To_LE((uint)item.InternalLength), 0, 4);
+				itemAuthenticator.Update (encryptionConfiguration, 0, encryptionConfiguration.Length);
+				itemAuthenticator.Update (authenticationConfiguration, 0, authenticationConfiguration.Length);
+				itemAuthenticator.Close ();
+
 				// Mark the item as completed in the register
 				ItemCompletionRegister [Index] = true;
 				ItemsCompleted++;
@@ -196,4 +205,3 @@ namespace ObscurCore.Packaging
 	}
 #endif
 }
-

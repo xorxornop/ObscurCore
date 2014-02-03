@@ -38,15 +38,5 @@ namespace ObscurCore
         /// Elliptic curve public key(s) of foreign entities.
         /// </summary>
         IEnumerable<EcKeyConfiguration> ForeignEcKeys { get; }
-
-        /// <summary>
-        /// Curve25519 keypairs that the local user owns.
-        /// </summary>
-        IEnumerable<Curve25519Keypair> Curve25519Keypairs { get; }
-
-        /// <summary>
-        /// Curve25519 public key(s) of foreign entities.
-        /// </summary>
-        IEnumerable<byte[]> ForeignCurve25519Keys { get; }
     }
 }

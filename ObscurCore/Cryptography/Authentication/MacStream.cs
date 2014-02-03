@@ -32,7 +32,23 @@ namespace ObscurCore.Cryptography.Authentication
 		public byte[] Mac { get { return _output; } }
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.MacStream"/> class.
+		/// Initialises a new instance of the <see cref="ObscurCore.Cryptography.MacStream"/> class.
+		/// </summary>
+		/// <param name="binding">Stream to write to or read from.</param>
+		/// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
+		/// <param name="function">MAC function to instantiate.</param>
+		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
+		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
+		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
+		public MacStream (Stream binding, bool writing, MacFunction function, byte[] key, byte[] salt = null,
+			byte[] config = null, bool closeOnDispose = true) : base(binding, writing, closeOnDispose)
+		{
+			_mac = Source.CreateMacPrimitive (function, key, salt, config);
+			_output = new byte[_mac.MacSize];
+		}
+
+		/// <summary>
+		/// Initialises a new instance of the <see cref="ObscurCore.Cryptography.MacStream"/> class.
 		/// </summary>
 		/// <param name="binding">Stream to write to or read from.</param>
 		/// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
@@ -42,10 +58,8 @@ namespace ObscurCore.Cryptography.Authentication
 		/// <param name="output">Byte array where the finished MAC will be output to. Does not need to be initialised.</param>
 		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
 		public MacStream (Stream binding, bool writing, MacFunction function, out byte[] output, byte[] key, byte[] salt = null,
-			byte[] config = null, bool closeOnDispose = true) : base(binding, writing, closeOnDispose)
+			byte[] config = null, bool closeOnDispose = true) : this(binding, writing, function, key, salt, config, closeOnDispose)
 		{
-			_mac = Source.CreateMacPrimitive (function, key, salt, config);
-            _output = new byte[_mac.MacSize];
 		    output = _output;
 		}
 
@@ -56,12 +70,41 @@ namespace ObscurCore.Cryptography.Authentication
 				throw new ConfigurationInvalidException ("Configuration specifies function type other than MAC.");
 			}
 
-			_mac = Source.CreateMacPrimitive (config.FunctionName.ToEnum<MacFunction>(), key, config.Salt, config.FunctionConfiguration);
+			_mac = Source.CreateMacPrimitive (config.FunctionName.ToEnum<MacFunction>(), key, config.Salt, 
+				config.FunctionConfiguration, config.Nonce);
 			_output = new byte[_mac.MacSize];
 		}
 
 		public MacStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, out byte[] output, byte[] key, 
 			bool closeOnDispose = true) : this(binding, writing, config, key, closeOnDispose)
+		{
+			output = _output;
+		}
+
+		/// <summary>
+		/// Initialises a MAC authenticator stream using a pre-initialised MAC primitive.
+		/// </summary>
+		/// <param name="binding">Stream to write to or read from.</param>
+		/// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
+		/// <param name="macPrimitive">MAC primitive to use for authentication.</param>
+		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
+		public MacStream(Stream binding, bool writing, IMac macPrimitive, bool closeOnDispose = true) 
+			: base(binding, writing, closeOnDispose)
+		{
+			_mac = macPrimitive;
+			_output = new byte[_mac.MacSize];
+		}
+
+		/// <summary>
+		/// Initialises a MAC authenticator stream using a pre-initialised MAC primitive.
+		/// </summary>
+		/// <param name="binding">Binding.</param>
+		/// <param name="writing">If set to <c>true</c> writing.</param>
+		/// <param name="macPrimitive">MAC primitive to use for authentication.</param>
+		/// <param name="output">Byte array where the finished MAC will be output to. Does not need to be initialised.</param>
+		/// <param name="closeOnDispose">If set to <c>true</c> close on dispose.</param>
+		public MacStream(Stream binding, bool writing, IMac macPrimitive, out byte[] output, bool closeOnDispose = true) 
+			: this(binding, writing, macPrimitive, closeOnDispose)
 		{
 			output = _output;
 		}

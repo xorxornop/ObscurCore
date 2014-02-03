@@ -19,20 +19,18 @@ namespace ObscurCore.Tests.Packaging
 
             foreach (var fileInfo in files) {
                 var t = fileInfo;
-                var payloadItem = new PayloadItem()
-                    {
-                        RelativePath = t.Name,
-                        ExternalLength = t.Length,
-                        Type = PayloadItemType.Binary,
-                        //Compression = new CompressionConfiguration () { AlgorithmName = CompressionAlgorithms.LZ4.ToString() },
-                        //Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCiphers.AES, BlockCipherModes.CTR, BlockCipherPaddings.None),
-						Encryption = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Sosemanuk),
-						Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration()
-                    };
+				int authOutputSize;
+				var payloadItem = new PayloadItem {
+                    RelativePath = t.Name,
+                    ExternalLength = t.Length,
+                    Type = PayloadItemType.Binary,
+					Encryption = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Sosemanuk),
+					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B256, out authOutputSize)
+                };
 
 				payloadItem.EncryptionKey = new byte[payloadItem.Encryption.KeySizeBits / 8];
 				StratCom.EntropySource.NextBytes(payloadItem.EncryptionKey);
-				payloadItem.AuthenticationKey = new byte[payloadItem.Encryption.KeySizeBits / 8];
+				payloadItem.AuthenticationKey = new byte[payloadItem.Authentication.KeySizeBits / 8];
 				StratCom.EntropySource.NextBytes(payloadItem.AuthenticationKey);
 
                 payloadItem.SetStreamBinding(fileInfo.OpenRead);
@@ -48,16 +46,15 @@ namespace ObscurCore.Tests.Packaging
 
             foreach (var fileInfo in files) {
                 var t = fileInfo;
-                var payloadItem = new PayloadItem()
-                    {
-                        RelativePath = t.Name,
-                        ExternalLength = t.Length,
-                        Type = PayloadItemType.Binary,
-                        //Compression = new CompressionConfiguration () { AlgorithmName = CompressionAlgorithms.LZ4.ToString() },
-                        Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCipher.Serpent, 
+				int authOutputSize;
+				var payloadItem = new PayloadItem {
+                    RelativePath = t.Name,
+                    ExternalLength = t.Length,
+                    Type = PayloadItemType.Binary,
+                    Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCipher.Serpent, 
 						BlockCipherMode.Ctr, BlockCipherPadding.None),
-						Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration()
-                    };
+					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B256, out authOutputSize)
+                };
 
                 payloadItem.EncryptionKey = new byte[payloadItem.Encryption.KeySizeBits / 8];
                 StratCom.EntropySource.NextBytes(payloadItem.EncryptionKey);

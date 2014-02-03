@@ -25,12 +25,16 @@ namespace ObscurCore.Support
 		protected byte padding = (byte)'=';
 
 		/*		
-                * set up the decoding table.
-                */
+        * set up the decoding table.
+        */
 		protected readonly byte[] decodingTable = new byte[128];
 
 		protected void InitialiseDecodingTable()
 		{
+			for (int i = 0; i < decodingTable.Length; i++) {
+				decodingTable [i] = (byte)0xFF;
+			}
+
 			for (int i = 0; i < encodingTable.Length; i++)
 			{
 				decodingTable[encodingTable[i]] = (byte)i;
@@ -43,15 +47,15 @@ namespace ObscurCore.Support
 		}
 
 		/*		*
-                * encode the input data producing a base 64 output stream.
-                *
-                * @return the number of bytes produced.
-                */
+        * encode the input data producing a base 64 output stream.
+        *
+        * @return the number of bytes produced.
+        */
 		public int Encode(
-			byte[]        data,
-			int                off,
-			int                length,
-			Stream        outStream)
+			byte[]	data,
+			int		off,
+			int		length,
+			Stream	outStream)
 		{
 			int modulus = length % 3;
 			int dataLength = (length - modulus);
@@ -70,8 +74,8 @@ namespace ObscurCore.Support
 			}
 
 			/*			
-                        * process the tail end.
-                        */
+            * process the tail end.
+            */
 			int b1, b2, b3;
 			int d1, d2;
 
@@ -114,16 +118,16 @@ namespace ObscurCore.Support
 		}
 
 		/*		*
-                * decode the base 64 encoded byte data writing it to the given output stream,
-                * whitespace characters will be ignored.
-                *
-                * @return the number of bytes produced.
-                */
+        * decode the base 64 encoded byte data writing it to the given output stream,
+        * whitespace characters will be ignored.
+        *
+        * @return the number of bytes produced.
+        */
 		public int Decode(
-			byte[]        data,
-			int                off,
-			int                length,
-			Stream        outStream)
+			byte[]	data,
+			int		off,
+			int		length,
+			Stream	outStream)
 		{
 			byte b1, b2, b3, b4;
 			int outLen = 0;
@@ -161,6 +165,9 @@ namespace ObscurCore.Support
 
 				b4 = decodingTable[data[i++]];
 
+				if ((b1 | b2 | b3 | b4) >= 0x80)
+					throw new IOException("invalid characters encountered in base64 data");
+
 				outStream.WriteByte((byte)((b1 << 2) | (b2 >> 4)));
 				outStream.WriteByte((byte)((b2 << 4) | (b3 >> 2)));
 				outStream.WriteByte((byte)((b3 << 6) | b4));
@@ -176,9 +183,9 @@ namespace ObscurCore.Support
 		}
 
 		private int nextI(
-			byte[]        data,
-			int                i,
-			int                finish)
+			byte[]	data,
+			int		i,
+			int		finish)
 		{
 			while ((i < finish) && ignore((char)data[i]))
 			{
@@ -188,19 +195,19 @@ namespace ObscurCore.Support
 		}
 
 		/*		*
-                * decode the base 64 encoded string data writing it to the given output stream,
-                * whitespace characters will be ignored.
-                *
-                * @return the number of bytes produced.
-                */
+        * decode the base 64 encoded string data writing it to the given output stream,
+        * whitespace characters will be ignored.
+        *
+        * @return the number of bytes produced.
+        */
 		public int DecodeString(
-			string        data,
-			Stream        outStream)
+			string	data,
+			Stream	outStream)
 		{
 			// Platform Implementation
-//                        byte[] bytes = Convert.FromBase64String(data);
-//                        outStream.Write(bytes, 0, bytes.Length);
-//                        return bytes.Length;
+//			byte[] bytes = Convert.FromBase64String(data);
+//			outStream.Write(bytes, 0, bytes.Length);
+//			return bytes.Length;
 
 			byte b1, b2, b3, b4;
 			int length = 0;
@@ -238,6 +245,9 @@ namespace ObscurCore.Support
 
 				b4 = decodingTable[data[i++]];
 
+				if ((b1 | b2 | b3 | b4) >= 0x80)
+					throw new IOException("invalid characters encountered in base64 data");
+
 				outStream.WriteByte((byte)((b1 << 2) | (b2 >> 4)));
 				outStream.WriteByte((byte)((b2 << 4) | (b3 >> 2)));
 				outStream.WriteByte((byte)((b3 << 6) | b4));
@@ -253,16 +263,19 @@ namespace ObscurCore.Support
 		}
 
 		private int decodeLastBlock(
-			Stream        outStream,
-			char        c1,
-			char        c2,
-			char        c3,
-			char        c4)
+			Stream	outStream,
+			char	c1,
+			char	c2,
+			char	c3,
+			char	c4)
 		{
 			if (c3 == padding)
 			{
 				byte b1 = decodingTable[c1];
 				byte b2 = decodingTable[c2];
+
+				if ((b1 | b2) >= 0x80)
+					throw new IOException("invalid characters encountered at end of base64 data");
 
 				outStream.WriteByte((byte)((b1 << 2) | (b2 >> 4)));
 
@@ -275,6 +288,9 @@ namespace ObscurCore.Support
 				byte b2 = decodingTable[c2];
 				byte b3 = decodingTable[c3];
 
+				if ((b1 | b2 | b3) >= 0x80)
+					throw new IOException("invalid characters encountered at end of base64 data");
+
 				outStream.WriteByte((byte)((b1 << 2) | (b2 >> 4)));
 				outStream.WriteByte((byte)((b2 << 4) | (b3 >> 2)));
 
@@ -286,6 +302,9 @@ namespace ObscurCore.Support
 				byte b2 = decodingTable[c2];
 				byte b3 = decodingTable[c3];
 				byte b4 = decodingTable[c4];
+
+				if ((b1 | b2 | b3 | b4) >= 0x80)
+					throw new IOException("invalid characters encountered at end of base64 data");
 
 				outStream.WriteByte((byte)((b1 << 2) | (b2 >> 4)));
 				outStream.WriteByte((byte)((b2 << 4) | (b3 >> 2)));

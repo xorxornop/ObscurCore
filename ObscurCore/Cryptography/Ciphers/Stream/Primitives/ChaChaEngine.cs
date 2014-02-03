@@ -173,6 +173,81 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			x[14] = x14 + input[14];
 			x[15] = x15 + input[15];
 		}
+
+		public static void HChaCha(int rounds, uint[] input, int inOff, uint[] x, int xOff) {
+			if (rounds.IsBetween(2, 20) == false || (rounds & 1) == 1) {
+				throw new ArgumentException("Must be even and in the range 2 to 20.", "rounds");
+			}
+
+			uint x00 = input[inOff + 0];
+			uint x01 = input[inOff + 1];
+			uint x02 = input[inOff + 2];
+			uint x03 = input[inOff + 3];
+			uint x04 = input[inOff + 4];
+			uint x05 = input[inOff + 5];
+			uint x06 = input[inOff + 6];
+			uint x07 = input[inOff + 7];
+			uint x08 = input[inOff + 8];
+			uint x09 = input[inOff + 9];
+			uint x10 = input[inOff +10];
+			uint x11 = input[inOff +11];
+			uint x12 = input[inOff +12];
+			uint x13 = input[inOff +13];
+			uint x14 = input[inOff +14];
+			uint x15 = input[inOff +15];
+
+			for (int i = rounds; i > 0; i -= 2) {
+				x00 += x04; x12 = R(x12 ^ x00, 16);
+				x08 += x12; x04 = R(x04 ^ x08, 12);
+				x00 += x04; x12 = R(x12 ^ x00, 8);
+				x08 += x12; x04 = R(x04 ^ x08, 7);
+				x01 += x05; x13 = R(x13 ^ x01, 16);
+				x09 += x13; x05 = R(x05 ^ x09, 12);
+				x01 += x05; x13 = R(x13 ^ x01, 8);
+				x09 += x13; x05 = R(x05 ^ x09, 7);
+				x02 += x06; x14 = R(x14 ^ x02, 16);
+				x10 += x14; x06 = R(x06 ^ x10, 12);
+				x02 += x06; x14 = R(x14 ^ x02, 8);
+				x10 += x14; x06 = R(x06 ^ x10, 7);
+				x03 += x07; x15 = R(x15 ^ x03, 16);
+				x11 += x15; x07 = R(x07 ^ x11, 12);
+				x03 += x07; x15 = R(x15 ^ x03, 8);
+				x11 += x15; x07 = R(x07 ^ x11, 7);
+				x00 += x05; x15 = R(x15 ^ x00, 16);
+				x10 += x15; x05 = R(x05 ^ x10, 12);
+				x00 += x05; x15 = R(x15 ^ x00, 8);
+				x10 += x15; x05 = R(x05 ^ x10, 7);
+				x01 += x06; x12 = R(x12 ^ x01, 16);
+				x11 += x12; x06 = R(x06 ^ x11, 12);
+				x01 += x06; x12 = R(x12 ^ x01, 8);
+				x11 += x12; x06 = R(x06 ^ x11, 7);
+				x02 += x07; x13 = R(x13 ^ x02, 16);
+				x08 += x13; x07 = R(x07 ^ x08, 12);
+				x02 += x07; x13 = R(x13 ^ x02, 8);
+				x08 += x13; x07 = R(x07 ^ x08, 7);
+				x03 += x04; x14 = R(x14 ^ x03, 16);
+				x09 += x14; x04 = R(x04 ^ x09, 12);
+				x03 += x04; x14 = R(x14 ^ x03, 8);
+				x09 += x14; x04 = R(x04 ^ x09, 7);
+			}
+
+			x[xOff + 0] = x00 + input[inOff + 0];
+			x[xOff + 1] = x01 + input[inOff + 1];
+			x[xOff + 2] = x02 + input[inOff + 2];
+			x[xOff + 3] = x03 + input[inOff + 3];
+			x[xOff + 4] = x04 + input[inOff + 4];
+			x[xOff + 5] = x05 + input[inOff + 5];
+			x[xOff + 6] = x06 + input[inOff + 6];
+			x[xOff + 7] = x07 + input[inOff + 7];
+			x[xOff + 8] = x08 + input[inOff + 8];
+			x[xOff + 9] = x09 + input[inOff + 9];
+			x[xOff +10] = x10 + input[inOff +10];
+			x[xOff +11] = x11 + input[inOff +11];
+			x[xOff +12] = x12 + input[inOff +12];
+			x[xOff +13] = x13 + input[inOff +13];
+			x[xOff +14] = x14 + input[inOff +14];
+			x[xOff +15] = x15 + input[inOff +15];
+		}
 	}
 }
 

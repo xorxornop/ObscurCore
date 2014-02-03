@@ -12,8 +12,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
                 FunctionName = "TestForNow",
                 FunctionConfiguration = new byte[] { 0x01, 0x02, 0x03 },
                 Salt = new byte[] { 0x03, 0x01, 0x04 },
-				AdditionalData = new byte[] { 0x03, 0x01, 0x04 },
-                VerifiedOutput = new byte[] { 0x03, 0x02, 0x01 }
+				AdditionalData = new byte[] { 0x03, 0x01, 0x04 }
             };
 
             var stream = SerialiseToMemory(inputObj);

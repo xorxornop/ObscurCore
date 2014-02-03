@@ -57,7 +57,6 @@
     <Reference Include="protobuf-net">
       <HintPath>..\ObscurCore.DTO\lib\protobuf-net\net30\protobuf-net.dll</HintPath>
     </Reference>
-    <Reference Include="Mono.Simd" />
     <Reference Include="RingByteBuffer">
       <HintPath>lib\RingByteBuffer\RingByteBuffer.dll</HintPath>
     </Reference>
@@ -107,7 +106,6 @@
     <Compile Include="Cryptography\CryptoException.cs" />
     <Compile Include="Cryptography\IncompleteBlockException.cs" />
     <Compile Include="Cryptography\Support\Pack.cs" />
-    <Compile Include="Curve25519Keypair.cs" />
     <Compile Include="EcKeypair.cs" />
     <Compile Include="ItemKeyMissingException.cs" />
     <Compile Include="Cryptography\KeyAgreement\Sec2EllipticCurve.cs" />
@@ -115,7 +113,6 @@
     <Compile Include="Cryptography\Entropy\CsPseudorandomNumberGenerator.cs" />
     <Compile Include="Cryptography\Authentication\HashFunction.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519UM1Exchange.cs" />
     <Compile Include="Cryptography\KeyConfirmationException.cs" />
     <Compile Include="Cryptography\KeyConfirmation\ConfirmationUtility.cs" />
     <Compile Include="Cryptography\KeyDerivation\KeyDerivationFunction.cs" />
@@ -210,10 +207,8 @@
     <Compile Include="Cryptography\Authentication\AuthenticationConfigurationFactory.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigest.cs" />
     <None Include="Cryptography\MacSizeException.cs" />
-    <Compile Include="Cryptography\Authentication\EtMKeyStretchingUtility.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Utility.cs" />
     <Compile Include="Packaging\PayloadMux.cs" />
-    <Compile Include="Cryptography\KeyDerivation\Primitives\Salsa20Core.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Pbkdf2.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Scrypt.cs" />
     <Compile Include="DataLengthException.cs" />
@@ -221,10 +216,6 @@
     <Compile Include="Cryptography\Ciphers\Block\Modes\CtrBlockCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\XSalsa20Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\ThreefishEngine.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Primitives\Threefish256Engine.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Primitives\Threefish256SimdEngine.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\Skein.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Primitives\Threefish512Engine.cs" />
     <Compile Include="Support\IEncoder.cs" />
     <Compile Include="Support\HexTranslator.cs" />
     <Compile Include="Support\HexEncoder.cs" />
@@ -326,6 +317,48 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\ZSignedDigitR2LMultiplier.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\SipHashMac.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\ChaChaEngine.cs" />
+    <None Include="Cryptography\Ciphers\Block\Primitives\Threefish256SimdEngine.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\SkeinEngine.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\SkeinDigest.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\SkeinMac.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\SkeinParameters.cs" />
+    <Compile Include="IMemoable.cs" />
+    <None Include="Cryptography\Authentication\Primitives\Skein.cs" />
+    <Compile Include="MemoableResetException.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Primitives\EcJpakeParticipant.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\FixedPointCombMultiplier.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\FixedPointPreCompInfo.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\FixedPointUtilities.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\Nat192.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\Nat256.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\Nat512.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP192K1Curve.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP192K1Field.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP192K1FieldElement.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP192K1Point.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP192R1Curve.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP192R1Field.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP192R1FieldElement.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP192R1Point.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP256K1Curve.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP256K1Field.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP256K1FieldElement.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP256K1Point.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP256R1Curve.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP256R1Field.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP256R1FieldElement.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP256R1Point.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP521R1Curve.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP521R1Field.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP521R1FieldElement.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP521R1Point.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Information\EcNamedCurveInformation.cs" />
+    <Compile Include="Information\IPrimitiveInformation.cs" />
+    <Compile Include="Cryptography\KeyAgreement\NamedEllipticCurves.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Curve25519Field.cs" />
+    <Compile Include="Cryptography\KeyAgreement\DjbCurve.cs" />
+    <Compile Include="Cryptography\Ciphers\SymmetricCipherKeyFactory.cs" />
+    <Compile Include="Cryptography\Authentication\KeyStretchingUtility.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />
@@ -361,5 +394,7 @@
     <Folder Include="Cryptography\Signing\" />
     <Folder Include="Cryptography\Signing\Primitives\" />
     <Folder Include="Cryptography\Signing\Primitives\Ed25519Ref10\" />
+    <Folder Include="Cryptography\Support\Math\EllipticCurve\Custom\" />
+    <Folder Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\" />
   </ItemGroup>
 </Project>

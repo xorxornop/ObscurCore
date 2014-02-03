@@ -66,6 +66,12 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		/*		* Polynomial accumulator */
 		private uint h0, h1, h2, h3, h4;
 
+
+		public Poly1305Mac ()
+		{
+			this.cipher = null;
+		}
+
 		/*		*
 	     * Constructs a Poly1305 MAC, using a 128 bit block cipher.
 	     */
@@ -84,12 +90,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			get { return BLOCK_SIZE; }
 		}
 
-		/// <summary>
-		/// This initialisation method cannot be used. Do not call this method.
-		/// </summary>
-		/// <param name="key">Key.</param>
 		public void Init (byte[] key) {
-			throw new NotSupportedException ("An IV/nonce is required for Poly1305 initialisation.");
+			InitInternal (key, null, true);
 		}
 
 		public void Init (byte[] key, byte[] iv) {
@@ -106,10 +108,13 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			} else if (key.Length != 32) {
 				throw new ArgumentException ("Poly1305 initialisation requires exactly 32 bytes of key.", "key");
 			}
-			if (nonce == null) {
-				throw new InvalidOperationException ("Poly1305 initialisation requires a nonce/IV.");
-			} else if (key.Length != 32) {
-				throw new ArgumentException ("Poly1305 initialisation requires exactly 16 bytes of nonce/IV.", "key");
+
+			if (cipher != null) {
+				if (nonce == null) {
+					throw new InvalidOperationException ("Poly1305 initialisation requires a nonce/IV when being used with a block cipher.");
+				} else if (nonce.Length != 16) {
+					throw new ArgumentException ("Poly1305 initialisation requires exactly 16 bytes of nonce/IV.", "nonce");
+				}
 			}
 
 			byte[] clampedKey;
@@ -147,21 +152,32 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			s4 = r4 * 5;
 
 			// Compute encrypted nonce
-			byte[] cipherKey = new byte[BLOCK_SIZE];
-			Array.Copy(key, 0, cipherKey, 0, cipherKey.Length);
+			byte[] kBytes;
+			if (cipher != null) {
+				kBytes = new byte[BLOCK_SIZE];
+				Array.Copy(key, 0, kBytes, 0, kBytes.Length);
 
-			cipher.Init(true, cipherKey, null);
-			cipher.ProcessBlock(nonce, 0, cipherKey, 0);
+				cipher.Init(true, kBytes, null);
+				cipher.ProcessBlock(nonce, 0, kBytes, 0);
+			} else {
+				kBytes = key;
+			}
 
-			k0 = Pack.LE_To_UInt32(cipherKey, 0);
-			k1 = Pack.LE_To_UInt32(cipherKey, 4);
-			k2 = Pack.LE_To_UInt32(cipherKey, 8);
-			k3 = Pack.LE_To_UInt32(cipherKey, 12);
+			k0 = Pack.LE_To_UInt32(kBytes, 0);
+			k1 = Pack.LE_To_UInt32(kBytes, 4);
+			k2 = Pack.LE_To_UInt32(kBytes, 8);
+			k3 = Pack.LE_To_UInt32(kBytes, 12);
 		}
 
 		public string AlgorithmName
 		{
-			get { return "Poly1305-" + cipher.AlgorithmName; }
+			get { 
+				if (cipher != null) {
+					return "Poly1305-" + cipher.AlgorithmName;
+				} else {
+					return "Poly1305";
+				}
+			}
 		}
 
 		public void Update (byte input) {

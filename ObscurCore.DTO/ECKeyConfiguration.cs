@@ -28,23 +28,33 @@ namespace ObscurCore.DTO
     [ProtoContract]
     public class EcKeyConfiguration : IDataTransferObject, IEquatable<EcKeyConfiguration>, IEcKeyConfiguration
     {
-        /// <summary>
+		[ProtoMember(1, IsRequired = true)]
+		public bool PublicComponent { get; set; }
+
+		/// <summary>
         /// Name of the curve provider. Used to look up relevant domain parameters to interpret the encoded key.
         /// </summary>
-        [ProtoMember(1, IsRequired = true)]
+		[ProtoMember(2, IsRequired = true)]
         public string CurveProviderName { get; set; }
 		
         /// <summary>
         /// Name of the elliptic curve in the provider's selection.
         /// </summary>
-        [ProtoMember(2, IsRequired = true)]
+		[ProtoMember(3, IsRequired = true)]
         public string CurveName { get; set; }
 		
         /// <summary>
         /// Byte-array-encoded form of the key.
         /// </summary>
-        [ProtoMember(3, IsRequired = true)]
+		[ProtoMember(4, IsRequired = true)]
         public byte[] EncodedKey { get; set; }
+
+		/// <summary>
+		/// Any additional data required for the key 
+		/// (for example, special formatting, if any).
+		/// </summary>
+		[ProtoMember(5, IsRequired = true)]
+		public byte[] AdditionalData { get; set; }
 
         public override bool Equals (object obj)
         {

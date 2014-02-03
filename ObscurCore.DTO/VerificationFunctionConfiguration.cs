@@ -36,7 +36,7 @@ namespace ObscurCore.DTO
         
         /// <summary>
 		/// Name of the function used to verify some data (e.g. a key, a payload item, etc.). 
-		/// This may be a key derivation function, HMAC function, hash function, etc.
+		/// This may be a key derivation function, MAC function, hash function, etc.
 		/// </summary>
 		[ProtoMember(2, IsRequired = true)]
 		public string FunctionName { get; set; }
@@ -49,23 +49,28 @@ namespace ObscurCore.DTO
 		public byte[] FunctionConfiguration { get; set; }
 
 		/// <summary>
-		/// Salt for the verification function, where applicable.
+		/// Size of the key in bits for the verification function, where applicable.
 		/// </summary>
 		[ProtoMember(4, IsRequired = false)]
+		public int KeySizeBits { get; set; }
+
+		/// <summary>
+		/// Salt for the verification function, where applicable.
+		/// </summary>
+		[ProtoMember(5, IsRequired = false)]
+		public byte[] Nonce { get; set; }
+
+		/// <summary>
+		/// Salt for the verification function, where applicable.
+		/// </summary>
+		[ProtoMember(6, IsRequired = false)]
 		public byte[] Salt { get; set; }
 
 		/// <summary>
 		/// Additional data for the verification function, where applicable.
 		/// </summary>
-		[ProtoMember(5, IsRequired = false)]
+		[ProtoMember(7, IsRequired = false)]
 		public byte[] AdditionalData { get; set; }
-
-		/// <summary>
-		/// Output of the confirmation/verification scheme given correct input data. 
-		/// Usually a KDF or HMAC digest in practice, but varies by scheme.
-		/// </summary>
-		[ProtoMember(6, IsRequired = true)]
-		public byte[] VerifiedOutput { get; set; }
 
 		public override bool Equals (object obj)
 		{
@@ -88,7 +93,7 @@ namespace ObscurCore.DTO
 			return string.Equals(FunctionName, other.FunctionName) &&
 				FunctionConfiguration !=  null ? FunctionConfiguration.SequenceEqual(other.FunctionConfiguration) : true && 
 				Salt != null ? Salt.SequenceEqual(other.Salt) : true && 
-				VerifiedOutput.SequenceEqual(other.VerifiedOutput);
+				AdditionalData != null ? AdditionalData.SequenceEqual(other.AdditionalData) : true;
 		}
 
 		/// <summary>
@@ -104,7 +109,6 @@ namespace ObscurCore.DTO
 				hashCode = (hashCode * 397) ^ (FunctionConfiguration != null ? FunctionConfiguration.GetHashCode() : 0); // can be null
 				hashCode = (hashCode * 397) ^ (Salt != null ? Salt.GetHashCode() : 0); // can be null
 				hashCode = (hashCode * 397) ^ (AdditionalData != null ? AdditionalData.GetHashCode() : 0); // can be null
-				hashCode = (hashCode * 397) ^ VerifiedOutput.GetHashCode();
 				return hashCode;
 			}
 		}
@@ -119,7 +123,7 @@ namespace ObscurCore.DTO
         
 		/// <summary>
 		/// Name of the function used to verify some data (e.g. a key, a payload item, etc.). 
-		/// This may be a key derivation function, HMAC function, hash function, etc.
+		/// This may be a key derivation function, MAC function, hash function, etc.
 		/// </summary>
 		string FunctionName { get; }
 
@@ -128,6 +132,10 @@ namespace ObscurCore.DTO
 		/// </summary>
 		/// <remarks>Format of the configuration is that of the consuming type.</remarks>
 		byte[] FunctionConfiguration { get; }
+
+		int KeySizeBits { get; }
+
+		byte[] Nonce { get; }
 
 		/// <summary>
 		/// Salt for the verification function, where applicable.
@@ -138,12 +146,6 @@ namespace ObscurCore.DTO
 		/// Additional data for the verification function, where applicable.
 		/// </summary>
 		byte[] AdditionalData { get; set; }
-
-		/// <summary>
-		/// Output of the confirmation/verification scheme given correct input data. 
-		/// Usually a KDF or HMAC digest in practice, but varies by scheme.
-		/// </summary>
-		byte[] VerifiedOutput { get; }
 	}
 }
 

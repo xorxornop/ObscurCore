@@ -41,23 +41,35 @@ namespace ObscurCore.DTO
 		public VerificationFunctionConfiguration Authentication { get; set; }
 
 		/// <summary>
+		/// Output of the key confirmation scheme given correct input data.
+		/// </summary>
+		[ProtoMember(3, IsRequired = true)]
+		public byte[] AuthenticationVerifiedOutput { get; set; }
+
+		/// <summary>
 		/// Configuration for the key confirmation scheme used to validate the existence and 
 		/// validity of keying material at respondent's side without disclosing the key itself.
 		/// </summary>
-		[ProtoMember(3, IsRequired = false)]
+		[ProtoMember(4, IsRequired = false)]
 		public VerificationFunctionConfiguration KeyConfirmation { get; set; }
+
+		/// <summary>
+		/// Output of the key confirmation scheme given correct input data.
+		/// </summary>
+		[ProtoMember(5, IsRequired = false)]
+		public byte[] KeyConfirmationVerifiedOutput { get; set; }
 
 		/// <summary>
 		/// Configuration for the scheme used to derive a key from the shared secret.
 		/// </summary>
-		[ProtoMember(4, IsRequired = true)]
+		[ProtoMember(6, IsRequired = true)]
 		public KeyDerivationConfiguration KeyDerivation { get; set; }
 
-        /// <summary>
-        /// Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
-        /// </summary>
-		[ProtoMember(5, IsRequired = true)]
-        public EcKeyConfiguration EphemeralKey { get; set; }
+		/// <summary>
+		/// Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
+		/// </summary>
+		[ProtoMember(7, IsRequired = true)]
+		public EcKeyConfiguration EphemeralKey { get; set; }
 
         public override bool Equals (object obj)
         {

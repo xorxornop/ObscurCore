@@ -199,7 +199,17 @@ namespace ObscurCore
 			if (a == null || b == null)
 				return false;
 
-			return SequenceEqual(a, b);
+			return SequenceEqual<int>(a, b);
+		}
+
+		public static bool SequenceEqual(this uint[] a, uint[] b) {
+			if (a == b)
+				return true;
+
+			if (a == null || b == null)
+				return false;
+
+			return SequenceEqual<uint>(a, b);
 		}
 
 		private static bool SequenceEqual<T> (T[] a, T[] b) where T: struct {

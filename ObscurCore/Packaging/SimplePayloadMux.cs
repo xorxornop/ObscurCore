@@ -21,6 +21,7 @@ using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
+using ObscurCore.Cryptography.Support;
 
 namespace ObscurCore.Packaging
 {
@@ -79,24 +80,6 @@ namespace ObscurCore.Packaging
 			itemDecorator.Close ();
 			Overhead += Writing ? EmitTrailer(itemAuthenticator) : ConsumeTrailer(itemAuthenticator);
 
-			// Final stages of Encrypt-then-MAC authentication scheme
-			byte[] encryptionConfig = item.Encryption.SerialiseDto ();
-			// Authenticate the encryption configuration
-			itemAuthenticator.Update (encryptionConfig, 0, encryptionConfig.Length);
-			itemAuthenticator.Close ();
-
-			// Authentication
-			if(Writing) {
-				// Commit the MAC to item in payload manifest
-				item.Authentication.VerifiedOutput = itemAuthenticator.Mac;
-			} else {
-				// Verify the authenticity of the item ciphertext and configuration
-				if (!itemAuthenticator.Mac.SequenceEqualConstantTime(item.Authentication.VerifiedOutput)) {
-					// Verification failed!
-					throw new CiphertextAuthenticationException ("Payload item not authenticated.");
-				}
-			}
-
 			// Length checks & commits
 			if(Writing) {
 				// Check if pre-stated length matches what was actually written
@@ -111,6 +94,30 @@ namespace ObscurCore.Packaging
 				}
 				if(itemDecorator.BytesOut != item.ExternalLength) {
 					throw new InvalidDataException ("Mismatch between stated item external length and actual output length.");
+				}
+			}
+
+			// Final stages of Encrypt-then-MAC authentication scheme
+			byte[] pathBytes = System.Text.Encoding.UTF8.GetBytes (item.RelativePath);
+			byte[] encryptionConfiguration = item.Encryption.SerialiseDto ();
+			byte[] authenticationConfiguration = item.Authentication.SerialiseDto ();
+			// Authenticate relative path, item lengths, and encryption + authentication configurations
+			itemAuthenticator.Update (pathBytes, 0, pathBytes.Length);
+			itemAuthenticator.Update (Pack.UInt32_To_LE((uint)item.ExternalLength), 0, 4);
+			itemAuthenticator.Update (Pack.UInt32_To_LE((uint)item.InternalLength), 0, 4);
+			itemAuthenticator.Update (encryptionConfiguration, 0, encryptionConfiguration.Length);
+			itemAuthenticator.Update (authenticationConfiguration, 0, authenticationConfiguration.Length);
+			itemAuthenticator.Close ();
+
+			// Authentication
+			if(Writing) {
+				// Commit the MAC to item in payload manifest
+				item.AuthenticationVerifiedOutput = itemAuthenticator.Mac.DeepCopy();
+			} else {
+				// Verify the authenticity of the item ciphertext and configuration
+				if (itemAuthenticator.Mac.SequenceEqualConstantTime(item.AuthenticationVerifiedOutput) == false) {
+					// Verification failed!
+					throw new CiphertextAuthenticationException ("Payload item not authenticated.");
 				}
 			}
 
@@ -158,4 +165,3 @@ namespace ObscurCore.Packaging
 
 	}
 }
-

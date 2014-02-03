@@ -16,7 +16,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 	*/
 	internal static class Curve25519HansWolff
 	{
-		/*		 key size */
+		/* key size */
 		public const int KeySize = 32;
 
 		/*		 group order (a prime near 2^252+2^124) */
@@ -33,6 +33,52 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 		};
 
 		/*		******** KEY AGREEMENT *********/
+
+		/// <summary>
+		/// Private key clamping (inline, for performance)
+		/// </summary>
+		/// <param name="key">[out] 32 random bytes</param>
+		public static void ClampPrivateKeyInline(byte[] key)
+		{
+			if (key == null) throw new ArgumentNullException("key");
+			if (key.Length != 32) throw new ArgumentException(String.Format("key must be 32 bytes long (but was {0} bytes long)", key.Length));
+
+			key[31] &= 0x7F;
+			key[31] |= 0x40;
+			key[0] &= 0xF8;
+		}
+
+		/// <summary>
+		/// Private key clamping
+		/// </summary>
+		/// <param name="rawKey">[out] 32 random bytes</param>
+		public static byte[] ClampPrivateKey(byte[] rawKey)
+		{
+			if (rawKey == null) throw new ArgumentNullException("rawKey");
+			if (rawKey.Length != 32) throw new ArgumentException(String.Format("rawKey must be 32 bytes long (but was {0} bytes long)", rawKey.Length), "rawKey");
+
+			var res = new byte[32];
+			Array.Copy(rawKey, res, 32);
+
+			res[31] &= 0x7F;
+			res[31] |= 0x40;
+			res[0] &= 0xF8;
+
+			return res;
+		}
+
+		/// <summary>
+		/// Key-pair generation (inline, for performance)
+		/// </summary>
+		/// <param name="publicKey">[out] public key</param>
+		/// <param name="signingKey">[out] signing key (ignored if NULL)</param>
+		/// <param name="privateKey">[out] private key</param>
+		/// <remarks>WARNING: if signingKey is not NULL, this function has data-dependent timing</remarks>
+		public static void KeyGenInline(byte[] publicKey, byte[] signingKey, byte[] privateKey)
+		{
+			ClampPrivateKeyInline(privateKey);
+			Core(publicKey, signingKey, privateKey, null);
+		}
 
 		/// <summary>
 		/// Generates the public key out of the clamped private key
@@ -75,8 +121,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 		/* sahn0:
 		* Using this class instead of long[10] to avoid bounds checks. */
 
-		private struct Long10
+		private sealed class Long10
 		{
+			public Long10()
+			{
+			}
 
 			public Long10(
 				long n0, long n1, long n2, long n3, long n4,
@@ -101,7 +150,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 
 		static void Copy32(byte[] source, byte[] destination)
 		{
-			Buffer.BlockCopy(source, 0, destination, 0, 32);
+			Array.Copy(source, 0, destination, 0, 32);
 		}
 
 		/*		 p[m..n+m-1] = q[m..n+m-1] + z * x */
