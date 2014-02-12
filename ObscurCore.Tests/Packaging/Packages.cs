@@ -36,7 +36,7 @@ namespace ObscurCore.Tests.Packaging
 			TimeSpan enc, dec;
 			using (var ms = new MemoryStream ()) {
 				var sw = Stopwatch.StartNew ();
-				var package = new Package (preKey, scheme);
+				var package = new PackageWriter (preKey, scheme);
 				foreach (var file in IOTestBase.LargeBinaryFileList) {
 					package.AddFile (file.FullName);
 				}
@@ -52,7 +52,7 @@ namespace ObscurCore.Tests.Packaging
 				ms.Seek (0, SeekOrigin.Begin);
 				sw.Start ();
 				// Now read it back
-				var readingPackage = Package.FromStream (ms, KeyProviders.Alice);
+				var readingPackage = PackageReader.FromStream (ms, KeyProviders.Alice);
 				readingPackage.ReadToDirectory (IOTestBase.PackageDestinationDirectory.FullName);
 				sw.Stop ();
 				dec = sw.Elapsed;
@@ -93,11 +93,11 @@ namespace ObscurCore.Tests.Packaging
 			TimeSpan enc, dec;
 			using (var ms = new MemoryStream ()) {
 				var sw = Stopwatch.StartNew ();
-				var package = new Package (senderKeyEnumerated, receiverKeyEnumerated, scheme);
+				var packageWriter = new PackageWriter (senderKeyEnumerated, receiverKeyEnumerated, scheme);
 				foreach (var file in IOTestBase.LargeBinaryFileList) {
-					package.AddFile (file.FullName);
+					packageWriter.AddFile (file.FullName);
 				}
-				package.Write (ms, false);
+				packageWriter.Write (ms, false);
 				sw.Stop ();
 				enc = sw.Elapsed;
 				sw.Reset ();
@@ -109,8 +109,8 @@ namespace ObscurCore.Tests.Packaging
 				ms.Seek (0, SeekOrigin.Begin);
 				sw.Start ();
 				// Now read it back
-				var readingPackage = Package.FromStream (ms, KeyProviders.Bob);
-				readingPackage.ReadToDirectory (IOTestBase.PackageDestinationDirectory.FullName);
+				var packageReader = PackageReader.FromStream (ms, KeyProviders.Bob);
+				packageReader.ReadToDirectory (IOTestBase.PackageDestinationDirectory.FullName);
 				sw.Stop ();
 				dec = sw.Elapsed;
 			}

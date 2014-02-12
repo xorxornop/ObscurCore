@@ -1,5 +1,5 @@
 //
-//  Copyright 2013  Matthew Ducker
+//  Copyright 2014  Matthew Ducker
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -49,36 +49,31 @@ namespace ObscurCore.Cryptography.Entropy
 		}
 
 		/// <summary>
-		/// Takes 4 bytes from the CSPRNG and truncates the output to a specified number of bits. 
-		/// Truncated data is discarded. 
-		/// Caution: No input validation is performed.
-		/// </summary>
-		/// <returns>Truncated generated integer.</returns>
-		/// <param name="bitsToCollect">Bits to collect out of a possible 32.</param>
-		protected internal int NextBits (int bitsToCollect) {
-			uint mask = 0x00000001u << (bitsToCollect - 1);
-			uint num = NextUInt32 ();
-			return (int)(num & mask);
-		}
-
-		/// <summary>
-		/// Generate an integer between 0 and maxValue, inclusive.
+		/// Generate an integer between 0 (inclusive) and maxValue (exclusive).
 		/// </summary>
 		/// <param name="maxValue">Maximum value of output, inclusive.</param>
 		public override int Next (int maxValue) {
-			if (++maxValue <= 0) // maxValue now denotes an EXCLUSIVE maximum, rather than inclusive
-				throw new ArgumentException("n must be positive");
+			if (maxValue < 2) {
+				if (maxValue < 0)
+					throw new ArgumentOutOfRangeException("maxValue < 0");
 
-			if ((maxValue & -maxValue) == maxValue)  // i.e., n is a power of 2
-				return (int)((maxValue * (long)NextBits(31)) >> 31);
+				return 0;
+			}
 
-			int bits, val;
+			// Test whether maxValue is a power of 2
+			if ((maxValue & -maxValue) == maxValue) {
+				int val = Next() & Int32.MaxValue;
+				long lr = ((long) maxValue * (long) val) >> 31;
+				return (int) lr;
+			}
+
+			int bits, result;
 			do {
-				bits = NextBits(31);
-				val = bits % maxValue;
-			} while (bits - val + (maxValue - 1) < 0);
+				bits = Next() & Int32.MaxValue;
+				result = bits % maxValue;
+			} while (bits - result + (maxValue - 1) < 0); // Ignore results near overflow
 
-			return val;
+			return result;
 		}
 
 		/// <summary>
@@ -87,22 +82,36 @@ namespace ObscurCore.Cryptography.Entropy
 		/// <param name="minValue">Minimum value of output, inclusive.</param>
 		/// <param name="maxValue">Maximum value of output, inclusive.</param>
 		public override int Next(int minValue, int maxValue) {
-			int range = maxValue - minValue;
-			int num = minValue + Next (range);
-			return num;
+			if (maxValue <= minValue) {
+				if (maxValue == minValue)
+					return minValue;
+
+				throw new ArgumentException("maxValue cannot be less than minValue");
+			}
+
+			int diff = maxValue - minValue;
+			if (diff > 0)
+				return minValue + Next(diff);
+
+			int i;
+			do {
+				i = Next();
+			} while (i < minValue && i > maxValue);
+
+			return i;
         }
 
 		/// <summary>
-		/// Generate an integer.
+		/// Generate an integer between zero and the maximum positive range of an Int32.
 		/// </summary>
 		public override int Next() {
 			NextBytes(intBuf);
-			int num = intBuf.LittleEndianToInt32 ();
+			int num = intBuf.LittleEndianToInt32 () & Int32.MaxValue;
 			return num;
 		}
 
 		/// <summary>
-		/// Generate an unsigned integer.
+		/// Generate a 32-bit unsigned integer.
 		/// </summary>
 		public UInt32 NextUInt32() {
 			NextBytes(intBuf);
@@ -113,7 +122,7 @@ namespace ObscurCore.Cryptography.Entropy
 		
 		protected override double Sample () {
 			NextBytes(dblBuf);
-			var ul = BitConverter.ToUInt64(dblBuf, 0) >> 11; // cleaner version
+			var ul = dblBuf.LittleEndianToUInt64() >> 11;
 			return ul / (double) (1UL << 53);
 		}
 

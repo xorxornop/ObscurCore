@@ -34,7 +34,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		
 		public Pbkdf2Module (int outputSize, byte[] config) {
 			_outputSize = outputSize;
-            var pbkdf2Config = StratCom.DeserialiseDataTransferObject<PBKDF2Configuration>(config);
+            var pbkdf2Config = StratCom.DeserialiseDataTransferObject<Pbkdf2Configuration>(config);
 		    _iterations = pbkdf2Config.Iterations;
 //		    _algorithm = pbkdf2Config.AlgorithmName;
 		}
@@ -67,11 +67,11 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		}
 		
 		public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, byte[] config) {
-			var pbkdf2Config = StratCom.DeserialiseDataTransferObject<PBKDF2Configuration>(config);
+			var pbkdf2Config = StratCom.DeserialiseDataTransferObject<Pbkdf2Configuration>(config);
 			return DeriveKeyWithConfig (key, salt, outputSize, pbkdf2Config);
 		}
 
-        public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, PBKDF2Configuration config) {
+        public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, Pbkdf2Configuration config) {
 			if(!config.AlgorithmName.Equals(DefaultAlgorithm)) throw new ArgumentException();
 			var hmac = Source.CreateHmacPrimitive (ObscurCore.Cryptography.Authentication.HashFunction.Sha256, key, null);
 			return Pbkdf2.ComputeDerivedKey (hmac, salt, config.Iterations, outputSize);

@@ -54,14 +54,6 @@ namespace ObscurCore.DTO
         [ProtoMember(4, IsRequired = false)]
         public byte[] PrngConfiguration { get; set; }
 
-        /// <summary>
-        /// Offset at which the payload may be found 
-        /// relative to the manifest end in the bytestream. 
-        /// This allows for payload I/O frameshifting to increase security.
-        /// </summary>
-		[ProtoMember(5)]
-        public int Offset { get; set; }
-
         public override bool Equals (object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -84,10 +76,7 @@ namespace ObscurCore.DTO
                    SchemeConfiguration.SequenceEqual(other.SchemeConfiguration)) && 
                    string.Equals(PrngName, other.PrngName) &&
                    (PrngConfiguration == null ? other.PrngConfiguration == null : 
-                   PrngConfiguration.SequenceEqual(other.PrngConfiguration))/* && 
-                   string.Equals(SecondaryPRNGName, other.SecondaryPRNGName) && 
-                   (SecondaryPRNGConfiguration == null ? other.SecondaryPRNGConfiguration == null : 
-                   SecondaryPRNGConfiguration.SequenceEqual(other.SecondaryPRNGConfiguration))*/;
+                   PrngConfiguration.SequenceEqual(other.PrngConfiguration));
         }
 
         /// <summary>
@@ -103,11 +92,6 @@ namespace ObscurCore.DTO
                 hashCode = (hashCode * 397) ^ (SchemeConfiguration != null ? SchemeConfiguration.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (PrngName != null ? PrngName.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (PrngConfiguration != null ? PrngConfiguration.GetHashCode() : 0);
-                /*
-                hashCode = (hashCode * 397) ^ (SecondaryPRNGName != null ? SecondaryPRNGName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (SecondaryPRNGConfiguration != null ? SecondaryPRNGConfiguration.GetHashCode() : 0);
-                */
-                hashCode = (hashCode * 397) ^ Offset.GetHashCode();
                 return hashCode;
             }
         }
@@ -137,28 +121,5 @@ namespace ObscurCore.DTO
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
         byte[] PrngConfiguration { get; }
-
-        ///// <summary>
-        ///// Name of the PRNG used for other tasks that the layout scheme may require. 
-        ///// </summary>
-        ///// <remarks>
-        ///// Convert this name to an enumeration when used internally.
-        ///// </remarks>			
-        //string SecondaryPrngName { get; }
-
-        ///// <summary>
-        ///// Configuration for the auxillary PRNG.
-        ///// </summary>
-        ///// <remarks>
-        ///// Format of the configuration is that of the consuming type.
-        ///// </remarks>
-        //byte[] SecondaryPrngConfiguration { get; }
-
-        /// <summary>
-        /// Offset at which the payload may be found 
-        /// relative to the manifest end in the bytestream. 
-        /// This allows for payload I/O frameshifting to increase security.
-        /// </summary>
-        int Offset { get; set; }
     }
 }

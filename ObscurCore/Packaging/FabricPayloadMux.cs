@@ -107,21 +107,21 @@ namespace ObscurCore.Packaging
 
 			var opLength = NextOperationLength ();
 
-			if(Writing) {
-				if(itemDecorator.BytesIn + opLength > item.ExternalLength) {
+			if (Writing) {
+				if (itemDecorator.BytesIn + opLength > item.ExternalLength) {
 					// Final operation, or just prior to
-					if(!itemContainer.Buffer.IsValueCreated) {
+					if (itemContainer.Buffer.IsValueCreated == false) {
 						// Redirect final ciphertext to buffer to account for possible expansion
 						itemAuthenticator.ReassignBinding (itemContainer.Buffer.Value, 
 							reset: false, finish: false);
 					}
 					int remaining = (int) (item.ExternalLength - itemDecorator.BytesIn);
-					if(remaining > 0) {
+					if (remaining > 0) {
 						int iterIn = 0;
 						while (remaining > 0) {
 							int toRead = Math.Min (remaining, BufferSize);
 							iterIn = item.StreamBinding.Read (Buffer, 0, toRead);
-							if(iterIn < toRead) {
+							if (iterIn < toRead) {
 								throw new EndOfStreamException ();
 							}
 							itemDecorator.Write (Buffer, 0, iterIn); // writing into recently-lazy-inited buffer
@@ -138,7 +138,7 @@ namespace ObscurCore.Packaging
 				}
 			} else {
 				bool finalOp = false;
-				if(itemDecorator.BytesIn + opLength > item.InternalLength) {
+				if (itemDecorator.BytesIn + opLength > item.InternalLength) {
 					// Final operation
 					opLength = item.InternalLength - itemDecorator.BytesIn;
 					finalOp = true;

@@ -25,8 +25,8 @@ namespace ObscurCore.DTO
     // ***************************************************************************************************************************************************
 
     [ProtoContract]
-    public class UM1ManifestCryptographyConfiguration : IManifestCryptographySchemeConfiguration, 
-        IDataTransferObject, IEquatable<UM1ManifestCryptographyConfiguration>
+	public class Um1ManifestCryptographyConfiguration : IUm1ManifestCryptographyConfiguration, 
+	IManifestCryptographySchemeConfiguration, IDataTransferObject, IEquatable<Um1ManifestCryptographyConfiguration>
     {
 		/// <summary>
 		/// Configuration of the cipher used in encryption of the manifest.
@@ -76,10 +76,10 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((UM1ManifestCryptographyConfiguration) obj);
+            return Equals((Um1ManifestCryptographyConfiguration) obj);
         }
 
-        public bool Equals(UM1ManifestCryptographyConfiguration other) {
+        public bool Equals(Um1ManifestCryptographyConfiguration other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return SymmetricCipher.Equals(other.SymmetricCipher) 
@@ -100,28 +100,38 @@ namespace ObscurCore.DTO
         }
     }
 
-    public interface IUM1ManifestCryptographyConfiguration {
-        /// <summary>
-        /// Configuration for the symmetric cipher to use with the key derived from the shared secret.
-        /// </summary>
-        SymmetricCipherConfiguration SymmetricCipher { get; }
+    public interface IUm1ManifestCryptographyConfiguration 
+	{
+		/// <summary>
+		/// Configuration of the cipher used in encryption of the manifest.
+		/// </summary>
+		SymmetricCipherConfiguration SymmetricCipher { get; }
 
 		/// <summary>
 		/// Configuration for the authentication of the manifest and cipher configuration.
 		/// </summary>
 		VerificationFunctionConfiguration Authentication { get; }
 
-        /// <summary>
-        /// Key confirmation configuration for the manifest. 
-        /// Used to validate the existence and validity of keying material 
-        /// at the respondent's side without disclosing the key itself.
-        /// </summary>
-        VerificationFunctionConfiguration KeyConfirmation { get; }
+		/// <summary>
+		/// Output of the authentication scheme given correct input data.
+		/// </summary>
+		byte[] AuthenticationVerifiedOutput { get; }
 
-        /// <summary>
-        /// Configuration for the scheme used to derive a key from the shared secret.
-        /// </summary>
-        KeyDerivationConfiguration KeyDerivation { get; }
+		/// <summary>
+		/// Configuration for the key confirmation scheme used to validate the existence and 
+		/// validity of keying material at respondent's side without disclosing the key itself.
+		/// </summary>
+		VerificationFunctionConfiguration KeyConfirmation { get; }
+
+		/// <summary>
+		/// Output of the key confirmation scheme given correct input data.
+		/// </summary>
+		byte[] KeyConfirmationVerifiedOutput { get; }
+
+		/// <summary>
+		/// Configuration for the scheme used to derive a key from the shared secret.
+		/// </summary>
+		KeyDerivationConfiguration KeyDerivation { get; }
 
         /// <summary>
         /// Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.

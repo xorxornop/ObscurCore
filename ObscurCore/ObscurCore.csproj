@@ -128,7 +128,6 @@
     <Compile Include="Information\KdfDescription.cs" />
     <Compile Include="Information\MacFunctionDescription.cs" />
     <Compile Include="ItemStreamBindingAbsentException.cs" />
-    <Compile Include="Package.cs" />
     <Compile Include="Packaging\FabricStripeMode.cs" />
     <Compile Include="Packaging\FrameshiftPaddingMode.cs" />
     <Compile Include="Information\SymmetricCipherDescription.cs" />
@@ -359,6 +358,8 @@
     <Compile Include="Cryptography\KeyAgreement\DjbCurve.cs" />
     <Compile Include="Cryptography\Ciphers\SymmetricCipherKeyFactory.cs" />
     <Compile Include="Cryptography\Authentication\KeyStretchingUtility.cs" />
+    <Compile Include="PackageWriter.cs" />
+    <Compile Include="PackageReader.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />

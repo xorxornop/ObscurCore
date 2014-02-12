@@ -27,7 +27,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
     [TestFixture]
     class CsprngTests
     {
-        private const int Iterations = 1000000; // 1,000,000 (1 million)
+		private const int Iterations = 10000000; // 10,000,000 (10 million)
 
         [Test]
         public void SOSEMANUK_Int32 () {
@@ -39,7 +39,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
             RunTestInt32(generator, ((csprng, output) =>
                 {
                     for (var i = 0; i < output.Length; i++) {
-						output[i] = Math.Abs(csprng.Next());
+						output[i] = csprng.Next();
                     }
                 }),  out average, out time);
 
@@ -73,7 +73,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
             RunTestInt32(generator, ((csprng, output) =>
                 {
                     for (var i = 0; i < output.Length; i++) {
-						output[i] = Math.Abs(csprng.Next());
+						output[i] = csprng.Next();
                     }
                 }),  out average, out time);
 
