@@ -10,7 +10,7 @@ namespace ObscurCore.Tests.Cryptography
     public abstract class MACTestBase : IOTestBase
     {
         protected byte[] Key { get; set; }
-        protected byte[] Salt { get; private set; }
+        protected byte[] Salt { get; set; }
 
         protected static byte[] CreateRandomBytes (int lengthBits) {
             var bytes = new byte[lengthBits / 8];
@@ -24,11 +24,11 @@ namespace ObscurCore.Tests.Cryptography
             Salt = CreateRandomBytes(lengthBits);
         }
 
-        protected void RunMACTest (MacFunction function, byte[] config = null, byte[] overrideKey = null, byte[] overrideSalt = null) {
+		protected void RunMACTest (MacFunction function, byte[] config = null, byte[] nonce = null, byte[] overrideKey = null, byte[] overrideSalt = null) {
             byte[] outputMAC;
             var sw = new Stopwatch();
             using (var outputMS = new MemoryStream()) {
-                using (var macS = new MacStream(outputMS, true, function, out outputMAC, overrideKey ?? Key, overrideSalt ?? Salt, config, false)) {
+				using (var macS = new MacStream(outputMS, true, function, out outputMAC, overrideKey ?? Key, overrideSalt ?? Salt, config, nonce, false)) {
                     sw.Start();
                     LargeBinaryFile.CopyTo(macS);
                     sw.Stop();

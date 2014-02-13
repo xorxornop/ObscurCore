@@ -287,14 +287,15 @@ namespace ObscurCore
 			} else {
 				macObj = MacInstantiators[macEnum]();
 				macObj.Init (key);
-				if(!salt.IsNullOrZeroLength()) macObj.BlockUpdate(salt, 0, salt.Length);
+				if (salt.IsNullOrZeroLength() == false) 
+					macObj.BlockUpdate(salt, 0, salt.Length);
 			}
 
 			return macObj;
 		}
 
-		public static IMac CreateMacPrimitive(string macName, byte[] key, byte[] salt = null, byte[] config = null) {
-			return CreateMacPrimitive(macName.ToEnum<MacFunction>(), key, salt, config);
+		public static IMac CreateMacPrimitive(string macName, byte[] key, byte[] salt = null, byte[] config = null, byte[] nonce = null) {
+			return CreateMacPrimitive(macName.ToEnum<MacFunction>(), key, salt, config, nonce);
 		}
 
 		/// <summary>

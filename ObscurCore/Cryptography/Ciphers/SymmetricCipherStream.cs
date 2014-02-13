@@ -16,15 +16,12 @@
 using System;
 using System.Linq;
 using System.IO;
-//using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Block.Modes;
 using ObscurCore.Cryptography.Ciphers.Block.Padding;
 using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.DTO;
-using ObscurCore.Information;
-
 using RingByteBuffer;
 
 namespace ObscurCore.Cryptography
@@ -188,7 +185,7 @@ namespace ObscurCore.Cryptography
 			while (totalOut + _outBuffer.Length < length) {
 				iterIn = source.Read (_operationBuffer, 0, _operationSize);
 				totalIn += iterIn;
-
+				// We might have tried to read past the end simply because of the opsize requirement
 				if (iterIn < _operationSize) {
 					_operationBufferOffset = iterIn;
 					int finalLength = _cipher.ProcessFinal(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);

@@ -68,7 +68,7 @@ namespace ObscurCore.Packaging
 		}
 
 		protected override int EmitHeader (MacStream authenticator) {
-			var paddingLength = (_paddingMode == FrameshiftPaddingMode.VariableLength) ? SelectionSource.Next(_minPadding, _maxPadding) : _maxPadding;
+			var paddingLength = (_paddingMode == FrameshiftPaddingMode.VariableLength) ? SelectionSource.Next(_minPadding, _maxPadding + 1) : _maxPadding;
 			Debug.Print(DebugUtility.CreateReportString("FrameshiftPayloadMux", "EmitHeader/EmitTrailer", "Padding length",
 				paddingLength));
 			StratCom.EntropySource.NextBytes(_paddingBuffer, 0, paddingLength);
@@ -85,7 +85,7 @@ namespace ObscurCore.Packaging
 		protected override int EmitTrailer (MacStream authenticator) { return EmitHeader(authenticator); }
 
 		protected override int ConsumeHeader (MacStream authenticator) {
-			var paddingLength = (_paddingMode == FrameshiftPaddingMode.VariableLength) ? SelectionSource.Next(_minPadding, _maxPadding) : _maxPadding;
+			var paddingLength = (_paddingMode == FrameshiftPaddingMode.VariableLength) ? SelectionSource.Next(_minPadding, _maxPadding + 1) : _maxPadding;
 			Debug.Print(DebugUtility.CreateReportString("FrameshiftPayloadMux", "ConsumeHeader/ConsumeTrailer", "Padding length",
 				paddingLength));
 

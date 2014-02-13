@@ -324,7 +324,6 @@
     <Compile Include="IMemoable.cs" />
     <None Include="Cryptography\Authentication\Primitives\Skein.cs" />
     <Compile Include="MemoableResetException.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Primitives\EcJpakeParticipant.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\FixedPointCombMultiplier.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\FixedPointPreCompInfo.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\FixedPointUtilities.cs" />
@@ -360,6 +359,8 @@
     <Compile Include="Cryptography\Authentication\KeyStretchingUtility.cs" />
     <Compile Include="PackageWriter.cs" />
     <Compile Include="PackageReader.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Primitives\EcJpakeSession.cs" />
+    <None Include="Cryptography\Signing\Primitives\EcDsaSigner.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />

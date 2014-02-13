@@ -51,7 +51,7 @@ namespace ObscurCore.Cryptography.Entropy
 		/// <summary>
 		/// Generate an integer between 0 (inclusive) and maxValue (exclusive).
 		/// </summary>
-		/// <param name="maxValue">Maximum value of output, inclusive.</param>
+		/// <param name="maxValue">Maximum value of output, exclusive.</param>
 		public override int Next (int maxValue) {
 			if (maxValue < 2) {
 				if (maxValue < 0)
@@ -77,10 +77,10 @@ namespace ObscurCore.Cryptography.Entropy
 		}
 
 		/// <summary>
-		/// Generate an integer between minValue and maxValue, inclusive.
+		/// Generate an integer between minValue (inclusive) and maxValue (exclusive).
 		/// </summary>
 		/// <param name="minValue">Minimum value of output, inclusive.</param>
-		/// <param name="maxValue">Maximum value of output, inclusive.</param>
+		/// <param name="maxValue">Maximum value of output, exclusive.</param>
 		public override int Next(int minValue, int maxValue) {
 			if (maxValue <= minValue) {
 				if (maxValue == minValue)

@@ -136,7 +136,7 @@ namespace ObscurCore.Packaging
 		/// <remarks>May be overriden in a derived class to provide for advanced stream selection logic.</remarks>
 		/// <returns>The next stream index.</returns>
 		protected override sealed void NextSource() {
-			Index = SelectionSource.Next(0, PayloadItems.Count - 1);
+			Index = SelectionSource.Next(0, PayloadItems.Count);
 			Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "NextSource", "Generated index",
                     Index));
 		}

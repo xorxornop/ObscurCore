@@ -197,7 +197,7 @@ namespace ObscurCore.Packaging
 		/// </summary>
 		/// <returns>Operation length to perform.</returns>
 		private long NextOperationLength() {
-			var opLen = _stripeMode == FabricStripeMode.VariableLength ? SelectionSource.Next (_minStripe, _maxStripe) : _maxStripe;
+			var opLen = _stripeMode == FabricStripeMode.VariableLength ? SelectionSource.Next (_minStripe, _maxStripe + 1) : _maxStripe;
 			Debug.Print (DebugUtility.CreateReportString ("FabricPayloadMux", "NextOperationLength", "Generated stripe length",
 				opLen));
 			return opLen;

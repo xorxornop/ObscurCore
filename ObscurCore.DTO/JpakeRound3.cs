@@ -23,9 +23,9 @@ namespace ObscurCore.DTO
 	{
 		[ProtoMember(1, IsRequired = true)]
 		public string ParticipantId { get; set; }
-
-		[ProtoMember(2, IsRequired = true)]
-		public VerificationFunctionConfiguration KeyConfirmation { get; set; }
+//
+//		[ProtoMember(2, IsRequired = true)]
+//		public VerificationFunctionConfiguration KeyConfirmation { get; set; }
 
 		/// <summary>
 		/// Output of the key confirmation scheme given correct input data. 

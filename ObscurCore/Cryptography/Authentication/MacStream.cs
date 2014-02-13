@@ -41,9 +41,9 @@ namespace ObscurCore.Cryptography.Authentication
 		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
 		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
 		public MacStream (Stream binding, bool writing, MacFunction function, byte[] key, byte[] salt = null,
-			byte[] config = null, bool closeOnDispose = true) : base(binding, writing, closeOnDispose)
+			byte[] config = null, byte[] nonce = null, bool closeOnDispose = true) : base (binding, writing, closeOnDispose)
 		{
-			_mac = Source.CreateMacPrimitive (function, key, salt, config);
+			_mac = Source.CreateMacPrimitive (function, key, salt, config, nonce);
 			_output = new byte[_mac.MacSize];
 		}
 
@@ -58,13 +58,14 @@ namespace ObscurCore.Cryptography.Authentication
 		/// <param name="output">Byte array where the finished MAC will be output to. Does not need to be initialised.</param>
 		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
 		public MacStream (Stream binding, bool writing, MacFunction function, out byte[] output, byte[] key, byte[] salt = null,
-			byte[] config = null, bool closeOnDispose = true) : this(binding, writing, function, key, salt, config, closeOnDispose)
+			byte[] config = null, byte[] nonce = null, bool closeOnDispose = true) 
+			: this (binding, writing, function, key, salt, config, nonce, closeOnDispose)
 		{
 		    output = _output;
 		}
 
 		public MacStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, byte[] key, 
-			bool closeOnDispose = true) : base(binding, writing, closeOnDispose) 
+			bool closeOnDispose = true) : base (binding, writing, closeOnDispose) 
 		{
 			if(config.FunctionType.ToEnum<VerificationFunctionType>() != VerificationFunctionType.Mac) {
 				throw new ConfigurationInvalidException ("Configuration specifies function type other than MAC.");
@@ -76,7 +77,7 @@ namespace ObscurCore.Cryptography.Authentication
 		}
 
 		public MacStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, out byte[] output, byte[] key, 
-			bool closeOnDispose = true) : this(binding, writing, config, key, closeOnDispose)
+			bool closeOnDispose = true) : this (binding, writing, config, key, closeOnDispose)
 		{
 			output = _output;
 		}

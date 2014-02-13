@@ -26,8 +26,13 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 	public class JPake
 	{
 		[Test]
-		public void Secp521r1_Blake2B512() {
-			TestECJPake (Sec2EllipticCurve.Secp521r1.ToString (), HashFunction.Blake2B512);
+		public void Secp256r1_Keccak256() {
+			TestECJPake (Sec2EllipticCurve.Secp256r1.ToString (), HashFunction.Keccak256);
+		}
+
+		[Test]
+		public void Secp521r1_Keccak512() {
+			TestECJPake (Sec2EllipticCurve.Secp521r1.ToString (), HashFunction.Keccak256);
 		}
 
 		[Test]
@@ -45,8 +50,8 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 			var ecParams = Source.GetEcDomainParameters (curveName);
 			var digest = Source.CreateHashPrimitive (hashFunction);
 
-			var alice = new EcJpakeParticipant ("ObscurCore_P0", password, ecParams, digest, StratCom.EntropySource);
-			var bob = new EcJpakeParticipant ("ObscurCore_P1", password, ecParams, digest, StratCom.EntropySource);
+			var alice = new EcJpakeSession ("ObscurCore_P0", password, ecParams, digest, StratCom.EntropySource);
+			var bob = new EcJpakeSession ("ObscurCore_P1", password, ecParams, digest, StratCom.EntropySource);
 
 			var sw = System.Diagnostics.Stopwatch.StartNew ();
 
@@ -62,8 +67,13 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 			alice.ValidateRound2Received (bobR2);
 			bob.ValidateRound2Received (aliceR2);
 
-			var aliceKey = alice.CalculateKeyingMaterial ();
-			var bobKey = bob.CalculateKeyingMaterial ();
+			var aliceR3 = alice.CreateRound3ToSend ();
+			var bobR3 = bob.CreateRound3ToSend ();
+
+			byte[] aliceKey, bobKey;
+
+			alice.ValidateRound3Received(bobR3, out aliceKey);
+			bob.ValidateRound3Received (aliceR3, out bobKey);
 
 			sw.Stop ();
 
