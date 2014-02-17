@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.KeyDerivation;
@@ -62,16 +63,14 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 			}
 
             // We can determine which, if any, of the provided keys are capable of decrypting the manifest
-            var viableSenderKeys =
-				senderKeys.Where(key => key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
+			var viableSenderKeys = senderKeys.Where(key => key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
                 key.CurveName.Equals(ephemeralKey.CurveName)).ToList();
 			if (viableSenderKeys.Count == 0) {
 				throw new ArgumentException (
 					"No viable sender keys found - curve provider and/or curve name do not match ephemeral key.", "senderKeys");
 			}
 
-			var viableReceiverKeys =
-				receiverKeys.Where(key => key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
+			var viableReceiverKeys = receiverKeys.Where(key => key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
                 key.CurveName.Equals(ephemeralKey.CurveName)).ToList();
 			if (viableReceiverKeys.Count == 0) {
 				throw new ArgumentException (
@@ -79,36 +78,34 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 			}
 
 			var validator = GetValidator(keyConfirmation, verifiedOutput.Length);
-			var um1SecretFunc = new Func<EcKeyConfiguration, EcKeyConfiguration, byte[]>((pubKey, privKey) => 
+			var um1SecretFunc = new Func<EcKeyConfiguration, EcKeyConfiguration, byte[]> ((pubKey, privKey) => 
 				UM1Exchange.Respond(pubKey, privKey, ephemeralKey));
 
 			byte[] preKey = null;
 
             // See which mode (by-sender / by-recipient) is better to run in parallel
 			if (viableSenderKeys.Count > viableReceiverKeys.Count) {
-                Parallel.ForEach(viableSenderKeys, (sKey, state) =>
-                    {
-						foreach (var rKey in viableReceiverKeys) {
-                            var ss = um1SecretFunc(sKey, rKey);
-                            var validationOut = validator(ss);
-							if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
-                                preKey = ss;
-                                state.Stop();
-                            }
+				Parallel.ForEach(viableSenderKeys, (sKey, state) => {
+					foreach (var rKey in viableReceiverKeys) {
+                        var ss = um1SecretFunc(sKey, rKey);
+                        var validationOut = validator(ss);
+						if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
+                            preKey = ss;
+                            state.Stop();
                         }
-                    });
+                    }
+                });
             } else {
-				Parallel.ForEach(viableReceiverKeys, (rKey, state) =>
-                    {
-                        foreach (var sKey in viableSenderKeys) {
-                            var ss = um1SecretFunc(sKey, rKey);
-                            var validationOut = validator(ss);
-							if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
-                                preKey = ss;
-                                state.Stop();
-                            }
+				Parallel.ForEach(viableReceiverKeys, (rKey, state) => {
+                    foreach (var sKey in viableSenderKeys) {
+                        var ss = um1SecretFunc(sKey, rKey);
+                        var validationOut = validator(ss);
+						if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
+                            preKey = ss;
+                            state.Stop();
                         }
-                    });
+                    }
+                });
             }
 
             Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "ConfirmUM1HybridKey", "Key output", 
@@ -136,15 +133,14 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 			var validator = GetValidator(keyConfirmation, verifiedOutput.Length);
             byte[] preKey = null;
 
-            Parallel.ForEach(potentialKeys, (key, state) =>
-                {
-                    var validationOut = validator(key);
-					if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
-                        preKey = key;
-                        // Terminate all other validation function instances - we have found the key
-                        state.Stop();
-                    }
-                });
+			Parallel.ForEach(potentialKeys, (key, state) => {
+                var validationOut = validator(key);
+				if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
+                    preKey = key;
+                    // Terminate all other validation function instances - we have found the key
+                    state.Stop();
+                }
+            });
 
             Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "ConfirmSymmetricKey", "Key output", 
                 preKey != null ? preKey.ToHexString() : "[null]"));
@@ -185,7 +181,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 					} catch (EnumerationParsingException ex) {
 						throw new ConfigurationValueInvalidException ("Key derivation function is unsupported/unknown.", ex);
 					}
-					validator = (key) => Source.DeriveKeyWithKdf (kdfEnum, key, keyConfirmation.Salt, 
+				validator = (key) => KeyDerivationUtility.DeriveKeyWithKdf (kdfEnum, key, keyConfirmation.Salt, 
 						outputSizeBytes, keyConfirmation.FunctionConfiguration);
 			        break;
 			    case VerificationFunctionType.Mac:
@@ -196,7 +192,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 						throw new ConfigurationValueInvalidException ("MAC function is unsupported/unknown.", ex);
 					}
 		        	validator = (key) => {
-						var macF = Source.CreateMacPrimitive (macFEnum, key, keyConfirmation.Salt, 
+					var macF = AuthenticatorFactory.CreateMacPrimitive (macFEnum, key, keyConfirmation.Salt, 
 						keyConfirmation.FunctionConfiguration, keyConfirmation.Nonce);
 
 						if (outputSizeBytes != macF.MacSize)
@@ -217,7 +213,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 						throw new ConfigurationValueInvalidException ("Hash/digest function is unsupported/unknown.", ex);
 					}
 					validator = (key) => {
-						var hashF = Source.CreateHashPrimitive (hashFEnum);
+						var hashF = AuthenticatorFactory.CreateHashPrimitive (hashFEnum);
 
 						if (outputSizeBytes != hashF.DigestSize)
 							throw new ArgumentException(LengthIncompatibleString, "outputSizeBytes");
@@ -256,14 +252,12 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 			int outputSize;
 			var config = AuthenticationConfigurationFactory.CreateAuthenticationConfigurationHmac(hashFEnum, out outputSize);
 
-            var macP = Source.CreateMacPrimitive(config.FunctionName.ToEnum<MacFunction>(), key, config.Salt,
+			var macP = AuthenticatorFactory.CreateMacPrimitive(config.FunctionName.ToEnum<MacFunction>(), key, config.Salt,
 				config.FunctionConfiguration, config.Nonce);
 
             if (config.AdditionalData != null) macP.BlockUpdate(config.AdditionalData, 0, config.AdditionalData.Length);
 			verifiedOutput = new byte[macP.MacSize];
 			macP.DoFinal(verifiedOutput, 0);
-
-
 
 			Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "CreateDefaultManifestKeyConfirmation", "Verified output", 
 				verifiedOutput.ToHexString()));

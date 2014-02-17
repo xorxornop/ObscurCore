@@ -19,7 +19,7 @@ using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.DTO;
 
-namespace ObscurCore.Cryptography.Authentication
+namespace ObscurCore.Cryptography.KeyDerivation
 {
 	public static class KeyStretchingUtility
 	{
@@ -37,7 +37,7 @@ namespace ObscurCore.Cryptography.Authentication
 			KeyDerivationConfiguration kdfConfig, out byte[] cipherKey, out byte[] macKey)
 		{
 			// Derive the key which will be used for encrypting the manifest
-			byte[] stretchedKeys = Source.DeriveKeyWithKdf(kdfConfig.SchemeName.ToEnum<KeyDerivationFunction>(),
+			byte[] stretchedKeys = KeyDerivationUtility.DeriveKeyWithKdf(kdfConfig.SchemeName.ToEnum<KeyDerivationFunction>(),
 				preKey, kdfConfig.Salt, cipherKeySize + macKeySize,
 				kdfConfig.SchemeConfiguration);
 

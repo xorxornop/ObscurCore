@@ -20,10 +20,12 @@ using ObscurCore.DTO;
 using ObscurCore.Packaging;
 using System.Diagnostics;
 using System.Linq;
-using ObscurCore.Cryptography.KeyConfirmation;
+
 using ObscurCore.Cryptography;
-using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.Authentication;
+using ObscurCore.Cryptography.KeyAgreement.Primitives;
+using ObscurCore.Cryptography.KeyConfirmation;
+using ObscurCore.Cryptography.KeyDerivation;
 
 namespace ObscurCore
 {
@@ -443,7 +445,7 @@ namespace ObscurCore
 			} catch (Exception) {
 				throw new ConfigurationValueInvalidException("Payload layout scheme specified is unsupported/unknown or missing.");
 			}
-			var mux = Source.CreatePayloadMultiplexer(payloadScheme, false, _readingStream, _manifest.PayloadItems, 
+			var mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer (payloadScheme, false, _readingStream, _manifest.PayloadItems, 
 				ItemPreKeys, _manifest.PayloadConfiguration);
 
 			// Demux the payload

@@ -32,7 +32,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Maximum = FrameshiftPayloadMux.DefaultFixedPaddingLength
 			        }.SerialiseDto(),
                 PrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-                PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto<StreamCipherCsprngConfiguration>()
             };
 
@@ -54,7 +54,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Maximum = FrameshiftPayloadMux.MaximumPaddingLength
 			        }.SerialiseDto(),
                 PrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-                PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto<StreamCipherCsprngConfiguration>()
             };
 
@@ -66,8 +66,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             Assert.IsTrue(equal);
         }
-
-#if(INCLUDE_FABRIC)
+			
         [Test]
         public void Fabric_Fixed () {
 
@@ -78,7 +77,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Maximum = FabricPayloadMux.DefaultFixedStripeLength
 			        }.SerialiseDto(),
                 PrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-                PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto()
             };
 
@@ -100,7 +99,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Maximum = FabricPayloadMux.MaximumStripeLength
 			        }.SerialiseDto(),
                 PrngName = CsPseudorandomNumberGenerator.Salsa20.ToString(),
-                PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto()
             };
 
@@ -112,6 +111,5 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             Assert.IsTrue(equal);
         }
-#endif
     }
 }

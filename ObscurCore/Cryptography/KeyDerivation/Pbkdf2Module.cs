@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System;
+using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Authentication.Primitives;
 using ObscurCore.Cryptography.KeyDerivation.Primitives;
 using ObscurCore.DTO;
@@ -62,7 +63,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		#endregion
 		
 		private static byte[] DeriveKey (byte[] key, byte[] salt, int outputSize, int iterations) {
-			var hmac = Source.CreateHmacPrimitive (ObscurCore.Cryptography.Authentication.HashFunction.Sha256, key, null);
+			var hmac = AuthenticatorFactory.CreateHmacPrimitive (ObscurCore.Cryptography.Authentication.HashFunction.Sha256, key, null);
 			return Pbkdf2.ComputeDerivedKey (hmac, salt, iterations, outputSize);
 		}
 		
@@ -73,7 +74,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 
         public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, Pbkdf2Configuration config) {
 			if(!config.AlgorithmName.Equals(DefaultAlgorithm)) throw new ArgumentException();
-			var hmac = Source.CreateHmacPrimitive (ObscurCore.Cryptography.Authentication.HashFunction.Sha256, key, null);
+			var hmac = AuthenticatorFactory.CreateHmacPrimitive (ObscurCore.Cryptography.Authentication.HashFunction.Sha256, key, null);
 			return Pbkdf2.ComputeDerivedKey (hmac, salt, config.Iterations, outputSize);
 		}
 	}

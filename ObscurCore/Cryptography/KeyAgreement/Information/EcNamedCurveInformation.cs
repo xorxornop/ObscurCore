@@ -15,14 +15,16 @@
 
 using System;
 using ObscurCore.Cryptography.Support;
-using ObscurCore.Cryptography.Support.Math.EllipticCurve;
 using ObscurCore.Cryptography.Support.Math;
+using ObscurCore.Cryptography.Support.Math.EllipticCurve;
 using ObscurCore.Support;
 
 namespace ObscurCore.Cryptography.KeyAgreement.Information
 {
 	public abstract class EcNamedCurveInformation
 	{
+		public CurveField Field { get; protected internal set; }
+
 		/// <summary>
 		/// Name of the elliptic curve.
 		/// </summary>
@@ -40,6 +42,13 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 		protected static BigInteger FromHex (string hex) {
 			return new BigInteger(1, Hex.Decode(hex));
 		}
+
+		public enum CurveField
+		{
+			Fp,
+			TpbF2m,
+			PpbF2m
+		}
 	}
 
 	/// <summary>
@@ -47,6 +56,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 	/// </summary>
 	public class FpEcNamedCurveInformation : EcNamedCurveInformation
 	{
+		public FpEcNamedCurveInformation ()
+		{
+			Field = CurveField.Fp;
+		}
+
 		public string Q { get; protected internal set; }
 		public string A { get; protected internal set; }
 		public string B { get; protected internal set; }
@@ -71,6 +85,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 	/// </summary>
 	public class CustomFpEcNamedCurveInformation : EcNamedCurveInformation
 	{
+		public CustomFpEcNamedCurveInformation ()
+		{
+			Field = CurveField.Fp;
+		}
+
 		public Func<ECCurve> Curve { get; protected internal set; }
 
 		public string G { get; protected internal set; }
@@ -89,6 +108,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 	/// </summary>
 	public class TpbF2mEcNamedCurveInformation : EcNamedCurveInformation
 	{
+		public TpbF2mEcNamedCurveInformation ()
+		{
+			Field = CurveField.TpbF2m;
+		}
+
 		public int M { get; protected internal set; }
 		public int K { get; protected internal set; }
 
@@ -115,6 +139,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 	/// </summary>
 	public class PpbF2mEcNamedCurveInformation : EcNamedCurveInformation
 	{
+		public PpbF2mEcNamedCurveInformation ()
+		{
+			Field = CurveField.PpbF2m;
+		}
+
 		public int M { get; protected internal set; }
 		public int K1 { get; protected internal set; }
 		public int K2 { get; protected internal set; }

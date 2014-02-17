@@ -32,7 +32,7 @@ namespace ObscurCore.Cryptography.Authentication
 		public byte[] Hash { get { return _output; } }
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.HashStream"/> class.
+		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.Authentication.HashStream"/> class.
 		/// </summary>
 		/// <param name="binding">Stream to write to or read from.</param>
 		/// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
@@ -42,7 +42,7 @@ namespace ObscurCore.Cryptography.Authentication
 		public HashStream (Stream binding, bool writing, HashFunction function, out byte[] output, bool closeOnDispose = true) 
 			: base(binding, writing, closeOnDispose)
 		{
-			_digest = Source.CreateHashPrimitive (function);
+			_digest = AuthenticatorFactory.CreateHashPrimitive (function);
             _output = new byte[_digest.DigestSize];
 			output = _output;
 		}
@@ -54,7 +54,7 @@ namespace ObscurCore.Cryptography.Authentication
 				throw new ConfigurationInvalidException ("Configuration specifies function type other than MAC.");
 			}
 
-			_digest = Source.CreateHashPrimitive (config.FunctionName.ToEnum<HashFunction>());
+			_digest = AuthenticatorFactory.CreateHashPrimitive (config.FunctionName.ToEnum<HashFunction>());
 			_output = new byte[_digest.DigestSize];
 		}
 

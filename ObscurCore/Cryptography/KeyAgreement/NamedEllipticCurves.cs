@@ -36,6 +36,27 @@ namespace ObscurCore.Cryptography.KeyAgreement
 			throw new NotSupportedException ();
 		}
 
+		public static EcNamedCurveInformation GetEcCurveData(BrainpoolEllipticCurve curveEnum) {
+			if (curveEnum == BrainpoolEllipticCurve.None) {
+				throw new ArgumentException();
+			}
+			return GetEcCurveData(curveEnum.ToString());
+		}
+
+		public static EcNamedCurveInformation GetEcCurveData(Sec2EllipticCurve curveEnum) {
+			if (curveEnum == Sec2EllipticCurve.None) {
+				throw new ArgumentException();
+			}
+			return GetEcCurveData(curveEnum.ToString());
+		}
+
+		public static EcNamedCurveInformation GetEcCurveData(string name) {
+			if (NamedEllipticCurves.Curves.ContainsKey(name) == false) {
+				throw new NotSupportedException("Named curve is unknown or unsupported.");
+			}
+			return NamedEllipticCurves.Curves[name];
+		}
+
 		static NamedEllipticCurves ()
 		{
 			Curves = new Dictionary<string, EcNamedCurveInformation> ();

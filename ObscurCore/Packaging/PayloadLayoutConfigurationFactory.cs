@@ -30,7 +30,7 @@ namespace ObscurCore.Packaging
 			var config = new PayloadConfiguration {
                 SchemeName = schemeEnum.ToString(),
 				PrngName = CsPseudorandomNumberGenerator.Salsa20.ToString(),
-				PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
 					CsPseudorandomNumberGenerator.Salsa20).SerialiseDto()
 			};
 			
@@ -67,7 +67,7 @@ namespace ObscurCore.Packaging
 			            Maximum = fixedSize,
 			        }.SerialiseDto(),
 				PrngName = csprngEnum.ToString(),
-				PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(
+				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
                     csprngEnum).SerialiseDto()
 			};
 		    return config;
@@ -83,7 +83,7 @@ namespace ObscurCore.Packaging
 			            Maximum = (maxPadding == null ? FrameshiftPayloadMux.MaximumPaddingLength : maxPadding.Value)
 			        }.SerialiseDto(),
 				PrngName = csprngEnum.ToString(),
-				PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
+				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
 			};
             return config;
 	    }
@@ -97,7 +97,7 @@ namespace ObscurCore.Packaging
 			            Maximum = fixedSize,
 			        }.SerialiseDto(),
 				PrngName = csprngEnum.ToString(),
-				PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
+				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
 			};
 		    return config;
 		}
@@ -112,7 +112,7 @@ namespace ObscurCore.Packaging
 			            Maximum = (maxStripe == null ? FabricPayloadMux.MaximumStripeLength : maxStripe.Value)
 			        }.SerialiseDto(),
 				PrngName = csprngEnum.ToString(),
-				PrngConfiguration = Source.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
+				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
 			};
             return config;
 	    }

@@ -47,8 +47,8 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 
 		private void TestECJPake(string curveName, HashFunction hashFunction) {
 			const string password = "green eggs and ham";
-			var ecParams = Source.GetEcDomainParameters (curveName);
-			var digest = Source.CreateHashPrimitive (hashFunction);
+			var ecParams = NamedEllipticCurves.GetEcCurveData (curveName).GetParameters();
+			var digest = AuthenticatorFactory.CreateHashPrimitive (hashFunction);
 
 			var alice = new EcJpakeSession ("ObscurCore_P0", password, ecParams, digest, StratCom.EntropySource);
 			var bob = new EcJpakeSession ("ObscurCore_P1", password, ecParams, digest, StratCom.EntropySource);

@@ -17,8 +17,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 using System;
 using System.Threading;
-using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
 using ObscurCore.Cryptography.Authentication;
+using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
 
 namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 {
@@ -129,7 +129,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 			int cost, int blockSize, int parallel, int? maxThreads)
 		{
 			byte[] B = GetEffectivePbkdf2Salt(key, salt, cost, blockSize, parallel, maxThreads);
-			var hmac = Source.CreateHmacPrimitive (HashFunction.Sha256, key, null);
+			var hmac = AuthenticatorFactory.CreateHmacPrimitive (HashFunction.Sha256, key, null);
 			Pbkdf2 kdf = new Pbkdf2(hmac, B, 1);
 			//Security.Clear(B);
 			Array.Clear (B, 0, B.Length);
@@ -148,7 +148,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 			Helper.CheckRange("parallel", parallel, 1, int.MaxValue / MFLen);
 			Helper.CheckRange("maxThreads", (int)maxThreads, 1, int.MaxValue);
 
-			var hmac = Source.CreateHmacPrimitive (HashFunction.Sha256, P, null);
+			var hmac = AuthenticatorFactory.CreateHmacPrimitive (HashFunction.Sha256, P, null);
 			byte[] B = Pbkdf2.ComputeDerivedKey(hmac, S, 1, parallel * MFLen);
 
 			uint[] B0 = new uint[B.Length / 4];
@@ -244,4 +244,3 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 		}
 	}
 }
-

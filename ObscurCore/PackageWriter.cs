@@ -25,11 +25,11 @@ using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.Cryptography.Ciphers.Block;
-using ObscurCore.Cryptography.KeyConfirmation;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
+using ObscurCore.Cryptography.KeyConfirmation;
 using ObscurCore.Cryptography.KeyDerivation;
-using ObscurCore.Packaging;
 using ObscurCore.DTO;
+using ObscurCore.Packaging;
 
 namespace ObscurCore
 {
@@ -57,7 +57,6 @@ namespace ObscurCore
 		private byte[] _writingPreManifestKey;
 
 		private Dictionary<Guid, byte[]> ItemPreKeys = new Dictionary<Guid, byte[]>();
-
 
 		// Properties
 
@@ -525,19 +524,19 @@ namespace ObscurCore
 					_manifest.PayloadItems.Where(payloadItem => !payloadItem.StreamHasBinding)
 					.Select(payloadItem => new ItemStreamBindingAbsentException(payloadItem)));
 			}
-			if (_manifest.PayloadItems.Any(item => !ItemPreKeys.ContainsKey(item.Identifier) && 
+			if (_manifest.PayloadItems.Any(item => ItemPreKeys.ContainsKey(item.Identifier) == false && 
 				(item.EncryptionKey.IsNullOrZeroLength() || item.AuthenticationKey.IsNullOrZeroLength())))
 			{
-				var exceptions = from payloadItem in _manifest.PayloadItems
-					                 where !ItemPreKeys.ContainsKey (payloadItem.Identifier) &&
-				                 (payloadItem.EncryptionKey.IsNullOrZeroLength () ||
-					                 payloadItem.AuthenticationKey.IsNullOrZeroLength ())
-				                 select new ItemKeyMissingException (payloadItem);
+				var exceptions = 	from payloadItem in _manifest.PayloadItems 
+									where ItemPreKeys.ContainsKey (payloadItem.Identifier) == false
+										&& (payloadItem.EncryptionKey.IsNullOrZeroLength () ||
+					                 	payloadItem.AuthenticationKey.IsNullOrZeroLength ())
+				                 	select new ItemKeyMissingException (payloadItem);
 
 				throw new AggregateException (exceptions);
 			}
 
-			if (!outputStream.CanWrite) throw new IOException("Cannot write to output stream.");
+			if (outputStream.CanWrite == false) throw new IOException("Cannot write to output stream.");
 			if (_writingTempStream == null) {
 				// Default to writing to memory
 				_writingTempStream = new MemoryStream();
@@ -569,7 +568,7 @@ namespace ObscurCore
 					"Package payload schema specified is unsupported/unknown or missing.");
 			}
 			// Bind the multiplexer to the temp stream
-			var mux = Source.CreatePayloadMultiplexer(payloadScheme, true, _writingTempStream,
+			var mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer (payloadScheme, true, _writingTempStream,
 				_manifest.PayloadItems, ItemPreKeys, _manifest.PayloadConfiguration);
 
 			try {

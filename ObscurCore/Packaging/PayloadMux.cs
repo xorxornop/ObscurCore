@@ -22,6 +22,7 @@ using System.Linq;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.DTO;
+using ObscurCore.Cryptography.KeyDerivation;
 
 namespace ObscurCore.Packaging
 {

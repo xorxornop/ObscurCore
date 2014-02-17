@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using System.IO;
+
 using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Block.Modes;
@@ -88,16 +89,16 @@ namespace ObscurCore.Cryptography
                         throw new NotSupportedException("Specified block size is unsupported.");
 
 					var blockConfigWrapper = new BlockCipherConfigurationWrapper(config);
-					var blockCipher = Source.CreateBlockCipher(blockCipherEnum, blockConfigWrapper.BlockSizeBits);
+				var blockCipher = CipherFactory.CreateBlockCipher(blockCipherEnum, blockConfigWrapper.BlockSizeBits);
 					BlockCipherMode blockModeEnum = blockConfigWrapper.Mode;
 					byte[] blockIV = blockConfigWrapper.IV;
 					// Overlay the cipher with the mode of operation
-					blockCipher = Source.OverlayBlockCipherWithMode(blockCipher, blockModeEnum);
+					blockCipher = CipherFactory.OverlayBlockCipherWithMode(blockCipher, blockModeEnum);
 
 					IBlockCipherPadding padding = null;
 					BlockCipherPadding paddingEnum = blockConfigWrapper.Padding;
 					if (paddingEnum != BlockCipherPadding.None) {
-						padding = Source.CreatePadding(paddingEnum);
+						padding = CipherFactory.CreatePadding(paddingEnum);
 						padding.Init(StratCom.EntropySource);
 					}
 					
@@ -111,7 +112,7 @@ namespace ObscurCore.Cryptography
 					var streamCipherEnum = streamWrapper.StreamCipher;
 					var streamNonce = streamWrapper.Nonce;
 					// Instantiate the cipher
-					var streamCipher = Source.CreateStreamCipher (streamCipherEnum);
+					var streamCipher = CipherFactory.CreateStreamCipher (streamCipherEnum);
 					streamCipher.Init (encrypting, key, streamNonce);
 					_cipher = new StreamCipherWrapper (encrypting, streamCipher, strideIncreaseFactor : 2);
 

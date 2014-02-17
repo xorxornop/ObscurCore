@@ -32,7 +32,7 @@ namespace ObscurCore.Cryptography.Authentication
 		public byte[] Mac { get { return _output; } }
 
 		/// <summary>
-		/// Initialises a new instance of the <see cref="ObscurCore.Cryptography.MacStream"/> class.
+		/// Initialises a new instance of the <see cref="ObscurCore.Cryptography.Authentication.MacStream"/> class.
 		/// </summary>
 		/// <param name="binding">Stream to write to or read from.</param>
 		/// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
@@ -43,12 +43,12 @@ namespace ObscurCore.Cryptography.Authentication
 		public MacStream (Stream binding, bool writing, MacFunction function, byte[] key, byte[] salt = null,
 			byte[] config = null, byte[] nonce = null, bool closeOnDispose = true) : base (binding, writing, closeOnDispose)
 		{
-			_mac = Source.CreateMacPrimitive (function, key, salt, config, nonce);
+			_mac = AuthenticatorFactory.CreateMacPrimitive (function, key, salt, config, nonce);
 			_output = new byte[_mac.MacSize];
 		}
 
 		/// <summary>
-		/// Initialises a new instance of the <see cref="ObscurCore.Cryptography.MacStream"/> class.
+		/// Initialises a new instance of the <see cref="ObscurCore.Cryptography.Authentication.MacStream"/> class.
 		/// </summary>
 		/// <param name="binding">Stream to write to or read from.</param>
 		/// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
@@ -71,7 +71,7 @@ namespace ObscurCore.Cryptography.Authentication
 				throw new ConfigurationInvalidException ("Configuration specifies function type other than MAC.");
 			}
 
-			_mac = Source.CreateMacPrimitive (config.FunctionName.ToEnum<MacFunction>(), key, config.Salt, 
+			_mac = AuthenticatorFactory.CreateMacPrimitive (config.FunctionName.ToEnum<MacFunction>(), key, config.Salt, 
 				config.FunctionConfiguration, config.Nonce);
 			_output = new byte[_mac.MacSize];
 		}

@@ -86,7 +86,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
 		internal static ECPublicKeyParameters DecodeToPublicKey (EcKeyConfiguration ecKey) {
 			ECPublicKeyParameters publicKey;
 			try {
-				var domain = Source.GetEcDomainParameters(ecKey.CurveName);
+				var domain = NamedEllipticCurves.GetEcCurveData(ecKey.CurveName).GetParameters ();
 				var point = domain.Curve.DecodePoint(ecKey.EncodedKey);
 				publicKey = new ECPublicKeyParameters("ECDHC", point, domain);
 			} catch (NotSupportedException) {
@@ -100,7 +100,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
 		internal static ECPrivateKeyParameters DecodeToPrivateKey (EcKeyConfiguration ecKey) {
 			ECPrivateKeyParameters privateKey;
 			try {
-				var domain = Source.GetEcDomainParameters(ecKey.CurveName);
+				var domain = NamedEllipticCurves.GetEcCurveData(ecKey.CurveName).GetParameters ();
 				privateKey = new ECPrivateKeyParameters("ECDHC", new BigInteger(ecKey.EncodedKey), domain);
 			} catch (NotSupportedException) {
 				throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");

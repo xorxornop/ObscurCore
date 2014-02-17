@@ -42,13 +42,8 @@ namespace ObscurCore.Cryptography.KeyAgreement
 					EncodedPrivateKey = privateKey
 				};
 			} else {
-				var domain = NamedEllipticCurves.Curves [curveName].GetParameters ();
-				ECPoint g = domain.G;
-				BigInteger n = domain.N;
-
 				ECPoint Q;
 				BigInteger d;
-
 				GenerateEcKeypair (curveName, out Q, out d);
 
 				keypair = new EcKeypair {
