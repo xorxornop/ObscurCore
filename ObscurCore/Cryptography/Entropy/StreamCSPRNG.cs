@@ -58,8 +58,8 @@ namespace ObscurCore.Cryptography.Entropy
                     Key = new byte[Athena.Cryptography.StreamCiphers[cipherEnum].DefaultKeySize / 8],
                     Nonce = new byte[Athena.Cryptography.StreamCiphers[cipherEnum].DefaultIvSize / 8]
                 };
-            StratCom.EntropySource.NextBytes(config.Key);
-            StratCom.EntropySource.NextBytes(config.Nonce);
+            StratCom.EntropySupplier.NextBytes(config.Key);
+            StratCom.EntropySupplier.NextBytes(config.Nonce);
             return config;
         }
 

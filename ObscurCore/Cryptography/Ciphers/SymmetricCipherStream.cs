@@ -99,7 +99,7 @@ namespace ObscurCore.Cryptography
 					BlockCipherPadding paddingEnum = blockConfigWrapper.Padding;
 					if (paddingEnum != BlockCipherPadding.None) {
 						padding = CipherFactory.CreatePadding(paddingEnum);
-						padding.Init(StratCom.EntropySource);
+						padding.Init(StratCom.EntropySupplier);
 					}
 					
 					blockCipher.Init(encrypting, key, blockIV);

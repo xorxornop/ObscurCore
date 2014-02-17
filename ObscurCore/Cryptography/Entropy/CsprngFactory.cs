@@ -20,19 +20,19 @@ using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.Entropy
 {
+	/// <summary>
+	/// Instantiator for CSPRNGs.
+	/// </summary>
 	public static class CsprngFactory
 	{
 		private readonly static IDictionary<CsPseudorandomNumberGenerator, Func<byte[], Csprng>> PrngInstantiators =
 			new Dictionary<CsPseudorandomNumberGenerator, Func<byte[], Csprng>>();
 
 		/// <summary>
-		/// Instantiates and returns a CSPRNG implementing a generator function.
+		/// Instantiates and returns a CSPRNG function.
 		/// </summary>
-		/// <param name="csprngEnum">CSPRNG function to use.</param>
+		/// <param name="csprngEnum">Underlying function to use.</param>
 		/// <param name="config">Serialised configuration of the CSPRNG.</param>
-		/// <returns>
-		/// An CSPRNG object deriving from CSPRNG.
-		/// </returns>
 		public static Csprng CreateCsprng (CsPseudorandomNumberGenerator csprngEnum, byte[] config) {
 			return PrngInstantiators[csprngEnum](config);
 		}
@@ -42,7 +42,7 @@ namespace ObscurCore.Cryptography.Entropy
 		}
 
 		public static StreamCipherCsprngConfiguration CreateStreamCipherCsprngConfiguration
-		(CsPseudorandomNumberGenerator cipherEnum)
+			(CsPseudorandomNumberGenerator cipherEnum)
 		{
 			return StreamCsprng.CreateRandomConfiguration(cipherEnum);
 		}

@@ -235,34 +235,6 @@ namespace ObscurCore.Cryptography.KeyConfirmation
             return validator;
         }
 
-		/// <summary>
-		/// Creates a default manifest key confirmation. 
-		/// Uses BLAKE2B-256 with random salt and additional data, currently.
-		/// </summary>
-		/// <returns>A key confirmation as a verification configuration.</returns>
-		/// <param name="key">Key to confirm. Constitutes key prior to key derivation.</param>
-		/// <exception cref="ArgumentException">Key is null or zero-length.</exception>
-		public static VerificationFunctionConfiguration CreateDefaultManifestKeyConfirmation(byte[] key, out byte[] verifiedOutput) {
-			const HashFunction hashFEnum = HashFunction.Blake2B256;
 
-			if (key.IsNullOrZeroLength()) {
-				throw new ArgumentException ("Key is null or zero-length.", "key");
-			}
-
-			int outputSize;
-			var config = AuthenticationConfigurationFactory.CreateAuthenticationConfigurationHmac(hashFEnum, out outputSize);
-
-			var macP = AuthenticatorFactory.CreateMacPrimitive(config.FunctionName.ToEnum<MacFunction>(), key, config.Salt,
-				config.FunctionConfiguration, config.Nonce);
-
-            if (config.AdditionalData != null) macP.BlockUpdate(config.AdditionalData, 0, config.AdditionalData.Length);
-			verifiedOutput = new byte[macP.MacSize];
-			macP.DoFinal(verifiedOutput, 0);
-
-			Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "CreateDefaultManifestKeyConfirmation", "Verified output", 
-				verifiedOutput.ToHexString()));
-
-            return config;
-        }
     }
 }

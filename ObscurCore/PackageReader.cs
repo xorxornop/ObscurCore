@@ -29,6 +29,9 @@ using ObscurCore.Cryptography.KeyDerivation;
 
 namespace ObscurCore
 {
+	/// <summary>
+	/// Provides capability of reading ObscurCore packages.
+	/// </summary>
 	public class PackageReader
 	{
 		/// <summary>
@@ -396,7 +399,6 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="path">Path to write items to.</param>
 		/// <param name="payloadKeys">Potential symmetric keys for payload items.</param>
-		/// <exception cref="InvalidOperationException">Package is being written, not read.</exception>
 		/// <exception cref="NotImplementedException">Package includes a KeyAction payload item type (not implemented).</exception>
 		public void ReadToDirectory(string path, IEnumerable<byte[]> payloadKeys = null) {
 			var directory = new DirectoryInfo(path);

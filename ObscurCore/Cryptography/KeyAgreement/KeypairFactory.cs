@@ -31,7 +31,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
 
 			if (curveName.Equals ("Curve25519")) {
 				var privEntropy = new byte[32];
-				StratCom.EntropySource.NextBytes(privEntropy);
+				StratCom.EntropySupplier.NextBytes(privEntropy);
 				var privateKey = Curve25519.CreatePrivateKey(privEntropy);
 				var publicKey = Curve25519.CreatePublicKey(privateKey);
 
@@ -67,7 +67,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
 			BigInteger n = domain.N;
 
 			do {
-				d = new BigInteger(n.BitLength, StratCom.EntropySource);
+				d = new BigInteger(n.BitLength, StratCom.EntropySupplier);
 			} while (d.SignValue == 0 || (d.CompareTo(n) >= 0));
 
 			Q = EcBasePointMultiplier.Multiply(domain.G, d);

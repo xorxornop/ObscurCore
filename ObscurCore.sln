@@ -50,7 +50,7 @@ Global
 		$0.DotNetNamingPolicy = $5
 		$5.DirectoryNamespaceAssociation = PrefixedHierarchical
 		$5.ResourceNamePolicy = FileFormatDefault
-		version = 0.5
+		version = 0.8
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

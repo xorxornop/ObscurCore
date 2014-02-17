@@ -73,7 +73,7 @@ namespace ObscurCore.Packaging
 			var paddingLength = (_paddingMode == FrameshiftPaddingMode.VariableLength) ? SelectionSource.Next(_minPadding, _maxPadding + 1) : _maxPadding;
 			Debug.Print(DebugUtility.CreateReportString("FrameshiftPayloadMux", "EmitHeader/EmitTrailer", "Padding length",
 				paddingLength));
-			StratCom.EntropySource.NextBytes(_paddingBuffer, 0, paddingLength);
+			StratCom.EntropySupplier.NextBytes(_paddingBuffer, 0, paddingLength);
 
 			#if AUTH_PADDING
 			authenticator.Write(_paddingBuffer, 0, paddingLength);

@@ -21,6 +21,9 @@ using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.KeyDerivation
 {
+	/// <summary>
+	/// "Stretches" a single pre-key into encryption and authentication keys with a key derivation function.
+	/// </summary>
 	public static class KeyStretchingUtility
 	{
 		/// <summary>

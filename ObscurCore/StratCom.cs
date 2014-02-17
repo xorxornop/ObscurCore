@@ -22,17 +22,29 @@ using ProtoBuf;
 
 namespace ObscurCore
 {
+	/// <summary>
+	/// Strategic Command. 
+	/// Holds various resources shared by the entirety of ObscurCore.
+	/// </summary>
     public static class StratCom
     {
         private const int InitialSeedSize = 64; // bytes
-		public static readonly SecureRandom EntropySource = SecureRandom.GetInstance("SHA256PRNG");
+		public static readonly SecureRandom EntropySupplier = SecureRandom.GetInstance("SHA256PRNG");
 
         internal static readonly DTOSerialiser Serialiser = new DTOSerialiser();
 
         static StratCom() {
-            EntropySource.SetSeed(SecureRandom.GetSeed(InitialSeedSize));
-            EntropySource.SetSeed(Thread.CurrentThread.ManagedThreadId);
+            EntropySupplier.SetSeed(SecureRandom.GetSeed(InitialSeedSize));
+            EntropySupplier.SetSeed(Thread.CurrentThread.ManagedThreadId);
         }
+
+		/// <summary>
+		/// Adds entropy to the entropy source. 
+		/// Important to do so periodically from a high quality entropy source!
+		/// </summary>
+		public static void AddEntropy (byte[] entropy) {
+			EntropySupplier.SetSeed (entropy);
+		}
 
         /// <summary>
         /// Provides serialisation capabilities for any object that has a ProtoContract attribute (e.g. from ObscurCore.DTO namespace).
@@ -46,7 +58,7 @@ namespace ObscurCore
 
         public static void SerialiseDataTransferObject(object obj, Stream output, bool prefixLength = false) {
             var type = obj.GetType();
-            if (!Serialiser.CanSerializeContractType(type)) {
+			if (Serialiser.CanSerializeContractType(type) == false) {
                 throw new ArgumentException(
                     "Cannot serialise - object type does not have a serialisation contract.", "obj");
             }
@@ -62,7 +74,7 @@ namespace ObscurCore
         /// </summary>
         /// <returns>The DTO object serialised to binary data wrapped in a MemoryStream.</returns>
         public static T DeserialiseDataTransferObject<T>(byte[] objectBytes, bool prefixLength = false) {
-            if (!Serialiser.CanSerializeContractType(typeof (T))) {
+			if (Serialiser.CanSerializeContractType(typeof (T)) == false) {
                 throw new ArgumentException(
                     "Cannot deserialise - requested type does not have a serialisation contract.");
             }
@@ -83,7 +95,7 @@ namespace ObscurCore
         /// <param name="input">Stream to read the serialised object from.</param>
         /// <returns>Deserialised DTO object</returns>
         public static T DeserialiseDataTransferObject<T>(Stream input) {
-            if (!Serialiser.CanSerializeContractType(typeof (T))) {
+			if (Serialiser.CanSerializeContractType(typeof (T)) == false) {
                 throw new ArgumentException(
                     "Cannot deserialise - requested type does not have a serialisation contract.");
             }

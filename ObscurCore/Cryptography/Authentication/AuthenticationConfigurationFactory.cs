@@ -114,7 +114,7 @@ namespace ObscurCore.Cryptography.Authentication
 
 			if (nonce == null) {
 				nonce = new byte[16];
-				StratCom.EntropySource.NextBytes (nonce);
+				StratCom.EntropySupplier.NextBytes (nonce);
 			}
 
 			return CreateAuthConf(MacFunction.Poly1305.ToString(), 256, 128, functionConfig, nonce);
@@ -129,7 +129,7 @@ namespace ObscurCore.Cryptography.Authentication
 				Nonce = nonce,
 				Salt = new byte[keySizeBits / 8]
 			};
-			StratCom.EntropySource.NextBytes(config.Salt);
+			StratCom.EntropySupplier.NextBytes(config.Salt);
 			return config;
 		}
 	}

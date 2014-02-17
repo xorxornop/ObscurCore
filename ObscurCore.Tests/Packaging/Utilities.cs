@@ -29,9 +29,9 @@ namespace ObscurCore.Tests.Packaging
                 };
 
 				payloadItem.EncryptionKey = new byte[payloadItem.Encryption.KeySizeBits / 8];
-				StratCom.EntropySource.NextBytes(payloadItem.EncryptionKey);
+				StratCom.EntropySupplier.NextBytes(payloadItem.EncryptionKey);
 				payloadItem.AuthenticationKey = new byte[payloadItem.Authentication.KeySizeBits.Value / 8];
-				StratCom.EntropySource.NextBytes(payloadItem.AuthenticationKey);
+				StratCom.EntropySupplier.NextBytes(payloadItem.AuthenticationKey);
 
                 payloadItem.SetStreamBinding(fileInfo.OpenRead);
 
@@ -57,9 +57,9 @@ namespace ObscurCore.Tests.Packaging
                 };
 
                 payloadItem.EncryptionKey = new byte[payloadItem.Encryption.KeySizeBits / 8];
-                StratCom.EntropySource.NextBytes(payloadItem.EncryptionKey);
+                StratCom.EntropySupplier.NextBytes(payloadItem.EncryptionKey);
 				payloadItem.AuthenticationKey = new byte[payloadItem.Authentication.KeySizeBits.Value / 8];
-				StratCom.EntropySource.NextBytes(payloadItem.AuthenticationKey);
+				StratCom.EntropySupplier.NextBytes(payloadItem.AuthenticationKey);
 
                 payloadItem.SetStreamBinding(fileInfo.OpenRead);
 

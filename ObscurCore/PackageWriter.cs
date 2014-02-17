@@ -33,6 +33,9 @@ using ObscurCore.Packaging;
 
 namespace ObscurCore
 {
+	/// <summary>
+	/// Provides capability of writing ObscurCore packages.
+	/// </summary>
 	public sealed class PackageWriter
 	{
 		private readonly Manifest _manifest;
@@ -79,7 +82,6 @@ namespace ObscurCore
 		/// <summary>
 		/// Configuration of symmetric cipher used for encryption of the manifest.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
 		internal SymmetricCipherConfiguration ManifestCipher {
 			get { return _manifestCryptoConfig.SymmetricCipher; }
 			private set {
@@ -97,7 +99,6 @@ namespace ObscurCore
 		/// <summary>
 		/// Configuration of function used in verifying the authenticity/integrity of the manifest.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
 		internal VerificationFunctionConfiguration ManifestAuthentication {
 			get { return _manifestCryptoConfig.Authentication; }
 			private set {
@@ -116,7 +117,6 @@ namespace ObscurCore
 		/// Configuration of key derivation used to derive encryption and authentication keys from prior key material. 
 		/// These keys are used in those functions of manifest encryption/authentication, respectively.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
 		internal KeyDerivationConfiguration ManifestKeyDerivation {
 			get { return _manifestCryptoConfig.KeyDerivation; }
 			private set {
@@ -135,7 +135,6 @@ namespace ObscurCore
 		/// Configuration of key confirmation used for confirming the cryptographic key 
 		/// to be used as the basis for key derivation.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
 		internal VerificationFunctionConfiguration ManifestKeyConfirmation {
 			get { return _manifestCryptoConfig.KeyConfirmation; }
 			private set {
@@ -153,7 +152,6 @@ namespace ObscurCore
 		/// <summary>
 		/// Layout scheme configuration of the items in the payload.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
 		public PayloadLayoutScheme PayloadLayout
 		{
 			get {
@@ -171,7 +169,24 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="key">Cryptographic key known to the receiver to use for the manifest.</param>
 		/// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-		public PackageWriter (byte[] key, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Fabric) {
+		public PackageWriter (byte[] key, bool lowEntropy, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Fabric) {
+			_manifest = new Manifest();
+			_manifestHeader = new ManifestHeader
+			{
+				FormatVersion = Athena.Packaging.HeaderVersion,
+				CryptographySchemeName = ManifestCryptographyScheme.SymmetricOnly.ToString()
+			};
+			SetManifestCryptoSymmetric(key, lowEntropy);
+			PayloadLayout = layoutScheme;
+		}
+
+		/// <summary>
+		/// Create a new package using default symmetric-only encryption for security. 
+		/// Key is used in UTF-8 encoded byte array form.
+		/// </summary>
+		/// <param name="key">Passphrase known to the receiver to use for the manifest.</param>
+		/// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
+		public PackageWriter (string key, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Fabric) {
 			_manifest = new Manifest();
 			_manifestHeader = new ManifestHeader
 			{
@@ -205,7 +220,6 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="name">Name of the item. Subject of the text is suggested.</param>
 		/// <param name="text">Content of the item.</param>
-		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
 		/// <exception cref="ArgumentException">Supplied null or empty string.</exception>
 		public void AddText(string name, string text) {
 			if (String.IsNullOrEmpty(name) || String.IsNullOrWhiteSpace(name)) {
@@ -265,7 +279,7 @@ namespace ObscurCore
 
 
 		/// <summary>
-		/// Creates a new PayloadItem DTO object, but does not add it to the manifest, returning it instead.
+		/// Creates a new PayloadItem DTO object.
 		/// </summary>
 		/// <returns>A payload item.</returns>
 		/// <remarks>
@@ -293,10 +307,46 @@ namespace ObscurCore
 
 			if (skipCrypto == false) {
 				newItem.EncryptionKey = new byte[newItem.Encryption.KeySizeBits / 8];
-				StratCom.EntropySource.NextBytes (newItem.EncryptionKey);
+				StratCom.EntropySupplier.NextBytes (newItem.EncryptionKey);
 				newItem.AuthenticationKey = new byte[newItem.Authentication.KeySizeBits.Value / 8];
-				StratCom.EntropySource.NextBytes (newItem.AuthenticationKey);
+				StratCom.EntropySupplier.NextBytes (newItem.AuthenticationKey);
 			}
+
+			newItem.SetStreamBinding (itemData);
+			return newItem;
+		}
+
+		/// <summary>
+		/// Creates a new PayloadItem DTO object.
+		/// </summary>
+		/// <returns>A payload item.</returns>
+		/// <remarks>
+		/// Default encryption is HC-128 with random IV and key. 
+		/// Default authentication is Poly1305-AES.
+		/// </remarks>
+		/// <param name="itemData">Function supplying a stream of the item data.</param>
+		/// <param name="itemType">Type of the item, e.g., Utf8 (text) or Binary (data/file).</param>
+		/// <param name="externalLength">External length (outside the payload) of the item.</param>
+		/// <param name="relativePath">Relative path of the item.</param>
+		/// <param name="preKey">Key to be found on recipient's system and used as a basis.</param>
+		/// <param name="lowEntropyKey">If set to <c>true</c> pre-key has low entropy.</param>
+		private static PayloadItem CreateItem(Func<Stream> itemData, PayloadItemType itemType, long externalLength, 
+			string relativePath, byte[] preKey, bool lowEntropyKey = true)
+		{
+			byte[] keyConfirmatConfVerifiedOutput;
+			var keyConfirmatConf = CreateDefaultPayloadItemKeyConfirmationConfiguration (preKey, out keyConfirmatConfVerifiedOutput);
+			var kdfConf = CreateDefaultPayloadItemKeyDerivation (preKey.Length, lowEntropyKey);
+
+			var newItem = new PayloadItem {
+				ExternalLength = externalLength,
+				Type = itemType,
+				RelativePath = relativePath,
+				Encryption = CreateDefaultPayloadItemCipherConfiguration(),
+				Authentication = CreateDefaultPayloadItemAuthenticationConfiguration(),
+				KeyConfirmation = keyConfirmatConf,
+				KeyConfirmationVerifiedOutput = keyConfirmatConfVerifiedOutput,
+				KeyDerivation = kdfConf
+			};
 
 			newItem.SetStreamBinding (itemData);
 			return newItem;
@@ -307,8 +357,35 @@ namespace ObscurCore
 		}
 
 		private static VerificationFunctionConfiguration CreateDefaultPayloadItemAuthenticationConfiguration() {
-			return AuthenticationConfigurationFactory.CreateAuthenticationConfigurationPoly1305(SymmetricBlockCipher.Aes);
+			return AuthenticationConfigurationFactory.CreateAuthenticationConfigurationPoly1305 (SymmetricBlockCipher.Aes);
 		}
+
+		private static VerificationFunctionConfiguration CreateDefaultPayloadItemKeyConfirmationConfiguration (byte[] key, out byte[] verifiedOutput) {
+			return ConfirmationFactory.GenerateKeyConfirmation (HashFunction.Blake2B256, key, out verifiedOutput);
+		}
+
+		/// <summary>
+		/// Creates a default payload item key derivation configuration.
+		/// </summary>
+		/// <remarks>Default KDF configuration is scrypt</remarks>
+		/// <returns>Key derivation configuration.</returns>
+		/// <param name="keyLengthBytes">Length of key to produce.</param>
+		/// <param name="lowEntropyPreKey">Pre-key has low entropy, e.g. a human-memorisable passphrase.</param>
+		private static KeyDerivationConfiguration CreateDefaultPayloadItemKeyDerivation (int keyLengthBytes, bool lowEntropyPreKey = true) {
+			var schemeConfig = new ScryptConfiguration {
+				Iterations = lowEntropyPreKey ? 16384 : 1024,
+				Blocks = 8,
+				Parallelism = 1
+			};
+			var config = new KeyDerivationConfiguration {
+				SchemeName = KeyDerivationFunction.Scrypt.ToString(),
+				SchemeConfiguration = schemeConfig.SerialiseDto(),
+				Salt = new byte[keyLengthBytes]
+			};
+			StratCom.EntropySupplier.NextBytes(config.Salt);
+			return config;
+		}
+
 
 		/// <summary>
 		/// Advanced method. Manually set a symmetric-only manifest cryptography configuration. 
@@ -329,12 +406,22 @@ namespace ObscurCore
 		}
 
 		/// <summary>
+		/// Set the manifest to use symmetric-only security. 
+		/// Key is used in UTF-8 encoded byte array form.
+		/// </summary>
+		/// <param name="key">Passphrase known to the receiver of the package.</param>
+		/// <exception cref="ArgumentException">Array is null or zero-length.</exception>
+		public void SetManifestCryptoSymmetric (string key) {
+			SetManifestCryptoSymmetric (Encoding.UTF8.GetBytes(key), lowEntropy: true);
+		}
+
+		/// <summary>
 		/// Set the manifest to use symmetric-only security.
 		/// </summary>
 		/// <param name="key">Key known to the receiver of the package.</param>
-		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
+		/// <param name="key">Pre-key has low entropy, e.g. a human-memorisable passphrase.</param>
 		/// <exception cref="ArgumentException">Array is null or zero-length.</exception>
-		public void SetManifestCryptoSymmetric(byte[] key) {
+		public void SetManifestCryptoSymmetric (byte[] key, bool lowEntropy) {
 			if (key.IsNullOrZeroLength()) {
 				throw new ArgumentException("Key is null or zero-length.", "key");
 			}
@@ -349,19 +436,19 @@ namespace ObscurCore
 				_writingPreManifestKey.ToHexString()));
 
 			SymmetricCipherConfiguration cipherConfig = _manifestCryptoConfig == null
-			                                            ? CreateDefaultManifestCipherConfiguration()
-			                                            : _manifestCryptoConfig.SymmetricCipher ?? CreateDefaultManifestCipherConfiguration();
+                ? CreateDefaultManifestCipherConfiguration()
+                : _manifestCryptoConfig.SymmetricCipher ?? CreateDefaultManifestCipherConfiguration();
 
 			VerificationFunctionConfiguration authenticationConfig = _manifestCryptoConfig == null
-			                                                         ? CreateDefaultManifestAuthenticationConfiguration () : 
-			                                                         _manifestCryptoConfig.Authentication ?? CreateDefaultManifestAuthenticationConfiguration();
+            	? CreateDefaultManifestAuthenticationConfiguration () : 
+            	_manifestCryptoConfig.Authentication ?? CreateDefaultManifestAuthenticationConfiguration();
 
 			KeyDerivationConfiguration derivationConfig =  _manifestCryptoConfig == null
-			                                              ? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8, lowEntropyPreKey:true)
-			                                              : _manifestCryptoConfig.KeyDerivation ?? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8);
+				? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8, lowEntropy)
+            	: _manifestCryptoConfig.KeyDerivation ?? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8);
 
 			byte[] keyConfirmationOutput;
-			var keyConfirmationConfig = ConfirmationUtility.CreateDefaultManifestKeyConfirmation (
+			var keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration (
 				_writingPreManifestKey, out keyConfirmationOutput);
 
 			_manifestCryptoConfig = new SymmetricManifestCryptographyConfiguration {
@@ -379,7 +466,7 @@ namespace ObscurCore
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Package is being written, not read.</exception>
 		/// <exception cref="ArgumentException">Enum was set to None.</exception>
-		public void ConfigureManifestSymmetricCrypto(SymmetricBlockCipher cipher, BlockCipherMode mode, 
+		public void ConfigureManifestCryptoSymmetric(SymmetricBlockCipher cipher, BlockCipherMode mode, 
 			BlockCipherPadding padding)
 		{
 			if (cipher == SymmetricBlockCipher.None) {
@@ -428,19 +515,19 @@ namespace ObscurCore
 				_writingPreManifestKey.ToHexString()));
 
 			SymmetricCipherConfiguration cipherConfig = _manifestCryptoConfig == null
-			                                            ? CreateDefaultManifestCipherConfiguration()
-			                                            : _manifestCryptoConfig.SymmetricCipher ?? CreateDefaultManifestCipherConfiguration();
+	            ? CreateDefaultManifestCipherConfiguration()
+	            : _manifestCryptoConfig.SymmetricCipher ?? CreateDefaultManifestCipherConfiguration();
 
 			VerificationFunctionConfiguration authenticationConfig = _manifestCryptoConfig == null
-			                                                         ? CreateDefaultManifestAuthenticationConfiguration () : 
-			                                                         _manifestCryptoConfig.Authentication ?? CreateDefaultManifestAuthenticationConfiguration();
+	        	? CreateDefaultManifestAuthenticationConfiguration () : 
+	        	_manifestCryptoConfig.Authentication ?? CreateDefaultManifestAuthenticationConfiguration();
 
 			KeyDerivationConfiguration derivationConfig =  _manifestCryptoConfig == null
-			                                              ? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8, lowEntropyPreKey:false)
-			                                              : _manifestCryptoConfig.KeyDerivation ?? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8);
+	        	? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8, lowEntropyPreKey:false)
+	        	: _manifestCryptoConfig.KeyDerivation ?? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8);
 
 			byte[] keyConfirmationOutput;
-			var keyConfirmationConfig = ConfirmationUtility.CreateDefaultManifestKeyConfirmation (
+			var keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration (
 				_writingPreManifestKey, out keyConfirmationOutput);
 
 			_manifestCryptoConfig = new Um1HybridManifestCryptographyConfiguration {
@@ -463,15 +550,20 @@ namespace ObscurCore
 			return AuthenticationConfigurationFactory.CreateAuthenticationConfiguration (MacFunction.Blake2B256, out outputSize);
 		}
 
+		private static VerificationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration (byte[] key, out byte[] verifiedOutput) {
+			return ConfirmationFactory.GenerateKeyConfirmation (HashFunction.Blake2B256, key, out verifiedOutput);
+		}
+
 		/// <summary>
 		/// Creates a default manifest key derivation configuration.
 		/// </summary>
 		/// <remarks>Default KDF configuration is scrypt</remarks>
 		/// <returns>Key derivation configuration.</returns>
 		/// <param name="keyLengthBytes">Length of key to produce.</param>
+		/// <param name="lowEntropyPreKey">Pre-key has low entropy, e.g. a human-memorisable passphrase.</param>
 		private static KeyDerivationConfiguration CreateDefaultManifestKeyDerivation (int keyLengthBytes, bool lowEntropyPreKey = true) {
 			var schemeConfig = new ScryptConfiguration {
-				Iterations = lowEntropyPreKey ? 16384 : 4096,
+				Iterations = lowEntropyPreKey ? 32768 : 1024,
 				Blocks = 8,
 				Parallelism = 2
 			};
@@ -480,7 +572,7 @@ namespace ObscurCore
 				SchemeConfiguration = schemeConfig.SerialiseDto(),
 				Salt = new byte[keyLengthBytes]
 			};
-			StratCom.EntropySource.NextBytes(config.Salt);
+			StratCom.EntropySupplier.NextBytes(config.Salt);
 			return config;
 		}
 
@@ -488,7 +580,7 @@ namespace ObscurCore
 		/// Advanced method. Manually set a payload configuration for the package.
 		/// </summary>
 		/// <param name="payloadConfiguration">Payload configuration to set.</param>
-		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
+		/// <exception cref="ArgumentNullException">Payload configuration is null.</exception>
 		public void SetPayloadConfiguration (PayloadConfiguration payloadConfiguration) {
 			if (payloadConfiguration == null) {
 				throw new ArgumentNullException("payloadConfiguration");
@@ -542,7 +634,7 @@ namespace ObscurCore
 				_writingTempStream = new MemoryStream();
 			}
 
-			/*			 Now we write the package */
+			/* Now we write the package */
 
 			// Write the header tag
 			Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "[*PACKAGE START*] Offset",
@@ -559,7 +651,7 @@ namespace ObscurCore
 			Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest working key",
 				workingManifestCipherKey.ToHexString()));
 
-			/*			 Write the payload to temporary storage (payloadTemp) */
+			/* Write the payload to temporary storage (_writingTempStream) */
 			PayloadLayoutScheme payloadScheme;
 			try {
 				payloadScheme = _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>();

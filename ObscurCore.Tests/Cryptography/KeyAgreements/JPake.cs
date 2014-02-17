@@ -50,8 +50,8 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 			var ecParams = NamedEllipticCurves.GetEcCurveData (curveName).GetParameters();
 			var digest = AuthenticatorFactory.CreateHashPrimitive (hashFunction);
 
-			var alice = new EcJpakeSession ("ObscurCore_P0", password, ecParams, digest, StratCom.EntropySource);
-			var bob = new EcJpakeSession ("ObscurCore_P1", password, ecParams, digest, StratCom.EntropySource);
+			var alice = new EcJpakeSession ("ObscurCore_P0", password, ecParams, digest, StratCom.EntropySupplier);
+			var bob = new EcJpakeSession ("ObscurCore_P1", password, ecParams, digest, StratCom.EntropySupplier);
 
 			var sw = System.Diagnostics.Stopwatch.StartNew ();
 

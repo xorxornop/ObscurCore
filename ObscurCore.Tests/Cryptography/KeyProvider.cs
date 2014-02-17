@@ -46,10 +46,10 @@ namespace ObscurCore.Tests.Cryptography
 
             for (int i = 0; i < keysToMake; i++) {
                 var newKey = new byte[16];
-                StratCom.EntropySource.NextBytes(newKey);
+                StratCom.EntropySupplier.NextBytes(newKey);
                 symKeys.Add(newKey);
 
-				var curveName = NamedEllipticCurves.Curves.Keys.ElementAt (StratCom.EntropySource.Next (NamedEllipticCurves.Curves.Count));
+				var curveName = NamedEllipticCurves.Curves.Keys.ElementAt (StratCom.EntropySupplier.Next (NamedEllipticCurves.Curves.Count));
 				ecKeypairs.Add(KeypairFactory.GenerateEcKeypair(curveName));
             }
 

@@ -35,7 +35,7 @@ namespace ObscurCore.Tests.Packaging
 			TimeSpan enc, dec;
 			using (var ms = new MemoryStream ()) {
 				var sw = Stopwatch.StartNew ();
-				var package = new PackageWriter (preKey, scheme);
+				var package = new PackageWriter (preKey, false, scheme); // low entropy = false
 				foreach (var file in IOTestBase.LargeBinaryFileList) {
 					package.AddFile (file.FullName);
 				}
@@ -80,7 +80,7 @@ namespace ObscurCore.Tests.Packaging
 		private void UM1PackageTest(string testName, PayloadLayoutScheme scheme) {
 			// Process of writing destroys sender and receiver key variables passed in for security
 			// We must copy it to a local variable before reading the package back
-			var senderKeyEnumerated = KeyProviders.Alice.EcKeypairs.ElementAt (StratCom.EntropySource.Next (KeyProviders.Alice.EcKeypairs.Count ()));
+			var senderKeyEnumerated = KeyProviders.Alice.EcKeypairs.ElementAt (StratCom.EntropySupplier.Next (KeyProviders.Alice.EcKeypairs.Count ()));
 			var receiverKeyEnumerated = KeyProviders.Bob.EcKeypairs.First ((keypair) => keypair.CurveName.Equals (senderKeyEnumerated.CurveName));
 
 			TimeSpan enc, dec;
