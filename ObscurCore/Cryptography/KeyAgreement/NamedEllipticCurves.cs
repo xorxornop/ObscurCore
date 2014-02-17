@@ -575,8 +575,6 @@ namespace ObscurCore.Cryptography.KeyAgreement
 				H = "02",
 				Seed = "2AA058F73A0E33AB486B0F610410C53A7F132310"
 			});
-
 		}
 	}
 }
-

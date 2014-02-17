@@ -36,7 +36,7 @@ namespace ObscurCore.DTO
         /// </summary>
 		[ProtoMember(2, IsRequired = true)]
         public string CurveProviderName { get; set; }
-		
+
         /// <summary>
         /// Name of the elliptic curve in the provider's selection.
         /// </summary>
@@ -67,43 +67,40 @@ namespace ObscurCore.DTO
         public bool Equals(EcKeyConfiguration other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            if(!IsSuperficiallyValid()) 
-                throw new InvalidDataException("Not a valid key configuration.");
-            return string.Equals(CurveProviderName, other.CurveProviderName) && string.Equals(CurveName, other.CurveName) &&
-                   EncodedKey.SequenceEqual(other.EncodedKey);
+			return 
+				PublicComponent == other.PublicComponent && 
+				String.Equals(CurveProviderName, other.CurveProviderName) && String.Equals(CurveName, other.CurveName) &&
+				EncodedKey.SequenceEqual(other.EncodedKey) && AdditionalData.SequenceEqual(other.AdditionalData);
         }
 		
         public override int GetHashCode () {
-            if (!IsSuperficiallyValid())
-                throw new InvalidDataException("Not a valid key configuration.");
             unchecked {
-                int hashCode = CurveProviderName.GetHashCode(); // Must not be null!
+				int hashCode = PublicComponent.GetHashCode(); // Must not be null!
+				hashCode = (hashCode * 397) ^ CurveProviderName.GetHashCode(); // Must not be null!
                 hashCode = (hashCode * 397) ^ CurveName.GetHashCode(); // Must not be null!
                 hashCode = (hashCode * 397) ^ EncodedKey.GetHashCode(); // Must not be null! 
                 return hashCode;
             }
         }
-
-        public bool IsSuperficiallyValid() {
-            return String.IsNullOrEmpty(CurveProviderName) || String.IsNullOrEmpty(CurveName) || EncodedKey == null;
-        }
     }
 
     public interface IEcKeyConfiguration
     {
-        /// <summary>
+		bool PublicComponent { get; }
+
+		/// <summary>
         /// Name of the curve provider. Used to look up relevant domain parameters to interpret the encoded key.
         /// </summary>
-        string CurveProviderName { get; set; }
+        string CurveProviderName { get; }
 
         /// <summary>
         /// Name of the elliptic curve in the provider's selection.
         /// </summary>
-        string CurveName { get; set; }
+        string CurveName { get; }
 
         /// <summary>
         /// Byte-array-encoded form of the key.
         /// </summary>
-        byte[] EncodedKey { get; set; }
+        byte[] EncodedKey { get; }
     }
 }

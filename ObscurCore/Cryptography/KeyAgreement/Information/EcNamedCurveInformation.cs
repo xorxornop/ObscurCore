@@ -24,17 +24,16 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 	public abstract class EcNamedCurveInformation
 	{
 		/// <summary>
-		/// Name of the cryptographic cipher transform (must be a member of SymmetricBlockCiphers or SymmetricStreamCiphers).
+		/// Name of the elliptic curve.
 		/// </summary>
-		public string Name { get; internal set; }
+		public string Name { get; protected internal set; }
 
 		/// <summary>
 		/// Name to show a user or for a detailed specification.
 		/// </summary>
-		public string DisplayName { get; internal set; }
+		public string DisplayName { get; protected internal set; }
 
-
-		public int BitLength { get; internal set; }
+		public int BitLength { get; protected internal set; }
 
 		public abstract ECDomainParameters GetParameters();
 
@@ -48,12 +47,12 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 	/// </summary>
 	public class FpEcNamedCurveInformation : EcNamedCurveInformation
 	{
-		public string Q { get; internal set; }
-		public string A { get; internal set; }
-		public string B { get; internal set; }
-		public string G { get; internal set; }
-		public string N { get; internal set; }
-		public string H { get; internal set; }
+		public string Q { get; protected internal set; }
+		public string A { get; protected internal set; }
+		public string B { get; protected internal set; }
+		public string G { get; protected internal set; }
+		public string N { get; protected internal set; }
+		public string H { get; protected internal set; }
 
 		public string Seed { get; internal set; }
 
@@ -72,11 +71,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 	/// </summary>
 	public class CustomFpEcNamedCurveInformation : EcNamedCurveInformation
 	{
-		public Func<ECCurve> Curve { get; internal set; }
+		public Func<ECCurve> Curve { get; protected internal set; }
 
-		public string G { get; internal set; }
+		public string G { get; protected internal set; }
 
-		public string Seed { get; internal set; }
+		public string Seed { get; protected internal set; }
 
 		public override ECDomainParameters GetParameters () {
 			var curve = Curve ();
@@ -90,17 +89,17 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 	/// </summary>
 	public class TpbF2mEcNamedCurveInformation : EcNamedCurveInformation
 	{
-		public int M { get; internal set; }
-		public int K { get; internal set; }
+		public int M { get; protected internal set; }
+		public int K { get; protected internal set; }
 
-		public string A { get; internal set; }
-		public string B { get; internal set; }
-		public string G { get; internal set; }
+		public string A { get; protected internal set; }
+		public string B { get; protected internal set; }
+		public string G { get; protected internal set; }
 
-		public string N { get; internal set; }
-		public string H { get; internal set; }
+		public string N { get; protected internal set; }
+		public string H { get; protected internal set; }
 
-		public string Seed { get; internal set; }
+		public string Seed { get; protected internal set; }
 
 		public override ECDomainParameters GetParameters () {
 			var n = new BigInteger (N, 16);
@@ -116,19 +115,19 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 	/// </summary>
 	public class PpbF2mEcNamedCurveInformation : EcNamedCurveInformation
 	{
-		public int M { get; internal set; }
-		public int K1 { get; internal set; }
-		public int K2 { get; internal set; }
-		public int K3 { get; internal set; }
+		public int M { get; protected internal set; }
+		public int K1 { get; protected internal set; }
+		public int K2 { get; protected internal set; }
+		public int K3 { get; protected internal set; }
 
-		public string A { get; internal set; }
-		public string B { get; internal set; }
-		public string G { get; internal set; }
+		public string A { get; protected internal set; }
+		public string B { get; protected internal set; }
+		public string G { get; protected internal set; }
 
-		public string N { get; internal set; }
-		public string H { get; internal set; }
+		public string N { get; protected internal set; }
+		public string H { get; protected internal set; }
 
-		public string Seed { get; internal set; }
+		public string Seed { get; protected internal set; }
 
 		public override ECDomainParameters GetParameters () {
 			var n = new BigInteger (N, 16);

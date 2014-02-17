@@ -49,11 +49,10 @@ If deniability is not needed, one could use this feature by distributing a packa
 
 The index of the archive (where all the information about the items in the archive is kept), termed a *manifest* in ObscurCore nonclemature, is encrypted with a choice of schemes: 
 
-+	Symmetric cipher (non-public key; participants must share key securely somehow)
-+	UM1-hybrid (public key)
-+	Curve25519-UM1-hybrid (public key)
++	Symmetric cipher (participants must share secret key securely somehow)
++	UM1-hybrid (ephemeral-static-static elliptic curve Diffie-Hellman)
 
-The hybrid schemes derive a key from the public key cryptosystems, derive it further with a KDF, and uses this as the key for a symmetric cipher.
+The hybrid scheme derives a key from the public key cryptosystem, derives it further with a KDF, and uses this as the key for a symmetric cipher.
 The symmetric-only scheme derives the supplied shared key further with a KDF, and uses this as the key for a symmetric cipher.
 
 The collection of items in the package is termed the "payload". There is a choice of schemes:
@@ -62,12 +61,11 @@ The collection of items in the package is termed the "payload". There is a choic
 +	Frameshift
 +	Fabric
 
-Simple just concatenates them together in *random* order.
-Frameshift does the same but inserts *random* lengths of bytes before and after each item.
-Fabric multiplexes *random*-length stripes of each item, mixing them all up, much like the Rubberhose file system.
+Simple just concatenates them together in varied (or sequential) order.
+Frameshift does the same but inserts variable (or fixed) lengths of bytes before and after each item.
+Fabric multiplexes variable (or fixed) length stripes of each item, mixing them all up, much like the Rubberhose file system.
 
-... Obviously, if it were *really* random, you'd never get your data back. No - rather, "random" is the output of a CSPRNG.
-
+Where variable ordering/lengths are used, these are assigned by the use of a CSPRNG, so the recipient can decrypt - if it was actually random, this would be impossible.
 
 All items and their configurations, along with the manifest and its configuration, are authenticated with a MAC in the **Encrypt-then-MAC (EtM)** scheme, which provides strong verification and minimum information leakage. Upon detection of any alteration, all operations are aborted.
 
@@ -77,24 +75,23 @@ Here's an example using the packager:
     using (var output = new MemoryStream()) {
     	var package = new Package(key);
     	package.AddFile(filePath);
-    	package.Write(ms);
+    	package.Write(output);
     }
 
 The above...
-*	Creates the package with frameshifting payload layout (default) and a SOSEMANUK-based CSPRNG
+*	Creates the symmetric-encryption package using XSalsa20 encryption, BLAKE2B256 key confirmation, BLAKE2B256 authentication, and key derivation with scrypt for the manifest
+* 	The package is set up with fabric payload layout (default) and a Salsa20-based CSPRNG
 *	Sets up key confirmation for the manifest with BLAKE2B-256 (default)
-*	Adds a file to a package with AES-256/CTR encryption (random key, default) and Poly1305-AES EtM authentication (random key and nonce, default)
+*	Adds a file to a package with HC-128 encryption (random key & IV, default) and Poly1305-AES EtM authentication (random key and nonce, default). Key confirmation and derivation is not used due to the keys being random and stored in the manifest
 *	Derives a package/manifest key (from the supplied one) with scrypt KDF
 *	Writes it out to the output stream
 
-Pretty easy huh?
 
 All schemes offer key confirmation capability with a choice of algorithms (e.g. MAC, KDF, etc.)
+
 If a package is recieived from a sender for which you hold multiple keys on file for (whatever kind they may be), all them will be verified with the key confirmation data (if present, which it is by default - generated automatically) to determine the correct one to proceed with.
 
 Packages include the capability to communicate new keys (of any kind), or request invalidation of keys for subsequent communications. For example, you could send a symmetric key for manifests, so as to reduce overhead incurred by public key schemes.
-
-More to come... it is designed to be a highly comprehensive system.
 
 
 Functionality exposed through streams
@@ -106,7 +103,7 @@ Functionality exposed through streams
 
 	var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCipher.Aes,
 		BlockCipherMode.Ctr, BlockCipherPadding.None);
-	using (var cs = new SymmetricCryptoStream(destStream, encrypting:true, config, key, closeOnDispose:false) ) {
+	using (var cs = new SymmetricCryptoStream(destStream, encrypting:true, config, keyBytes, closeOnDispose:false) ) {
 		sourceStream.CopyTo(cs);
 	}
 
@@ -142,13 +139,13 @@ And these stream ciphers:
 ### Hashing and MAC ###
 
 	byte[] hash = null;
-	using (var hs = new HashStream(destStream, writing:true, HashFunction.Blake2B256, hash, closeOnDispose:true) ) {
+	using (var hs = new HashStream(destStream, writing:true, HashFunction.Blake2B256, out hash, closeOnDispose:true) ) {
 		sourceStream.CopyTo(cs);
 	}
 
 	byte[] mac = null;
-	using (var ms = new MacStream(destStream, writing:true, MacFunction.BlakeB256, mac, key, salt, config:null, closeOnDispose:true) ) {
-		sourceStream.CopyTo(cs);
+	using (var ms = new MacStream(destStream, writing:true, MacFunction.BlakeB256, out mac, keyBytes, saltBytes:null, config:null, closeOnDispose:true) ) {
+		sourceStream.CopyTo(ms);
 	}
 
 Here's all the hash/digest functions supported (*HashFunction* enumeration) :
@@ -180,39 +177,37 @@ Primitives
 ### Key derivation ###
 
 	var config = new ScryptConfiguration {
-		IterationPower = 16,
+		Iterations = 32768,
 		Blocks = 8,
 		Parallelism = 2
 	};
 	var configBytes = config.SerialiseDto();
-	var derivedKey = Source.DeriveKeyWithKDF(KeyDerivationFunction.Scrypt, key, salt, outputSizeBits, configBytes);
+	byte[] derivedKey = Source.DeriveKeyWithKDF(KeyDerivationFunction.Scrypt, keyBytes, saltBytes, outputSizeBits:256, configBytes);
 
 These are in serious need of a convenience method. It's on the list.
 
 
 ### Key agreements ###
 
-Please note that currently no 3-pass algorithms are implemented. Sorry. It's definitely a desired feature, for that sweet, sweet Perfect Forward Secrecy...
+Please note that currently, perfect-forward-secrecy ECDH algorithms (such as 3-pass Full Unified Model; UM3) are not implemented. Sorry!
+Work has started on implementing the *Axolotl Ratchet* for another manifest cryptography scheme.
+
 There are, however, implemented UM1-type agreements, which provide unilateral forward secrecy - which is much better than nothing.
 
-There are no convenience methods for key agreements currently; they must be used manually by manipulating the primitives. Fortunately, they're pretty approachable for primitives - an example with *Curve25519-UM1*:
+J-PAKE password-authenticated key agreement is also available, using ECC instead of DSA, making for very secure and fast agreements.
+
+Elliptic curves provided are from the Brainpool Consortium and SEC2 (secp and sect curves; also called NIST curves). These are the most popular choices.
+
 
 Creating keys:
 
-	var entropy = new byte[32];
-    StratCom.EntropySource.NextBytes(entropy);
-    privateKeySender = Curve25519.CreatePrivateKey(entropy);
-    publicKeySender = Curve25519.CreatePublicKey(privateKeySender);
-
-    StratCom.EntropySource.NextBytes(entropy);
-    privateKeyRecipient = Curve25519.CreatePrivateKey(entropy);
-    publicKeyRecipient = Curve25519.CreatePublicKey(privateKeyRecipient);
+	var keypair = KeypairFactory.GenerateEcKeypair(DjbCurve.Curve25519.ToString());
 
 And calculating shared secret:
 
-    byte[] ephemeral;
-    initiatorSS = Curve25519UM1Exchange.Initiate(_publicKeyRecipient, _privateKeySender, out eph);
-	responderSS = Curve25519UM1Exchange.Respond(_publicKeySender, _privateKeyRecipient, eph);
+    EcKeyConfiguration ephemeral;
+    byte[] initiatorSS = UM1Exchange.Initiate(senderKeypair.ExportPublicKey(), senderKeypair.GetPrivateKey(), out ephemeral);
+	byte[] responderSS = UM1Exchange.Respond(receiverKeypair.ExportPublicKey(), receiverKeypair.GetPrivateKey(), ephemeral);
 
 
 ### Signatures ###

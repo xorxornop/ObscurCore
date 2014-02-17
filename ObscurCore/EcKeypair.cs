@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.DTO;
@@ -59,6 +56,7 @@ namespace ObscurCore
         /// <returns>Public key as EcKeyConfiguration DTO.</returns>
         public EcKeyConfiguration GetPrivateKey() {
 			return new EcKeyConfiguration {
+				PublicComponent = false,
                 CurveProviderName = CurveProviderName,
                 CurveName = CurveName,
 				EncodedKey = EncodedPrivateKey.CopyBytes()

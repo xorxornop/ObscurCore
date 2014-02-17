@@ -23,7 +23,6 @@ using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.DTO;
-using ObscurCore.Extensions.EllipticCurve;
 
 namespace ObscurCore.Cryptography.KeyConfirmation
 {

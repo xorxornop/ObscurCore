@@ -18,6 +18,7 @@ using System.IO;
 using ProtoBuf;
 
 //[assembly: InternalsVisibleTo(assemblyName: "ObscurCore")]
+using System.Linq;
 
 namespace ObscurCore.DTO
 {
@@ -102,12 +103,6 @@ namespace ObscurCore.DTO
 		/// </summary>
 		[ProtoMember(4, IsRequired = true)]
 		public long InternalLength { get; set; }
-
-        // /// <summary>
-        // /// Compression configuration for this payload item.
-        // /// </summary>
-        //[ProtoMember(5, IsRequired = false)]
-        //public CompressionConfiguration Compression { get; set; }
 		
         /// <summary>
         /// Encryption configuration for this payload item.
@@ -189,13 +184,6 @@ namespace ObscurCore.DTO
             return Equals((PayloadItem) obj);
         }
 
-        /// <summary>
-        /// Indicates whether the current object is equal to another object of the same type.
-        /// </summary>
-        /// <returns>
-        /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
-        /// </returns>
-        /// <param name="other">An object to compare with this object.</param>
         public bool Equals (PayloadItem other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -204,30 +192,22 @@ namespace ObscurCore.DTO
 				String.Equals(RelativePath, other.RelativePath, Type != PayloadItemType.KeyAction ? 
 					StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) && 
 				InternalLength == other.InternalLength && ExternalLength == other.ExternalLength && 
-				/*Compression.Equals(other.Compression) && */
 				Encryption.Equals(other.Encryption) && 
 				Authentication.Equals(other.Authentication) && 
-				(AuthenticationKey == null ? other.AuthenticationKey == null : AuthenticationKey.Equals(other.AuthenticationKey)) &&
-				AuthenticationVerifiedOutput.Equals(other.AuthenticationVerifiedOutput) && 
+				(AuthenticationKey == null ? other.AuthenticationKey == null : AuthenticationKey.SequenceEqual(other.AuthenticationKey)) &&
+				AuthenticationVerifiedOutput.SequenceEqual(other.AuthenticationVerifiedOutput) && 
 				(KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) && 
-				(KeyConfirmationVerifiedOutput == null ? other.KeyConfirmationVerifiedOutput == null : KeyConfirmationVerifiedOutput.Equals(other.KeyConfirmationVerifiedOutput)) && 
+				(KeyConfirmationVerifiedOutput == null ? 
+					other.KeyConfirmationVerifiedOutput == null : KeyConfirmationVerifiedOutput.SequenceEqual(other.KeyConfirmationVerifiedOutput)) && 
 				KeyDerivation == null ? other.KeyDerivation == null : KeyDerivation.Equals((other.KeyDerivation));
         }
 
-        /// <summary>
-        /// Serves as a hash function for a particular type. 
-        /// </summary>
-        /// <returns>
-        /// A hash code for the current <see cref="T:System.Object"/>.
-        /// </returns>
-        /// <filterpriority>2</filterpriority>
         public override int GetHashCode () {
             unchecked {
-                int hashCode = Type.GetHashCode();
+				int hashCode = this.Type.GetHashCode();
 				hashCode = (hashCode * 397) ^ RelativePath.GetHashCode();
                 hashCode = (hashCode * 397) ^ InternalLength.GetHashCode();
                 hashCode = (hashCode * 397) ^ ExternalLength.GetHashCode();
-				/*hashCode = (hashCode * 397) ^ (Compression != null ? Compression.GetHashCode() : 0);*/
                 hashCode = (hashCode * 397) ^ Encryption.GetHashCode();
 				hashCode = (hashCode * 397) ^ Authentication.GetHashCode();
 				hashCode = (hashCode * 397) ^ (AuthenticationKey != null ? AuthenticationKey.GetHashCode() : 0);
@@ -306,9 +286,16 @@ namespace ObscurCore.DTO
 
 		VerificationFunctionConfiguration Authentication { get; }
 
-		byte[] AuthenticationVerifiedOutput { get; }
-
+		/// <summary>
+		/// Cryptographic key for authentication of the payload item. 
+		/// Required if key confirmation not used.
+		/// </summary>
 		byte[] AuthenticationKey { get; }
+
+		/// <summary>
+		/// Output of the authentication scheme given correct input data.
+		/// </summary>
+		byte[] AuthenticationVerifiedOutput { get; }
 
         /// <summary>
         /// Key confirmation configuration for this payload item. 

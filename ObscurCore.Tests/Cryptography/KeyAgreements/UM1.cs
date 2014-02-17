@@ -25,74 +25,23 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		public void Init () {		
 			var curves = Enum.GetNames (typeof(BrainpoolEllipticCurve));
 			for (var i = 1; i < curves.Length; i++) {
-			    var domain = Source.GetEcDomainParameters(curves[i]);
-				var kpInitiator = ECAgreementUtility.GenerateKeyPair (domain);
-				var kpResponder = ECAgreementUtility.GenerateKeyPair (domain);
-				
-				var kpStore = new ECTestKPStore {
-					Initiator = new EcKeypair {
-						CurveProviderName = "Brainpool",
-						CurveName = curves[i],
-						EncodedPublicKey = ((ECPublicKeyParameters)kpInitiator.Public).Q.GetEncoded(),
-						EncodedPrivateKey = ((ECPrivateKeyParameters)kpInitiator.Private).D.ToByteArray()
-					},
-					Responder = new EcKeypair {
-						CurveProviderName = "Brainpool",
-						CurveName = curves[i],
-						EncodedPublicKey = ((ECPublicKeyParameters)kpResponder.Public).Q.GetEncoded(),
-						EncodedPrivateKey = ((ECPrivateKeyParameters)kpResponder.Private).D.ToByteArray()
-					}
-				};
-				
-				_ecKeypairs.Add (curves [i], kpStore);
+				_ecKeypairs.Add (curves [i], new ECTestKPStore {
+					Initiator = KeypairFactory.GenerateEcKeypair(curves[i]),
+					Responder = KeypairFactory.GenerateEcKeypair(curves[i])
+				});
 			}
 
             curves = Enum.GetNames (typeof(Sec2EllipticCurve));
             for (var i = 1; i < curves.Length; i++) {
-			    var domain = Source.GetEcDomainParameters(curves[i]);
-				var kpInitiator = ECAgreementUtility.GenerateKeyPair (domain);
-				var kpResponder = ECAgreementUtility.GenerateKeyPair (domain);
-				
-				var kpStore = new ECTestKPStore {
-					Initiator = new EcKeypair {
-						CurveProviderName = "SEC",
-						CurveName = curves[i],
-						EncodedPublicKey = ((ECPublicKeyParameters)kpInitiator.Public).Q.GetEncoded(),
-						EncodedPrivateKey = ((ECPrivateKeyParameters)kpInitiator.Private).D.ToByteArray()
-					},
-					Responder = new EcKeypair {
-						CurveProviderName = "SEC",
-						CurveName = curves[i],
-						EncodedPublicKey = ((ECPublicKeyParameters)kpResponder.Public).Q.GetEncoded(),
-						EncodedPrivateKey = ((ECPrivateKeyParameters)kpResponder.Private).D.ToByteArray()
-					}
-				};
-				
-				_ecKeypairs.Add (curves [i], kpStore);
+				_ecKeypairs.Add (curves [i], new ECTestKPStore {
+					Initiator = KeypairFactory.GenerateEcKeypair(curves[i]),
+					Responder = KeypairFactory.GenerateEcKeypair(curves[i])
+				});
 			}
 
-			var privEntropy = new byte[32];
-			StratCom.EntropySource.NextBytes(privEntropy);
-			var privateKeySender = Curve25519.CreatePrivateKey(privEntropy);
-			var publicKeySender = Curve25519.CreatePublicKey(privateKeySender);
-
-			StratCom.EntropySource.NextBytes(privEntropy);
-			var privateKeyRecipient = Curve25519.CreatePrivateKey(privEntropy);
-			var publicKeyRecipient = Curve25519.CreatePublicKey(privateKeyRecipient);
-
-			_ecKeypairs.Add (DjbCurve.Curve25519.ToString (), new ECTestKPStore {
-				Initiator = new EcKeypair {
-					CurveProviderName = "DJB",
-					CurveName = DjbCurve.Curve25519.ToString (),
-					EncodedPublicKey = publicKeySender,
-					EncodedPrivateKey = privateKeySender
-				},
-				Responder = new EcKeypair {
-					CurveProviderName = "DJB",
-					CurveName = DjbCurve.Curve25519.ToString (),
-					EncodedPublicKey = publicKeyRecipient,
-					EncodedPrivateKey = privateKeyRecipient
-				}
+			_ecKeypairs.Add (DjbCurve.Curve25519.ToString(), new ECTestKPStore {
+				Initiator = KeypairFactory.GenerateEcKeypair(DjbCurve.Curve25519.ToString()),
+				Responder = KeypairFactory.GenerateEcKeypair(DjbCurve.Curve25519.ToString())
 			});
 		}
 

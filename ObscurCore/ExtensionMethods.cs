@@ -307,63 +307,6 @@ namespace ObscurCore
 
 namespace ObscurCore.Extensions
 {
-    namespace EllipticCurve
-    {
-        public static class ECKeyConfigurationExtensions
-        {
-            public static ECPublicKeyParameters DecodeToPublicKey(this EcKeyConfiguration config) {
-                //if (!config.CurveProviderName.Equals ("Brainpool"))
-                //    throw new InvalidDataException ("Curve providers other than \"Brainpool\" are not currently supported.");
-
-                ECPublicKeyParameters publicKey;
-                try {
-                    var domain = Source.GetEcDomainParameters(config.CurveName);
-                    ECPoint point = domain.Curve.DecodePoint(config.EncodedKey);
-                    publicKey = new ECPublicKeyParameters("ECDHC", point, domain);
-                } catch (NotSupportedException) {
-                    throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
-                } catch (Exception) {
-                    throw new InvalidDataException("Unspecified error occured in decoding EC key.");
-                }
-                return publicKey;
-            }
-
-            public static ECPrivateKeyParameters DecodeToPrivateKey(this EcKeyConfiguration config) {
-                //if (!config.CurveProviderName.Equals ("Brainpool"))
-                //    throw new InvalidDataException ("Curve providers other than \"Brainpool\" are not currently supported.");
-
-                ECPrivateKeyParameters privateKey;
-                try {
-                    var domain = Source.GetEcDomainParameters(config.CurveName);
-                    privateKey = new ECPrivateKeyParameters("ECDHC", new BigInteger(config.EncodedKey), domain);
-
-                } catch (NotSupportedException) {
-                    throw new NotSupportedException ("EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
-                } catch (Exception) {
-                    throw new InvalidDataException("Unspecified error occured in decoding EC key.");
-                }
-                return privateKey;
-            }
-
-            public static void EncodePublicKey(this EcKeyConfiguration config, string curveProvider, string curveName, ECPoint key) {
-                //if (!curveProvider.Equals ("Brainpool"))
-                //    throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
-                config.CurveProviderName = curveProvider;
-                config.CurveName = curveName;
-                //config.EncodedKey = ECKeyUtility.Write (key);
-                config.EncodedKey = key.GetEncoded();
-            }
-
-            public static void EncodePrivateKey(this EcKeyConfiguration config, string curveProvider, string curveName, BigInteger key) {
-                //if (!curveProvider.Equals ("Brainpool"))
-                //    throw new ArgumentException ("Curve providers other than \"Brainpool\" are not currently supported.");
-                config.CurveProviderName = curveProvider;
-                config.CurveName = curveName;
-                config.EncodedKey = key.ToByteArray ();
-            }
-        }
-    }
-
     namespace Streams
     {
         public static class StreamExtensions

@@ -14,9 +14,10 @@
 //    limitations under the License.
 
 using System;
-using ObscurCore.Extensions.EllipticCurve;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.DTO;
+using ObscurCore.Cryptography.Support.Math.EllipticCurve;
+using ObscurCore.Cryptography.Support.Math;
 
 namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 {
@@ -32,37 +33,6 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 	/// </remarks>
     public static class UM1Exchange
     {
-		public static byte[] Initiate(ECPublicKeyParameters receiverPublicKey, ECPrivateKeyParameters senderPrivateKey, 
-			out ECPublicKeyParameters ephemeralSenderPublicKey)
-		{
-			var Q_static_V = receiverPublicKey;
-			var d_static_U = senderPrivateKey;
-			ECPublicKeyParameters Q_ephemeral_V;
-
-			AsymmetricCipherKeyPair pair = ECAgreementUtility.GenerateKeyPair(Q_static_V.Parameters);
-			Q_ephemeral_V = (ECPublicKeyParameters)pair.Public;
-
-			// Calculate shared ephemeral secret 'Ze'
-			ECPrivateKeyParameters deU = (ECPrivateKeyParameters) pair.Private;
-			var Ze = ECAgreementUtility.CalculateDhcSecret(Q_static_V, deU); // EC-DHC
-			byte[] Ze_encoded = Ze.ToByteArrayUnsigned();
-
-			// Calculate shared static secret 'Zs'
-			var Zs = ECAgreementUtility.CalculateDhcSecret(Q_static_V, d_static_U); // EC-DHC
-			byte[] Zs_encoded = Zs.ToByteArrayUnsigned();
-
-			// Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
-			var Z = new byte[Ze_encoded.Length + Zs_encoded.Length];
-			Array.Copy (Ze_encoded, 0, Z, 0, Ze_encoded.Length);
-			Array.Copy (Zs_encoded, 0, Z, Ze_encoded.Length, Zs_encoded.Length);
-			ephemeralSenderPublicKey = Q_ephemeral_V;
-
-			// Zero intermediate secrets
-			Ze_encoded.SecureWipe ();
-			Zs_encoded.SecureWipe ();
-
-			return Z;
-		}
 
 		/// <summary>
 		/// Calculate the shared secret in participant U's (initiator) role.
@@ -80,83 +50,61 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 			}
 
 			EcKeyConfiguration Q_ephemeral_U;
-			byte[] Zs_encoded, Ze_encoded;
+			byte[] Zs, Ze;
 
-			if (senderPrivateKey.CurveName.Equals(DjbCurve.Curve25519.ToString())) {
-				var Q_static_V = receiverPublicKey.EncodedKey;
-				var d_static_U = senderPrivateKey.EncodedKey;
+			var Q_static_V = receiverPublicKey;
+			var d_static_U = senderPrivateKey;
 
-				var privKeyEntropy = new byte[32];
-				StratCom.EntropySource.NextBytes(privKeyEntropy);
-				var d_ephemeral_U = Curve25519.CreatePrivateKey(privKeyEntropy);
-				Q_ephemeral_U = new EcKeyConfiguration {
-					PublicComponent = true,
-					CurveProviderName = senderPrivateKey.CurveProviderName,
-					CurveName = senderPrivateKey.CurveName,
-					EncodedKey = Curve25519.CreatePublicKey(d_ephemeral_U)
-				};
+			var kp_ephemeral_U = KeypairFactory.GenerateEcKeypair (senderPrivateKey.CurveName);
+			Q_ephemeral_U = kp_ephemeral_U.ExportPublicKey ();
+			var d_ephemeral_U = kp_ephemeral_U.GetPrivateKey ();
 
-				// Calculate shared ephemeral secret 'Ze'
-				Ze_encoded = Curve25519.CalculateSharedSecret(d_ephemeral_U, Q_static_V);
-
-				// Calculate shared static secret 'Zs'
-				Zs_encoded = Curve25519.CalculateSharedSecret(d_static_U, Q_static_V);
-			} else {
-				var Q_static_V = receiverPublicKey.DecodeToPublicKey();
-				var d_static_U = senderPrivateKey.DecodeToPrivateKey();
-				var domain = Q_static_V.Parameters;
-
-				AsymmetricCipherKeyPair pair = ECAgreementUtility.GenerateKeyPair(Q_static_V.Parameters);
-				Q_ephemeral_U = new EcKeyConfiguration {
-					PublicComponent = true,
-					CurveProviderName = receiverPublicKey.CurveProviderName,
-					CurveName = receiverPublicKey.CurveName,
-					EncodedKey = ((ECPublicKeyParameters)pair.Public).Q.GetEncoded ()
-				};
-				var d_ephemeral_U = (ECPrivateKeyParameters)pair.Private;
-
-				// Calculate shared ephemeral secret 'Ze'
-				ECPrivateKeyParameters deU = (ECPrivateKeyParameters) pair.Private;
-				var Ze = ECAgreementUtility.CalculateDhcSecret(Q_static_V, d_ephemeral_U); // EC-DHC
-				Ze_encoded = Ze.ToByteArrayUnsigned();
-
-				// Calculate shared static secret 'Zs'
-				var Zs = ECAgreementUtility.CalculateDhcSecret(Q_static_V, d_static_U); // EC-DHC
-				Zs_encoded = Zs.ToByteArrayUnsigned();
-			}
+			// Calculate shared ephemeral secret 'Ze'
+			Ze = KeyAgreementFactory.CalculateEcdhcSecret (Q_static_V, d_ephemeral_U); // EC-DHC
+			// Calculate shared static secret 'Zs'
+			Zs = KeyAgreementFactory.CalculateEcdhcSecret (Q_static_V, d_static_U); // EC-DHC
 
 			// Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
-			var Z = new byte[Ze_encoded.Length + Zs_encoded.Length];
-			Array.Copy(Ze_encoded, 0, Z, 0, Ze_encoded.Length);
-			Array.Copy(Zs_encoded, 0, Z, Ze_encoded.Length, Zs_encoded.Length);
+			var Z = new byte[Ze.Length + Zs.Length];
+			Ze.CopyBytes (0, Z, 0, Ze.Length);
+			Zs.CopyBytes (0, Z, Ze.Length, Zs.Length);
 			ephemeralSenderPublicKey = Q_ephemeral_U;
 
 			// Zero intermediate secrets
-			Ze_encoded.SecureWipe ();
-			Zs_encoded.SecureWipe ();
+			Ze.SecureWipe ();
+			Zs.SecureWipe ();
 
 			return Z;
 		}
 
-		public static byte[] Respond(ECPublicKeyParameters senderPublicKey, ECPrivateKeyParameters receiverPrivateKey, 
-			ECPublicKeyParameters ephemeralSenderPublicKey)
+		public static byte[] Initiate(ECPublicKeyParameters receiverPublicKey, ECPrivateKeyParameters senderPrivateKey, 
+			out ECPublicKeyParameters ephemeralSenderPublicKey)
 		{
-			var Q_static_U = senderPublicKey;
-			var d_static_V = receiverPrivateKey;
-			ECPublicKeyParameters Q_ephemeral_U = ephemeralSenderPublicKey;
+			var Q_static_V = receiverPublicKey;
+			var d_static_U = senderPrivateKey;
+
+			ECPoint QeV;
+			BigInteger deU;
+			KeypairFactory.GenerateEcKeypair (receiverPublicKey.Parameters, out QeV, out deU);
+
+			ECPublicKeyParameters Q_ephemeral_V;
+			ECPrivateKeyParameters d_ephemeral_U;
+			Q_ephemeral_V = new ECPublicKeyParameters ("ECDHC", QeV, receiverPublicKey.Parameters);
+			d_ephemeral_U = new ECPrivateKeyParameters ("ECDHC", deU, receiverPublicKey.Parameters);
 
 			// Calculate shared ephemeral secret 'Ze'
-			var Ze = ECAgreementUtility.CalculateDhcSecret(Q_ephemeral_U, d_static_V); // EC-DHC
+			var Ze = KeyAgreementFactory.CalculateEcdhcSecret (Q_static_V, d_ephemeral_U); // EC-DHC
 			byte[] Ze_encoded = Ze.ToByteArrayUnsigned();
 
 			// Calculate shared static secret 'Zs'
-			var Zs = ECAgreementUtility.CalculateDhcSecret(Q_static_U, d_static_V); // EC-DHC
+			var Zs = KeyAgreementFactory.CalculateEcdhcSecret (Q_static_V, d_static_U); // EC-DHC
 			byte[] Zs_encoded = Zs.ToByteArrayUnsigned();
 
 			// Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
 			var Z = new byte[Ze_encoded.Length + Zs_encoded.Length];
-			Array.Copy(Ze_encoded, Z, Ze_encoded.Length);
-			Array.Copy(Zs_encoded, 0, Z, Ze_encoded.Length, Zs_encoded.Length);
+			Ze_encoded.CopyBytes (0, Z, 0, Ze_encoded.Length);
+			Zs_encoded.CopyBytes (0, Z, Ze_encoded.Length, Zs_encoded.Length);
+			ephemeralSenderPublicKey = Q_ephemeral_V;
 
 			// Zero intermediate secrets
 			Ze_encoded.SecureWipe ();
@@ -182,36 +130,47 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 				throw new ArgumentException ();
 			}
 
-			byte[] Zs_encoded, Ze_encoded;
+			byte[] Zs, Ze;
 
-			if (senderPublicKey.CurveName.Equals(DjbCurve.Curve25519.ToString())) {
-				var Q_static_U = senderPublicKey.EncodedKey;
-				var d_static_V = receiverPrivateKey.EncodedKey;
-				var Q_ephemeral_U = ephemeralSenderPublicKey.EncodedKey;
+			var Q_static_U = senderPublicKey;
+			var d_static_V = receiverPrivateKey;
+			var Q_ephemeral_U = ephemeralSenderPublicKey;
 
-				// Calculate shared ephemeral secret 'Ze'
-				Ze_encoded = Curve25519.CalculateSharedSecret(d_static_V, Q_ephemeral_U);
+			// Calculate shared ephemeral secret 'Ze'
+			Ze = KeyAgreementFactory.CalculateEcdhcSecret (Q_ephemeral_U, d_static_V); // EC-DHC
+			// Calculate shared static secret 'Zs'
+			Zs = KeyAgreementFactory.CalculateEcdhcSecret (Q_static_U, d_static_V); // EC-DHC
 
-				// Calculate shared static secret 'Zs'
-				Zs_encoded = Curve25519.CalculateSharedSecret(d_static_V, Q_static_U);
-			} else {
-				var Q_static_U = senderPublicKey.DecodeToPublicKey();
-				var d_static_V = receiverPrivateKey.DecodeToPrivateKey();
-				var Q_ephemeral_U = ephemeralSenderPublicKey.DecodeToPublicKey();
-				var domain = Q_static_U.Parameters;
+			// Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
+			var Z = new byte[Ze.Length + Zs.Length];
+			Ze.CopyBytes (0, Z, 0, Ze.Length);
+			Zs.CopyBytes (0, Z, Ze.Length, Zs.Length);
 
-				// Calculate shared ephemeral secret 'Ze'
-				var Ze = ECAgreementUtility.CalculateDhcSecret(Q_ephemeral_U, d_static_V); // EC-DHC
-				Ze_encoded = Ze.ToByteArrayUnsigned();
+			// Zero intermediate secrets
+			Ze.SecureWipe ();
+			Zs.SecureWipe ();
 
-				// Calculate shared static secret 'Zs'
-				var Zs = ECAgreementUtility.CalculateDhcSecret(Q_static_U, d_static_V); // EC-DHC
-				Zs_encoded = Zs.ToByteArrayUnsigned();
-			}
+			return Z;
+		}
+
+		public static byte[] Respond (ECPublicKeyParameters senderPublicKey, ECPrivateKeyParameters receiverPrivateKey, 
+			ECPublicKeyParameters ephemeralSenderPublicKey)
+		{
+			var Q_static_U = senderPublicKey;
+			var d_static_V = receiverPrivateKey;
+			ECPublicKeyParameters Q_ephemeral_U = ephemeralSenderPublicKey;
+
+			// Calculate shared ephemeral secret 'Ze'
+			var Ze = KeyAgreementFactory.CalculateEcdhcSecret(Q_ephemeral_U, d_static_V); // EC-DHC
+			byte[] Ze_encoded = Ze.ToByteArrayUnsigned();
+
+			// Calculate shared static secret 'Zs'
+			var Zs = KeyAgreementFactory.CalculateEcdhcSecret(Q_static_U, d_static_V); // EC-DHC
+			byte[] Zs_encoded = Zs.ToByteArrayUnsigned();
 
 			// Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
 			var Z = new byte[Ze_encoded.Length + Zs_encoded.Length];
-			Array.Copy(Ze_encoded, 0, Z, 0, Ze_encoded.Length);
+			Array.Copy(Ze_encoded, Z, Ze_encoded.Length);
 			Array.Copy(Zs_encoded, 0, Z, Ze_encoded.Length, Zs_encoded.Length);
 
 			// Zero intermediate secrets
@@ -222,4 +181,3 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 		}
     }
 }
-

@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System;
+using System.Linq;
 using ProtoBuf;
 
 namespace ObscurCore.DTO
@@ -32,5 +33,30 @@ namespace ObscurCore.DTO
 
 		[ProtoMember(4, IsRequired = true)]
 		public byte[] X2sR { get; set; }
+
+		public override int GetHashCode () {
+			unchecked {
+				int hashCode = ParticipantId.GetHashCode();
+				hashCode = (hashCode * 397) ^ A.GetHashCode();
+				hashCode = (hashCode * 397) ^ X2sV.GetHashCode();
+				hashCode = (hashCode * 397) ^ X2sR.GetHashCode();
+				return hashCode;
+			}
+		}
+
+		public override bool Equals (object obj) {
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != this.GetType()) return false;
+			return Equals((JpakeRound2) obj);
+		}
+
+		public bool Equals (JpakeRound2 other) {
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
+			return 
+				String.Equals (ParticipantId, other.ParticipantId) && 
+				A.SequenceEqual (other.A) && X2sV.SequenceEqual (other.X2sV) && X2sR.SequenceEqual (other.X2sR);
+		}
 	}
 }

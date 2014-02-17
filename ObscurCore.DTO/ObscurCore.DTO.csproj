@@ -61,7 +61,6 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CompressionConfiguration.cs" />
     <Compile Include="EcKeyConfiguration.cs" />
     <Compile Include="VerificationFunctionType.cs" />
     <Compile Include="IDataTransferObject.cs" />

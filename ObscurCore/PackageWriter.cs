@@ -172,7 +172,7 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="key">Cryptographic key known to the receiver to use for the manifest.</param>
 		/// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-		public PackageWriter (byte[] key, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Frameshift) {
+		public PackageWriter (byte[] key, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Fabric) {
 			_manifest = new Manifest();
 			_manifestHeader = new ManifestHeader
 			{
@@ -188,7 +188,7 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="key">Cryptographic key known to the receiver to use for the manifest.</param>
 		/// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-		public PackageWriter (EcKeypair sender, EcKeypair receiver, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Frameshift) {
+		public PackageWriter (EcKeypair sender, EcKeypair receiver, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Fabric) {
 			_manifest = new Manifest();
 			_manifestHeader = new ManifestHeader
 			{

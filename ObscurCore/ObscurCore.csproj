@@ -152,7 +152,6 @@
     <Compile Include="Cryptography\Entropy\StreamCsprng.cs" />
     <Compile Include="Cryptography\KeyAgreement\BrainpoolEllipticCurve.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\UM1Exchange.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Utilities.cs" />
     <None Include="Cryptography\Entropy\Primitives\MersenneTwister.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Helper.cs" />
     <Compile Include="DecoratingStream.cs" />
@@ -361,6 +360,8 @@
     <Compile Include="PackageReader.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\EcJpakeSession.cs" />
     <None Include="Cryptography\Signing\Primitives\EcDsaSigner.cs" />
+    <Compile Include="Cryptography\KeyAgreement\KeyAgreementFactory.cs" />
+    <Compile Include="Cryptography\KeyAgreement\KeypairFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />
