@@ -107,12 +107,8 @@ namespace ObscurCore
         /// <summary>
         /// Converts a byte array into a hex-encoded string.
         /// </summary>
-        /// <returns>Hex-encoded string, lowercase.</returns>
         public static string ToHexString (this byte[] bytes) {
-            var hexBuilder = new StringBuilder(bytes.Length * 2);
-            foreach (byte b in bytes)
-                hexBuilder.AppendFormat("{0:x2}", b);
-            return hexBuilder.ToString();
+			return Hex.ToHexString (bytes);
         }
 
         /// <summary>
@@ -122,21 +118,19 @@ namespace ObscurCore
         public static byte[] HexToBinary(this string hexSrc) {
 			if (hexSrc == null)
 				return null;
+
 			return Hex.Decode (hexSrc);
         }
 
-		public static int GetHashCodeExt(this byte[] data)
-		{
-			if (data == null)
-			{
+		public static int GetHashCodeExt(this byte[] data) {
+			if (data == null) {
 				return 0;
 			}
 
 			int i = data.Length;
 			int hc = i + 1;
 
-			while (--i >= 0)
-			{
+			while (--i >= 0) {
 				hc *= 257;
 				hc ^= data[i];
 			}
@@ -144,18 +138,15 @@ namespace ObscurCore
 			return hc;
 		}
 
-		public static int GetHashCodeExt(this int[] data)
-		{
-			if (data == null)
-			{
+		public static int GetHashCodeExt(this int[] data) {
+			if (data == null) {
 				return 0;
 			}
 
 			int i = data.Length;
 			int hc = i + 1;
 
-			while (--i >= 0)
-			{
+			while (--i >= 0) {
 				hc *= 257;
 				hc ^= data[i];
 			}
@@ -163,10 +154,7 @@ namespace ObscurCore
 			return hc;
 		}
 
-		public static bool SequenceEqual(
-			this byte[]	a,
-			byte[]	b)
-		{
+		public static bool SequenceEqual(this byte[] a, byte[] b) {
 			if (a == b)
 				return true;
 
@@ -176,10 +164,7 @@ namespace ObscurCore
 			return SequenceEqual<byte>(a, b);
 		}
 
-		private static bool SequenceEqualByteOptimised(
-			byte[]	a,
-			byte[]	b)
-		{
+		private static bool SequenceEqualByteOptimised(byte[] a, byte[]	b) {
 			int i = a.Length;
 			if (i != b.Length)
 				return false;
@@ -224,16 +209,18 @@ namespace ObscurCore
 			return true;
 		}
 
-		public static byte[] DeepCopy(this byte[] data)
-		{
-			return data == null ? null : (byte[]) data.Clone();
+		public static byte[] DeepCopy (this byte[] data) {
+			if (data == null)
+				return null;
+			else
+				return data.CopyBytes ();
 		}
 
-		public static int[] DeepCopy(this int[] data) {
+		public static int[] DeepCopy (this int[] data) {
 			return data == null ? null : (int[])data.Clone();
 		}
 
-		public static long[] DeepCopy(this long[] data) {
+		public static long[] DeepCopy (this long[] data) {
 			return data == null ? null : (long[])data.Clone();
 		}
 
@@ -242,6 +229,78 @@ namespace ObscurCore
 			this ulong[] data)
 		{
 			return data == null ? null : (ulong[]) data.Clone();
+		}
+
+
+		#if INCLUDE_UNSAFE
+		internal static unsafe void CopyMemory (byte* dst, byte* src, int length) {
+			while (length >= 16) {
+				*(ulong*)dst = *(ulong*)src; dst += 8; src += 8;
+				*(ulong*)dst = *(ulong*)src; dst += 8; src += 8;
+				length -= 16;
+			}
+
+			if (length >= 8) {
+				*(ulong*)dst = *(ulong*)src; dst += 8; src += 8;
+				length -= 8;
+			}
+
+			if (length >= 4) {
+				*(uint*)dst = *(uint*)src; dst += 4; src += 4;
+				length -= 4;
+			}
+
+			if (length >= 2) {
+				*(ushort*)dst = *(ushort*)src; dst += 2; src += 2;
+				length -= 2;
+			}
+
+			if (length != 0)
+				*dst = *src;
+		}
+		#endif
+
+		public static byte[] CopyBytes (this byte[] src) {
+			byte[] dst = new byte[src.Length];
+			src.CopyBytes (dst);
+			return dst;
+		}
+
+		public static void CopyBytes (this byte[] src, byte[] dst) {
+			#if INCLUDE_UNSAFE
+			unsafe {
+				fixed (byte* srcPtr = src) {
+					fixed (byte* dstPtr = dst) {
+						CopyMemory(dstPtr, srcPtr, src.Length);
+					}
+				}
+			}
+			#else
+			if (src.Length > 1024) 
+				Buffer.BlockCopy(src, 0, dst, 0, src.Length);
+			else 
+				Array.Copy(src, 0, dst, 0, src.Length);
+			#endif
+		}
+
+		public static void CopyBytes (this byte[] src, int srcOffset, byte[] dst, int dstOffset, int length) {
+			#if INCLUDE_UNSAFE
+			if (srcOffset + length > src.Length || dstOffset + length > dst.Length) {
+				throw new ArgumentException ("Either/both src or dst offset is incompatible with array length. Security risk in unsafe execution!");
+			}
+			unsafe {
+				fixed (byte* srcPtr = src) {
+					fixed (byte* dstPtr = dst) {
+						CopyMemory(dstPtr + dstOffset, srcPtr + srcOffset, length);
+					}
+				}
+			}
+			#else
+			if (src.Length > 1024) 
+				Buffer.BlockCopy(src, srcOffset, dst, dstOffset, length);
+			else 
+				Array.Copy(src, srcOffset, dst, dstOffset, length);
+			#endif
 		}
     }
 }

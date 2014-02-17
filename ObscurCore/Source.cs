@@ -166,10 +166,9 @@ namespace ObscurCore
 				new SimplePayloadMux (writing, multiplexedStream, payloadItems, itemPreKeys, config));
 			PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Frameshift, (writing, multiplexedStream, payloadItems, itemPreKeys, config) => 
 				new FrameshiftPayloadMux(writing, multiplexedStream, payloadItems, itemPreKeys, config));
-#if INCLUDE_FABRIC
 			PayloadLayoutModuleInstantiators.Add(PayloadLayoutScheme.Fabric, (writing, multiplexedStream, payloadItems, itemPreKeys, config) => 
 				new FabricPayloadMux(writing, multiplexedStream, payloadItems, itemPreKeys, config));
-#endif
+
             // ######################################## INIT END ########################################
         }
 

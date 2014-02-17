@@ -375,7 +375,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 		private static byte[] Trim(byte[] a, int length)
 		{
 			byte[] result = new byte[length];
-			Array.Copy(a, 0, result, 0, result.Length);
+			a.CopyBytes (0, result, 0, result.Length);
+
 			return result;
 		}
 

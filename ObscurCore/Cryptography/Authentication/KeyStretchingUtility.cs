@@ -37,19 +37,19 @@ namespace ObscurCore.Cryptography.Authentication
 			KeyDerivationConfiguration kdfConfig, out byte[] cipherKey, out byte[] macKey)
 		{
 			// Derive the key which will be used for encrypting the manifest
-			byte[] stretchedWorkingMKeys = Source.DeriveKeyWithKdf(kdfConfig.SchemeName.ToEnum<KeyDerivationFunction>(),
+			byte[] stretchedKeys = Source.DeriveKeyWithKdf(kdfConfig.SchemeName.ToEnum<KeyDerivationFunction>(),
 				preKey, kdfConfig.Salt, cipherKeySize + macKeySize,
 				kdfConfig.SchemeConfiguration);
 
 			// Retrieve the working encryption & authentication subkeys from the stretched manifest key
 			cipherKey = new byte[cipherKeySize];
 			macKey = new byte[macKeySize];
-			Array.Copy (stretchedWorkingMKeys, 0, cipherKey, 0, cipherKeySize);
-			Array.Copy (stretchedWorkingMKeys, cipherKeySize, macKey, 0, macKeySize);
+			stretchedKeys.CopyBytes(0, cipherKey, 0, cipherKeySize);
+			stretchedKeys.CopyBytes(cipherKeySize, macKey, 0, macKeySize);
 
 			// Clear the pre-key and stretched manifest working combination key from memory
-			Array.Clear(preKey, 0, preKey.Length);
-			Array.Clear(stretchedWorkingMKeys, 0, stretchedWorkingMKeys.Length);
+			preKey.SecureWipe ();
+			stretchedKeys.SecureWipe ();
 		}
 	}
 }

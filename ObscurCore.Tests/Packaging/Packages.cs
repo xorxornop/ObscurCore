@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using ObscurCore.Tests.Cryptography;
+using ObscurCore.Packaging;
 
 namespace ObscurCore.Tests.Packaging
 {
@@ -11,22 +12,20 @@ namespace ObscurCore.Tests.Packaging
     {
 		[Test]
 		public void SymmetricSimplePackage() {
-			SymmetricPackageTest ("SymmetricSimplePackage", ObscurCore.Packaging.PayloadLayoutScheme.Simple);
+			SymmetricPackageTest ("SymmetricSimplePackage", PayloadLayoutScheme.Simple);
 		}
 
 		[Test]
 		public void SymmetricFrameshiftPackage() {
-			SymmetricPackageTest ("SymmetricFrameshiftPackage", ObscurCore.Packaging.PayloadLayoutScheme.Frameshift);
+			SymmetricPackageTest ("SymmetricFrameshiftPackage", PayloadLayoutScheme.Frameshift);
 		}
-
-		#if INCLUDE_FABRIC
+			
 		[Test]
 		public void SymmetricFabricPackage() {
-			SymmetricPackageTest ("SymmetricFabricPackage", ObscurCore.Packaging.PayloadLayoutScheme.Fabric);
+			SymmetricPackageTest ("SymmetricFabricPackage", PayloadLayoutScheme.Fabric);
 		}
-		#endif
 
-		private void SymmetricPackageTest(string testName, ObscurCore.Packaging.PayloadLayoutScheme scheme) {
+		private void SymmetricPackageTest(string testName, PayloadLayoutScheme scheme) {
 			// Process of writing destroys preKey variable passed in for security
 			// We must copy it to a local variable before reading the package back
 			var preKeyEnumerated = KeyProviders.Alice.SymmetricKeys.First();
@@ -65,30 +64,24 @@ namespace ObscurCore.Tests.Packaging
 
 		[Test]
 		public void UM1SimplePackage() {
-			UM1PackageTest ("UM1SimplePackage", ObscurCore.Packaging.PayloadLayoutScheme.Simple);
+			UM1PackageTest ("UM1SimplePackage", PayloadLayoutScheme.Simple);
 		}
 
 		[Test]
 		public void UM1FrameshiftPackage() {
-			UM1PackageTest ("UM1FrameshiftPackage", ObscurCore.Packaging.PayloadLayoutScheme.Frameshift);
+			UM1PackageTest ("UM1FrameshiftPackage", PayloadLayoutScheme.Frameshift);
 		}
-
-		#if INCLUDE_FABRIC
+			
 		[Test]
 		public void UM1FabricPackage() {
-			UM1PackageTest ("UM1FabricPackage", ObscurCore.Packaging.PayloadLayoutScheme.Fabric);
+			UM1PackageTest ("UM1FabricPackage", PayloadLayoutScheme.Fabric);
 		}
-		#endif
 
-		private void UM1PackageTest(string testName, ObscurCore.Packaging.PayloadLayoutScheme scheme) {
+		private void UM1PackageTest(string testName, PayloadLayoutScheme scheme) {
 			// Process of writing destroys sender and receiver key variables passed in for security
 			// We must copy it to a local variable before reading the package back
-			var senderKeyEnumerated = KeyProviders.Alice.EcKeypairs.First();
-			var senderKey = new byte[senderKeyEnumerated.EncodedPrivateKey.Length];
-			Array.Copy(senderKeyEnumerated.EncodedPrivateKey, senderKey, senderKey.Length);
-			var receiverKeyEnumerated = KeyProviders.Bob.EcKeypairs.Last();
-			var receiverKey = new byte[receiverKeyEnumerated.EncodedPublicKey.Length];
-			Array.Copy(receiverKeyEnumerated.EncodedPublicKey, receiverKey, receiverKey.Length);
+			var senderKeyEnumerated = KeyProviders.Alice.EcKeypairs.ElementAt (StratCom.EntropySource.Next (KeyProviders.Alice.EcKeypairs.Count ()));
+			var receiverKeyEnumerated = KeyProviders.Bob.EcKeypairs.First ((keypair) => keypair.CurveName.Equals (senderKeyEnumerated.CurveName));
 
 			TimeSpan enc, dec;
 			using (var ms = new MemoryStream ()) {
@@ -115,8 +108,7 @@ namespace ObscurCore.Tests.Packaging
 				dec = sw.Elapsed;
 			}
 
-			Assert.Pass ("Packaging: {0} ms.\nDepackaging: {1} ms.", enc.Milliseconds, dec.Milliseconds);
+			Assert.Pass ("Packaging: {0} ms.\nDepackaging: {1} ms.\nUsed curve: {2}", enc.Milliseconds, dec.Milliseconds, senderKeyEnumerated.CurveName);
 		}
-
     }
 }

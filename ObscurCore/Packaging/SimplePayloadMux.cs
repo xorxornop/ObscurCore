@@ -98,15 +98,8 @@ namespace ObscurCore.Packaging
 			}
 
 			// Final stages of Encrypt-then-MAC authentication scheme
-			byte[] pathBytes = System.Text.Encoding.UTF8.GetBytes (item.RelativePath);
-			byte[] encryptionConfiguration = item.Encryption.SerialiseDto ();
-			byte[] authenticationConfiguration = item.Authentication.SerialiseDto ();
-			// Authenticate relative path, item lengths, and encryption + authentication configurations
-			itemAuthenticator.Update (pathBytes, 0, pathBytes.Length);
-			itemAuthenticator.Update (Pack.UInt32_To_LE((uint)item.ExternalLength), 0, 4);
-			itemAuthenticator.Update (Pack.UInt32_To_LE((uint)item.InternalLength), 0, 4);
-			itemAuthenticator.Update (encryptionConfiguration, 0, encryptionConfiguration.Length);
-			itemAuthenticator.Update (authenticationConfiguration, 0, authenticationConfiguration.Length);
+			byte[] itemDtoAuthBytes = item.CreateAuthenticatibleClone().SerialiseDto ();
+			itemAuthenticator.Update (itemDtoAuthBytes, 0, itemDtoAuthBytes.Length);
 			itemAuthenticator.Close ();
 
 			// Authentication

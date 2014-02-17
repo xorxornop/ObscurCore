@@ -52,7 +52,7 @@ namespace ObscurCore.DTO
 		/// Size of the key in bits for the verification function, where applicable.
 		/// </summary>
 		[ProtoMember(4, IsRequired = false)]
-		public int KeySizeBits { get; set; }
+		public int? KeySizeBits { get; set; }
 
 		/// <summary>
 		/// Salt for the verification function, where applicable.
@@ -105,8 +105,11 @@ namespace ObscurCore.DTO
 		/// <filterpriority>2</filterpriority>
 		public override int GetHashCode () {
 			unchecked {
-				int hashCode = FunctionName.GetHashCode();
+				int hashCode = FunctionType.GetHashCode();
+				hashCode = (hashCode * 397) ^ FunctionName.GetHashCode();
 				hashCode = (hashCode * 397) ^ (FunctionConfiguration != null ? FunctionConfiguration.GetHashCode() : 0); // can be null
+				hashCode = (hashCode * 397) ^ (KeySizeBits.HasValue ? KeySizeBits.Value.GetHashCode() : 0); // can be null
+				hashCode = (hashCode * 397) ^ (Nonce != null ? Nonce.GetHashCode() : 0); // can be null
 				hashCode = (hashCode * 397) ^ (Salt != null ? Salt.GetHashCode() : 0); // can be null
 				hashCode = (hashCode * 397) ^ (AdditionalData != null ? AdditionalData.GetHashCode() : 0); // can be null
 				return hashCode;
@@ -133,7 +136,7 @@ namespace ObscurCore.DTO
 		/// <remarks>Format of the configuration is that of the consuming type.</remarks>
 		byte[] FunctionConfiguration { get; }
 
-		int KeySizeBits { get; }
+		int? KeySizeBits { get; }
 
 		byte[] Nonce { get; }
 

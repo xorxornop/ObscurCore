@@ -103,13 +103,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             get {
                 if (Configuration.IV.IsNullOrZeroLength()) {
 					throw new ConfigurationValueInvalidException("Block cipher cannot have an initalisation vector (IV) of null or zero length.");
-                }
-                if (Configuration.IV.Length != BlockSizeBits / 8) {
+				} else if (Configuration.IV.Length != BlockSizeBits / 8) {
 					throw new ConfigurationInvalidException("Initialisation vector should not be a different length to the block size.");
                 }
-                var retVal = new byte[Configuration.IV.Length];
-                Buffer.BlockCopy(Configuration.IV, 0, retVal, 0, Configuration.IV.Length);
-                return retVal;
+
+				return Configuration.IV.CopyBytes();
             }
             set { RawConfiguration.IV = value; }
         }

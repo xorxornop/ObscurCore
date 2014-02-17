@@ -105,8 +105,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 					+ w[i - 16] + i;
 			}
 
-			Array.Copy(w, 512, _p, 0, 1024);
-			Array.Copy(w, 1536, _q, 0, 1024);
+			Buffer.BlockCopy(w, 512 * sizeof(uint), _p, 0, 1024 * sizeof(uint));
+			Buffer.BlockCopy(w, 1536 * sizeof(uint), _q, 0, 1024 * sizeof(uint));
 
 			for (int i = 0; i < 4096; i++)
 			{
@@ -137,7 +137,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 			if(iv == null) {
 				throw new ArgumentNullException("iv", "HC-256 initialisation requires an IV.");
-			} else if (!key.Length.IsBetween(16, 32)) {
+			} else if (key.Length.IsBetween(16, 32) == false) {
 				throw new ArgumentException ("HC-256 requires a 16 to 32 byte IV.", "iv");
 			}
 			this.iv = iv;

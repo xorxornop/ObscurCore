@@ -25,7 +25,6 @@ using ObscurCore.Cryptography.Support;
 
 namespace ObscurCore.Packaging
 {
-#if(INCLUDE_FABRIC)
     /// <summary>
     /// Derived payload multiplexer implementing item layout in stripes of either 
 	/// constant or PRNG-varied length.
@@ -80,10 +79,10 @@ namespace ObscurCore.Packaging
 
 		/// <summary>
 		/// Create and bind Encrypt-then-MAC scheme components for an item. 
-		/// Adds finished encrypter and MACer to mux item resource container.
+		/// Adds finished encryptor and authenticator to mux item resource container.
 		/// </summary>
 		/// <param name="item">Item to prepare resources for.</param>
-		private MuxItemResourceContainer CreateEtMSchemeResources(PayloadItem item) {
+		private MuxItemResourceContainer CreateEtMSchemeResources (PayloadItem item) {
 			DecoratingStream decorator;
 			MacStream authenticator;
 			CreateEtMSchemeStreams (item, out decorator, out authenticator);
@@ -167,15 +166,8 @@ namespace ObscurCore.Packaging
 				}
 
 				// Final stages of Encrypt-then-MAC authentication scheme
-				byte[] pathBytes = System.Text.Encoding.UTF8.GetBytes (item.RelativePath);
-				byte[] encryptionConfiguration = item.Encryption.SerialiseDto ();
-				byte[] authenticationConfiguration = item.Authentication.SerialiseDto ();
-				// Authenticate relative path, item lengths, and encryption + authentication configurations
-				itemAuthenticator.Update (pathBytes, 0, pathBytes.Length);
-				itemAuthenticator.Update (Pack.UInt32_To_LE((uint)item.ExternalLength), 0, 4);
-				itemAuthenticator.Update (Pack.UInt32_To_LE((uint)item.InternalLength), 0, 4);
-				itemAuthenticator.Update (encryptionConfiguration, 0, encryptionConfiguration.Length);
-				itemAuthenticator.Update (authenticationConfiguration, 0, authenticationConfiguration.Length);
+				byte[] itemDtoAuthBytes = item.CreateAuthenticatibleClone().SerialiseDto ();
+				itemAuthenticator.Update (itemDtoAuthBytes, 0, itemDtoAuthBytes.Length);
 				itemAuthenticator.Close ();
 
 				// Mark the item as completed in the register
@@ -203,5 +195,4 @@ namespace ObscurCore.Packaging
 			return opLen;
 		}
 	}
-#endif
 }

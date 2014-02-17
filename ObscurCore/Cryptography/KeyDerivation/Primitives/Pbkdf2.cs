@@ -173,7 +173,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 
 				int bytesSoFar = (int)(Position - _blockStart);
 				int bytesThisTime = (int)Math.Min(_digest.Length - bytesSoFar, count);
-				Array.Copy(_digest, bytesSoFar, buffer, bytes, bytesThisTime);
+				_digest.CopyBytes (bytesSoFar, buffer, bytes, bytesThisTime);
 				count -= bytesThisTime; bytes += bytesThisTime; Position += bytesThisTime;
 			}
 

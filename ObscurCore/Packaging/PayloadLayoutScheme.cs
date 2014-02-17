@@ -30,12 +30,11 @@ namespace ObscurCore.Packaging
 		/// </summary>
 		/// <remarks>Medium security mode. Only very slightly slower than <see cref="Simple"/>. Incurs some storage inefficiency.</remarks>
 		Frameshift,
-#if(INCLUDE_FABRIC)
+
         /// <summary>
 		/// Items written/read in in randomly-shuffled order in pattern of "stripes" of fixed/variable length.
 		/// </summary>
 		/// <remarks>Highest security mode, but also the slowest.</remarks>
 		Fabric
-#endif
 	}
 }

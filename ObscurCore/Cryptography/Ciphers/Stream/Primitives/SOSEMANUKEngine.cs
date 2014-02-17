@@ -202,7 +202,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                 var blen = BufferLen - _streamPtr;
                 if (blen > len)
                     blen = len;
-                Array.Copy(_streamBuf, _streamPtr, buf, off, blen);
+				_streamBuf.CopyBytes (_streamPtr, buf, off, blen);
                 _streamPtr += blen;
                 off += blen;
                 len -= blen;
@@ -214,7 +214,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                     len -= BufferLen;
                 } else {
                     makeStreamBlock(_streamBuf, 0);
-                    Array.Copy(_streamBuf, 0, buf, off, len);
+					_streamBuf.CopyBytes (0, buf, off, len);
                     _streamPtr = len;
                     len = 0;
                 }

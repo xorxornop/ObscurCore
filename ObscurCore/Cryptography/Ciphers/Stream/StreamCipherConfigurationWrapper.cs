@@ -68,11 +68,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         public byte[] Nonce
         {
             get {
-				if (Configuration.IV == null)
-					return null;
-                var retVal = new byte[Configuration.IV.Length];
-                Buffer.BlockCopy(Configuration.IV, 0, retVal, 0, Configuration.IV.Length);
-                return retVal;
+				return Configuration.IV == null ? null : Configuration.IV.CopyBytes();
             }
             set { Configuration.IV = value; }
         }

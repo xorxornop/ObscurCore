@@ -25,8 +25,8 @@ namespace ObscurCore.DTO
     /// Description of an item in the payload.
     /// </summary>
     [ProtoContract]
-    public sealed class PayloadItem : IStreamBinding, IDataTransferObject, IDisposable, 
-        IEquatable<PayloadItem>, IPayloadItem
+	public sealed class PayloadItem : IPayloadItem, IStreamBinding, IDataTransferObject, 
+		IAuthenticatibleClonable<PayloadItem>, IDisposable, IEquatable<PayloadItem>
     {
         public PayloadItem ()
         {
@@ -164,6 +164,23 @@ namespace ObscurCore.DTO
 		[ProtoMember(13, IsRequired = false)]
         public KeyDerivationConfiguration KeyDerivation { get; set; }
 
+		public PayloadItem CreateAuthenticatibleClone () {
+			return new PayloadItem {
+				Type = this.Type,
+				RelativePath = this.RelativePath,
+				ExternalLength = this.ExternalLength,
+				InternalLength = this.InternalLength,
+				Encryption = this.Encryption,
+				EncryptionKey = this.EncryptionKey,
+				Authentication = this.Authentication,
+				AuthenticationKey = this.AuthenticationKey,
+				AuthenticationVerifiedOutput = null,
+				KeyConfirmation = this.KeyConfirmation,
+				KeyConfirmationVerifiedOutput = this.KeyConfirmationVerifiedOutput,
+				KeyDerivation = this.KeyDerivation
+			};
+		}
+
         public override bool Equals (object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -182,13 +199,19 @@ namespace ObscurCore.DTO
         public bool Equals (PayloadItem other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Type.Equals(other.Type) &&
-                   string.Equals(RelativePath, other.RelativePath, 
-                   Type == PayloadItemType.Binary ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) &&
-                   InternalLength == other.InternalLength && ExternalLength == other.ExternalLength && Encryption.Equals(other.Encryption) && 
-                   /*Compression.Equals(other.Compression) && */
-                   (KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) &&
-                   KeyDerivation == null ? other.KeyDerivation == null : KeyDerivation.Equals((other.KeyDerivation));
+            return 
+				Type.Equals(other.Type) && 
+				String.Equals(RelativePath, other.RelativePath, Type != PayloadItemType.KeyAction ? 
+					StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) && 
+				InternalLength == other.InternalLength && ExternalLength == other.ExternalLength && 
+				/*Compression.Equals(other.Compression) && */
+				Encryption.Equals(other.Encryption) && 
+				Authentication.Equals(other.Authentication) && 
+				(AuthenticationKey == null ? other.AuthenticationKey == null : AuthenticationKey.Equals(other.AuthenticationKey)) &&
+				AuthenticationVerifiedOutput.Equals(other.AuthenticationVerifiedOutput) && 
+				(KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) && 
+				(KeyConfirmationVerifiedOutput == null ? other.KeyConfirmationVerifiedOutput == null : KeyConfirmationVerifiedOutput.Equals(other.KeyConfirmationVerifiedOutput)) && 
+				KeyDerivation == null ? other.KeyDerivation == null : KeyDerivation.Equals((other.KeyDerivation));
         }
 
         /// <summary>
@@ -201,13 +224,16 @@ namespace ObscurCore.DTO
         public override int GetHashCode () {
             unchecked {
                 int hashCode = Type.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Type == PayloadItemType.Binary ? 
-                    StringComparer.OrdinalIgnoreCase.GetHashCode(RelativePath) : StringComparer.Ordinal.GetHashCode(RelativePath));
+				hashCode = (hashCode * 397) ^ RelativePath.GetHashCode();
                 hashCode = (hashCode * 397) ^ InternalLength.GetHashCode();
                 hashCode = (hashCode * 397) ^ ExternalLength.GetHashCode();
+				/*hashCode = (hashCode * 397) ^ (Compression != null ? Compression.GetHashCode() : 0);*/
                 hashCode = (hashCode * 397) ^ Encryption.GetHashCode();
-                /*hashCode = (hashCode * 397) ^ (Compression != null ? Compression.GetHashCode() : 0);*/
+				hashCode = (hashCode * 397) ^ Authentication.GetHashCode();
+				hashCode = (hashCode * 397) ^ (AuthenticationKey != null ? AuthenticationKey.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ AuthenticationVerifiedOutput.GetHashCode();
                 hashCode = (hashCode * 397) ^ (KeyConfirmation != null ? KeyConfirmation.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ (KeyConfirmationVerifiedOutput != null ? KeyConfirmationVerifiedOutput.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (KeyDerivation != null ? KeyDerivation.GetHashCode() : 0);
                 return hashCode;
             }
@@ -236,7 +262,8 @@ namespace ObscurCore.DTO
         long ExternalLength { get; set; }
 	}
 
-    public interface IPayloadItem {
+	public interface IPayloadItem : IDisposable
+	{
         /// <summary>
         /// Identifier used for stream binding.
         /// </summary>
@@ -252,28 +279,36 @@ namespace ObscurCore.DTO
         /// Item handling behaviour category. 
         /// Key actions should be handled differently from the others.
         /// </summary>
-        PayloadItemType Type { get; set; }
+        PayloadItemType Type { get; }
 
         /// <summary>
         /// Path of the stored data. 'Path' syntax may correspond to a key-value collection, filesystem, or other hierarchal schema. 
         /// Syntax uses '/' to seperate stores/directories. Item names may or may not have extensions (if files/binary-data-type).
         /// </summary>
-        string RelativePath { get; set; }
+        string RelativePath { get; }
 
         /// <summary>
         /// Length of the item inside of the payload, excluding any additional length imparted by the payload layout scheme.
         /// </summary>
-        long InternalLength { get; set; }
+        long InternalLength { get; }
 
         /// <summary>
         /// Length of the item outside of the payload, unmodified, as it was before inclusion.
         /// </summary>
-        long ExternalLength { get; set; }
+        long ExternalLength { get; }
 
         /// <summary>
         /// Encryption configuration for this payload item.
         /// </summary>
-        SymmetricCipherConfiguration Encryption { get; set; }
+        SymmetricCipherConfiguration Encryption { get; }
+
+		byte[] EncryptionKey { get; }
+
+		VerificationFunctionConfiguration Authentication { get; }
+
+		byte[] AuthenticationVerifiedOutput { get; }
+
+		byte[] AuthenticationKey { get; }
 
         /// <summary>
         /// Key confirmation configuration for this payload item. 
@@ -282,14 +317,11 @@ namespace ObscurCore.DTO
         /// </summary>
         VerificationFunctionConfiguration KeyConfirmation { get; set; }
 
+		byte[] KeyConfirmationVerifiedOutput { get; set; }
+
         /// <summary>
         /// Key derivation configuration for this payload item.
         /// </summary>
         KeyDerivationConfiguration KeyDerivation { get; set; }
-
-        /// <summary>
-        /// Clean up the stream binding resource when disposing of the object.
-        /// </summary>
-        void Dispose ();
     }
 }

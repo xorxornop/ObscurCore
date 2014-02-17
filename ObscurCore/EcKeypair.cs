@@ -37,14 +37,11 @@ namespace ObscurCore
         /// </summary>
         /// <returns>Public key as EcKeyConfiguration DTO.</returns>
         public EcKeyConfiguration ExportPublicKey() {
-            var key = new byte[EncodedPublicKey.Length];
-            Buffer.BlockCopy(EncodedPublicKey, 0, key, 0, key.Length);
-            
 			return new EcKeyConfiguration {
 				PublicComponent = true,
                 CurveProviderName = CurveProviderName,
                 CurveName = CurveName,
-                EncodedKey = key
+				EncodedKey = EncodedPublicKey.CopyBytes()
             };
         }
 
@@ -61,15 +58,11 @@ namespace ObscurCore
         /// </summary>
         /// <returns>Public key as EcKeyConfiguration DTO.</returns>
         public EcKeyConfiguration GetPrivateKey() {
-			var key = new byte[EncodedPrivateKey.Length];
-			Buffer.BlockCopy(EncodedPrivateKey, 0, key, 0, key.Length);
-            
-            return new EcKeyConfiguration
-                {
-                    CurveProviderName = CurveProviderName,
-                    CurveName = CurveName,
-                    EncodedKey = key
-                };
+			return new EcKeyConfiguration {
+                CurveProviderName = CurveProviderName,
+                CurveName = CurveName,
+				EncodedKey = EncodedPrivateKey.CopyBytes()
+            };
         }
     }
 }

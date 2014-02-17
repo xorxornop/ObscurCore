@@ -196,15 +196,14 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 					} catch (EnumerationParsingException ex) {
 						throw new ConfigurationValueInvalidException ("MAC function is unsupported/unknown.", ex);
 					}
-
-			        validator = (key) => {
+		        	validator = (key) => {
 						var macF = Source.CreateMacPrimitive (macFEnum, key, keyConfirmation.Salt, 
-							keyConfirmation.FunctionConfiguration);
+						keyConfirmation.FunctionConfiguration, keyConfirmation.Nonce);
 
 						if (outputSizeBytes != macF.MacSize)
 							throw new ArgumentException(LengthIncompatibleString, "outputSizeBytes");
 
-			            if(!keyConfirmation.AdditionalData.IsNullOrZeroLength()) 
+						if (keyConfirmation.AdditionalData.IsNullOrZeroLength() == false) 
 			                macF.BlockUpdate (keyConfirmation.AdditionalData, 0, keyConfirmation.AdditionalData.Length);
 			            var output = new byte[macF.MacSize];
 			            macF.DoFinal (output, 0);
@@ -224,9 +223,9 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 						if (outputSizeBytes != hashF.DigestSize)
 							throw new ArgumentException(LengthIncompatibleString, "outputSizeBytes");
 
-			            if(!keyConfirmation.Salt.IsNullOrZeroLength()) 
+						if (keyConfirmation.Salt.IsNullOrZeroLength() == false) 
 			                hashF.BlockUpdate (keyConfirmation.Salt, 0, keyConfirmation.Salt.Length);
-			            if(!keyConfirmation.AdditionalData.IsNullOrZeroLength()) 
+						if (keyConfirmation.AdditionalData.IsNullOrZeroLength() == false) 
 			                hashF.BlockUpdate (keyConfirmation.AdditionalData, 0, keyConfirmation.AdditionalData.Length);
 			            hashF.BlockUpdate (key, 0, key.Length);
 			            var output = new byte[hashF.DigestSize];
@@ -249,76 +248,23 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 		/// <param name="key">Key to confirm. Constitutes key prior to key derivation.</param>
 		/// <exception cref="ArgumentException">Key is null or zero-length.</exception>
 		public static VerificationFunctionConfiguration CreateDefaultManifestKeyConfirmation(byte[] key, out byte[] verifiedOutput) {
-			// TODO: Turn this method into a factory-type, using optional default values 
-            const VerificationFunctionType functionType = VerificationFunctionType.Mac;
-			// Used when their respective type is selected (defaults)
 			const HashFunction hashFEnum = HashFunction.Blake2B256;
-			const MacFunction macFEnum = MacFunction.Blake2B256;
-			const KeyDerivationFunction kdfEnum = KeyDerivationFunction.Scrypt;
-			const int minimumOutputSizeBytes = 16;
 
 			if (key.IsNullOrZeroLength()) {
 				throw new ArgumentException ("Key is null or zero-length.", "key");
 			}
 
-			string functionName;
+			int outputSize;
+			var config = AuthenticationConfigurationFactory.CreateAuthenticationConfigurationHmac(hashFEnum, out outputSize);
 
-			int saltSize = 0;
-			switch (functionType) {
-				case VerificationFunctionType.Digest:
-					functionName = hashFEnum.ToString();
-					saltSize = Athena.Cryptography.HashFunctions[hashFEnum].OutputSize / 8;
-					break;
-				case VerificationFunctionType.Mac:
-					functionName = macFEnum.ToString();
-					var macFOutputSize = Athena.Cryptography.MacFunctions [macFEnum].OutputSize;
-					saltSize = (macFOutputSize ?? minimumOutputSizeBytes) / 8;
-					break;
-				case VerificationFunctionType.Kdf:
-					functionName = kdfEnum.ToString();
-					saltSize = minimumOutputSizeBytes;
-					break;
-				default:
-					throw new NotImplementedException ();
-			}
+            var macP = Source.CreateMacPrimitive(config.FunctionName.ToEnum<MacFunction>(), key, config.Salt,
+				config.FunctionConfiguration, config.Nonce);
 
-            var config = new VerificationFunctionConfiguration
-                {
-                    FunctionType = functionType.ToString(),
-					FunctionName = functionName,
-                    FunctionConfiguration = null
-                };
+            if (config.AdditionalData != null) macP.BlockUpdate(config.AdditionalData, 0, config.AdditionalData.Length);
+			verifiedOutput = new byte[macP.MacSize];
+			macP.DoFinal(verifiedOutput, 0);
 
-            // Add entropy
-            // if (functionType != VerificationFunctionType.Digest) {
-            if (true) {
-                config.Salt = new byte[saltSize];
-                StratCom.EntropySource.NextBytes(config.Salt);
-            }
 
-            switch (functionType) {
-                case VerificationFunctionType.Digest:
-                    var hashP = Source.CreateHashPrimitive(config.FunctionName.ToEnum<HashFunction>());
-                    if (config.Salt != null) hashP.BlockUpdate(config.Salt, 0, config.Salt.Length);
-                    if (config.AdditionalData != null) hashP.BlockUpdate(config.AdditionalData, 0, config.AdditionalData.Length);
-                    hashP.BlockUpdate(key, 0, key.Length);
-					verifiedOutput = new byte[hashP.DigestSize];
-					hashP.DoFinal(verifiedOutput, 0);
-                    break;
-                case VerificationFunctionType.Mac:
-                    var macP = Source.CreateMacPrimitive(config.FunctionName.ToEnum<MacFunction>(), key, config.Salt,
-                        config.FunctionConfiguration);
-                    if (config.AdditionalData != null) macP.BlockUpdate(config.AdditionalData, 0, config.AdditionalData.Length);
-					verifiedOutput = new byte[macP.MacSize];
-					macP.DoFinal(verifiedOutput, 0);
-                    break;
-                case VerificationFunctionType.Kdf:
-					verifiedOutput = Source.DeriveKeyWithKdf(config.FunctionName.ToEnum<KeyDerivationFunction>(), key,
-						config.Salt, 32, config.FunctionConfiguration);
-                    break;
-				default:
-					throw new NotImplementedException ();
-            }
 
 			Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "CreateDefaultManifestKeyConfirmation", "Verified output", 
 				verifiedOutput.ToHexString()));

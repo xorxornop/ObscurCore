@@ -84,7 +84,7 @@ namespace ObscurCore.Cryptography
 		/// <param name="c">Destination array.</param>
 		/// <param name="cOff">Destination array offset.</param>
 		/// <param name="length">Length to XOR.</param>
-		public static void XOR(this byte[] a, int aOff, byte[] b, int bOff, byte[] c, int cOff, int length) {
+		public static void XOR(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff, int length) {
 			if (length <= 0) {
 				throw new ArgumentException ("Length is not positive.", "length");
 			} else if (aOff < 0) {
@@ -95,28 +95,28 @@ namespace ObscurCore.Cryptography
 				throw new ArgumentOutOfRangeException("bOff", "bOff must be 0 or positive.");
 			} else if (bOff + length > b.Length) {
 				throw new ArgumentException ("Insufficient length.", "b");
-			} else if (cOff < 0) {
+			} else if (outputOff < 0) {
 				throw new ArgumentOutOfRangeException("cOff", "cOff must be 0 or positive.");
-			}  else if (cOff + length > c.Length) {
+			}  else if (outputOff + length > output.Length) {
 				throw new DataLengthException ("Insufficient length.", "c");
 			}
 
-			XORNoChecks (a, aOff, b, bOff, c, cOff, length);
+			XORNoChecks (a, aOff, b, bOff, output, outputOff, length);
 		}
 
-		internal static void XORNoChecks(this byte[] a, int aOff, byte[] b, int bOff, byte[] c, int cOff, int length) {
+		internal static void XORNoChecks(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff, int length) {
 			#if INCLUDE_UNSAFE
 			int remainder;
 			int uintOps = Math.DivRem(length, sizeof(uint), out remainder);
 			unsafe {
 				fixed (byte* aPtr = a) {
 					fixed (byte* bPtr = b) {
-						fixed (byte* cPtr = c) {
+						fixed (byte* outputPtr = output) {
 							uint* aUintPtr = (uint*)(aPtr + aOff);
 							uint* bUintPtr = (uint*)(bPtr + bOff);
-							uint* cUintPtr = (uint*)(cPtr + cOff);
+							uint* outputUintPtr = (uint*)(outputPtr + outputOff);
 							for (int i = 0; i < uintOps; i++) {
-								cUintPtr[i] = aUintPtr[i] ^ bUintPtr[i];
+								outputUintPtr[i] = aUintPtr[i] ^ bUintPtr[i];
 							}
 						}
 					}
@@ -125,12 +125,12 @@ namespace ObscurCore.Cryptography
 			int increment = uintOps * sizeof(uint);
 			aOff += increment;
 			bOff += increment;
-			cOff += increment;
+			outputOff += increment;
 			length = remainder;
 			#endif
 
 			for (int i = 0; i < length; i++) {
-				c[cOff + i] = (byte)(a[aOff + i] ^ b[bOff + i]);
+				output[outputOff + i] = (byte)(a[aOff + i] ^ b[bOff + i]);
 			}
 		}
 
@@ -191,11 +191,6 @@ namespace ObscurCore.Cryptography
 
 		public static int RotateRight(this int i, int distance) {
 			return (int)((uint)i >> distance) ^ (i << -distance);
-		}
-
-
-		public static ulong RotateRight(ulong value, int nBits) {
-			return (value >> nBits) | (value << (64 - nBits));
 		}
 
 		public static void SecureWipe(this byte[] data) {

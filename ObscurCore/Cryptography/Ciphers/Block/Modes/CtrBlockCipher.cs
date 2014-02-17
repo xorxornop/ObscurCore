@@ -40,8 +40,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 			}
 
 			// Prepend the supplied IV with zeros (as per FIPS PUB 81)
-			Array.Copy(iv, 0, _iv, _iv.Length - iv.Length, iv.Length);
-			Array.Clear(_iv, 0, _iv.Length - iv.Length);
+			iv.CopyBytes (0, _iv, _iv.Length - iv.Length, iv.Length);
+			Array.Clear (_iv, 0, _iv.Length - iv.Length);
 			Reset();
 			_cipher.Init (true, key, null); // Streaming mode - cipher always used in encryption mode
 		}
@@ -69,9 +69,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 			_cipher.ProcessBlock(_counter, 0, _counterOut, 0);
 
 			// XOR the counterOut with the plaintext producing the cipher text
-			for (int i = 0; i < _counterOut.Length; i++) {
-				output[outOff + i] = (byte)(_counterOut[i] ^ input[inOff + i]);
-			}
+			input.XORNoChecks (inOff, _counterOut, 0, output, outOff, _counterOut.Length);
 
 			// Increment the counter
 			int j = _counter.Length;
@@ -82,7 +80,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 
 		public void Reset()
 		{
-			Array.Copy(_iv, 0, _counter, 0, _counter.Length);
+			_iv.CopyBytes (0, _counter, 0, _counter.Length);
 			_cipher.Reset();
 		}
 	}

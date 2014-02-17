@@ -18,8 +18,24 @@ namespace ObscurCore.DTO
     /// <summary>
     /// Defines data that must be available in manifest cryptography scheme configurations.
     /// </summary>
-    public interface IManifestCryptographySchemeConfiguration
+	public interface IManifestCryptographySchemeConfiguration
     {
+		/// <summary>
+		/// Configuration for the key confirmation scheme used to validate the existence and 
+		/// validity of keying material at respondent's side without disclosing the key itself.
+		/// </summary>
+		VerificationFunctionConfiguration KeyConfirmation { get; }
+
+		/// <summary>
+		/// Output of the key confirmation scheme given correct input data.
+		/// </summary>
+		byte[] KeyConfirmationVerifiedOutput { get; }
+
+		/// <summary>
+		/// Configuration for the scheme used to derive a key from the shared secret.
+		/// </summary>
+		KeyDerivationConfiguration KeyDerivation { get; }
+
 		/// <summary>
 		/// Configuration of the cipher used in encryption of the manifest.
 		/// </summary>
@@ -34,21 +50,5 @@ namespace ObscurCore.DTO
 		/// Output of the authentication scheme given correct input data.
 		/// </summary>
 		byte[] AuthenticationVerifiedOutput { get; }
-
-		/// <summary>
-		/// Configuration for the key confirmation scheme used to validate the existence and 
-		/// validity of keying material at respondent's side without disclosing the key itself.
-		/// </summary>
-        VerificationFunctionConfiguration KeyConfirmation { get; }
-
-		/// <summary>
-		/// Output of the key confirmation scheme given correct input data.
-		/// </summary>
-		byte[] KeyConfirmationVerifiedOutput { get; }
-
-		/// <summary>
-		/// Configuration for the scheme used to derive a key from the shared secret.
-		/// </summary>
-		KeyDerivationConfiguration KeyDerivation { get; }
     }
 }

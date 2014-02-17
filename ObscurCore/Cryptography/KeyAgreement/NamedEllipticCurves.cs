@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System;
+using System.Linq;
 using ObscurCore.Cryptography.KeyAgreement.Information;
 using System.Collections.Generic;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC;
@@ -23,6 +24,17 @@ namespace ObscurCore.Cryptography.KeyAgreement
 	public static class NamedEllipticCurves
 	{
 		public static Dictionary<string, EcNamedCurveInformation> Curves { get; private set; }
+
+		public static string GetProvider (string curveName) {
+			if (Enum.GetNames (typeof(DjbCurve)).Contains (curveName))
+				return "DJB";
+			if (Enum.GetNames (typeof(BrainpoolEllipticCurve)).Contains (curveName))
+				return "Brainpool";
+			if (Enum.GetNames (typeof(Sec2EllipticCurve)).Contains (curveName))
+				return "SEC";
+
+			throw new NotSupportedException ();
+		}
 
 		static NamedEllipticCurves ()
 		{

@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_RC4;INCLUDE_FABRIC</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_RC4</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>BasicCorrectnessRules.ruleset</CodeAnalysisRuleSet>
@@ -33,7 +33,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
+    <DefineConstants>TRACE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_RC4</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -41,7 +41,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
     <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
-    <DefineConstants>TRACE;INCLUDE_UNSAFE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
+    <DefineConstants>TRACE;INCLUDE_UNSAFE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_RC4</DefineConstants>
     <Optimize>true</Optimize>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>

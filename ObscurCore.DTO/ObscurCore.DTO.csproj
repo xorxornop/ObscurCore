@@ -88,7 +88,8 @@
     <Compile Include="AxolotlExchange.cs" />
     <Compile Include="ScryptConfiguration.cs" />
     <Compile Include="Pbkdf2Configuration.cs" />
-    <Compile Include="Um1ManifestCryptographyConfiguration.cs" />
+    <Compile Include="IAuthenticatibleClonable.cs" />
+    <Compile Include="Um1HybridManifestCryptographyConfiguration.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

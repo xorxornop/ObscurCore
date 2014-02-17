@@ -17,6 +17,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 using System;
 using System.Threading;
+using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
+using ObscurCore.Cryptography.Authentication;
 
 namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 {
@@ -127,7 +129,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 			int cost, int blockSize, int parallel, int? maxThreads)
 		{
 			byte[] B = GetEffectivePbkdf2Salt(key, salt, cost, blockSize, parallel, maxThreads);
-			var hmac = Source.CreateHmacPrimitive (ObscurCore.Cryptography.Authentication.HashFunction.Sha256, key, null);
+			var hmac = Source.CreateHmacPrimitive (HashFunction.Sha256, key, null);
 			Pbkdf2 kdf = new Pbkdf2(hmac, B, 1);
 			//Security.Clear(B);
 			Array.Clear (B, 0, B.Length);
@@ -146,7 +148,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 			Helper.CheckRange("parallel", parallel, 1, int.MaxValue / MFLen);
 			Helper.CheckRange("maxThreads", (int)maxThreads, 1, int.MaxValue);
 
-			var hmac = Source.CreateHmacPrimitive (ObscurCore.Cryptography.Authentication.HashFunction.Sha256, P, null);
+			var hmac = Source.CreateHmacPrimitive (HashFunction.Sha256, P, null);
 			byte[] B = Pbkdf2.ComputeDerivedKey(hmac, S, 1, parallel * MFLen);
 
 			uint[] B0 = new uint[B.Length / 4];
@@ -190,10 +192,10 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 			uint[] x = new uint[Bs]; uint[][] v = new uint[N][];
 			for (int i = 0; i < v.Length; i++) { v[i] = new uint[Bs]; }
 
-			Array.Copy(B, Boffset, x, 0, Bs);
+			Buffer.BlockCopy(B, Boffset, x, 0, Bs);
 			for (uint i = 0; i < N; i++)
 			{
-				Array.Copy(x, v[i], Bs);
+				Buffer.BlockCopy(x, 0, v[i], 0, Bs);
 				BlockMix(x, 0, x, 0, scratchX, scratchY, scratch1, r); 
 			}
 			for (uint i = 0; i < N; i++)
@@ -202,7 +204,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 				for (int k = 0; k < scratchZ.Length; k++) { scratchZ[k] = x[k] ^ vj[k]; }
 				BlockMix(scratchZ, 0, x, 0, scratchX, scratchY, scratch1, r);
 			}
-			Array.Copy(x, 0, Bp, Bpoffset, Bs);
+			Buffer.BlockCopy(x, 0, Bp, Bpoffset, Bs);
 
 			for (int i = 0; i < v.Length; i++) { Array.Clear(v[i], 0, v[i].Length); }
 			Array.Clear(v, 0, v.Length); Array.Clear(x, 0, x.Length);
@@ -226,19 +228,19 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 			for (int i = 0; i < r; i++)
 			{
 				for (int j = 0; j < scratch.Length; j++) { scratch[j] = x[j] ^ B[j + k]; }
-				ObscurCore.Cryptography.Ciphers.Stream.Primitives.Salsa20Engine.Salsa(8, scratch, 0, x, 0);
+				Salsa20Engine.HSalsa(8, scratch, 0, x, 0);
 				Array.Copy(x, 0, y, m, 16);
 				k += 16;
 
 				for (int j = 0; j < scratch.Length; j++) { scratch[j] = x[j] ^ B[j + k]; }
-				ObscurCore.Cryptography.Ciphers.Stream.Primitives.Salsa20Engine.Salsa(8, scratch, 0, x, 0);
+				Salsa20Engine.HSalsa(8, scratch, 0, x, 0);
 				Array.Copy(x, 0, y, m + n, 16);
 				k += 16;
 
 				m += 16;
 			}
 
-			Array.Copy(y, 0, Bp, Bpoffset, y.Length);
+			Buffer.BlockCopy(y, 0, Bp, Bpoffset, y.Length);
 		}
 	}
 }

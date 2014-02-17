@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Text;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
-//using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.Cryptography.Entropy;
@@ -149,18 +148,6 @@ namespace ObscurCore
 					AllowableKeySizes = new[] { 128, 256 },
                     DefaultKeySize = 256
                 });
-#if INCLUDE_ISAAC
-                _streamCipherDirectory.Add(SymmetricStreamCiphers.Isaac, new SymmetricCipherDescription {
-                    Name = SymmetricStreamCiphers.Isaac.ToString(),
-                    DisplayName = "Indirection, Shift, Accumulate, Add, and Count (ISAAC)",
-					AllowableBlockSizes = null,
-                    DefaultBlockSize = -1,
-					AllowableIVSizes = new[] { -1 },
-					DefaultIVSize = -1,
-                    AllowableKeySizes = new[] { 256 },
-                    DefaultKeySize = 256
-                });
-#endif
                 _streamCipherDirectory.Add(SymmetricStreamCipher.Rabbit, new SymmetricCipherDescription {
                     Name = SymmetricStreamCipher.Rabbit.ToString(),
                     DisplayName = "Rabbit",
@@ -221,7 +208,7 @@ namespace ObscurCore
 					AllowableIvSizes = new[] { 32, 48, 64, 80, 96, 112, 128 },
                     DefaultIvSize = 128,
 					AllowableKeySizes = new[] { 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256 },
-                    DefaultKeySize = 256
+					DefaultKeySize = 128
                 });
 
                 // Add block cipher modes of operation

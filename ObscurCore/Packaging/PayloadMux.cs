@@ -65,8 +65,11 @@ namespace ObscurCore.Packaging
 				encryptionKey = item.EncryptionKey;
 				authenticationKey = item.AuthenticationKey;
 			} else if (PayloadItemPreKeys.ContainsKey(item.Identifier)) {
+				if (item.Authentication.KeySizeBits.HasValue == false) {
+					throw new ConfigurationInvalidException ("Payload item authentication configuration is missing size specification of MAC key.");
+				}
 				KeyStretchingUtility.DeriveWorkingKeys (PayloadItemPreKeys [item.Identifier], item.Encryption.KeySizeBits / 8, 
-					item.Authentication.KeySizeBits / 8, item.KeyDerivation, out encryptionKey, out authenticationKey);
+					item.Authentication.KeySizeBits.Value / 8, item.KeyDerivation, out encryptionKey, out authenticationKey);
 			} else {
 				throw new ItemKeyMissingException (item);
 			}

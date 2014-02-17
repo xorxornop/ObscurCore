@@ -40,13 +40,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		private uint[] C = new uint[8];
 		private byte b = 0;
 
-
-
 		private byte[] 			_keyStream 		= new byte[16];
 		private int 			_keyStreamPtr 	= 16;
-
-		private readonly uint[] constants = new uint[] 	{ 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D,
-                                                          0xD34D34D3, 0x34D34D34, 0x4D34D34D, 0xD34D34D3 };
 
 
 		public void Init (bool encrypting, byte[] key, byte[] iv) {

@@ -113,17 +113,14 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             * XOR the cbcV and the input,
             * then encrypt the cbcV
             */
-            for (int i = 0; i < _blockSize; i++)
-            {
-                _cbcV[i] ^= input[inOff + i];
-            }
+			_cbcV.XORInPlaceNoChecks (0, input, inOff, _blockSize);
 
             int length = _cipher.ProcessBlock(_cbcV, 0, outBytes, outOff);
 
             /*
             * copy ciphertext to cbcV
             */
-            Array.Copy(outBytes, outOff, _cbcV, 0, _cbcV.Length);
+			outBytes.CopyBytes (outOff, _cbcV, 0, _cbcV.Length);
 
             return length;
         }
@@ -151,17 +148,14 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
                 throw new DataLengthException("input buffer too short");
             }
 
-            Array.Copy(input, inOff, _cbcNextV, 0, _blockSize);
+			input.CopyBytes (inOff, _cbcNextV, 0, _blockSize);
 
             int length = _cipher.ProcessBlock(input, inOff, outBytes, outOff);
 
             /*
             * XOR the cbcV and the output
             */
-            for (int i = 0; i < _blockSize; i++)
-            {
-                outBytes[outOff + i] ^= _cbcV[i];
-            }
+			outBytes.XORInPlaceNoChecks (outOff, _cbcV, 0, _blockSize);
 
             /*
             * swap the back up buffer into next position

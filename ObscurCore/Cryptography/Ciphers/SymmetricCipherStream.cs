@@ -234,8 +234,7 @@ namespace ObscurCore.Cryptography
 			// Process any leftovers
 			int gapLength = _operationSize - _operationBufferOffset;
 			if (_operationBufferOffset > 0 && count > gapLength) {
-				Array.Copy(buffer, offset, _operationBuffer, _operationBufferOffset, 
-					gapLength);
+				buffer.CopyBytes (offset, _operationBuffer, _operationBufferOffset, gapLength);
 				totalIn += gapLength;
 				iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
 				_operationBufferOffset = 0;
@@ -266,7 +265,7 @@ namespace ObscurCore.Cryptography
 			}
 
 			// Store any remainder in operation buffer
-			Array.Copy(buffer, offset, _operationBuffer, _operationBufferOffset, remainder);
+			buffer.CopyBytes (offset, _operationBuffer, _operationBufferOffset, remainder);
 			totalIn += remainder;
 			_operationBufferOffset += remainder;
 
@@ -392,7 +391,7 @@ namespace ObscurCore.Cryptography
 								// Short operation
 								iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
 								int subOp = buffer.Length - offset;
-								Array.Copy (_tempBuffer, 0, buffer, offset, subOp);
+								_tempBuffer.CopyBytes (0, buffer, offset, subOp);
 								totalOut += subOp;
 								_outBuffer.Put (_tempBuffer, count, iterOut - subOp);
 								count = 0;
@@ -402,7 +401,7 @@ namespace ObscurCore.Cryptography
 					} else {
 						// End of stream - finish the decryption
 						// Copy the previous operation block in to provide overrun protection
-						Array.Copy (buffer, offset - _operationSize, _tempBuffer, 0, _operationSize);
+						buffer.CopyBytes (offset - _operationSize, _tempBuffer, 0, _operationSize);
 						iterOut = FinishReading(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, _operationSize);
 						if(iterOut > 0) {
 							// Process the final decrypted data
@@ -410,11 +409,11 @@ namespace ObscurCore.Cryptography
 							if (remainingBufferSpace < 0) {
 								// Not enough space in destination buffer
 								int subOp = buffer.Length - offset;
-								Array.Copy (_tempBuffer, _operationSize, buffer, offset, subOp);
+								_tempBuffer.CopyBytes (_operationSize, buffer, offset, subOp);
 								totalOut += subOp;
 								_outBuffer.Put (_tempBuffer, _operationSize + subOp, iterOut - subOp);
 							} else {
-								Array.Copy (_tempBuffer, _operationSize, buffer, offset, iterOut);
+								_tempBuffer.CopyBytes (_operationSize, buffer, offset, iterOut);
 								totalOut += iterOut;
 							}
 						} else {

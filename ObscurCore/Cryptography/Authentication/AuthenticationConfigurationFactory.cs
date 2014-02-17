@@ -70,11 +70,11 @@ namespace ObscurCore.Cryptography.Authentication
 		/// </remarks>
 		/// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
 		/// <param name="hmacEnum">Hmac enum.</param>
-		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationHmac (HashFunction hmacEnum, 
+		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationHmac (HashFunction hashEnum, 
 			out int outputSize, int? keySize = null) 
 		{
-			outputSize = Athena.Cryptography.HashFunctions[hmacEnum].OutputSize;
-			byte[] functionConfig = Encoding.UTF8.GetBytes (hmacEnum.ToString ());
+			outputSize = Athena.Cryptography.HashFunctions[hashEnum].OutputSize;
+			byte[] functionConfig = Encoding.UTF8.GetBytes (hashEnum.ToString ());
 			return CreateAuthConf(MacFunction.Hmac.ToString(), keySize ?? outputSize, outputSize, functionConfig, null);
 		}
 
@@ -87,10 +87,10 @@ namespace ObscurCore.Cryptography.Authentication
 		/// </remarks>
 		/// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
 		/// <param name="cmacEnum">Cmac enum.</param>
-		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationCmac(SymmetricBlockCipher cmacEnum, out int outputSize) {
-			outputSize = Athena.Cryptography.BlockCiphers[cmacEnum].DefaultBlockSize;
-			int keySize = Athena.Cryptography.BlockCiphers[cmacEnum].DefaultKeySize;
-			byte[] functionConfig = Encoding.UTF8.GetBytes (cmacEnum.ToString());
+		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationCmac(SymmetricBlockCipher cipherEnum, out int outputSize) {
+			outputSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
+			int keySize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultKeySize;
+			byte[] functionConfig = Encoding.UTF8.GetBytes (cipherEnum.ToString());
 
 			return CreateAuthConf(MacFunction.Cmac.ToString(), keySize, outputSize, functionConfig, null);
 		}

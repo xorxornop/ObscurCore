@@ -30,7 +30,7 @@ namespace ObscurCore
 	public class PackageReader
 	{
 		/// <summary>
-		/// Stream that package is being read from. Only used in reading mode.
+		/// Stream that package is being read from.
 		/// </summary>
 		private readonly Stream _readingStream;
 
@@ -40,7 +40,7 @@ namespace ObscurCore
 		private Dictionary<Guid, byte[]> ItemPreKeys = new Dictionary<Guid, byte[]>();
 
 		/// <summary>
-		/// Offset at which the payload starts. Used in reading only.
+		/// Offset at which the payload starts.
 		/// </summary>
 		private long _readingPayloadStreamOffset;
 
@@ -184,7 +184,7 @@ namespace ObscurCore
 				               (manifestHeader.CryptographySchemeConfiguration);
 				break;
 			case ManifestCryptographyScheme.UM1Hybrid:
-				cryptoConfig = StratCom.DeserialiseDataTransferObject<Um1ManifestCryptographyConfiguration>
+				cryptoConfig = StratCom.DeserialiseDataTransferObject<Um1HybridManifestCryptographyConfiguration>
 				               (manifestHeader.CryptographySchemeConfiguration);
 				break;
 			default:
@@ -239,7 +239,7 @@ namespace ObscurCore
 				break;
 			case ManifestCryptographyScheme.UM1Hybrid:
 				// Identify matching public-private key pairs based on curve provider and curve name
-				var um1EphemeralKey = ((Um1ManifestCryptographyConfiguration) _manifestCryptoConfig).EphemeralKey;
+				var um1EphemeralKey = ((Um1HybridManifestCryptographyConfiguration) _manifestCryptoConfig).EphemeralKey;
 
 				if (_manifestCryptoConfig.KeyConfirmation != null) {
 					try {
@@ -269,71 +269,84 @@ namespace ObscurCore
 				"None of the keys provided to decrypt the manifest (cryptographic scheme: {0}) were confirmed as being able to do so.", manifestScheme));
 			}
 
-			Debug.Print(DebugUtility.CreateReportString("Package", "ReadManifest", "Manifest pre-key",
+			Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest pre-key",
 				preMKey.ToHexString()));
 
 			// Derive working manifest encryption & authentication keys from the manifest pre-key
 			byte[] workingMEncryptionKey, workingMAuthKey;
 			KeyStretchingUtility.DeriveWorkingKeys (preMKey, _manifestCryptoConfig.SymmetricCipher.KeySizeBits / 8,
-				_manifestCryptoConfig.Authentication.KeySizeBits / 8, _manifestCryptoConfig.KeyDerivation, 
+				_manifestCryptoConfig.Authentication.KeySizeBits.Value / 8, _manifestCryptoConfig.KeyDerivation, 
 				out workingMEncryptionKey, out workingMAuthKey);
 
 			// Clear the manifest pre-key
 			Array.Clear(preMKey, 0, preMKey.Length);
 
-			Debug.Print(DebugUtility.CreateReportString("Package", "ReadManifest", "Manifest working key",
+			Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest working key",
 				workingMEncryptionKey.ToHexString()));
-			Debug.Print(DebugUtility.CreateReportString("Package", "ReadManifest", "Manifest length prefix offset (absolute)", 
+			Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest length prefix offset (absolute)", 
 				_readingStream.Position));
 
 			// Read manifest length prefix
 			Manifest manifest;
 
-			byte[] manifestLengthLEBytes = new byte[4];
-			_readingStream.Read (manifestLengthLEBytes, 0, 4);
+			byte[] manifestLengthLEBytes = new byte[sizeof(UInt32)];
+			_readingStream.Read (manifestLengthLEBytes, 0, manifestLengthLEBytes.Length);
 			uint mlUInt = manifestLengthLEBytes.LittleEndianToUInt32 ();
 			int manifestLength = (int)mlUInt;
 
-			Debug.Print(DebugUtility.CreateReportString("Package", "ReadManifest", "Manifest length prefix",
+			Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest length prefix",
 				manifestLength));
-			Debug.Print(DebugUtility.CreateReportString("Package", "ReadManifest", "Manifest offset (absolute)",
+			Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest offset (absolute)",
 				_readingStream.Position));
 
 			/* Read manifest */
-			using(var decryptedManifestStream = new MemoryStream()) {
-			byte[] manifestMac = null;
-			using(var authenticator = new MacStream(_readingStream, false, _manifestCryptoConfig.Authentication, 
-				out manifestMac, workingMAuthKey, closeOnDispose : false)) 
-			{
-				using(var cs = new SymmetricCipherStream(authenticator, false, _manifestCryptoConfig.SymmetricCipher, 
-					workingMEncryptionKey, closeOnDispose : false))
+			using (var decryptedManifestStream = new MemoryStream ()) {
+				byte[] manifestMac = null;
+				using (var authenticator = new MacStream (_readingStream, false, _manifestCryptoConfig.Authentication, 
+					out manifestMac, workingMAuthKey, closeOnDispose : false)) 
 				{
-					cs.ReadExactlyTo (decryptedManifestStream, manifestLength, true);
+					using (var cs = new SymmetricCipherStream (authenticator, false, _manifestCryptoConfig.SymmetricCipher, 
+						workingMEncryptionKey, closeOnDispose : false)) 
+					{
+						cs.ReadExactlyTo (decryptedManifestStream, manifestLength, true);
+					}
+
+					authenticator.Update (manifestLengthLEBytes, 0, manifestLengthLEBytes.Length);
+
+					byte[] manifestCryptoDtoForAuth;
+					switch (manifestScheme) {
+					case ManifestCryptographyScheme.SymmetricOnly:
+						manifestCryptoDtoForAuth = 
+							((SymmetricManifestCryptographyConfiguration)_manifestCryptoConfig).CreateAuthenticatibleClone().SerialiseDto ();
+						break;
+					case ManifestCryptographyScheme.UM1Hybrid:
+						manifestCryptoDtoForAuth = 
+							((Um1HybridManifestCryptographyConfiguration)_manifestCryptoConfig).CreateAuthenticatibleClone().SerialiseDto ();
+						break;
+					default:
+						throw new InvalidOperationException ();
+					}
+
+					authenticator.Update (manifestCryptoDtoForAuth, 0, manifestCryptoDtoForAuth.Length);
 				}
 
-				authenticator.Update (manifestLengthLEBytes, 0, 4);
-				byte[] encryptionConfiguration = _manifestCryptoConfig.SymmetricCipher.SerialiseDto ();
-				byte[] authenticationConfiguration = _manifestCryptoConfig.Authentication.SerialiseDto ();
-				byte[] keyDerivationConfiguration = _manifestCryptoConfig.KeyDerivation.SerialiseDto ();
-				authenticator.Update (encryptionConfiguration, 0, encryptionConfiguration.Length);
-				authenticator.Update (authenticationConfiguration, 0, authenticationConfiguration.Length);
-				authenticator.Update (keyDerivationConfiguration, 0, keyDerivationConfiguration.Length);
-			}
-			// Authenticate the manifest
-			if(!manifestMac.SequenceEqualConstantTime(_manifestCryptoConfig.AuthenticationVerifiedOutput)) {
-				throw new CiphertextAuthenticationException ("Manifest not authenticated.");
-			}
-			decryptedManifestStream.Seek(0, SeekOrigin.Begin);
-			try {
-				manifest = (Manifest)StratCom.Serialiser.Deserialize(decryptedManifestStream, null, typeof (Manifest));
-			} catch (Exception e) {
-				throw new InvalidDataException("Manifest failed to deserialise.");
-			}
+				// Authenticate the manifest
+				if (manifestMac.SequenceEqualConstantTime (_manifestCryptoConfig.AuthenticationVerifiedOutput) == false) {
+					throw new CiphertextAuthenticationException ("Manifest not authenticated.");
+				}
+				decryptedManifestStream.Seek (0, SeekOrigin.Begin);
+				try {
+					manifest = (Manifest)StratCom.Serialiser.Deserialize (decryptedManifestStream, null, typeof(Manifest));
+				} catch (Exception e) {
+					throw new InvalidDataException ("Manifest failed to deserialise.", e);
+				}
 			}
 
+			_readingPayloadStreamOffset = _readingStream.Position;
+
 			// Clear the manifest encryption & authentication keys
-			Array.Clear(workingMEncryptionKey, 0, workingMEncryptionKey.Length);
-			Array.Clear(workingMAuthKey, 0, workingMAuthKey.Length);
+			workingMEncryptionKey.SecureWipe ();
+			workingMAuthKey.SecureWipe ();
 
 			return manifest;
 		}
@@ -359,7 +372,7 @@ namespace ObscurCore
 				if (preIKey.IsNullOrZeroLength()) {
 					errorList.Add(item);
 				}
-				if (errorList.Count == 0 && !ItemPreKeys.ContainsKey(item.Identifier)) {
+				if (errorList.Count == 0 && ItemPreKeys.ContainsKey(item.Identifier) == false) {
 					ItemPreKeys.Add (item.Identifier, preIKey);
 				}
 			}
@@ -412,12 +425,12 @@ namespace ObscurCore
 		/// <param name="payloadKeys">Potential keys for payload items.</param>
 		/// <exception cref="PackageConfigurationException">Payload layout scheme malformed/missing.</exception>
 		/// <exception cref="InvalidDataException">Package data structure malformed.</exception>
-		private void ReadPayload(IEnumerable<byte[]> payloadKeys = null) {
-//            if (_readingPayloadStreamOffset != 0 && _readingStream.Position != _readingPayloadStreamOffset) {
-//                _readingStream.Seek(_readingPayloadStreamOffset, SeekOrigin.Begin);
-//            }
+		private void ReadPayload (IEnumerable<byte[]> payloadKeys = null) {
+            if (_readingPayloadStreamOffset != 0 && _readingStream.Position != _readingPayloadStreamOffset) {
+                _readingStream.Seek(_readingPayloadStreamOffset, SeekOrigin.Begin);
+            }
 
-			Debug.Print(DebugUtility.CreateReportString("Package", "Read", "Payload offset (absolute)",
+			Debug.Print(DebugUtility.CreateReportString("PackageReader", "Read", "Payload offset (absolute)",
 				_readingStream.Position));
 
 			// Check that all payload items have decryption keys - if they do not, confirm them from potentials
@@ -441,7 +454,7 @@ namespace ObscurCore
 				throw;
 			}
 
-			Debug.Print(DebugUtility.CreateReportString("Package", "ReadPayload", "Trailer offset (absolute)",
+			Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPayload", "Trailer offset (absolute)",
 				_readingStream.Position));
 
 			// Read the trailer
@@ -453,9 +466,8 @@ namespace ObscurCore
 					+ "It would appear, however, that the package has unpacked successfully despite this.");
 			}
 
-			Debug.Print(DebugUtility.CreateReportString("Package", "ReadPayload", "[* PACKAGE END *] Offset (absolute)",
+			Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPayload", "[* PACKAGE END *] Offset (absolute)",
 				_readingStream.Position));
 		}
 	}
 }
-

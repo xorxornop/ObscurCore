@@ -13,6 +13,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#define AUTH_PADDING
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -73,11 +75,11 @@ namespace ObscurCore.Packaging
 				paddingLength));
 			StratCom.EntropySource.NextBytes(_paddingBuffer, 0, paddingLength);
 
-			if(AuthenticatePadding) {
-				authenticator.Write(_paddingBuffer, 0, paddingLength);
-			} else {
-				authenticator.DecoratorBinding.Write(_paddingBuffer, 0, paddingLength);
-			}
+			#if AUTH_PADDING
+			authenticator.Write(_paddingBuffer, 0, paddingLength);
+			#else
+			authenticator.DecoratorBinding.Write(_paddingBuffer, 0, paddingLength);
+			#endif
 
 			return paddingLength;
 		}
@@ -90,15 +92,15 @@ namespace ObscurCore.Packaging
 				paddingLength));
 
 			int bytesRead = 0;
-			if(AuthenticatePadding) {
-				bytesRead = authenticator.Read (_paddingBuffer, 0, paddingLength);
-			} else {
-				if (authenticator.DecoratorBinding.CanSeek) {
-					authenticator.DecoratorBinding.Seek (paddingLength, SeekOrigin.Current);
-					return paddingLength;
-				}
-				bytesRead = authenticator.DecoratorBinding.Read (_paddingBuffer, 0, paddingLength);
+			#if AUTH_PADDING
+			bytesRead = authenticator.Read (_paddingBuffer, 0, paddingLength);
+			#else
+			if (authenticator.DecoratorBinding.CanSeek) {
+				authenticator.DecoratorBinding.Seek (paddingLength, SeekOrigin.Current);
+				return paddingLength;
 			}
+			bytesRead = authenticator.DecoratorBinding.Read (_paddingBuffer, 0, paddingLength);
+			#endif
 			if(bytesRead < paddingLength) {
 				throw new IOException ("Unable to read frameshift padding bytes.");
 			}
