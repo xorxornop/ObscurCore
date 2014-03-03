@@ -123,12 +123,16 @@ namespace ObscurCore
         }
 
 		public static int GetHashCodeExt(this byte[] data) {
+			return data.GetHashCodeExt (0, data.Length);
+		}
+
+		public static int GetHashCodeExt(this byte[] data, int off, int count) {
 			if (data == null) {
 				return 0;
 			}
 
-			int i = data.Length;
-			int hc = i + 1;
+			int i = off + count;
+			int hc = count + 1;
 
 			while (--i >= 0) {
 				hc *= 257;
@@ -139,16 +143,42 @@ namespace ObscurCore
 		}
 
 		public static int GetHashCodeExt(this int[] data) {
+			return data.GetHashCodeExt (0, data.Length);
+		}
+
+		public static int GetHashCodeExt(this int[] data, int off, int count) {
 			if (data == null) {
 				return 0;
 			}
 
-			int i = data.Length;
-			int hc = i + 1;
+			int i = off + count;
+			int hc = count + 1;
 
 			while (--i >= 0) {
 				hc *= 257;
 				hc ^= data[i];
+			}
+
+			return hc;
+		}
+
+		[CLSCompliant(false)]
+		public static int GetHashCodeExt(this uint[] data) {
+			return data.GetHashCodeExt (0, data.Length);
+		}
+
+		[CLSCompliant(false)]
+		public static int GetHashCodeExt(this uint[] data, int off, int count) {
+			if (data == null) {
+				return 0;
+			}
+
+			int i = off + count;
+			int hc = count + 1;
+
+			while (--i >= 0) {
+				hc *= 257;
+				hc ^= (int)data[i];
 			}
 
 			return hc;

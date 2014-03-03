@@ -123,7 +123,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			}
 		}
 
-		/*		*
+		/**
          * Adds <code>PreCompInfo</code> for a point on this curve, under a given name. Used by
          * <code>ECMultiplier</code>s to save the precomputation for this <code>ECPoint</code> for use
          * by subsequent multiplication.
@@ -166,7 +166,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return CreatePoint(p.XCoord.ToBigInteger(), p.YCoord.ToBigInteger(), p.IsCompressed);
 		}
 
-		/*		*
+		/**
          * Normalization ensures that any projective coordinate is 1, and therefore that the x, y
          * coordinates reflect those of the equivalent point in an affine coordinate system. Where more
          * than one point is to be normalized, this method will generally be more efficient than
@@ -185,7 +185,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 				return;
 			}
 
-			/*			
+			/*
              * Figure out which of the points actually need to be normalized
              */
 			ECFieldElement[] zs = new ECFieldElement[points.Length];
@@ -273,8 +273,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			if (null == other)
 				return false;
 			return Field.Equals(other.Field)
-				&& A.Equals(other.A)
-				&& B.Equals(other.B);
+				&& A.ToBigInteger().Equals(other.A.ToBigInteger())
+				&& B.ToBigInteger().Equals(other.B.ToBigInteger());
 		}
 
 		public override bool Equals(object obj) 
@@ -285,13 +285,13 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		public override int GetHashCode()
 		{
 			return Field.GetHashCode()
-				^ A.GetHashCode().RotateLeft(8)
-				^ B.GetHashCode().RotateLeft(16);
+				^ A.ToBigInteger().GetHashCode().RotateLeft(8)
+				^ B.ToBigInteger().GetHashCode().RotateLeft(16);
 		}
 
 		protected abstract ECPoint DecompressPoint(int yTilde, BigInteger X1);
 
-		/*		*
+		/**
          * Sets the default <code>ECMultiplier</code>, unless already set. 
          */
 		public virtual ECMultiplier GetMultiplier()
@@ -306,7 +306,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			}
 		}
 
-		/*		*
+		/**
          * Decode a point on this curve from its ASN.1 encoding. The different
          * encodings are taken account of, including point compression for
          * <code>F<sub>p</sub></code> (X9.62 s 4.2.1 pg 17).
@@ -363,7 +363,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		}
 	}
 
-	/*	*
+	/**
      * Elliptic curve over Fp
      */
 	public class FpCurve
@@ -501,7 +501,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		}
 	}
 
-	/*	*
+	/**
      * Elliptic curves over F2m. The Weierstrass equation is given by
      * <code>y<sup>2</sup> + xy = x<sup>3</sup> + ax<sup>2</sup> + b</code>.
      */
@@ -539,12 +539,12 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return FiniteFields.GetBinaryExtensionField(new int[]{ 0, k1, k2, k3, m });
 		}
 
-		/*		*
+		/**
          * The exponent <code>m</code> of <code>F<sub>2<sup>m</sup></sub></code>.
          */
 		private readonly int m;
 
-		/*		*
+		/**
          * TPB: The integer <code>k</code> where <code>x<sup>m</sup> +
          * x<sup>k</sup> + 1</code> represents the reduction polynomial
          * <code>f(z)</code>.<br/>
@@ -554,7 +554,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          */
 		private readonly int k1;
 
-		/*		*
+		/**
          * TPB: Always set to <code>0</code><br/>
          * PPB: The integer <code>k2</code> where <code>x<sup>m</sup> +
          * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
@@ -562,7 +562,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          */
 		private readonly int k2;
 
-		/*		*
+		/**
          * TPB: Always set to <code>0</code><br/>
          * PPB: The integer <code>k3</code> where <code>x<sup>m</sup> +
          * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
@@ -570,25 +570,25 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          */
 		private readonly int k3;
 
-		/*		*
+		/**
          * The point at infinity on this curve.
          */
 		protected readonly F2mPoint m_infinity;
 
-		/*		*
+		/**
          * The parameter <code>&#956;</code> of the elliptic curve if this is
          * a Koblitz curve.
          */
 		private sbyte mu = 0;
 
-		/*		*
+		/**
          * The auxiliary values <code>s<sub>0</sub></code> and
          * <code>s<sub>1</sub></code> used for partial modular reduction for
          * Koblitz curves.
          */
 		private BigInteger[] si = null;
 
-		/*		*
+		/**
          * Constructor for Trinomial Polynomial Basis (TPB).
          * @param m  The exponent <code>m</code> of
          * <code>F<sub>2<sup>m</sup></sub></code>.
@@ -611,7 +611,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		{
 		}
 
-		/*		*
+		/**
          * Constructor for Trinomial Polynomial Basis (TPB).
          * @param m  The exponent <code>m</code> of
          * <code>F<sub>2<sup>m</sup></sub></code>.
@@ -639,7 +639,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		{
 		}
 
-		/*		*
+		/**
          * Constructor for Pentanomial Polynomial Basis (PPB).
          * @param m  The exponent <code>m</code> of
          * <code>F<sub>2<sup>m</sup></sub></code>.
@@ -670,7 +670,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		{
 		}
 
-		/*		*
+		/**
          * Constructor for Pentanomial Polynomial Basis (PPB).
          * @param m  The exponent <code>m</code> of
          * <code>F<sub>2<sup>m</sup></sub></code>.
@@ -829,7 +829,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			get { return m_infinity; }
 		}
 
-		/*		*
+		/**
          * Returns true if this is a Koblitz curve (ABC curve).
          * @return true if this is a Koblitz curve (ABC curve), false otherwise
          */
@@ -841,7 +841,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			}
 		}
 
-		/*		*
+		/**
          * Returns the parameter <code>&#956;</code> of the elliptic curve.
          * @return <code>&#956;</code> of the elliptic curve.
          * @throws ArgumentException if the given ECCurve is not a
@@ -863,7 +863,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return mu;
 		}
 
-		/*		*
+		/**
          * @return the auxiliary values <code>s<sub>0</sub></code> and
          * <code>s<sub>1</sub></code> used for partial modular reduction for
          * Koblitz curves.
@@ -922,7 +922,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return new F2mPoint(this, xp, yp, true);
 		}
 
-		/*		*
+		/**
          * Solves a quadratic equation <code>z<sup>2</sup> + z = beta</code>(X9.62
          * D.1.6) The other solution is <code>z + 1</code>.
          *
@@ -971,7 +971,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			get { return m; }
 		}
 
-		/*		*
+		/**
          * Return true if curve uses a Trinomial basis.
          *
          * @return true if curve Trinomial, false otherwise.

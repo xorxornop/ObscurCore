@@ -61,7 +61,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		}	
 
         public byte[] DeriveKey(byte[] key, int outputSize, KeyDerivationConfiguration config) {
-            return DeriveKeyWithConfig(key, config.Salt, outputSize, config.SchemeConfiguration);
+            return DeriveKeyWithConfig(key, config.Salt, outputSize, config.FunctionConfiguration);
         }
 		#endregion
 

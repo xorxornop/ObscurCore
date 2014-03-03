@@ -367,6 +367,20 @@
     <Compile Include="Cryptography\KeyDerivation\KeyDerivationUtility.cs" />
     <Compile Include="Cryptography\Entropy\CsprngFactory.cs" />
     <Compile Include="Cryptography\KeyConfirmation\ConfirmationFactory.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\Nat224.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224R1Curve.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224R1Field.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224R1FieldElement.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224R1Point.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224K1Curve.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224K1Field.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224K1FieldElement.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224K1Point.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\Nat384.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP384R1Curve.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP384R1Field.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP384R1FieldElement.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP384R1Point.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cryptography\KeyDerivation\Primitives\LICENSE.txt" />

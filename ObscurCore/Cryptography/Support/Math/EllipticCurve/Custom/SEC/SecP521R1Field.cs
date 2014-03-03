@@ -23,7 +23,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 
 		public static void AddOne(uint[] x, uint[] z)
 		{
-			Array.Copy(x, 0, z, 0, 16);
+			Nat.Copy(16, x, z);
 			uint c = Nat.Inc(16, z, 0) + x[16];
 			if (c > P16 || (c == P16 && Nat.Eq(16, z, P)))
 			{
@@ -87,7 +87,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 		public static void Reduce23(uint[] z)
 		{
 			uint z16 = z[16];
-			uint c = Nat.AddWord(16, z16 >> 9, z) + (z16 & P16);
+			uint c = Nat.AddWord(16, z16 >> 9, z, 0) + (z16 & P16);
 			if (c > P16 || (c == P16 && Nat.Eq(16, z, P)))
 			{
 				c += Nat.Inc(16, z, 0);
@@ -130,13 +130,9 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 
 		public static void Twice(uint[] x, uint[] z)
 		{
-			uint c = Nat.ShiftUpBit(16, x, 0, z) | (x[16] << 1);
-			if (c > P16 || (c == P16 && Nat.Eq(16, z, P)))
-			{
-				c += Nat.Inc(16, z, 0);
-				c &= P16;
-			}
-			z[16] = c;
+			uint x16 = x[16];
+			uint c = Nat.ShiftUpBit(16, x, x16 << 23, z) | (x16 << 1);
+			z[16] = c & P16;
 		}
 
 		protected static void ImplMultiply(uint[] x, uint[] y, uint[] zz)
@@ -152,7 +148,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			Nat512.Square(x, zz);
 
 			uint x16 = x[16];
-			zz[32] = Nat.MulWordAdd(16, x16 << 1, x, zz, 16) + (x16 * x16);
+			zz[32] = Nat.MulWordAddTo(16, x16 << 1, x, 0, zz, 16) + (x16 * x16);
 		}
 	}
 }

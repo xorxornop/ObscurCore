@@ -6,35 +6,41 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 	{
 		public static readonly string PRECOMP_NAME = "bc_wnaf";
 
-		private static int[] DEFAULT_WINDOW_SIZE_CUTOFFS = new int[]{ 13, 41, 121, 337, 897, 2305 };
+		private static readonly int[] DEFAULT_WINDOW_SIZE_CUTOFFS = new int[]{ 13, 41, 121, 337, 897, 2305 };
+
+		private static readonly byte[] EMPTY_BYTES = new byte[0];
+		private static readonly int[] EMPTY_INTS = new int[0];
 
 		public static int[] GenerateCompactNaf(BigInteger k)
 		{
 			if ((k.BitLength >> 16) != 0)
 				throw new ArgumentException("must have bitlength < 2^16", "k");
+			if (k.SignValue == 0)
+				return EMPTY_INTS;
 
 			BigInteger _3k = k.ShiftLeft(1).Add(k);
 
-			int digits = _3k.BitLength - 1;
-			int[] naf = new int[(digits + 1) >> 1];
+			int bits = _3k.BitLength;
+			int[] naf = new int[bits >> 1];
 
-			int length = 0, zeroes = 0;
-			for (int i = 1; i <= digits; ++i)
+			BigInteger diff = _3k.Xor(k);
+
+			int highBit = bits - 1, length = 0, zeroes = 0;
+			for (int i = 1; i < highBit; ++i)
 			{
-				bool _3kBit = _3k.TestBit(i);
-				bool kBit = k.TestBit(i);
-
-				if (_3kBit == kBit)
+				if (!diff.TestBit(i))
 				{
 					++zeroes;
+					continue;
 				}
-				else
-				{
-					int digit  = kBit ? -1 : 1;
-					naf[length++] = (digit << 16) | zeroes;
-					zeroes = 0;
-				}
+
+				int digit = k.TestBit(i) ? -1 : 1;
+				naf[length++] = (digit << 16) | zeroes;
+				zeroes = 1;
+				++i;
 			}
+
+			naf[length++] = (1 << 16) | zeroes;
 
 			if (naf.Length > length)
 			{
@@ -55,6 +61,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 				throw new ArgumentException("must be in the range [2, 16]", "width");
 			if ((k.BitLength >> 16) != 0)
 				throw new ArgumentException("must have bitlength < 2^16", "k");
+			if (k.SignValue == 0)
+				return EMPTY_INTS;
 
 			int[] wnaf = new int[k.BitLength / width + 1];
 
@@ -166,23 +174,31 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 
 		public static byte[] GenerateNaf(BigInteger k)
 		{
+			if (k.SignValue == 0)
+				return EMPTY_BYTES;
+
 			BigInteger _3k = k.ShiftLeft(1).Add(k);
 
 			int digits = _3k.BitLength - 1;
 			byte[] naf = new byte[digits];
 
-			for (int i = 1; i <= digits; ++i)
-			{
-				bool _3kBit = _3k.TestBit(i);
-				bool kBit = k.TestBit(i);
+			BigInteger diff = _3k.Xor(k);
 
-				naf[i - 1] = (byte)(_3kBit == kBit ? 0 : kBit ? -1 : 1);
+			for (int i = 1; i < digits; ++i)
+			{
+				if (diff.TestBit(i))
+				{
+					naf[i - 1] = (byte)(k.TestBit(i) ? -1 : 1);
+					++i;
+				}
 			}
+
+			naf[digits - 1] = 1;
 
 			return naf;
 		}
 
-		/*		*
+		/**
          * Computes the Window NAF (non-adjacent Form) of an integer.
          * @param width The width <code>w</code> of the Window NAF. The width is
          * defined as the minimal number <code>w</code>, such that for any
@@ -203,6 +219,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 
 			if (width < 2 || width > 8)
 				throw new ArgumentException("must be in the range [2, 8]", "width");
+			if (k.SignValue == 0)
+				return EMPTY_BYTES;
 
 			byte[] wnaf = new byte[k.BitLength + 1];
 
@@ -260,7 +278,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 			return new WNafPreCompInfo();
 		}
 
-		/*		*
+		/**
          * Determine window width to use for a scalar multiplication of the given size.
          * 
          * @param bits the bit-length of the scalar to multiply by
@@ -271,7 +289,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 			return GetWindowSize(bits, DEFAULT_WINDOW_SIZE_CUTOFFS);
 		}
 
-		/*		*
+		/**
          * Determine window width to use for a scalar multiplication of the given size.
          * 
          * @param bits the bit-length of the scalar to multiply by
@@ -323,7 +341,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 
 					for (int i = preCompLen; i < reqPreCompLen; i++)
 					{
-						/*						
+						/*
                          * Compute the new ECPoints for the precomputation array. The values 1, 3, 5, ...,
                          * 2^(width-1)-1 times p are computed
                          */
@@ -331,7 +349,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 					}
 				}
 
-				/*				
+				/*
                  * Having oft-used operands in affine form makes operations faster.
                  */
 				c.NormalizeAll(preComp);
@@ -375,8 +393,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 		private static byte[] Trim(byte[] a, int length)
 		{
 			byte[] result = new byte[length];
-			a.CopyBytes (0, result, 0, result.Length);
-
+			Array.Copy(a, 0, result, 0, result.Length);
 			return result;
 		}
 
@@ -395,4 +412,3 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier
 		}
 	}
 }
-

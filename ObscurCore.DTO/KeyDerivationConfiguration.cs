@@ -29,14 +29,14 @@ namespace ObscurCore.DTO
         /// Key Derivation Function (KDF) being used to derive valid, secure working key material.
         /// </summary>
         [ProtoMember(1, IsRequired = true)]
-        public string SchemeName { get; set; }
+        public string FunctionName { get; set; }
 
         /// <summary>
         /// Configuration for the key derivation function.
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
         [ProtoMember(2, IsRequired = false)]
-        public byte[] SchemeConfiguration { get; set; }
+        public byte[] FunctionConfiguration { get; set; }
 
         /// <summary>
         /// Data used by KDF to extend and/or strengthen base key material.
@@ -62,8 +62,8 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Salt.SequenceEqual(other.Salt) &&
-                   string.Equals(SchemeName, other.SchemeName) &&
-                   (SchemeConfiguration == null ? other.SchemeConfiguration == null : SchemeConfiguration.SequenceEqual(other.SchemeConfiguration));
+                   string.Equals(FunctionName, other.FunctionName) &&
+                   (FunctionConfiguration == null ? other.FunctionConfiguration == null : FunctionConfiguration.SequenceEqual(other.FunctionConfiguration));
         }
 
         /// <summary>
@@ -76,8 +76,8 @@ namespace ObscurCore.DTO
         public override int GetHashCode () {
             unchecked {
                 int hashCode = Salt.GetHashCode();
-                hashCode = (hashCode * 397) ^ SchemeName.GetHashCode();
-                hashCode = (hashCode * 397) ^ (SchemeConfiguration != null ? SchemeConfiguration.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ FunctionName.GetHashCode();
+                hashCode = (hashCode * 397) ^ (FunctionConfiguration != null ? FunctionConfiguration.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -88,18 +88,18 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Key Derivation Function (KDF) being used to derive valid, secure working key material.
         /// </summary>
-        string SchemeName { get; set; }
+        string FunctionName { get; }
 
         /// <summary>
         /// Configuration for the key derivation function.
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        byte[] SchemeConfiguration { get; set; }
+        byte[] FunctionConfiguration { get; }
 
         /// <summary>
         /// Data used by KDF to extend and/or strengthen base key material.
         /// </summary>
-        byte[] Salt { get; set; }
+        byte[] Salt { get; }
     }
 
 

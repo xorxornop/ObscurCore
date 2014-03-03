@@ -1,35 +1,34 @@
 ﻿using System;
-
-using ObscurCore.Cryptography.Support.Math.Field;
 using ObscurCore.Support;
+using ObscurCore.Cryptography.Support.Math.Field;
 
 namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 {
-	internal class SecP192K1Curve
+	internal class SecP224K1Curve
 		: ECCurve
 	{
 		public static readonly BigInteger q = new BigInteger(1,
-			Hex.Decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFEE37"));
+			Hex.Decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFE56D"));
 
-		private const int SECP192K1_DEFAULT_COORDS = COORD_JACOBIAN;
+		private const int SECP224K1_DEFAULT_COORDS = COORD_JACOBIAN;
 
-		protected readonly SecP192K1Point m_infinity;
+		protected readonly SecP224K1Point m_infinity;
 
-		public SecP192K1Curve()
+		public SecP224K1Curve()
 			: base(FiniteFields.GetPrimeField(q))
 		{
-			this.m_infinity = new SecP192K1Point(this, null, null);
+			this.m_infinity = new SecP224K1Point(this, null, null);
 
 			this.m_a = FromBigInteger(BigInteger.Zero);
-			this.m_b = FromBigInteger(BigInteger.ValueOf(3));
-			this.m_order = new BigInteger(1, Hex.Decode("FFFFFFFFFFFFFFFFFFFFFFFE26F2FC170F69466A74DEFD8D"));
+			this.m_b = FromBigInteger(BigInteger.ValueOf(5));
+			this.m_order = new BigInteger(1, Hex.Decode("010000000000000000000000000001DCE8D2EC6184CAF0A971769FB1F7"));
 			this.m_cofactor = BigInteger.One;
-			this.m_coord = SECP192K1_DEFAULT_COORDS;
+			this.m_coord = SECP224K1_DEFAULT_COORDS;
 		}
 
 		protected override ECCurve CloneCurve()
 		{
-			return new SecP192K1Curve();
+			return new SecP224K1Curve();
 		}
 
 		public override bool SupportsCoordinateSystem(int coord)
@@ -60,12 +59,12 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 
 		public override ECFieldElement FromBigInteger(BigInteger x)
 		{
-			return new SecP192K1FieldElement(x);
+			return new SecP224K1FieldElement(x);
 		}
 
 		protected internal override ECPoint CreateRawPoint(ECFieldElement x, ECFieldElement y, bool withCompression)
 		{
-			return new SecP192K1Point(this, x, y, withCompression);
+			return new SecP224K1Point(this, x, y, withCompression);
 		}
 
 		protected override ECPoint DecompressPoint(int yTilde, BigInteger X1)
@@ -87,7 +86,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 				beta = beta.Negate();
 			}
 
-			return new SecP192K1Point(this, x, beta, true);
+			return new SecP224K1Point(this, x, beta, true);
 		}
 	}
 }
+

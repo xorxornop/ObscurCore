@@ -378,8 +378,8 @@ namespace ObscurCore
 				Parallelism = 1
 			};
 			var config = new KeyDerivationConfiguration {
-				SchemeName = KeyDerivationFunction.Scrypt.ToString(),
-				SchemeConfiguration = schemeConfig.SerialiseDto(),
+				FunctionName = KeyDerivationFunction.Scrypt.ToString(),
+				FunctionConfiguration = schemeConfig.SerialiseDto(),
 				Salt = new byte[keyLengthBytes]
 			};
 			StratCom.EntropySupplier.NextBytes(config.Salt);
@@ -568,8 +568,8 @@ namespace ObscurCore
 				Parallelism = 2
 			};
 			var config = new KeyDerivationConfiguration {
-				SchemeName = KeyDerivationFunction.Scrypt.ToString(),
-				SchemeConfiguration = schemeConfig.SerialiseDto(),
+				FunctionName = KeyDerivationFunction.Scrypt.ToString(),
+				FunctionConfiguration = schemeConfig.SerialiseDto(),
 				Salt = new byte[keyLengthBytes]
 			};
 			StratCom.EntropySupplier.NextBytes(config.Salt);

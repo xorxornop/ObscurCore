@@ -71,6 +71,31 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			}
 		}
 
+		public static uint[] Random(uint[] p)
+		{
+			int len = p.Length;
+			Random rand = new Random();
+			uint[] s = Nat.Create(len);
+
+			uint m = p[len - 1];
+			m |= m >> 1;
+			m |= m >> 2;
+			m |= m >> 4;
+			m |= m >> 8;
+			m |= m >> 16;
+
+			do
+			{
+				byte[] bytes = new byte[len << 2];
+				rand.NextBytes(bytes);
+				Pack.BE_To_UInt32(bytes, 0, s);
+				s[len - 1] &= m;
+			}
+			while (Nat.Gte(len, s, p));
+
+			return s;
+		}
+
 		public static void Subtract(uint[] p, uint[] x, uint[] y, uint[] z)
 		{
 			int len = p.Length;
@@ -144,4 +169,3 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		}
 	}
 }
-

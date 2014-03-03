@@ -132,7 +132,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return x;
 		}
 
-		/*		*
+		/**
          * return the field name for this field.
          *
          * @return the string "Fp".
@@ -244,37 +244,53 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return new FpFieldElement(q, r, ModInverse(x));
 		}
 
-		/*		*
+		/**
          * return a sqrt root - the routine verifies that the calculation
          * returns the right value - if none exists it returns null.
          */
 		public override ECFieldElement Sqrt()
 		{
+			if (IsZero || IsOne)
+				return this;
+
 			if (!q.TestBit(0))
 				throw new NotImplementedException("even value of q");
 
-			// p mod 4 == 3
-			if (q.TestBit(1))
+			if (q.TestBit(1)) // q == 4m + 3
 			{
-				// TODO Can this be optimised (inline the Square?)
-				// z = g^(u+1) + p, p = 4u + 3
-				ECFieldElement z = new FpFieldElement(q, r, x.ModPow(q.ShiftRight(2).Add(BigInteger.One), q));
-
-				return z.Square().Equals(this) ? z : null;
+				BigInteger e = q.ShiftRight(2).Add(BigInteger.One);
+				return CheckSqrt(new FpFieldElement(q, r, x.ModPow(e, q)));
 			}
 
-			// p mod 4 == 1
-			BigInteger qMinusOne = q.Subtract(BigInteger.One);
+			if (q.TestBit(2)) // q == 8m + 5
+			{
+				BigInteger t1 = x.ModPow(q.ShiftRight(3), q);
+				BigInteger t2 = ModMult(t1, x);
+				BigInteger t3 = ModMult(t2, t1);
 
-			BigInteger legendreExponent = qMinusOne.ShiftRight(1);
+				if (t3.Equals(BigInteger.One))
+				{
+					return CheckSqrt(new FpFieldElement(q, r, t2));
+				}
+
+				// TODO This is constant and could be precomputed
+				BigInteger t4 = BigInteger.Two.ModPow(q.ShiftRight(2), q);
+
+				BigInteger y = ModMult(t2, t4);
+
+				return CheckSqrt(new FpFieldElement(q, r, y));
+			}
+
+			// q == 8m + 1
+
+			BigInteger legendreExponent = q.ShiftRight(1);
 			if (!(x.ModPow(legendreExponent, q).Equals(BigInteger.One)))
 				return null;
 
-			BigInteger u = qMinusOne.ShiftRight(2);
-			BigInteger k = u.ShiftLeft(1).Add(BigInteger.One);
-
 			BigInteger X = this.x;
 			BigInteger fourX = ModDouble(ModDouble(X)); ;
+
+			BigInteger k = legendreExponent.Add(BigInteger.One), qMinusOne = q.Subtract(BigInteger.One);
 
 			BigInteger U, V;
 			Random rand = new Random();
@@ -286,7 +302,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 					P = new BigInteger(q.BitLength, rand);
 				}
 				while (P.CompareTo(q) >= 0
-					|| !(ModMult(P, P).Subtract(fourX).ModPow(legendreExponent, q).Equals(qMinusOne)));
+					|| !ModReduce(P.Multiply(P).Subtract(fourX)).ModPow(legendreExponent, q).Equals(qMinusOne));
 
 				BigInteger[] result = LucasSequence(P, X, k);
 				U = result[0];
@@ -294,22 +310,17 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 
 				if (ModMult(V, V).Equals(fourX))
 				{
-					// Integer division by 2, mod q
-					if (V.TestBit(0))
-					{
-						V = V.Add(q);
-					}
-
-					V = V.ShiftRight(1);
-
-					Debug.Assert(ModMult(V, V).Equals(X));
-
-					return new FpFieldElement(q, r, V);
+					return new FpFieldElement(q, r, ModHalfAbs(V));
 				}
 			}
 			while (U.Equals(BigInteger.One) || U.Equals(qMinusOne));
 
 			return null;
+		}
+
+		private ECFieldElement CheckSqrt(ECFieldElement z)
+		{
+			return z.Square().Equals(this) ? z : null;
 		}
 
 		private BigInteger[] LucasSequence(
@@ -384,6 +395,24 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 				_2x = _2x.Subtract(q);
 			}
 			return _2x;
+		}
+
+		protected virtual BigInteger ModHalf(BigInteger x)
+		{
+			if (x.TestBit(0))
+			{
+				x = q.Add(x);
+			}
+			return x.ShiftRight(1);
+		}
+
+		protected virtual BigInteger ModHalfAbs(BigInteger x)
+		{
+			if (x.TestBit(0))
+			{
+				x = q.Subtract(x);
+			}
+			return x.ShiftRight(1);
 		}
 
 		protected virtual BigInteger ModInverse(BigInteger x)
@@ -495,7 +524,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 		}
 	}
 
-	/*	*
+	/**
      * Class representing the Elements of the finite field
      * <code>F<sub>2<sup>m</sup></sub></code> in polynomial basis (PB)
      * representation. Both trinomial (Tpb) and pentanomial (Ppb) polynomial
@@ -505,68 +534,42 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 	public class F2mFieldElement
 		: ECFieldElement
 	{
-		/*		*
+		/**
          * Indicates gaussian normal basis representation (GNB). Number chosen
          * according to X9.62. GNB is not implemented at present.
          */
 		public const int Gnb = 1;
 
-		/*		*
+		/**
          * Indicates trinomial basis representation (Tpb). Number chosen
          * according to X9.62.
          */
 		public const int Tpb = 2;
 
-		/*		*
+		/**
          * Indicates pentanomial basis representation (Ppb). Number chosen
          * according to X9.62.
          */
 		public const int Ppb = 3;
 
-		/*		*
+		/**
          * Tpb or Ppb.
          */
 		private int representation;
 
-		/*		*
+		/**
          * The exponent <code>m</code> of <code>F<sub>2<sup>m</sup></sub></code>.
          */
 		private int m;
 
-		///**
-		// * Tpb: The integer <code>k</code> where <code>x<sup>m</sup> +
-		// * x<sup>k</sup> + 1</code> represents the reduction polynomial
-		// * <code>f(z)</code>.<br/>
-		// * Ppb: The integer <code>k1</code> where <code>x<sup>m</sup> +
-		// * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-		// * represents the reduction polynomial <code>f(z)</code>.<br/>
-		// */
-		//private int k1;
-
-		///**
-		// * Tpb: Always set to <code>0</code><br/>
-		// * Ppb: The integer <code>k2</code> where <code>x<sup>m</sup> +
-		// * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-		// * represents the reduction polynomial <code>f(z)</code>.<br/>
-		// */
-		//private int k2;
-
-		///**
-		//    * Tpb: Always set to <code>0</code><br/>
-		//    * Ppb: The integer <code>k3</code> where <code>x<sup>m</sup> +
-		//    * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
-		//    * represents the reduction polynomial <code>f(z)</code>.<br/>
-		//    */
-		//private int k3;
-
 		private int[] ks;
 
-		/*		*
+		/**
          * The <code>LongArray</code> holding the bits.
          */
 		private LongArray x;
 
-		/*		*
+		/**
             * Constructor for Ppb.
             * @param m  The exponent <code>m</code> of
             * <code>F<sub>2<sup>m</sup></sub></code>.
@@ -608,7 +611,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			this.x = new LongArray(x);
 		}
 
-		/*		*
+		/**
             * Constructor for Tpb.
             * @param m  The exponent <code>m</code> of
             * <code>F<sub>2<sup>m</sup></sub></code>.
@@ -669,7 +672,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			get { return m; }
 		}
 
-		/*		*
+		/**
         * Checks, if the ECFieldElements <code>a</code> and <code>b</code>
         * are elements of the same field <code>F<sub>2<sup>m</sup></sub></code>
         * (having the same representation).
@@ -699,7 +702,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 				throw new ArgumentException("One of the F2m field elements has incorrect representation");
 			}
 
-			if ((aF2m.m != bF2m.m) || !aF2m.ks.SequenceEqual(bF2m.ks))
+			if ((aF2m.m != bF2m.m) || aF2m.ks.SequenceEqual(bF2m.ks) == false)
 			{
 				throw new ArgumentException("Field elements are not elements of the same field F2m");
 			}
@@ -824,7 +827,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			return new F2mFieldElement(m, ks, x2);
 		}
 
-		/*		*
+		/**
             * @return the representation of the field
             * <code>F<sub>2<sup>m</sup></sub></code>, either of
             * {@link F2mFieldElement.Tpb} (trinomial
@@ -837,7 +840,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			get { return this.representation; }
 		}
 
-		/*		*
+		/**
             * @return the degree <code>m</code> of the reduction polynomial
             * <code>f(z)</code>.
             */
@@ -846,7 +849,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			get { return this.m; }
 		}
 
-		/*		*
+		/**
             * @return Tpb: The integer <code>k</code> where <code>x<sup>m</sup> +
             * x<sup>k</sup> + 1</code> represents the reduction polynomial
             * <code>f(z)</code>.<br/>
@@ -859,7 +862,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			get { return this.ks[0]; }
 		}
 
-		/*		*
+		/**
             * @return Tpb: Always returns <code>0</code><br/>
             * Ppb: The integer <code>k2</code> where <code>x<sup>m</sup> +
             * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
@@ -870,7 +873,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			get { return this.ks.Length >= 2 ? this.ks[1] : 0; }
 		}
 
-		/*		*
+		/**
             * @return Tpb: Always set to <code>0</code><br/>
             * Ppb: The integer <code>k3</code> where <code>x<sup>m</sup> +
             * x<sup>k3</sup> + x<sup>k2</sup> + x<sup>k1</sup> + 1</code>
@@ -906,7 +909,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 
 		public override int GetHashCode()
 		{
-			return x.GetHashCode () ^ m ^ ks.GetHashCodeExt ();
+			return x.GetHashCode() ^ m ^ ks.GetHashCodeExt();
 		}
 	}
 }

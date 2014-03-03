@@ -40,9 +40,9 @@ namespace ObscurCore.Cryptography.KeyDerivation
 			KeyDerivationConfiguration kdfConfig, out byte[] cipherKey, out byte[] macKey)
 		{
 			// Derive the key which will be used for encrypting the manifest
-			byte[] stretchedKeys = KeyDerivationUtility.DeriveKeyWithKdf(kdfConfig.SchemeName.ToEnum<KeyDerivationFunction>(),
+			byte[] stretchedKeys = KeyDerivationUtility.DeriveKeyWithKdf(kdfConfig.FunctionName.ToEnum<KeyDerivationFunction>(),
 				preKey, kdfConfig.Salt, cipherKeySize + macKeySize,
-				kdfConfig.SchemeConfiguration);
+				kdfConfig.FunctionConfiguration);
 
 			// Retrieve the working encryption & authentication subkeys from the stretched manifest key
 			cipherKey = new byte[cipherKeySize];
