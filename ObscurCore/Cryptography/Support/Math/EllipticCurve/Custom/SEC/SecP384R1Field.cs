@@ -8,10 +8,13 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 		// 2^384 - 2^128 - 2^96 + 2^32 - 1
 		internal static readonly uint[] P = new uint[]{ 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFFFF,
 			0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
-		private const uint P11 = 0xFFFFFFFF;
-		private static readonly uint[] PExt = new uint[]{ 0x00000001, 0xFFFFFFFE, 0x00000000, 0x00000002, 0x00000000, 0xFFFFFFFE,
+		internal static readonly uint[] PExt = new uint[]{ 0x00000001, 0xFFFFFFFE, 0x00000000, 0x00000002, 0x00000000, 0xFFFFFFFE,
 			0x00000000, 0x00000002, 0x00000001, 0x00000000, 0x00000000, 0x00000000, 0xFFFFFFFE, 0x00000001, 0x00000000,
 			0xFFFFFFFE, 0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
+		private static readonly uint[] PExtInv = new uint[]{ 0xFFFFFFFF, 0x00000001, 0xFFFFFFFF, 0xFFFFFFFD, 0xFFFFFFFF, 0x00000001,
+			0xFFFFFFFF, 0xFFFFFFFD, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000001, 0xFFFFFFFE, 0xFFFFFFFF,
+			0x00000001, 0x00000002 };
+		private const uint P11 = 0xFFFFFFFF;
 		private const uint PExt23 = 0xFFFFFFFF;
 
 		public static void Add(uint[] x, uint[] y, uint[] z)
@@ -19,7 +22,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			uint c = Nat.Add(12, x, y, z);
 			if (c != 0 || (z[11] == P11 && Nat.Gte(12, z, P)))
 			{
-				Nat.Sub(12, z, P, z);
+				AddPInvTo(z);
 			}
 		}
 
@@ -28,17 +31,19 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			uint c = Nat.Add(24, xx, yy, zz);
 			if (c != 0 || (zz[23] == PExt23 && Nat.Gte(24, zz, PExt)))
 			{
-				Nat.Sub(24, zz, PExt, zz);
+				if (Nat.AddTo(PExtInv.Length, PExtInv, zz) != 0)
+				{
+					Nat.IncAt(24, zz, PExtInv.Length);
+				}
 			}
 		}
 
 		public static void AddOne(uint[] x, uint[] z)
 		{
-			Nat.Copy(12, x, z);
-			uint c = Nat.Inc(12, z, 0);
+			uint c = Nat.Inc(12, x, z);
 			if (c != 0 || (z[11] == P11 && Nat.Gte(12, z, P)))
 			{
-				Nat.Sub(12, z, P, z);
+				AddPInvTo(z);
 			}
 		}
 
@@ -47,7 +52,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			uint[] z = Nat.FromBigInteger(384, x);
 			if (z[11] == P11 && Nat.Gte(12, z, P))
 			{
-				Nat.Sub(12, z, P, z);
+				Nat.SubFrom(12, P, z);
 			}
 			return z;
 		}
@@ -90,6 +95,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			long xx16 = xx[16], xx17 = xx[17], xx18 = xx[18], xx19 = xx[19];
 			long xx20 = xx[20], xx21 = xx[21], xx22 = xx[22], xx23 = xx[23];
 
+			const long n = 1;
+
+			xx12 -= n;
+
 			long cc = 0;
 			cc += (long)xx[0] + xx12 + xx20 + xx21 - xx23;
 			z[0] = (uint)cc;
@@ -127,51 +136,47 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			cc += (long)xx[11] + xx19 + xx20 + xx23 - xx22;
 			z[11] = (uint)cc;
 			cc >>= 32;
+			cc += n;
 
-			int c = (int)cc;
-			if (c > 0)
-			{
-				Reduce32((uint)c, z);
-			}
-			else
-			{
-				while (c < 0)
-				{
-					c += (int)Nat256.Add(z, P, z);
-				}
-			}
+			Debug.Assert(cc >= 0);
+
+			Reduce32((uint)cc, z);
 		}
 
 		public static void Reduce32(uint x, uint[] z)
 		{
-			long xx12 = x;
-
 			long cc = 0;
-			cc += (long)z[0] + xx12;
-			z[0] = (uint)cc;
-			cc >>= 32;
-			cc += (long)z[1] - xx12;
-			z[1] = (uint)cc;
-			cc >>= 32;
-			cc += (long)z[2];
-			z[2] = (uint)cc;
-			cc >>= 32;
-			cc += (long)z[3] + xx12;
-			z[3] = (uint)cc;
-			cc >>= 32;
-			cc += (long)z[4] + xx12;
-			z[4] = (uint)cc;
-			cc >>= 32;
 
-			Debug.Assert(cc >= 0);
-
-			if (cc > 0)
+			if (x != 0)
 			{
-				uint c = Nat.AddWord(12, (uint)cc, z, 5);
-				if (c != 0 || (z[11] == P11 && Nat.Gte(12, z, P)))
+				long xx12 = x;
+
+				cc += (long)z[0] + xx12;
+				z[0] = (uint)cc;
+				cc >>= 32;
+				cc += (long)z[1] - xx12;
+				z[1] = (uint)cc;
+				cc >>= 32;
+				if (cc != 0)
 				{
-					Nat.Sub(12, z, P, z);
+					cc += (long)z[2];
+					z[2] = (uint)cc;
+					cc >>= 32;
 				}
+				cc += (long)z[3] + xx12;
+				z[3] = (uint)cc;
+				cc >>= 32;
+				cc += (long)z[4] + xx12;
+				z[4] = (uint)cc;
+				cc >>= 32;
+
+				Debug.Assert(cc == 0 || cc == 1);
+			}
+
+			if ((cc != 0 && Nat.IncAt(12, z, 5) != 0)
+				|| (z[11] == P11 && Nat.Gte(12, z, P)))
+			{
+				AddPInvTo(z);
 			}
 		}
 
@@ -202,7 +207,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			int c = Nat.Sub(12, x, y, z);
 			if (c != 0)
 			{
-				Nat.Add(12, z, P, z);
+				SubPInvFrom(z);
 			}
 		}
 
@@ -211,7 +216,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			int c = Nat.Sub(24, xx, yy, zz);
 			if (c != 0)
 			{
-				Nat.Add(24, zz, PExt, zz);
+				if (Nat.SubFrom(PExtInv.Length, PExtInv, zz) != 0)
+				{
+					Nat.DecAt(24, zz, PExtInv.Length);
+				}
 			}
 		}
 
@@ -220,7 +228,59 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			uint c = Nat.ShiftUpBit(12, x, 0, z);
 			if (c != 0 || (z[11] == P11 && Nat.Gte(12, z, P)))
 			{
-				Nat.Sub(12, z, P, z);
+				AddPInvTo(z);
+			}
+		}
+
+		private static void AddPInvTo(uint[] z)
+		{
+			long c = (long)z[0] + 1;
+			z[0] = (uint)c;
+			c >>= 32;
+			c += (long)z[1] - 1;
+			z[1] = (uint)c;
+			c >>= 32;
+			if (c != 0)
+			{
+				c += (long)z[2];
+				z[2] = (uint)c;
+				c >>= 32;
+			}
+			c += (long)z[3] + 1;
+			z[3] = (uint)c;
+			c >>= 32;
+			c += (long)z[4] + 1;
+			z[4] = (uint)c;
+			c >>= 32;
+			if (c != 0)
+			{
+				Nat.IncAt(12, z, 5);
+			}
+		}
+
+		private static void SubPInvFrom(uint[] z)
+		{
+			long c = (long)z[0] - 1;
+			z[0] = (uint)c;
+			c >>= 32;
+			c += (long)z[1] + 1;
+			z[1] = (uint)c;
+			c >>= 32;
+			if (c != 0)
+			{
+				c += (long)z[2];
+				z[2] = (uint)c;
+				c >>= 32;
+			}
+			c += (long)z[3] - 1;
+			z[3] = (uint)c;
+			c >>= 32;
+			c += (long)z[4] - 1;
+			z[4] = (uint)c;
+			c >>= 32;
+			if (c != 0)
+			{
+				Nat.DecAt(12, z, 5);
 			}
 		}
 	}

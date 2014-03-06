@@ -8,11 +8,12 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 		// 2^224 - 2^32 - 2^12 - 2^11 - 2^9 - 2^7 - 2^4 - 2 - 1
 		internal static readonly uint[] P = new uint[]{ 0xFFFFE56D, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 			0xFFFFFFFF };
-		private const uint P6 = 0xFFFFFFFF;
-		private static readonly uint[] PExt = new uint[]{ 0x02C23069, 0x00003526, 0x00000001, 0x00000000, 0x00000000,
+		internal static readonly uint[] PExt = new uint[]{ 0x02C23069, 0x00003526, 0x00000001, 0x00000000, 0x00000000,
 			0x00000000, 0x00000000, 0xFFFFCADA, 0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
+		private static readonly uint[] PExtInv = new uint[]{ 0xFD3DCF97, 0xFFFFCAD9, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF,
+			0xFFFFFFFF, 0xFFFFFFFF, 0x00003525, 0x00000002 };
+		private const uint P6 = 0xFFFFFFFF;
 		private const uint PExt13 = 0xFFFFFFFF;
-		private const ulong PInv = 0x0000000100001A93L; 
 		private const uint PInv33 = 0x1A93;
 
 		public static void Add(uint[] x, uint[] y, uint[] z)
@@ -20,26 +21,28 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			uint c = Nat224.Add(x, y, z);
 			if (c != 0 || (z[6] == P6 && Nat224.Gte(z, P)))
 			{
-				Nat224.AddDWord(PInv, z, 0);
+				Nat.Add33To(7, PInv33, z);
 			}
 		}
 
 		public static void AddExt(uint[] xx, uint[] yy, uint[] zz)
 		{
-			uint c = Nat224.AddExt(xx, yy, zz);
-			if (c != 0 || (zz[13] == PExt13 && Nat224.GteExt(zz, PExt)))
+			uint c = Nat.Add(14, xx, yy, zz);
+			if (c != 0 || (zz[13] == PExt13 && Nat.Gte(14, zz, PExt)))
 			{
-				Nat224.SubExt(zz, PExt, zz);
+				if (Nat.AddTo(PExtInv.Length, PExtInv, zz) != 0)
+				{
+					Nat.IncAt(14, zz, PExtInv.Length);
+				}
 			}
 		}
 
 		public static void AddOne(uint[] x, uint[] z)
 		{
-			Nat224.Copy(x, z);
-			uint c = Nat224.Inc(z, 0);
+			uint c = Nat.Inc(7, x, z);
 			if (c != 0 || (z[6] == P6 && Nat224.Gte(z, P)))
 			{
-				Nat224.AddDWord(PInv, z, 0);
+				Nat.Add33To(7, PInv33, z);
 			}
 		}
 
@@ -48,7 +51,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			uint[] z = Nat224.FromBigInteger(x);
 			if (z[6] == P6 && Nat224.Gte(z, P))
 			{
-				Nat224.AddDWord(PInv, z, 0);
+				Nat224.SubFrom(P, z);
 			}
 			return z;
 		}
@@ -57,12 +60,12 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 		{
 			if ((x[0] & 1) == 0)
 			{
-				Nat224.ShiftDownBit(x, 0, z);
+				Nat.ShiftDownBit(7, x, 0, z);
 			}
 			else
 			{
 				uint c = Nat224.Add(x, P, z);
-				Nat224.ShiftDownBit(z, c, z);
+				Nat.ShiftDownBit(7, z, c);
 			}
 		}
 
@@ -87,26 +90,23 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 
 		public static void Reduce(uint[] xx, uint[] z)
 		{
-			ulong c = Nat224.Mul33Add(PInv33, xx, 7, xx, 0, z, 0);
-			c = Nat224.Mul33DWordAdd(PInv33, c, z, 0);
+			ulong cc = Nat224.Mul33Add(PInv33, xx, 7, xx, 0, z, 0);
+			uint c = Nat224.Mul33DWordAdd(PInv33, cc, z, 0);
 
 			Debug.Assert(c == 0 || c == 1);
 
 			if (c != 0 || (z[6] == P6 && Nat224.Gte(z, P)))
 			{
-				Nat224.AddDWord(PInv, z, 0);
+				Nat.Add33To(7, PInv33, z);
 			}
 		}
 
 		public static void Reduce32(uint x, uint[] z)
 		{
-			uint c = Nat224.Mul33WordAdd(PInv33, x, z, 0);
-
-			Debug.Assert(c == 0 || c == 1);
-
-			if (c != 0 || (z[6] == P6 && Nat224.Gte(z, P)))
+			if ((x != 0 && Nat224.Mul33WordAdd(PInv33, x, z, 0) != 0)
+				|| (z[6] == P6 && Nat224.Gte(z, P)))
 			{
-				Nat224.AddDWord(PInv, z, 0);
+				Nat.Add33To(7, PInv33, z);
 			}
 		}
 
@@ -137,25 +137,28 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			int c = Nat224.Sub(x, y, z);
 			if (c != 0)
 			{
-				Nat224.SubDWord(PInv, z);
+				Nat.Sub33From(7, PInv33, z);
 			}
 		}
 
 		public static void SubtractExt(uint[] xx, uint[] yy, uint[] zz)
 		{
-			int c = Nat224.SubExt(xx, yy, zz);
+			int c = Nat.Sub(14, xx, yy, zz);
 			if (c != 0)
 			{
-				Nat224.AddExt(zz, PExt, zz);
+				if (Nat.SubFrom(PExtInv.Length, PExtInv, zz) != 0)
+				{
+					Nat.DecAt(14, zz, PExtInv.Length);
+				}
 			}
 		}
 
 		public static void Twice(uint[] x, uint[] z)
 		{
-			uint c = Nat224.ShiftUpBit(x, 0, z);
+			uint c = Nat.ShiftUpBit(7, x, 0, z);
 			if (c != 0 || (z[6] == P6 && Nat224.Gte(z, P)))
 			{
-				Nat224.AddDWord(PInv, z, 0);
+				Nat.Add33To(7, PInv33, z);
 			}
 		}
 	}

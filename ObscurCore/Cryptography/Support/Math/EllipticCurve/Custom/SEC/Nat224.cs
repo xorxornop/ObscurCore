@@ -115,29 +115,30 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			return (uint)c;
 		}
 
-		// TODO Re-write to allow full range for x?
-		public static uint AddDWord(ulong x, uint[] z, int zOff)
-		{
-			Debug.Assert(zOff <= 5);
-			ulong c = x;
-			c += (ulong)z[zOff + 0];
-			z[zOff + 0] = (uint)c;
-			c >>= 32;
-			c += (ulong)z[zOff + 1];
-			z[zOff + 1] = (uint)c;
-			c >>= 32;
-			return c == 0 ? 0 : Inc(z, zOff + 2);
-		}
-
-		public static uint AddExt(uint[] xx, uint[] yy, uint[] zz)
+		public static uint AddTo(uint[] x, uint[] z)
 		{
 			ulong c = 0;
-			for (int i = 0; i < 14; ++i)
-			{
-				c += (ulong)xx[i] + yy[i];
-				zz[i] = (uint)c;
-				c >>= 32;
-			}
+			c += (ulong)x[0] + z[0];
+			z[0] = (uint)c;
+			c >>= 32;
+			c += (ulong)x[1] + z[1];
+			z[1] = (uint)c;
+			c >>= 32;
+			c += (ulong)x[2] + z[2];
+			z[2] = (uint)c;
+			c >>= 32;
+			c += (ulong)x[3] + z[3];
+			z[3] = (uint)c;
+			c >>= 32;
+			c += (ulong)x[4] + z[4];
+			z[4] = (uint)c;
+			c >>= 32;
+			c += (ulong)x[5] + z[5];
+			z[5] = (uint)c;
+			c >>= 32;
+			c += (ulong)x[6] + z[6];
+			z[6] = (uint)c;
+			c >>= 32;
 			return (uint)c;
 		}
 
@@ -202,24 +203,6 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			return (uint)c;
 		}
 
-		public static uint AddWord(uint x, uint[] z, int zOff)
-		{
-			Debug.Assert(zOff <= 6);
-			ulong c = (ulong)x + z[zOff + 0];
-			z[zOff + 0] = (uint)c;
-			c >>= 32;
-			return c == 0 ? 0 : Inc(z, zOff + 1);
-		}
-
-		public static uint AddWordExt(uint x, uint[] zz, int zzOff)
-		{
-			Debug.Assert(zzOff <= 13);
-			ulong c = (ulong)x + zz[zzOff + 0];
-			zz[zzOff + 0] = (uint)c;
-			c >>= 32;
-			return c == 0 ? 0 : IncExt(zz, zzOff + 1);
-		}
-
 		public static void Copy(uint[] x, uint[] z)
 		{
 			z[0] = x[0];
@@ -239,32 +222,6 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 		public static uint[] CreateExt()
 		{
 			return new uint[14];
-		}
-
-		public static int Dec(uint[] z, int zOff)
-		{
-			Debug.Assert(zOff <= 7);
-			for (int i = zOff; i < 7; ++i)
-			{
-				if (--z[i] != uint.MaxValue)
-				{
-					return 0;
-				}
-			}
-			return -1;
-		}
-
-		public static int DecExt(uint[] zz, int zzOff)
-		{
-			Debug.Assert(zzOff <= 14);
-			for (int i = zzOff; i < 14; ++i)
-			{
-				if (--zz[i] != uint.MaxValue)
-				{
-					return 0;
-				}
-			}
-			return -1;
 		}
 
 		public static bool Diff(uint[] x, int xOff, uint[] y, int yOff, uint[] z, int zOff)
@@ -347,45 +304,6 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			return true;
 		}
 
-		public static bool GteExt(uint[] xx, uint[] yy)
-		{
-			for (int i = 13; i >= 0; --i)
-			{
-				uint xx_i = xx[i], yy_i = yy[i];
-				if (xx_i < yy_i)
-					return false;
-				if (xx_i > yy_i)
-					return true;
-			}
-			return true;
-		}
-
-		public static uint Inc(uint[] z, int zOff)
-		{
-			Debug.Assert(zOff <= 7);
-			for (int i = zOff; i < 7; ++i)
-			{
-				if (++z[i] != uint.MinValue)
-				{
-					return 0;
-				}
-			}
-			return 1;
-		}
-
-		public static uint IncExt(uint[] zz, int zzOff)
-		{
-			Debug.Assert(zzOff <= 14);
-			for (int i = zzOff; i < 14; ++i)
-			{
-				if (++zz[i] != uint.MinValue)
-				{
-					return 0;
-				}
-			}
-			return 1;
-		}
-
 		public static bool IsOne(uint[] x)
 		{
 			if (x[0] != 1)
@@ -407,18 +325,6 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			for (int i = 0; i < 7; ++i)
 			{
 				if (x[i] != 0)
-				{
-					return false;
-				}
-			}
-			return true;
-		}
-
-		public static bool IsZeroExt(uint[] xx)
-		{
-			for (int i = 0; i < 14; ++i)
-			{
-				if (xx[i] != 0)
 				{
 					return false;
 				}
@@ -555,7 +461,49 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			}
 		}
 
-		public static uint MulAdd(uint[] x, int xOff, uint[] y, int yOff, uint[] zz, int zzOff)
+		public static uint MulAddTo(uint[] x, uint[] y, uint[] zz)
+		{
+			ulong y_0 = y[0];
+			ulong y_1 = y[1];
+			ulong y_2 = y[2];
+			ulong y_3 = y[3];
+			ulong y_4 = y[4];
+			ulong y_5 = y[5];
+			ulong y_6 = y[6];
+
+			ulong zc = 0;
+			for (int i = 0; i < 7; ++i)
+			{
+				ulong c = 0, x_i = x[i];
+				c += x_i * y_0 + zz[i + 0];
+				zz[i + 0] = (uint)c;
+				c >>= 32;
+				c += x_i * y_1 + zz[i + 1];
+				zz[i + 1] = (uint)c;
+				c >>= 32;
+				c += x_i * y_2 + zz[i + 2];
+				zz[i + 2] = (uint)c;
+				c >>= 32;
+				c += x_i * y_3 + zz[i + 3];
+				zz[i + 3] = (uint)c;
+				c >>= 32;
+				c += x_i * y_4 + zz[i + 4];
+				zz[i + 4] = (uint)c;
+				c >>= 32;
+				c += x_i * y_5 + zz[i + 5];
+				zz[i + 5] = (uint)c;
+				c >>= 32;
+				c += x_i * y_6 + zz[i + 6];
+				zz[i + 6] = (uint)c;
+				c >>= 32;
+				c += zc + zz[i + 7];
+				zz[i + 7] = (uint)c;
+				zc = c >> 32;
+			}
+			return (uint)zc;
+		}
+
+		public static uint MulAddTo(uint[] x, int xOff, uint[] y, int yOff, uint[] zz, int zzOff)
 		{
 			ulong y_0 = y[yOff + 0];
 			ulong y_1 = y[yOff + 1];
@@ -735,7 +683,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			c += z[zOff + 3];
 			z[zOff + 3] = (uint)c;
 			c >>= 32;
-			return c == 0 ? 0 : Inc(z, zOff + 4);
+			return c == 0 ? 0 : Nat.IncAt(7, z, zOff, 4);
 		}
 
 		public static uint Mul33WordAdd(uint x, uint y, uint[] z, int zOff)
@@ -752,7 +700,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			c += z[zOff + 2];
 			z[zOff + 2] = (uint)c;
 			c >>= 32;
-			return c == 0 ? 0 : Inc(z, zOff + 3);
+			return c == 0 ? 0 : Nat.IncAt(7, z, zOff, 3);
 		}
 
 		public static uint MulWordDwordAdd(uint x, ulong y, uint[] z, int zOff)
@@ -768,7 +716,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			c += z[zOff + 2];
 			z[zOff + 2] = (uint)c;
 			c >>= 32;
-			return c == 0 ? 0 : Inc(z, zOff + 3);
+			return c == 0 ? 0 : Nat.IncAt(7, z, zOff, 3);
 		}
 
 		public static uint MulWord(uint x, uint[] y, uint[] z, int zOff)
@@ -783,88 +731,6 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			}
 			while (++i < 7);
 			return (uint)c;
-		}
-
-		public static uint ShiftDownBit(uint[] x, int xLen, uint c)
-		{
-			int i = xLen;
-			while (--i >= 0)
-			{
-				uint next = x[i];
-				x[i] = (next >> 1) | (c << 31);
-				c = next;
-			}
-			return c << 31;
-		}
-
-		public static uint ShiftDownBit(uint[] x, uint c, uint[] z)
-		{
-			int i = 7;
-			while (--i >= 0)
-			{
-				uint next = x[i];
-				z[i] = (next >> 1) | (c << 31);
-				c = next;
-			}
-			return c << 31;
-		}
-
-		public static uint ShiftDownBits(uint[] x, int xLen, int bits, uint c)
-		{
-			Debug.Assert(bits > 0 && bits < 32);
-			int i = xLen;
-			while (--i >= 0)
-			{
-				uint next = x[i];
-				x[i] = (next >> bits) | (c << -bits);
-				c = next;
-			}
-			return c << -bits;
-		}
-
-		public static uint ShiftDownWord(uint[] x, int xLen, uint c)
-		{
-			int i = xLen;
-			while (--i >= 0)
-			{
-				uint next = x[i];
-				x[i] = c;
-				c = next;
-			}
-			return c;
-		}
-
-		public static uint ShiftUpBit(uint[] x, int xLen, uint c)
-		{
-			for (int i = 0; i < xLen; ++i)
-			{
-				uint next = x[i];
-				x[i] = (next << 1) | (c >> 31);
-				c = next;
-			}
-			return c >> 31;
-		}
-
-		public static uint ShiftUpBit(uint[] x, int xOff, int xLen, uint c)
-		{
-			for (int i = 0; i < xLen; ++i)
-			{
-				uint next = x[xOff + i];
-				x[xOff + i] = (next << 1) | (c >> 31);
-				c = next;
-			}
-			return c >> 31;
-		}
-
-		public static uint ShiftUpBit(uint[] x, uint c, uint[] z)
-		{
-			for (int i = 0; i < 7; ++i)
-			{
-				uint next = x[i];
-				z[i] = (next << 1) | (c >> 31);
-				c = next;
-			}
-			return c >> 31;
 		}
 
 		public static void Square(uint[] x, uint[] zz)
@@ -979,7 +845,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			zz[12] = (uint)zz_12;
 			zz[13] += (uint)(zz_12 >> 32);
 
-			ShiftUpBit(zz, 14, (uint)x_0 << 31);
+			Nat.ShiftUpBit(14, zz, (uint)x_0 << 31);
 		}
 
 		public static void Square(uint[] x, int xOff, uint[] zz, int zzOff)
@@ -1094,7 +960,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			zz[zzOff + 12] = (uint)zz_12;
 			zz[zzOff + 13] += (uint)(zz_12 >> 32);
 
-			ShiftUpBit(zz, zzOff, 16, (uint)x_0 << 31);
+			Nat.ShiftUpBit(14, zz, zzOff, (uint)x_0 << 31);
 		}
 
 		public static int Sub(uint[] x, uint[] y, uint[] z)
@@ -1178,75 +1044,58 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 			return (int)c;
 		}
 
-		// TODO Re-write to allow full range for x?
-		public static int SubDWord(ulong x, uint[] z)
+		public static int SubFrom(uint[] x, uint[] z)
 		{
-			long c = -(long)x;
-			c += (long)z[0];
+			long c = 0;
+			c += (long)z[0] - x[0];
 			z[0] = (uint)c;
 			c >>= 32;
-			c += (long)z[1];
+			c += (long)z[1] - x[1];
 			z[1] = (uint)c;
 			c >>= 32;
-			return c == 0 ? 0 : Dec(z, 2);
-		}
-
-		public static int SubExt(uint[] xx, uint[] yy, uint[] zz)
-		{
-			long c = 0;
-			for (int i = 0; i < 14; ++i)
-			{
-				c += (long)xx[i] - yy[i];
-				zz[i] = (uint)c;
-				c >>= 32;
-			}
-			return (int)c;
-		}
-
-		public static int SubFromExt(uint[] x, int xOff, uint[] zz, int zzOff)
-		{
-			Debug.Assert(zzOff <= 7);
-			long c = 0;
-			c += (long)zz[zzOff + 0] - x[xOff + 0];
-			zz[zzOff + 0] = (uint)c;
+			c += (long)z[2] - x[2];
+			z[2] = (uint)c;
 			c >>= 32;
-			c += (long)zz[zzOff + 1] - x[xOff + 1];
-			zz[zzOff + 1] = (uint)c;
+			c += (long)z[3] - x[3];
+			z[3] = (uint)c;
 			c >>= 32;
-			c += (long)zz[zzOff + 2] - x[xOff + 2];
-			zz[zzOff + 2] = (uint)c;
+			c += (long)z[4] - x[4];
+			z[4] = (uint)c;
 			c >>= 32;
-			c += (long)zz[zzOff + 3] - x[xOff + 3];
-			zz[zzOff + 3] = (uint)c;
+			c += (long)z[5] - x[5];
+			z[5] = (uint)c;
 			c >>= 32;
-			c += (long)zz[zzOff + 4] - x[xOff + 4];
-			zz[zzOff + 4] = (uint)c;
-			c >>= 32;
-			c += (long)zz[zzOff + 5] - x[xOff + 5];
-			zz[zzOff + 5] = (uint)c;
-			c >>= 32;
-			c += (long)zz[zzOff + 6] - x[xOff + 6];
-			zz[zzOff + 6] = (uint)c;
+			c += (long)z[6] - x[6];
+			z[6] = (uint)c;
 			c >>= 32;
 			return (int)c;
 		}
 
-		public static int SubWord(uint x, uint[] z, int zOff)
+		public static int SubFrom(uint[] x, int xOff, uint[] z, int zOff)
 		{
-			Debug.Assert(zOff <= 6);
-			long c = (long)z[zOff + 0] - x;
+			long c = 0;
+			c += (long)z[zOff + 0] - x[xOff + 0];
 			z[zOff + 0] = (uint)c;
 			c >>= 32;
-			return c == 0 ? 0 : Dec(z, zOff + 1);
-		}
-
-		public static int SubWordExt(uint x, uint[] zz, int zzOff)
-		{
-			Debug.Assert(zzOff <= 13);
-			long c = (long)zz[zzOff + 0] - x;
-			zz[zzOff + 0] = (uint)c;
+			c += (long)z[zOff + 1] - x[xOff + 1];
+			z[zOff + 1] = (uint)c;
 			c >>= 32;
-			return c == 0 ? 0 : DecExt(zz, zzOff + 1);
+			c += (long)z[zOff + 2] - x[xOff + 2];
+			z[zOff + 2] = (uint)c;
+			c >>= 32;
+			c += (long)z[zOff + 3] - x[xOff + 3];
+			z[zOff + 3] = (uint)c;
+			c >>= 32;
+			c += (long)z[zOff + 4] - x[xOff + 4];
+			z[zOff + 4] = (uint)c;
+			c >>= 32;
+			c += (long)z[zOff + 5] - x[xOff + 5];
+			z[zOff + 5] = (uint)c;
+			c >>= 32;
+			c += (long)z[zOff + 6] - x[xOff + 6];
+			z[zOff + 6] = (uint)c;
+			c >>= 32;
+			return (int)c;
 		}
 
 		public static BigInteger ToBigInteger(uint[] x)
@@ -1275,4 +1124,3 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 		}
 	}
 }
-

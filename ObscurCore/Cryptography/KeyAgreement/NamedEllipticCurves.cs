@@ -14,9 +14,9 @@
 //    limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ObscurCore.Cryptography.KeyAgreement.Information;
-using System.Collections.Generic;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC;
 
 namespace ObscurCore.Cryptography.KeyAgreement
