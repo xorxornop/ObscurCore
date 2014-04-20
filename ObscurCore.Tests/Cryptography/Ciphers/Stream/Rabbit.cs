@@ -23,7 +23,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 //		                                     "00000000000000000000000000000000" + 
 //		                                     "00000000000000000000000000000000";
 
-		public Rabbit () : base(ObscurCore.Cryptography.Ciphers.Stream.SymmetricStreamCipher.Rabbit)
+		public Rabbit () : base(ObscurCore.Cryptography.Ciphers.Stream.StreamCipher.Rabbit)
 		{
 			// TODO: Add test vectors
 		}

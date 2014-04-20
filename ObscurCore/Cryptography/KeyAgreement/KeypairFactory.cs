@@ -70,7 +70,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
 				d = new BigInteger(n.BitLength, StratCom.EntropySupplier);
 			} while (d.SignValue == 0 || (d.CompareTo(n) >= 0));
 
-			Q = EcBasePointMultiplier.Multiply(domain.G, d);
+			Q = EcBasePointMultiplier.Multiply(g, d);
 		}
 	}
 }

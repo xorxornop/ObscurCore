@@ -103,7 +103,7 @@ namespace ObscurCore.Cryptography.Authentication
 				}
 				totalIn += iterIn;
 				_digest.BlockUpdate(_buffer, 0, iterIn);
-				Binding.Write (_buffer, 0, iterIn);
+				StreamBinding.Write (_buffer, 0, iterIn);
 			}
 
 			return totalIn;
@@ -121,7 +121,7 @@ namespace ObscurCore.Cryptography.Authentication
 			int iterIn = 0;
 			long totalIn = 0;
 			while(length > 0) {
-				iterIn = DecoratorBinding.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
+				iterIn = Binding.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
 				if(iterIn == 0) {
 					throw new EndOfStreamException ();
 				}

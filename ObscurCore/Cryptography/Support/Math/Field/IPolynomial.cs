@@ -8,7 +8,7 @@ namespace ObscurCore.Cryptography.Support.Math.Field
 
         //BigInteger[] GetCoefficients();
 
-        int[] GetExponentsPresent();
+        int[] GetExponentsPresent ();
 
         //Term[] GetNonZeroTerms();
     }

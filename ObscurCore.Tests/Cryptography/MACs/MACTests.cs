@@ -54,7 +54,7 @@ namespace ObscurCore.Tests.Cryptography.MACs
 
 		[Test]
 		public void Poly1305_AES () {
-			RunMACTest(MacFunction.Poly1305, Encoding.UTF8.GetBytes(SymmetricBlockCipher.Aes.ToString()), CreateRandomBytes(128));
+			RunMACTest(MacFunction.Poly1305, Encoding.UTF8.GetBytes(BlockCipher.Aes.ToString()), CreateRandomBytes(128));
 		}
     }
 }

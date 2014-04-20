@@ -6,7 +6,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers.Block
     class IDEA : BlockCipherTestBase
     {
         public IDEA ()
-            : base(SymmetricBlockCipher.Idea) {
+            : base(BlockCipher.Idea) {
         }
     }
 #endif

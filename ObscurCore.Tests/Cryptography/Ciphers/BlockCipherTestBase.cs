@@ -25,9 +25,9 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 {
 	public abstract class BlockCipherTestBase : CipherTestBase
 	{
-		protected SymmetricBlockCipher Cipher;
+		protected BlockCipher Cipher;
 
-		protected BlockCipherTestBase(SymmetricBlockCipher cipher) 
+		protected BlockCipherTestBase(BlockCipher cipher) 
 		{ 
 			Cipher = cipher;
 		}
@@ -42,7 +42,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 				throw new InvalidOperationException ("Block cipher test cases require block & padding information.");
 			}
 
-			var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration (Cipher,
+			var config = CipherConfigurationFactory.CreateBlockCipherConfiguration (Cipher,
 				extraDataSplit[0].ToEnum<BlockCipherMode>(), extraDataSplit[1].ToEnum<BlockCipherPadding>(), 
 				testCase.Key.Length * 8);
 
@@ -54,7 +54,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 		[Test]
 		public virtual void StreamingPerformance_CTR () {
 			// Using default block & key size
-			var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Ctr,
+			var config = CipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Ctr,
 				BlockCipherPadding.None);
 			RunPerformanceTest(config);
 		}
@@ -62,7 +62,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 		[Test]
 		public virtual void StreamingPerformance_CFB () {
 			// Using default block & key size
-			var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cfb,
+			var config = CipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cfb,
 				BlockCipherPadding.None);
 			RunPerformanceTest(config);
 		}
@@ -70,7 +70,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 		[Test]
 		public virtual void StreamingPerformance_OFB () {
 			// Using default block & key size
-			var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Ofb,
+			var config = CipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Ofb,
 				BlockCipherPadding.None);
 			RunPerformanceTest(config);
 		}
@@ -80,7 +80,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 		[Test]
 		public virtual void StreamingPerformance_CBC_ISO10126D2 () {
 			// Using default block & key size
-			var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cbc,
+			var config = CipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cbc,
 				BlockCipherPadding.Iso10126D2);
 			RunPerformanceTest(config);
 		}
@@ -88,7 +88,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 		[Test]
 		public virtual void StreamingPerformance_CBC_ISO7816D4 () {
 			// Using default block & key size
-			var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cbc,
+			var config = CipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cbc,
 				BlockCipherPadding.Iso7816D4);
 			RunPerformanceTest(config);
 		}
@@ -96,7 +96,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 		[Test]
 		public virtual void StreamingPerformance_CBC_PKCS7 () {
 			// Using default block & key size
-			var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cbc,
+			var config = CipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cbc,
 				BlockCipherPadding.Pkcs7);
 			RunPerformanceTest(config);
 		}
@@ -104,7 +104,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 		[Test]
 		public virtual void StreamingPerformance_CBC_TBC () {
 			// Using default block & key size
-			var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cbc,
+			var config = CipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cbc,
 				BlockCipherPadding.Tbc);
 			RunPerformanceTest(config);
 		}
@@ -112,7 +112,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 		[Test]
 		public virtual void StreamingPerformance_CBC_X923 () {
 			// Using default block & key size
-			var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cbc,
+			var config = CipherConfigurationFactory.CreateBlockCipherConfiguration(Cipher, BlockCipherMode.Cbc,
 				BlockCipherPadding.X923);
 			RunPerformanceTest(config);
 		}

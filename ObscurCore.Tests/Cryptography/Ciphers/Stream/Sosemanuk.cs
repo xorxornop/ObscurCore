@@ -22,7 +22,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 		                                                   "00000000000000000000000000000000" + 
 		                                                   "00000000000000000000000000000000";
 
-		public Sosemanuk () : base(ObscurCore.Cryptography.Ciphers.Stream.SymmetricStreamCipher.Sosemanuk)
+		public Sosemanuk () : base(ObscurCore.Cryptography.Ciphers.Stream.StreamCipher.Sosemanuk)
 		{
 			// http://www.ecrypt.eu.org/stream/svn/viewcvs.cgi/ecrypt/trunk/submissions/sosemanuk/unverified.test-vectors?rev=108&view=markup
 

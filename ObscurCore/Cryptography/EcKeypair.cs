@@ -38,7 +38,7 @@ namespace ObscurCore
 				PublicComponent = true,
                 CurveProviderName = CurveProviderName,
                 CurveName = CurveName,
-				EncodedKey = EncodedPublicKey.CopyBytes()
+				EncodedKey = EncodedPublicKey.DeepCopy()
             };
         }
 
@@ -59,7 +59,7 @@ namespace ObscurCore
 				PublicComponent = false,
                 CurveProviderName = CurveProviderName,
                 CurveName = CurveName,
-				EncodedKey = EncodedPrivateKey.CopyBytes()
+                EncodedKey = EncodedPrivateKey.DeepCopy()
             };
         }
     }

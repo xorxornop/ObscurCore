@@ -1,7 +1,6 @@
 ﻿using System;
-
-using ObscurCore.Support;
 using ObscurCore.Cryptography.Support.Math.Field;
+using ObscurCore.Support;
 
 namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 {
@@ -15,9 +14,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 
         protected readonly SecP521R1Point m_infinity;
 
-        public SecP521R1Curve()
-            : base(FiniteFields.GetPrimeField(q))
-        {
+        public SecP521R1Curve ()
+            : base(FiniteFields.GetPrimeField(q)) {
             this.m_infinity = new SecP521R1Point(this, null, null);
 
             this.m_a = FromBigInteger(new BigInteger(1,
@@ -29,15 +27,12 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
             this.m_coord = SecP521R1_DEFAULT_COORDS;
         }
 
-        protected override ECCurve CloneCurve()
-        {
+        protected override ECCurve CloneCurve () {
             return new SecP521R1Curve();
         }
 
-        public override bool SupportsCoordinateSystem(int coord)
-        {
-            switch (coord)
-            {
+        public override bool SupportsCoordinateSystem (int coord) {
+            switch (coord) {
                 case COORD_JACOBIAN:
                     return true;
                 default:
@@ -45,33 +40,31 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
             }
         }
 
-        public virtual BigInteger Q
-        {
+        public virtual BigInteger Q {
             get { return q; }
         }
 
-        public override ECPoint Infinity
-        {
+        public override ECPoint Infinity {
             get { return m_infinity; }
         }
 
-        public override int FieldSize
-        {
+        public override int FieldSize {
             get { return q.BitLength; }
         }
 
-        public override ECFieldElement FromBigInteger(BigInteger x)
-        {
+        public override ECFieldElement FromBigInteger (BigInteger x) {
             return new SecP521R1FieldElement(x);
         }
 
-        protected internal override ECPoint CreateRawPoint(ECFieldElement x, ECFieldElement y, bool withCompression)
-        {
+        protected internal override ECPoint CreateRawPoint (ECFieldElement x, ECFieldElement y, bool withCompression) {
             return new SecP521R1Point(this, x, y, withCompression);
         }
 
-        protected override ECPoint DecompressPoint(int yTilde, BigInteger X1)
-        {
+        protected internal override ECPoint CreateRawPoint (ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression) {
+            return new SecP521R1Point(this, x, y, zs, withCompression);
+        }
+
+        protected override ECPoint DecompressPoint (int yTilde, BigInteger X1) {
             ECFieldElement x = FromBigInteger(X1);
             ECFieldElement alpha = x.Square().Add(A).Multiply(x).Add(B);
             ECFieldElement beta = alpha.Sqrt();
@@ -83,8 +76,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
             if (beta == null)
                 throw new ArithmeticException("Invalid point compression");
 
-            if (beta.TestBitZero() != (yTilde == 1))
-            {
+            if (beta.TestBitZero() != (yTilde == 1)) {
                 // Use the other root
                 beta = beta.Negate();
             }

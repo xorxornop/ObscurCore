@@ -22,7 +22,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 		                                     "00000000000000000000000000000000" + 
 		                                     "00000000000000000000000000000000";
 
-		public Hc128 () : base(ObscurCore.Cryptography.Ciphers.Stream.SymmetricStreamCipher.Hc128)
+		public Hc128 () : base(ObscurCore.Cryptography.Ciphers.Stream.StreamCipher.Hc128)
 		{
 			// Data from ESTREAM verified test vectors
 			// http://www.ecrypt.eu.org/stream/svn/viewcvs.cgi/ecrypt/trunk/submissions/hc-256/hc-128/verified.test-vectors?rev=210&view=markup

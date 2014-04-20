@@ -148,7 +148,7 @@ namespace ObscurCore.Tests.Cryptography
 
 			byte[] ciphertext;
 			using (var msCiphertext = new MemoryStream ()) {
-				using (var cs = new SymmetricCipherStream(msCiphertext, true, config, testCase.Key, false)) {
+				using (var cs = new CipherStream(msCiphertext, true, config, testCase.Key, false)) {
 					cs.Write (testCase.Plaintext, 0, testCase.Plaintext.Length);
 				}
 				ciphertext = msCiphertext.ToArray ();
@@ -165,7 +165,7 @@ namespace ObscurCore.Tests.Cryptography
 			int requiredCiphertextLength = lastSegment.Offset + lastSegment.Length;
 			var msCiphertext = new MemoryStream ();
 
-			using (var cs = new SymmetricCipherStream(msCiphertext, true, config, testCase.Key, false)) {
+			using (var cs = new CipherStream(msCiphertext, true, config, testCase.Key, false)) {
 				while (cs.BytesOut < requiredCiphertextLength) {
 					cs.Write (plaintext, 0, plaintext.Length);
 				}
@@ -197,7 +197,7 @@ namespace ObscurCore.Tests.Cryptography
 
 			// TEST STARTS HERE
 
-			using (var cs = new SymmetricCipherStream(msCiphertext, true, config, key, false)) {
+			using (var cs = new CipherStream(msCiphertext, true, config, key, false)) {
 				sw.Start();
 				msInputPlaintext.CopyTo(cs, GetBufferSize());
 			}
@@ -208,7 +208,7 @@ namespace ObscurCore.Tests.Cryptography
 			msCiphertext.Seek(0, SeekOrigin.Begin);
 
 			sw.Reset();
-			using (var cs = new SymmetricCipherStream(msCiphertext, false, config, key, false)) {
+			using (var cs = new CipherStream(msCiphertext, false, config, key, false)) {
 				sw.Start();
 				cs.CopyTo(msOutputPlaintext, GetBufferSize());
 			}

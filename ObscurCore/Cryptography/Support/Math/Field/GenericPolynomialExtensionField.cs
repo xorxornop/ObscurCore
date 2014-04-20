@@ -8,54 +8,44 @@ namespace ObscurCore.Cryptography.Support.Math.Field
         protected readonly IFiniteField subfield;
         protected readonly IPolynomial minimalPolynomial;
 
-        internal GenericPolynomialExtensionField(IFiniteField subfield, IPolynomial polynomial)
-        {
+        internal GenericPolynomialExtensionField (IFiniteField subfield, IPolynomial polynomial) {
             this.subfield = subfield;
             this.minimalPolynomial = polynomial;
         }
 
-        public virtual BigInteger Characteristic
-        {
+        public virtual BigInteger Characteristic {
             get { return subfield.Characteristic; }
         }
 
-        public virtual int Dimension
-        {
+        public virtual int Dimension {
             get { return subfield.Dimension * minimalPolynomial.Degree; }
         }
 
-        public virtual IFiniteField Subfield
-        {
+        public virtual IFiniteField Subfield {
             get { return subfield; }
         }
 
-        public virtual int Degree
-        {
+        public virtual int Degree {
             get { return minimalPolynomial.Degree; }
         }
 
-        public virtual IPolynomial MinimalPolynomial
-        {
+        public virtual IPolynomial MinimalPolynomial {
             get { return minimalPolynomial; }
         }
 
-        public override bool Equals(object obj)
-        {
-            if (this == obj)
-            {
+        public override bool Equals (object obj) {
+            if (this == obj) {
                 return true;
             }
             GenericPolynomialExtensionField other = obj as GenericPolynomialExtensionField;
-            if (null == other)
-            {
+            if (null == other) {
                 return false;
             }
             return subfield.Equals(other.subfield) && minimalPolynomial.Equals(other.minimalPolynomial);
         }
 
-        public override int GetHashCode()
-        {
-			return subfield.GetHashCode() ^ minimalPolynomial.GetHashCode().RotateLeft(16);
+        public override int GetHashCode () {
+            return subfield.GetHashCode() ^ minimalPolynomial.GetHashCode().RotateLeft(16);
         }
     }
 }

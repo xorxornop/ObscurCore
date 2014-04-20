@@ -16,7 +16,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 		public CtrBlockCipher(IBlockCipher cipher)
 		{
 			this._cipher = cipher;
-			this._blockSize = cipher.BlockSize;
+			this._blockSize = _cipher.BlockSize;
 			this._iv = new byte[_blockSize];
 			this._counter = new byte[_blockSize];
 			this._counterOut = new byte[_blockSize];
@@ -57,7 +57,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 		}
 
 	    public int BlockSize {
-	        get { return _cipher.BlockSize; }
+	        get { return _blockSize; }
 	    }
 
 	    public int ProcessBlock(
@@ -69,7 +69,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 			_cipher.ProcessBlock(_counter, 0, _counterOut, 0);
 
 			// XOR the counterOut with the plaintext producing the cipher text
-			input.XORNoChecks (inOff, _counterOut, 0, output, outOff, _counterOut.Length);
+			input.XorInternal (inOff, _counterOut, 0, output, outOff, _counterOut.Length);
 
 			// Increment the counter
 			int j = _counter.Length;

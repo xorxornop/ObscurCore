@@ -30,7 +30,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		public void Init (bool encrypting, byte[] key, byte[] iv) {
 			if (key == null) 
 				throw new ArgumentNullException("key", "RC4 initialisation requires a key.");
-			if (!Athena.Cryptography.StreamCiphers[SymmetricStreamCipher.Rc4].AllowableKeySizes.Contains(key.Length * 8))
+			if (!Athena.Cryptography.StreamCiphers[StreamCipher.Rc4].AllowableKeySizes.Contains(key.Length * 8))
 				throw new ArgumentException("Incompatible key size supplied.", "key");
 
 			SetKey (key);

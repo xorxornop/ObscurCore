@@ -45,8 +45,10 @@ namespace ObscurCore.Packaging
 				return new SimplePayloadMux (writing, multiplexedStream, payloadItems, itemPreKeys, config);
 			case PayloadLayoutScheme.Frameshift:
 				return new FrameshiftPayloadMux(writing, multiplexedStream, payloadItems, itemPreKeys, config);
+#if INCLUDE_FABRIC
 			case PayloadLayoutScheme.Fabric:
 				return new FabricPayloadMux(writing, multiplexedStream, payloadItems, itemPreKeys, config);
+#endif
 			default:
 				throw new ArgumentException ("Scheme unsupported.", "schemeEnum");
 			}

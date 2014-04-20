@@ -23,8 +23,8 @@ namespace ObscurCore.Cryptography.Authentication
 	public static class AuthenticationConfigurationFactory
 	{
 		const HashFunction DefaultHmacFunction = HashFunction.Blake2B256;
-		const SymmetricBlockCipher DefaultCmacCipher = SymmetricBlockCipher.Aes;
-		const SymmetricBlockCipher DefaultPoly1305BlockCipher = SymmetricBlockCipher.Aes;
+		const BlockCipher DefaultCmacCipher = BlockCipher.Aes;
+		const BlockCipher DefaultPoly1305BlockCipher = BlockCipher.Aes;
 
 		/// <summary>
 		/// Creates a new authentication configuration. 
@@ -87,7 +87,7 @@ namespace ObscurCore.Cryptography.Authentication
 		/// </remarks>
 		/// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
 		/// <param name="cmacEnum">Cmac enum.</param>
-		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationCmac(SymmetricBlockCipher cipherEnum, out int outputSize) {
+		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationCmac(BlockCipher cipherEnum, out int outputSize) {
 			outputSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
 			int keySize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultKeySize;
 			byte[] functionConfig = Encoding.UTF8.GetBytes (cipherEnum.ToString());
@@ -105,7 +105,7 @@ namespace ObscurCore.Cryptography.Authentication
 		/// </remarks>
 		/// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
 		/// <param name="cmacEnum">Cmac enum.</param>
-		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationPoly1305(SymmetricBlockCipher cipherEnum, byte[] nonce = null) {
+		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationPoly1305(BlockCipher cipherEnum, byte[] nonce = null) {
 			if (Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize != 128) {
 				throw new ArgumentException ("Incompatible cipher block size.");
 			}

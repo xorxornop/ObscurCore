@@ -16,6 +16,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.DTO;
 using ObscurCore.Packaging;
 using System.Diagnostics;
@@ -42,18 +43,17 @@ namespace ObscurCore
 		private readonly Manifest _manifest;
 		private readonly ManifestHeader _manifestHeader;
 
-		private Dictionary<Guid, byte[]> ItemPreKeys = new Dictionary<Guid, byte[]>();
+        /// <summary>
+        /// Configuration of the manifest cipher. Must be serialised into ManifestHeader when writing package.
+        /// </summary>
+        private readonly IManifestCryptographySchemeConfiguration _manifestCryptoConfig;
+
+		private readonly Dictionary<Guid, byte[]> _itemPreKeys = new Dictionary<Guid, byte[]>();
 
 		/// <summary>
 		/// Offset at which the payload starts.
 		/// </summary>
 		private long _readingPayloadStreamOffset;
-
-		/// <summary>
-		/// Configuration of the manifest cipher. Must be serialised into ManifestHeader when writing package.
-		/// </summary>
-		private IManifestCryptographySchemeConfiguration _manifestCryptoConfig;
-
 
 		/// <summary>
 		/// Format version specification of the data transfer objects and logic used in the package.
@@ -278,16 +278,16 @@ namespace ObscurCore
 				preMKey.ToHexString()));
 
 			// Derive working manifest encryption & authentication keys from the manifest pre-key
-			byte[] workingMEncryptionKey, workingMAuthKey;
+			byte[] workingManifestCipherKey, workingManifestMacKey;
 			KeyStretchingUtility.DeriveWorkingKeys (preMKey, _manifestCryptoConfig.SymmetricCipher.KeySizeBits / 8,
 				_manifestCryptoConfig.Authentication.KeySizeBits.Value / 8, _manifestCryptoConfig.KeyDerivation, 
-				out workingMEncryptionKey, out workingMAuthKey);
+				out workingManifestCipherKey, out workingManifestMacKey);
 
 			// Clear the manifest pre-key
 			Array.Clear(preMKey, 0, preMKey.Length);
 
 			Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest working key",
-				workingMEncryptionKey.ToHexString()));
+				workingManifestCipherKey.ToHexString()));
 			Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest length prefix offset (absolute)", 
 				_readingStream.Position));
 
@@ -296,6 +296,7 @@ namespace ObscurCore
 
 			byte[] manifestLengthLEBytes = new byte[sizeof(UInt32)];
 			_readingStream.Read (manifestLengthLEBytes, 0, manifestLengthLEBytes.Length);
+            manifestLengthLEBytes.XorInPlaceInternal(0, workingManifestMacKey, 0, sizeof(uint)); // deobfuscate length
 			uint mlUInt = manifestLengthLEBytes.LittleEndianToUInt32 ();
 			int manifestLength = (int)mlUInt;
 
@@ -308,10 +309,10 @@ namespace ObscurCore
 			using (var decryptedManifestStream = new MemoryStream ()) {
 				byte[] manifestMac = null;
 				using (var authenticator = new MacStream (_readingStream, false, _manifestCryptoConfig.Authentication, 
-					out manifestMac, workingMAuthKey, closeOnDispose : false)) 
+					out manifestMac, workingManifestMacKey, closeOnDispose : false)) 
 				{
-					using (var cs = new SymmetricCipherStream (authenticator, false, _manifestCryptoConfig.SymmetricCipher, 
-						workingMEncryptionKey, closeOnDispose : false)) 
+					using (var cs = new CipherStream (authenticator, false, _manifestCryptoConfig.SymmetricCipher, 
+						workingManifestCipherKey, closeOnDispose : false)) 
 					{
 						cs.ReadExactlyTo (decryptedManifestStream, manifestLength, true);
 					}
@@ -350,13 +351,13 @@ namespace ObscurCore
 			_readingPayloadStreamOffset = _readingStream.Position;
 
 			// Clear the manifest encryption & authentication keys
-			workingMEncryptionKey.SecureWipe ();
-			workingMAuthKey.SecureWipe ();
+			workingManifestCipherKey.SecureWipe ();
+			workingManifestMacKey.SecureWipe ();
 
 			return manifest;
 		}
 
-		/// <summary
+		/// <summary>
 		/// Performs key confirmation and derivation on each payload item.
 		/// </summary>
 		/// <param name="payloadKeysSymmetric">Potential symmetric keys for payload items.</param>
@@ -377,8 +378,8 @@ namespace ObscurCore
 				if (preIKey.IsNullOrZeroLength()) {
 					errorList.Add(item);
 				}
-				if (errorList.Count == 0 && ItemPreKeys.ContainsKey(item.Identifier) == false) {
-					ItemPreKeys.Add (item.Identifier, preIKey);
+				if (errorList.Count == 0 && _itemPreKeys.ContainsKey(item.Identifier) == false) {
+					_itemPreKeys.Add (item.Identifier, preIKey);
 				}
 			}
 			if (errorList.Count > 0) {
@@ -427,7 +428,7 @@ namespace ObscurCore
 		/// Read payload from package.
 		/// </summary>
 		/// <param name="payloadKeys">Potential keys for payload items.</param>
-		/// <exception cref="PackageConfigurationException">Payload layout scheme malformed/missing.</exception>
+        /// <exception cref="ConfigurationValueInvalidException">Payload layout scheme malformed/missing.</exception>
 		/// <exception cref="InvalidDataException">Package data structure malformed.</exception>
 		private void ReadPayload (IEnumerable<byte[]> payloadKeys = null) {
             if (_readingPayloadStreamOffset != 0 && _readingStream.Position != _readingPayloadStreamOffset) {
@@ -445,10 +446,10 @@ namespace ObscurCore
 			try {
 				payloadScheme = _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme> ();
 			} catch (Exception) {
-				throw new ConfigurationValueInvalidException("Payload layout scheme specified is unsupported/unknown or missing.");
+                throw new ConfigurationInvalidException("Payload layout scheme specified is unsupported/unknown or missing.");
 			}
 			var mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer (payloadScheme, false, _readingStream, _manifest.PayloadItems, 
-				ItemPreKeys, _manifest.PayloadConfiguration);
+				_itemPreKeys, _manifest.PayloadConfiguration);
 
 			// Demux the payload
 			try {

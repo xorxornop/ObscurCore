@@ -26,26 +26,36 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 	public class JPake
 	{
 		[Test]
-		public void Secp256r1_Keccak256() {
-			TestECJPake (Sec2EllipticCurve.Secp256r1.ToString (), HashFunction.Keccak256);
-		}
-
-		[Test]
-		public void Secp521r1_Keccak512() {
-			TestECJPake (Sec2EllipticCurve.Secp521r1.ToString (), HashFunction.Keccak256);
-		}
-
-		[Test]
 		public void Brainpool256t1_Blake2B256() {
-			TestECJPake (BrainpoolEllipticCurve.BrainpoolP256t1.ToString (), HashFunction.Blake2B256);
+			TestEcJPake (BrainpoolEllipticCurve.BrainpoolP256t1.ToString (), HashFunction.Blake2B256);
 		}
 
 		[Test]
 		public void Brainpool512t1_Blake2B512() {
-			TestECJPake (BrainpoolEllipticCurve.BrainpoolP512t1.ToString (), HashFunction.Blake2B512);
+			TestEcJPake (BrainpoolEllipticCurve.BrainpoolP512t1.ToString (), HashFunction.Blake2B512);
 		}
 
-		private void TestECJPake(string curveName, HashFunction hashFunction) {
+        [Test]
+        public void Secp256r1_Keccak256() {
+            TestEcJPake(Sec2EllipticCurve.Secp256r1.ToString(), HashFunction.Keccak256);
+        }
+
+        [Test]
+        public void Secp521r1_Keccak512() {
+            TestEcJPake(Sec2EllipticCurve.Secp521r1.ToString(), HashFunction.Keccak512);
+        }
+
+        [Test]
+        public void Secp256r1_Blake2B256() {
+            TestEcJPake(Sec2EllipticCurve.Secp256r1.ToString(), HashFunction.Blake2B256);
+        }
+
+        [Test]
+        public void Secp521r1_Blake2B512() {
+            TestEcJPake(Sec2EllipticCurve.Secp521r1.ToString(), HashFunction.Blake2B512);
+        }
+
+		private static void TestEcJPake(string curveName, HashFunction hashFunction) {
 			const string password = "green eggs and ham";
 			var ecParams = NamedEllipticCurves.GetEcCurveData (curveName).GetParameters();
 			var digest = AuthenticatorFactory.CreateHashPrimitive (hashFunction);
@@ -79,7 +89,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 
 			Assert.IsTrue (aliceKey.SequenceEqual (bobKey), "Keys produced ARE NOT equal! Protocol implementation is broken.");
 
-			Assert.Pass ("J-PAKE protocol completed successfuly in {0} milliseconds.\nKey = {1}", sw.ElapsedMilliseconds, aliceKey.ToHexString ());
+			Assert.Pass ("{0} ms.\nKey = {1}", sw.ElapsedMilliseconds, aliceKey.ToHexString ());
 		}
 
 

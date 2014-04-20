@@ -59,7 +59,7 @@ namespace ObscurCore
 		/// </summary>
 		private byte[] _writingPreManifestKey;
 
-		private Dictionary<Guid, byte[]> ItemPreKeys = new Dictionary<Guid, byte[]>();
+		private readonly Dictionary<Guid, byte[]> _itemPreKeys = new Dictionary<Guid, byte[]>();
 
 		// Properties
 
@@ -169,7 +169,7 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="key">Cryptographic key known to the receiver to use for the manifest.</param>
 		/// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-		public PackageWriter (byte[] key, bool lowEntropy, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Fabric) {
+		public PackageWriter (byte[] key, bool lowEntropy, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Frameshift) {
 			_manifest = new Manifest();
 			_manifestHeader = new ManifestHeader
 			{
@@ -186,7 +186,7 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="key">Passphrase known to the receiver to use for the manifest.</param>
 		/// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-		public PackageWriter (string key, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Fabric) {
+		public PackageWriter (string key, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Frameshift) {
 			_manifest = new Manifest();
 			_manifestHeader = new ManifestHeader
 			{
@@ -197,12 +197,13 @@ namespace ObscurCore
 			PayloadLayout = layoutScheme;
 		}
 
-		/// <summary>
-		/// Create a new package using UM1-hybrid cryptography for security.
-		/// </summary>
-		/// <param name="key">Cryptographic key known to the receiver to use for the manifest.</param>
-		/// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-		public PackageWriter (EcKeypair sender, EcKeypair receiver, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Fabric) {
+	    /// <summary>
+	    /// Create a new package using UM1-hybrid cryptography for security.
+	    /// </summary>
+        /// <param name="sender"></param>
+	    /// <param name="receiver"></param>
+	    /// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
+	    public PackageWriter (EcKeypair sender, EcKeypair receiver, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Frameshift) {
 			_manifest = new Manifest();
 			_manifestHeader = new ManifestHeader
 			{
@@ -317,7 +318,7 @@ namespace ObscurCore
 		}
 
 		/// <summary>
-		/// Creates a new PayloadItem DTO object.
+		/// Creates a new PayloadItem DTO object with a specific cryptographic key.
 		/// </summary>
 		/// <returns>A payload item.</returns>
 		/// <remarks>
@@ -353,11 +354,11 @@ namespace ObscurCore
 		}
 
 		private static SymmetricCipherConfiguration CreateDefaultPayloadItemCipherConfiguration() {
-			return SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration (SymmetricStreamCipher.Hc128);
+			return CipherConfigurationFactory.CreateStreamCipherConfiguration (StreamCipher.Hc128);
 		}
 
 		private static VerificationFunctionConfiguration CreateDefaultPayloadItemAuthenticationConfiguration() {
-			return AuthenticationConfigurationFactory.CreateAuthenticationConfigurationPoly1305 (SymmetricBlockCipher.Aes);
+			return AuthenticationConfigurationFactory.CreateAuthenticationConfigurationPoly1305 (BlockCipher.Aes);
 		}
 
 		private static VerificationFunctionConfiguration CreateDefaultPayloadItemKeyConfirmationConfiguration (byte[] key, out byte[] verifiedOutput) {
@@ -373,9 +374,9 @@ namespace ObscurCore
 		/// <param name="lowEntropyPreKey">Pre-key has low entropy, e.g. a human-memorisable passphrase.</param>
 		private static KeyDerivationConfiguration CreateDefaultPayloadItemKeyDerivation (int keyLengthBytes, bool lowEntropyPreKey = true) {
 			var schemeConfig = new ScryptConfiguration {
-				Iterations = lowEntropyPreKey ? 16384 : 1024,
+                Iterations = lowEntropyPreKey ? 32768 : 4096,
 				Blocks = 8,
-				Parallelism = 1
+				Parallelism = 2
 			};
 			var config = new KeyDerivationConfiguration {
 				FunctionName = KeyDerivationFunction.Scrypt.ToString(),
@@ -419,7 +420,7 @@ namespace ObscurCore
 		/// Set the manifest to use symmetric-only security.
 		/// </summary>
 		/// <param name="key">Key known to the receiver of the package.</param>
-		/// <param name="key">Pre-key has low entropy, e.g. a human-memorisable passphrase.</param>
+        /// <param name="lowEntropy">Pre-key has low entropy, e.g. a human-memorisable passphrase.</param>
 		/// <exception cref="ArgumentException">Array is null or zero-length.</exception>
 		public void SetManifestCryptoSymmetric (byte[] key, bool lowEntropy) {
 			if (key.IsNullOrZeroLength()) {
@@ -466,18 +467,18 @@ namespace ObscurCore
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Package is being written, not read.</exception>
 		/// <exception cref="ArgumentException">Enum was set to None.</exception>
-		public void ConfigureManifestCryptoSymmetric(SymmetricBlockCipher cipher, BlockCipherMode mode, 
+		public void ConfigureManifestCryptoSymmetric(BlockCipher cipher, BlockCipherMode mode, 
 			BlockCipherPadding padding)
 		{
-			if (cipher == SymmetricBlockCipher.None) {
+			if (cipher == BlockCipher.None) {
 				throw new ArgumentException("Cipher cannot be set to none.", "cipher");
 			} else if (mode == BlockCipherMode.None) {
 				throw new ArgumentException("Mode cannot be set to none.", "mode");
-			} else if (cipher == SymmetricBlockCipher.None) {
+			} else if (cipher == BlockCipher.None) {
 				throw new ArgumentException();
 			}
 
-			ManifestCipher = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(cipher, mode, padding);
+			ManifestCipher = CipherConfigurationFactory.CreateBlockCipherConfiguration(cipher, mode, padding);
 		}
 
 		/// <summary>
@@ -485,12 +486,12 @@ namespace ObscurCore
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Package is being written, not read.</exception>
 		/// <exception cref="ArgumentException">Cipher was set to None.</exception>
-		public void ConfigureManifestCryptoSymmetric (SymmetricStreamCipher cipher) {
-			if (cipher == SymmetricStreamCipher.None) {
+		public void ConfigureManifestCryptoSymmetric (StreamCipher cipher) {
+			if (cipher == StreamCipher.None) {
 				throw new ArgumentException();
 			}
 
-			ManifestCipher = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(cipher);
+			ManifestCipher = CipherConfigurationFactory.CreateStreamCipherConfiguration(cipher);
 		}
 
 		/// <summary>
@@ -542,7 +543,7 @@ namespace ObscurCore
 		}
 
 		private static SymmetricCipherConfiguration CreateDefaultManifestCipherConfiguration () {
-			return SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration (SymmetricStreamCipher.XSalsa20);
+			return CipherConfigurationFactory.CreateStreamCipherConfiguration (StreamCipher.XSalsa20);
 		}
 
 		private static VerificationFunctionConfiguration CreateDefaultManifestAuthenticationConfiguration () {
@@ -594,6 +595,8 @@ namespace ObscurCore
 		/// </summary>
 		/// <param name="outputStream">Stream which the package is to be written to.</param>
 		/// <param name="closeOnComplete">Whether to close the destination stream upon completion of writing.</param>
+        /// <exception cref="NotSupportedException">Attempted to write package twice.</exception>
+        /// <exception cref="InvalidOperationException">Package state incomplete.</exception>
 		/// <exception cref="AggregateException">
 		/// <para>Collection of however many items have no stream bindings as <see cref="ItemStreamBindingAbsentException"/></para>
 		/// <para>or</para>
@@ -605,22 +608,22 @@ namespace ObscurCore
 				throw new NotSupportedException("Multiple writes from one package are not supported; it may compromise security properties.");
 			}
 			if (_manifestCryptoConfig == null) {
-				throw new InvalidOperationException("Manifest cryptography scheme and its configuration is not set up.");
+				throw new ConfigurationInvalidException("Manifest cryptography scheme and its configuration is not set up.");
 			}
 
 			if (_manifest.PayloadItems.Count == 0) {
 				throw new InvalidOperationException("No payload items have been added.");
 			}
-			if (_manifest.PayloadItems.Any(item => !item.StreamHasBinding)) {
+			if (_manifest.PayloadItems.Any(item => item.StreamHasBinding == false)) {
 				throw new AggregateException(
-					_manifest.PayloadItems.Where(payloadItem => !payloadItem.StreamHasBinding)
+					_manifest.PayloadItems.Where(payloadItem => payloadItem.StreamHasBinding == false)
 					.Select(payloadItem => new ItemStreamBindingAbsentException(payloadItem)));
 			}
-			if (_manifest.PayloadItems.Any(item => ItemPreKeys.ContainsKey(item.Identifier) == false && 
+			if (_manifest.PayloadItems.Any(item => _itemPreKeys.ContainsKey(item.Identifier) == false && 
 				(item.EncryptionKey.IsNullOrZeroLength() || item.AuthenticationKey.IsNullOrZeroLength())))
 			{
 				var exceptions = 	from payloadItem in _manifest.PayloadItems 
-									where ItemPreKeys.ContainsKey (payloadItem.Identifier) == false
+									where _itemPreKeys.ContainsKey (payloadItem.Identifier) == false
 										&& (payloadItem.EncryptionKey.IsNullOrZeroLength () ||
 					                 	payloadItem.AuthenticationKey.IsNullOrZeroLength ())
 				                 	select new ItemKeyMissingException (payloadItem);
@@ -629,12 +632,10 @@ namespace ObscurCore
 			}
 
 			if (outputStream.CanWrite == false) throw new IOException("Cannot write to output stream.");
-			if (_writingTempStream == null) {
+			if (_writingTempStream == null || _writingTempStream == Stream.Null) {
 				// Default to writing to memory
 				_writingTempStream = new MemoryStream();
 			}
-
-			/* Now we write the package */
 
 			// Write the header tag
 			Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "[*PACKAGE START*] Offset",
@@ -642,9 +643,10 @@ namespace ObscurCore
 			var headerTag = Athena.Packaging.GetHeaderTag();
 			outputStream.Write(headerTag, 0, headerTag.Length);
 
-			// Derive working manifest encryption & authentication keys from the manifest pre-key
+			/* Derive working manifest encryption & authentication keys from the manifest pre-key */
 			byte[] workingManifestCipherKey, workingManifestMacKey;
-			KeyStretchingUtility.DeriveWorkingKeys (_writingPreManifestKey, _manifestCryptoConfig.SymmetricCipher.KeySizeBits / 8,
+		    Debug.Assert(_manifestCryptoConfig.Authentication.KeySizeBits != null, "Manifest authentication key size should not be null");
+		    KeyStretchingUtility.DeriveWorkingKeys (_writingPreManifestKey, _manifestCryptoConfig.SymmetricCipher.KeySizeBits / 8,
 				_manifestCryptoConfig.Authentication.KeySizeBits.Value / 8, _manifestCryptoConfig.KeyDerivation, 
 				out workingManifestCipherKey, out workingManifestMacKey);
 
@@ -656,12 +658,12 @@ namespace ObscurCore
 			try {
 				payloadScheme = _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>();
 			} catch (Exception) {
-				throw new ConfigurationValueInvalidException(
+				throw new ConfigurationInvalidException(
 					"Package payload schema specified is unsupported/unknown or missing.");
 			}
 			// Bind the multiplexer to the temp stream
 			var mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer (payloadScheme, true, _writingTempStream,
-				_manifest.PayloadItems, ItemPreKeys, _manifest.PayloadConfiguration);
+				_manifest.PayloadItems, _itemPreKeys, _manifest.PayloadConfiguration);
 
 			try {
 				mux.Execute();
@@ -671,12 +673,11 @@ namespace ObscurCore
 
 			/* Write the manifest in encrypted + authenticated form to memory at first, then to actual output */
 			using (var manifestTemp = new MemoryStream()) {
-				byte[] manifestMac = null;
-				byte[] manifestCryptoDtoForAuth = null;
-				using (var authenticator = new MacStream (manifestTemp, true, _manifestCryptoConfig.Authentication, 
+				byte[] manifestMac;
+			    using (var authenticator = new MacStream (manifestTemp, true, _manifestCryptoConfig.Authentication, 
 					out manifestMac, workingManifestMacKey, false)) 
 				{
-					using (var cs = new SymmetricCipherStream (authenticator, true, _manifestCryptoConfig.SymmetricCipher, 
+					using (var cs = new CipherStream (authenticator, true, _manifestCryptoConfig.SymmetricCipher, 
 						workingManifestCipherKey, false)) 
 					{
 						_manifest.SerialiseDto(cs, prefixLength:false);
@@ -684,14 +685,17 @@ namespace ObscurCore
 
 					authenticator.Update (((UInt32)authenticator.BytesOut).ToLittleEndian(), 0, sizeof(UInt32));
 
-					switch (ManifestCryptoScheme) {
+				    byte[] manifestCryptoDtoForAuth = null;
+				    switch (ManifestCryptoScheme) {
 					case ManifestCryptographyScheme.SymmetricOnly:
 						var symConfig = _manifestCryptoConfig as SymmetricManifestCryptographyConfiguration;
-						manifestCryptoDtoForAuth = symConfig.CreateAuthenticatibleClone().SerialiseDto ();
+				            Debug.Assert(symConfig != null, "symConfig should not be null");
+				            manifestCryptoDtoForAuth = symConfig.CreateAuthenticatibleClone().SerialiseDto ();
 						break;
 					case ManifestCryptographyScheme.UM1Hybrid:
 						var um1Config = _manifestCryptoConfig as Um1HybridManifestCryptographyConfiguration;
-						manifestCryptoDtoForAuth = um1Config.CreateAuthenticatibleClone().SerialiseDto ();
+				            Debug.Assert(um1Config != null, "um1Config should not be null");
+				            manifestCryptoDtoForAuth = um1Config.CreateAuthenticatibleClone().SerialiseDto ();
 						break;
 					default:
 						throw new NotImplementedException ();
@@ -720,16 +724,18 @@ namespace ObscurCore
 					outputStream.Position));
 				_manifestHeader.SerialiseDto(outputStream, prefixLength: true);
 
-				// Write length prefix
-				Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest length prefix offset (absolute)",
+                // Prepare to write manifest length prefix
+                Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest length prefix offset (absolute)",
 					outputStream.Position));
-
-				byte[] manifestLengthLEBytes = ((uint)manifestTemp.Length).ToLittleEndian ();
-				outputStream.Write (manifestLengthLEBytes, 0, 4);
-
+				var manifestLengthHeaderLE = ((uint)manifestTemp.Length).ToLittleEndian();
+                // Obfuscate the manifest length header by XORing it with the derived manifest MAC key
+                manifestLengthHeaderLE.XorInPlaceInternal(0, workingManifestMacKey, 0, sizeof(uint));
+                // Write the now-obfuscated manifest length header
+				outputStream.Write(manifestLengthHeaderLE, 0, 4);
 				Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest offset (absolute)",
 					outputStream.Position));
 
+                /* Write manifest */
 				manifestTemp.WriteTo(outputStream);
 			}
 
@@ -737,7 +743,7 @@ namespace ObscurCore
 			Array.Clear(workingManifestCipherKey, 0, workingManifestCipherKey.Length);
 			Array.Clear(workingManifestMacKey, 0, workingManifestMacKey.Length);
 
-			/* Write out payloadTemp to output stream */
+			/* Write out payload currently in temporary storage to real output stream */
 			Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Payload offset (absolute)",
 				outputStream.Position));
 			_writingTempStream.Seek(0, SeekOrigin.Begin);
@@ -752,7 +758,7 @@ namespace ObscurCore
 			Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "[* PACKAGE END *] Offset (absolute)",
 				outputStream.Position));
 
-			// All done! HAPPY DAYS.
+			/* All done! HAPPY DAYS */
 			_writingTempStream.Close();
 			_writingTempStream = null;
 			if (closeOnComplete) outputStream.Close();
@@ -765,7 +771,7 @@ namespace ObscurCore
 		/// <param name="stream">Stream to use for temporary storage.</param>
 		public void SetTemporaryStorageStream (Stream stream) {
 			if (stream == null || stream == Stream.Null) {
-				throw new ArgumentException("Stream is null or points toward oblivion (Stream.Null).");
+				throw new ArgumentException("Stream is null or points toward where bits go to die (Stream.Null).");
 			}
 			_writingTempStream = stream;
 		}

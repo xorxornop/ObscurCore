@@ -1,6 +1,5 @@
 using System.IO;
 using NUnit.Framework;
-using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
 using ObscurCore.Packaging;
@@ -66,7 +65,8 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             Assert.IsTrue(equal);
         }
-			
+		
+#if INCLUDE_FABRIC
         [Test]
         public void Fabric_Fixed () {
 
@@ -111,5 +111,6 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             Assert.IsTrue(equal);
         }
+#endif
     }
 }

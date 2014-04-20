@@ -61,7 +61,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		}
 
         public string AlgorithmName {
-			get { return Athena.Cryptography.StreamCiphers[SymmetricStreamCipher.Sosemanuk].DisplayName; }
+			get { return Athena.Cryptography.StreamCiphers[StreamCipher.Sosemanuk].DisplayName; }
         }
 
 		public int StateSize
@@ -104,7 +104,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				var blen = BufferLen - _streamPtr;
 				if (blen > len)
 					blen = len;
-				inBytes.XOR (inOff, _streamBuf, _streamPtr, outBytes, outOff, blen);
+				inBytes.Xor (inOff, _streamBuf, _streamPtr, outBytes, outOff, blen);
 				_streamPtr += blen;
 				inOff += blen;
 				outOff += blen;
@@ -116,14 +116,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 			for (var i = 0; i < blocks; i++) {
 				makeStreamBlock (_streamBuf, 0);
-				inBytes.XOR (inOff, _streamBuf, 0, outBytes, outOff, BufferLen);
+				inBytes.Xor (inOff, _streamBuf, 0, outBytes, outOff, BufferLen);
 				inOff += BufferLen;
 				outOff += BufferLen;
 			}
 
 			if(remainder > 0) {
 				makeStreamBlock (_streamBuf, 0);
-				inBytes.XOR (inOff, _streamBuf, 0, outBytes, outOff, remainder);
+				inBytes.Xor (inOff, _streamBuf, 0, outBytes, outOff, remainder);
 				_streamPtr = remainder;
 			}
         }

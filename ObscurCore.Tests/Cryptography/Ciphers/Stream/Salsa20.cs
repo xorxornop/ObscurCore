@@ -24,7 +24,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 			+ "00000000000000000000000000000000"
 		;
 
-		public Salsa20 () : base(ObscurCore.Cryptography.Ciphers.Stream.SymmetricStreamCipher.Salsa20)
+		public Salsa20 () : base(ObscurCore.Cryptography.Ciphers.Stream.StreamCipher.Salsa20)
 		{
 			// Data from ESTREAM verified test vectors
 			// http://www.ecrypt.eu.org/stream/svn/viewcvs.cgi/ecrypt/trunk/submissions/salsa20/verified.test-vectors?rev=140&view=markup

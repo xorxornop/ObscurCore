@@ -18,7 +18,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
     /// <summary>
     /// Symmetric block ciphers able to be used in an ObscurCore CryptoStream.
     /// </summary>
-    public enum SymmetricBlockCipher
+    public enum BlockCipher
     {
         None,
         /// <summary>
@@ -28,7 +28,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         Aes,
 
         /// <summary>
-        /// Classic block cipher, old but still good. Published 1993 by Bruce Schneier.
+        /// Classic block cipher. Published 1993 by Bruce Schneier.
         /// </summary>
         Blowfish,
 
@@ -36,7 +36,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         /// 128-bit block cipher jointly developed by Mitsubishi and NTT. Comparable to AES.
         /// </summary>
         Camellia,
-
+#if INCLUDE_CAST5AND6
         /// <summary>
         /// Default cipher in some versions of GPG and PGP. Also known as CAST-128. 
         /// </summary><seealso cref="Cast6"/>
@@ -46,14 +46,15 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         /// Block cipher published in June 1998. Also known as CAST-256.
         /// </summary><seealso cref="Cast5"/>
         Cast6,
-
+#endif
+#if INCLUDE_IDEA
         /// <summary>
         /// International Data Encryption Algorithm - patent unencumbered as of 2012. 64 bit block size.
         /// </summary>
         Idea,
-
+#endif
         /// <summary>
-        /// 128-bit block cipher. Year 2000 NESSIE entrant - not selected.
+        /// 128-bit block cipher. Year 2000 NESSIE entrant - not selected. Similar to AES.
         /// </summary>
         Noekeon,
 
@@ -61,13 +62,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         /// 128-bit block cipher. Finalist of AES content. Derivative of RC5.
         /// </summary>
         Rc6,
-        /*
-		/// <summary>
-		/// Block cipher. Full version (non-subset-restricted version) of AES. 
-		/// Use this if the fixed block size of 128 bits of AES is unsuitable. SLOW!
-		/// </summary><seealso cref="AES"/>
-		Rijndael,
-        */
+
         /// <summary>
         /// 128-bit block cipher, finalist in AES content, 2nd place after Rijndael.
         /// </summary>

@@ -45,6 +45,7 @@ namespace ObscurCore.Packaging
 			        };
 			    config.SchemeConfiguration = frameshiftConfig.SerialiseDto();
 				break;
+#if INCLUDE_FABRIC
             case PayloadLayoutScheme.Fabric:
 				// Stripe length is variable by default.
 				var fabricConfig = new PayloadSchemeConfiguration {
@@ -53,6 +54,7 @@ namespace ObscurCore.Packaging
 			        };
 			    config.SchemeConfiguration = fabricConfig.SerialiseDto();
 				break;
+#endif
 			}
 			
 			return config;
@@ -87,7 +89,7 @@ namespace ObscurCore.Packaging
 			};
             return config;
 	    }
-
+        #if INCLUDE_FABRIC
 	    public static PayloadConfiguration CreateFabricFixed(CsPseudorandomNumberGenerator csprngEnum, int? stripeSize = null) {
 	        var fixedSize = stripeSize == null ? FabricPayloadMux.DefaultFixedStripeLength : stripeSize.Value;
             var config = new PayloadConfiguration {
@@ -116,5 +118,6 @@ namespace ObscurCore.Packaging
 			};
             return config;
 	    }
+#endif
 	}
 }

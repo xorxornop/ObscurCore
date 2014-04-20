@@ -21,6 +21,7 @@ using System.Linq;
 
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.DTO;
 using ObscurCore.Cryptography.KeyDerivation;
 
@@ -43,15 +44,16 @@ namespace ObscurCore.Packaging
 		protected IReadOnlyDictionary<Guid, byte[]> PayloadItemPreKeys;
 		protected readonly bool[] ItemCompletionRegister;
 
-		public PayloadMux (bool writing, Stream payloadStream, IReadOnlyList<PayloadItem> payloadItems, 
-			IReadOnlyDictionary<Guid, byte[]> itemPreKeys)
-		{
-			if (payloadStream == null)
-				throw new ArgumentNullException ("payloadStream");
-			if (payloadItems == null)
-				throw new ArgumentNullException ("payloadItems");
-			if (itemPreKeys == null)
+	    protected PayloadMux(bool writing, Stream payloadStream, IReadOnlyList<PayloadItem> payloadItems,
+	        IReadOnlyDictionary<Guid, byte[]> itemPreKeys)
+        {
+	        if (payloadStream == null) {
+	            throw new ArgumentNullException("payloadStream");
+	        } else if (payloadItems == null) {
+	            throw new ArgumentNullException("payloadItems");
+	        } else if (itemPreKeys == null) {
 				throw new ArgumentNullException ("itemPreKeys");
+            }
 
 			this.Writing = writing;
 			this.PayloadStream = payloadStream;
@@ -67,17 +69,17 @@ namespace ObscurCore.Packaging
 				authenticationKey = item.AuthenticationKey;
 			} else if (PayloadItemPreKeys.ContainsKey(item.Identifier)) {
 				if (item.Authentication.KeySizeBits.HasValue == false) {
-					throw new ConfigurationInvalidException ("Payload item authentication configuration is missing size specification of MAC key.");
+					throw new ConfigurationInvalidException("Payload item authentication configuration is missing size specification of MAC key.");
 				}
-				KeyStretchingUtility.DeriveWorkingKeys (PayloadItemPreKeys [item.Identifier], item.Encryption.KeySizeBits / 8, 
+				KeyStretchingUtility.DeriveWorkingKeys(PayloadItemPreKeys [item.Identifier], item.Encryption.KeySizeBits / 8, 
 					item.Authentication.KeySizeBits.Value / 8, item.KeyDerivation, out encryptionKey, out authenticationKey);
 			} else {
 				throw new ItemKeyMissingException (item);
 			}
 
 			authenticator = new MacStream (PayloadStream, Writing, item.Authentication, 
-				authenticationKey, closeOnDispose : false);
-			decorator = new SymmetricCipherStream (authenticator, Writing, item.Encryption, 
+				authenticationKey, closeOnDispose:false);
+			decorator = new CipherStream (authenticator, Writing, item.Encryption, 
 				encryptionKey, closeOnDispose:false);
 		}
 
@@ -102,14 +104,19 @@ namespace ObscurCore.Packaging
 		/// </summary>
 		protected abstract void ExecuteOperation();
 
+	    protected abstract void FinishItem(PayloadItem item, DecoratingStream decorator, MacStream authenticator);
+
 		/// <summary>
-		/// Determine the index of the next stream to use in an I/O operation (whether to completion or just a buffer-full).
+		/// Determine the index of the next stream to use in an I/O operation 
+		/// (whether to completion or otherwise, depending on implementation).
 		/// </summary>
 		/// <remarks>May be overriden in a derived class to provide for advanced stream selection logic.</remarks>
 		/// <returns>The next stream index.</returns>
 		protected virtual void NextSource() {
 			Index++;
 			if (Index == PayloadItems.Count) Index = 0;
+
+
 		}
 	}
 }

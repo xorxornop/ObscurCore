@@ -18,7 +18,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
                     PayloadItems = new List<PayloadItem>(),
                     
 			        PayloadOffset = 69,
-			        PayloadConfiguration = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Fabric)
+			        PayloadConfiguration = PayloadLayoutConfigurationFactory.CreateDefault(PayloadLayoutSchemes.Frameshift)
 			    };
 
             manifest.PayloadItems.Add(new PayloadItem() { Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration

@@ -92,7 +92,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			get { return 64; }
 		}
 
-		public byte ReturnByte(
+		public byte ReturnByte (
 			byte input)
 		{
 			if (LimitExceeded())
@@ -112,7 +112,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return output;
 		}
 
-		protected virtual void AdvanceCounter()
+		protected virtual void AdvanceCounter ()
 		{
 			if (++engineState[8] == 0)
 			{
@@ -120,7 +120,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			}
 		}
 
-		public void ProcessBytes(
+		public void ProcessBytes (
 			byte[]	inBytes, 
 			int		inOff, 
 			int		len, 
@@ -147,7 +147,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				var blen = STRIDE_SIZE - index;
 				if (blen > len)
 					blen = len;
-				inBytes.XOR (inOff, keyStream, index, outBytes, outOff, blen);
+				inBytes.Xor (inOff, keyStream, index, outBytes, outOff, blen);
 				index += blen;
 				inOff += blen;
 				outOff += blen;
@@ -160,20 +160,20 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			for (var i = 0; i < blocks; i++) {
 				GenerateKeyStream (keyStream, 0);
 				AdvanceCounter ();
-				inBytes.XOR (inOff, keyStream, 0, outBytes, outOff, STRIDE_SIZE);
+				inBytes.Xor (inOff, keyStream, 0, outBytes, outOff, STRIDE_SIZE);
 				inOff += STRIDE_SIZE;
 				outOff += STRIDE_SIZE;
 			}
 
-			if(remainder > 0) {
+			if (remainder > 0) {
 				GenerateKeyStream (keyStream, 0);
 				AdvanceCounter ();
-				inBytes.XOR (inOff, keyStream, 0, outBytes, outOff, remainder);
-				index = remainder;
+				inBytes.Xor (inOff, keyStream, 0, outBytes, outOff, remainder);
 			}
+            index = remainder;
 		}
 
-		public void GetKeystream(byte[] buffer, int offset, int length) {
+		public void GetKeystream (byte[] buffer, int offset, int length) {
 			if (index > 0) {
 				var blen = STRIDE_SIZE - index;
 				if (blen > length)
@@ -199,19 +199,19 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			}
 		}
 
-		public void Reset()
+		public void Reset ()
 		{
 			index = 0;
 			ResetLimitCounter();
 			ResetCounter();
 		}
 
-		protected virtual void ResetCounter()
+		protected virtual void ResetCounter ()
 		{
 			engineState[8] = engineState[9] = 0;
 		}
 
-		protected virtual void SetKey(byte[] keyBytes, byte[] ivBytes) {
+		protected virtual void SetKey (byte[] keyBytes, byte[] ivBytes) {
 			int offset = 0;
 			byte[] constants;
 

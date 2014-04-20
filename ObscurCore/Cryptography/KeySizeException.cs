@@ -28,10 +28,10 @@ namespace ObscurCore.Cryptography
 
         protected KeySizeException(SerializationInfo info, StreamingContext context) : base(info, context) {}
 
-        public KeySizeException(SymmetricBlockCipher cipherEnum, int requestedSizeBits)
+        public KeySizeException(BlockCipher cipherEnum, int requestedSizeBits)
             : this(cipherEnum.ToString(), requestedSizeBits, Athena.Cryptography.BlockCiphers[cipherEnum].AllowableKeySizes.ToList()) {}
 
-        public KeySizeException(SymmetricStreamCipher cipherEnum, int requestedSizeBits)
+        public KeySizeException(StreamCipher cipherEnum, int requestedSizeBits)
             : this(cipherEnum.ToString(), requestedSizeBits, Athena.Cryptography.StreamCiphers[cipherEnum].AllowableKeySizes.ToList()) {}
 
         protected KeySizeException(string cipherName, int requestedSizeBits, List<int> allowedSizes)

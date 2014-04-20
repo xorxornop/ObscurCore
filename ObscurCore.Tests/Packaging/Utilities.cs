@@ -24,7 +24,7 @@ namespace ObscurCore.Tests.Packaging
                     RelativePath = t.Name,
                     ExternalLength = t.Length,
                     Type = PayloadItemType.Binary,
-					Encryption = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(SymmetricStreamCipher.Sosemanuk),
+					Encryption = CipherConfigurationFactory.CreateStreamCipherConfiguration(StreamCipher.Sosemanuk),
 					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B256, out authOutputSize)
                 };
 
@@ -51,7 +51,7 @@ namespace ObscurCore.Tests.Packaging
                     RelativePath = t.Name,
                     ExternalLength = t.Length,
                     Type = PayloadItemType.Binary,
-                    Encryption = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCipher.Serpent, 
+                    Encryption = CipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher.Serpent, 
 						BlockCipherMode.Ctr, BlockCipherPadding.None),
 					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B256, out authOutputSize)
                 };

@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_RC4</DefineConstants>
+    <DefineConstants>DEBUG;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -28,11 +28,11 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
-    <DefineConstants>INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_RC4</DefineConstants>
+    <DefineConstants>INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
     <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
-    <DefineConstants>INCLUDE_UNSAFE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_RC4</DefineConstants>
+    <DefineConstants>INCLUDE_UNSAFE;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
     <Optimize>true</Optimize>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -110,7 +110,5 @@
     <None Include="packages.config" />
     <None Include="Packaging\Serialisation\Compression.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Cryptography\Ciphers\" />
-  </ItemGroup>
+  <ItemGroup />
 </Project>

@@ -19,13 +19,13 @@ namespace ObscurCore.Tests.Packaging
 		public void SymmetricFrameshiftPackage() {
 			SymmetricPackageTest ("SymmetricFrameshiftPackage", PayloadLayoutScheme.Frameshift);
 		}
-			
+#if INCLUDE_FABRIC
 		[Test]
 		public void SymmetricFabricPackage() {
 			SymmetricPackageTest ("SymmetricFabricPackage", PayloadLayoutScheme.Fabric);
 		}
-
-		private void SymmetricPackageTest(string testName, PayloadLayoutScheme scheme) {
+#endif
+		private static void SymmetricPackageTest(string testName, PayloadLayoutScheme scheme) {
 			// Process of writing destroys preKey variable passed in for security
 			// We must copy it to a local variable before reading the package back
 			var preKeyEnumerated = KeyProviders.Alice.SymmetricKeys.First();
@@ -71,13 +71,13 @@ namespace ObscurCore.Tests.Packaging
 		public void UM1FrameshiftPackage() {
 			UM1PackageTest ("UM1FrameshiftPackage", PayloadLayoutScheme.Frameshift);
 		}
-			
+#if INCLUDE_FABRIC
 		[Test]
 		public void UM1FabricPackage() {
 			UM1PackageTest ("UM1FabricPackage", PayloadLayoutScheme.Fabric);
 		}
-
-		private void UM1PackageTest(string testName, PayloadLayoutScheme scheme) {
+#endif
+		private static void UM1PackageTest(string testName, PayloadLayoutScheme scheme) {
 			// Process of writing destroys sender and receiver key variables passed in for security
 			// We must copy it to a local variable before reading the package back
 			var senderKeyEnumerated = KeyProviders.Alice.EcKeypairs.ElementAt (StratCom.EntropySupplier.Next (KeyProviders.Alice.EcKeypairs.Count ()));

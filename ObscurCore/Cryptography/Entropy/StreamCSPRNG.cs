@@ -51,7 +51,7 @@ namespace ObscurCore.Cryptography.Entropy
         }
 
         public static StreamCipherCsprngConfiguration CreateRandomConfiguration(CsPseudorandomNumberGenerator csprng) {
-            var cipherEnum = csprng.ToString().ToEnum<SymmetricStreamCipher>();
+            var cipherEnum = csprng.ToString().ToEnum<StreamCipher>();
             var config = new StreamCipherCsprngConfiguration()
                 {
                     CipherName = csprng.ToString(),

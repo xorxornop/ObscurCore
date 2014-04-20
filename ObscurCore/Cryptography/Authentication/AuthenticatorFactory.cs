@@ -68,11 +68,11 @@ namespace ObscurCore.Cryptography.Authentication
 			} else if (macEnum == MacFunction.Cmac) {
 				if (config == null)
 					throw new ArgumentException ("No block cipher specified (encoded as UTF-8 bytes).", "config");
-				macObj = CreateCmacPrimitive (Encoding.UTF8.GetString (config).ToEnum<SymmetricBlockCipher> (), key, salt);
+				macObj = CreateCmacPrimitive (Encoding.UTF8.GetString (config).ToEnum<BlockCipher> (), key, salt);
 			} else if (macEnum == MacFunction.Poly1305) {
 				if (config != null && nonce == null)
 					throw new ArgumentException ("No nonce/IV supplied for the block cipher.", "nonce");
-				macObj = CreatePoly1305Primitive (Encoding.UTF8.GetString (config).ToEnum<SymmetricBlockCipher> (), key, nonce, salt);
+				macObj = CreatePoly1305Primitive (Encoding.UTF8.GetString (config).ToEnum<BlockCipher> (), key, nonce, salt);
 			} else {
 				macObj = MacInstantiators[macEnum]();
 				macObj.Init (key);
@@ -95,7 +95,7 @@ namespace ObscurCore.Cryptography.Authentication
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
 		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
 		/// <returns>Pre-initialised CMAC primitive.</returns>
-		public static IMac CreateCmacPrimitive(SymmetricBlockCipher cipherEnum, byte[] key, byte[] salt = null) {
+		public static IMac CreateCmacPrimitive(BlockCipher cipherEnum, byte[] key, byte[] salt = null) {
 			var defaultBlockSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
 			if(defaultBlockSize != 64 && defaultBlockSize != 128) {
 				throw new NotSupportedException ("CMAC/OMAC1 only supports ciphers with 64 / 128 bit block sizes.");
@@ -132,7 +132,7 @@ namespace ObscurCore.Cryptography.Authentication
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
 		/// <param name="iv">Initialisation vector/nonce. Required.</param>
 		/// <returns>Pre-initialised Poly1305 primitive.</returns>
-		public static IMac CreatePoly1305Primitive(SymmetricBlockCipher cipherEnum, byte[] key, byte[] nonce, byte[] salt = null) {
+		public static IMac CreatePoly1305Primitive(BlockCipher cipherEnum, byte[] key, byte[] nonce, byte[] salt = null) {
 			if(Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize != 128) {
 				throw new NotSupportedException ();
 			}

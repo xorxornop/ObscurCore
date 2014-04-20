@@ -4,6 +4,6 @@ namespace ObscurCore.Tests.Cryptography.Ciphers.Block
 {
     public class Blowfish : BlockCipherTestBase
     {
-        public Blowfish () : base(SymmetricBlockCipher.Blowfish) { }
+        public Blowfish () : base(BlockCipher.Blowfish) { }
     }
 }

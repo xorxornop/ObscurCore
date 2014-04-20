@@ -22,7 +22,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 		private static readonly string KEY = 
 			"0123456789ABCDEF";
 
-		public Rc4 () : base(ObscurCore.Cryptography.Ciphers.Stream.SymmetricStreamCipher.Rc4)
+		public Rc4 () : base(ObscurCore.Cryptography.Ciphers.Stream.StreamCipher.Rc4)
 		{
 			DiscreteVectorTests.Add (new DiscreteVectorTestCase (
 				"n/a",

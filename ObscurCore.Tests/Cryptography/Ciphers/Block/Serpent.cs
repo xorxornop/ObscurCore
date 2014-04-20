@@ -5,7 +5,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers.Block
     class Serpent : BlockCipherTestBase
     {
         public Serpent ()
-            : base(SymmetricBlockCipher.Serpent) {
+            : base(BlockCipher.Serpent) {
         }
     }
 }

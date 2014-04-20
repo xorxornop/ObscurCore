@@ -5,7 +5,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers.Block
     class RC6 : BlockCipherTestBase
     {
         public RC6 ()
-            : base(SymmetricBlockCipher.Rc6) {
+            : base(BlockCipher.Rc6) {
         }
     }
 }

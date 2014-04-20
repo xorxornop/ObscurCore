@@ -21,7 +21,7 @@ using ObscurCore.Information;
 
 namespace ObscurCore.Cryptography.Ciphers.Block
 {
-    public class BlockCipherConfigurationWrapper : SymmetricCipherConfigurationWrapper
+    public class BlockCipherConfigurationWrapper : CipherConfigurationWrapper
     {
         public BlockCipherConfigurationWrapper(SymmetricCipherConfiguration config) : base(config) {}
 
@@ -34,14 +34,14 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         /// <summary>
         /// Name of the cryptographic block cipher transform being used e.g. AES, Blowfish, etc.
         /// </summary>
-        public SymmetricBlockCipher BlockCipher
+        public BlockCipher BlockCipher
         {
             get {
-                SymmetricBlockCipher blockCipherEnum;
+                BlockCipher blockCipherEnum;
                 try {
-                    blockCipherEnum = Configuration.CipherName.ToEnum<SymmetricBlockCipher>();
+                    blockCipherEnum = Configuration.CipherName.ToEnum<BlockCipher>();
                 } catch (EnumerationParsingException e) {
-					throw new ConfigurationValueInvalidException("Cipher unknown/unsupported.", e);
+                    throw new ConfigurationInvalidException("Cipher unknown/unsupported.", e);
                 }
                 return blockCipherEnum;
             }
@@ -78,7 +78,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         {
             get {
                 if (Configuration.BlockSizeBits == 0) {
-					throw new ConfigurationValueInvalidException("Block cipher cannot have a block size of 0 (zero).");
+                    throw new ConfigurationInvalidException("Block cipher cannot have a block size of 0 (zero).");
                 }
                 ThrowIfBlockSizeIncompatible();
                 return RawConfiguration.BlockSizeBits;
@@ -102,12 +102,12 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         {
             get {
                 if (Configuration.IV.IsNullOrZeroLength()) {
-					throw new ConfigurationValueInvalidException("Block cipher cannot have an initalisation vector (IV) of null or zero length.");
-				} else if (Configuration.IV.Length != BlockSizeBits / 8) {
+                    throw new ConfigurationInvalidException("Block cipher cannot have an initalisation vector (IV) of null or zero length.");
+				} else if (Configuration.IV.Length != BlockSizeBytes) {
 					throw new ConfigurationInvalidException("Initialisation vector should not be a different length to the block size.");
                 }
 
-				return Configuration.IV.CopyBytes();
+                return Configuration.IV.DeepCopy();
             }
             set { RawConfiguration.IV = value; }
         }

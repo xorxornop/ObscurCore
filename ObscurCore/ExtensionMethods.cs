@@ -184,50 +184,7 @@ namespace ObscurCore
 			return hc;
 		}
 
-		public static bool SequenceEqual(this byte[] a, byte[] b) {
-			if (a == b)
-				return true;
-
-			if (a == null || b == null)
-				return false;
-
-			return SequenceEqual<byte>(a, b);
-		}
-
-		private static bool SequenceEqualByteOptimised(byte[] a, byte[]	b) {
-			int i = a.Length;
-			if (i != b.Length)
-				return false;
-			while (i != 0)
-			{
-				--i;
-				if (a[i] != b[i])
-					return false;
-			}
-			return true;
-		}
-
-		public static bool SequenceEqual(this int[] a, int[] b) {
-			if (a == b)
-				return true;
-
-			if (a == null || b == null)
-				return false;
-
-			return SequenceEqual<int>(a, b);
-		}
-
-		public static bool SequenceEqual(this uint[] a, uint[] b) {
-			if (a == b)
-				return true;
-
-			if (a == null || b == null)
-				return false;
-
-			return SequenceEqual<uint>(a, b);
-		}
-
-		private static bool SequenceEqual<T> (T[] a, T[] b) where T: struct {
+		public static bool SequenceEqual<T> (this T[] a, T[] b) where T: struct {
 			var i = a.Length;
 			if (i != b.Length)
 				return false;
@@ -239,28 +196,128 @@ namespace ObscurCore
 			return true;
 		}
 
+        private const int DeepCopyUnsafeLimit = 16384;
+
 		public static byte[] DeepCopy (this byte[] data) {
-			if (data == null)
-				return null;
-			else
-				return data.CopyBytes ();
+		    if (data == null)
+		        return null;
+		    else {
+		        var dst = new byte[data.Length];
+		        data.CopyBytes(0, dst, 0, data.Length);
+		        return dst;
+		    }
 		}
 
-		public static int[] DeepCopy (this int[] data) {
-			return data == null ? null : (int[])data.Clone();
+        public static void CopyBytes (this byte[] src, int srcOffset, byte[] dst, int dstOffset, int length) {
+#if INCLUDE_UNSAFE
+			if (srcOffset + length > src.Length || dstOffset + length > dst.Length) {
+				throw new ArgumentException ("Either/both src or dst offset is incompatible with array length. Security risk in unsafe execution!");
+			}
+			unsafe {
+				fixed (byte* srcPtr = src) {
+					fixed (byte* dstPtr = dst) {
+						CopyMemory(dstPtr + dstOffset, srcPtr + srcOffset, length);
+					}
+				}
+			}
+#else
+            if (src.Length > DeepCopyUnsafeLimit) {
+                Buffer.BlockCopy(src, srcOffset, dst, dstOffset, length);
+            } else {
+                Array.Copy(src, srcOffset, dst, dstOffset, length);
+            }
+#endif
+        }
+
+        public static int[] DeepCopy (this int[] data) {
+            if (data == null)
+                return null;
+            else {
+                var dst = new int[data.Length];
+                data.DeepCopy(dst);
+                return dst;
+            }
+        }
+
+		public static void DeepCopy (this int[] src, int[] dst) {
+#if INCLUDE_UNSAFE
+			unsafe {
+				fixed (int* srcPtr = src) {
+					fixed (int* dstPtr = dst) {
+					    byte* srcBP = (byte*)srcPtr;
+                        byte* dstBP = (byte*)dstPtr;
+						CopyMemory(dstBP, srcBP, src.Length * sizeof(int));
+					}
+				}
+			}
+#else
+            const int limit = DeepCopyUnsafeLimit / sizeof(ulong);
+            if (src.Length >= limit)
+                Buffer.BlockCopy(src, 0, dst, 0, src.Length);
+            else
+                Array.Copy(src, 0, dst, 0, src.Length);
+#endif
 		}
 
-		public static long[] DeepCopy (this long[] data) {
-			return data == null ? null : (long[])data.Clone();
-		}
+        public static long[] DeepCopy (this long[] data) {
+            if (data == null)
+                return null;
+            else {
+                var dst = new long[data.Length];
+                data.DeepCopy(dst);
+                return dst;
+            }
+        }
 
-		[CLSCompliantAttribute(false)]
-		public static ulong[] DeepCopy(
-			this ulong[] data)
-		{
-			return data == null ? null : (ulong[]) data.Clone();
-		}
+        public static void DeepCopy (this long[] src, long[] dst) {
+#if INCLUDE_UNSAFE
+			unsafe {
+				fixed (long* srcPtr = src) {
+					fixed (long* dstPtr = dst) {
+					    byte* srcBP = (byte*)srcPtr;
+                        byte* dstBP = (byte*)dstPtr;
+						CopyMemory(dstBP, srcBP, src.Length * sizeof(long));
+					}
+				}
+			}
+#else
+            const int limit = DeepCopyUnsafeLimit / sizeof(long);
+            if (src.Length >= limit)
+                Buffer.BlockCopy(src, 0, dst, 0, src.Length);
+            else
+                Array.Copy(src, 0, dst, 0, src.Length);
+#endif
+        }
 
+        public static ulong[] DeepCopy (this ulong[] data) {
+            if (data == null)
+                return null;
+            else {
+                var dst = new ulong[data.Length];
+                data.DeepCopy(dst);
+                return dst;
+            }
+        }
+
+        public static void DeepCopy (this ulong[] src, ulong[] dst) {
+#if INCLUDE_UNSAFE
+			unsafe {
+				fixed (ulong* srcPtr = src) {
+					fixed (ulong* dstPtr = dst) {
+					    byte* srcBP = (byte*)srcPtr;
+                        byte* dstBP = (byte*)dstPtr;
+						CopyMemory(dstBP, srcBP, src.Length * sizeof(ulong));
+					}
+				}
+			}
+#else
+            const int limit = DeepCopyUnsafeLimit / sizeof(ulong);
+            if (src.Length >= limit)
+                Buffer.BlockCopy(src, 0, dst, 0, src.Length);
+            else
+                Array.Copy(src, 0, dst, 0, src.Length);
+#endif
+        }
 
 		#if INCLUDE_UNSAFE
 		internal static unsafe void CopyMemory (byte* dst, byte* src, int length) {
@@ -289,49 +346,6 @@ namespace ObscurCore
 				*dst = *src;
 		}
 		#endif
-
-		public static byte[] CopyBytes (this byte[] src) {
-			byte[] dst = new byte[src.Length];
-			src.CopyBytes (dst);
-			return dst;
-		}
-
-		public static void CopyBytes (this byte[] src, byte[] dst) {
-			#if INCLUDE_UNSAFE
-			unsafe {
-				fixed (byte* srcPtr = src) {
-					fixed (byte* dstPtr = dst) {
-						CopyMemory(dstPtr, srcPtr, src.Length);
-					}
-				}
-			}
-			#else
-			if (src.Length > 1024) 
-				Buffer.BlockCopy(src, 0, dst, 0, src.Length);
-			else 
-				Array.Copy(src, 0, dst, 0, src.Length);
-			#endif
-		}
-
-		public static void CopyBytes (this byte[] src, int srcOffset, byte[] dst, int dstOffset, int length) {
-			#if INCLUDE_UNSAFE
-			if (srcOffset + length > src.Length || dstOffset + length > dst.Length) {
-				throw new ArgumentException ("Either/both src or dst offset is incompatible with array length. Security risk in unsafe execution!");
-			}
-			unsafe {
-				fixed (byte* srcPtr = src) {
-					fixed (byte* dstPtr = dst) {
-						CopyMemory(dstPtr + dstOffset, srcPtr + srcOffset, length);
-					}
-				}
-			}
-			#else
-			if (src.Length > 1024) 
-				Buffer.BlockCopy(src, srcOffset, dst, dstOffset, length);
-			else 
-				Array.Copy(src, srcOffset, dst, dstOffset, length);
-			#endif
-		}
     }
 }
 

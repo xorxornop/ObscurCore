@@ -60,31 +60,17 @@ namespace ObscurCore.Cryptography
 			return (1 & (((uint)differentbits - 1) >> 8));
 		}
 
-		/*
-		 * Original implementation of constant-time equals (BC):
-		 * 
-		 * if (a.Length != b.Length)
-				return false;
-
-			int cmp = 0;
-			for (int i = a.Length - 1; i >= 0; i--) {
-				cmp |= (a [i] ^ b [i]);
-			}
-			return cmp == 0;
-		*/
-
-
-		/// <summary>
-		/// XOR the specified a & b arrays into c.
-		/// </summary>
-		/// <param name="a">Source #0 array.</param>
-		/// <param name="aOff">Source array #0 offset.</param>
-		/// <param name="b">Source #1 array.</param>
-		/// <param name="bOff">Source #1 array offset.</param>
-		/// <param name="c">Destination array.</param>
-		/// <param name="cOff">Destination array offset.</param>
-		/// <param name="length">Length to XOR.</param>
-		public static void XOR(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff, int length) {
+	    /// <summary>
+	    /// XOR the specified a & b arrays into c.
+	    /// </summary>
+	    /// <param name="a">Source #0 array.</param>
+	    /// <param name="aOff">Source array #0 offset.</param>
+	    /// <param name="b">Source #1 array.</param>
+	    /// <param name="bOff">Source #1 array offset.</param>
+        /// <param name="output">Output array.</param>
+	    /// <param name="outputOff"></param>
+        /// <param name="length">Length to XOR.</param>
+	    public static void Xor(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff, int length) {
 			if (length <= 0) {
 				throw new ArgumentException ("Length is not positive.", "length");
 			} else if (aOff < 0) {
@@ -96,15 +82,15 @@ namespace ObscurCore.Cryptography
 			} else if (bOff + length > b.Length) {
 				throw new ArgumentException ("Insufficient length.", "b");
 			} else if (outputOff < 0) {
-				throw new ArgumentOutOfRangeException("cOff", "cOff must be 0 or positive.");
+                throw new ArgumentOutOfRangeException("outputOff", "outputOff must be 0 or positive.");
 			}  else if (outputOff + length > output.Length) {
-				throw new DataLengthException ("Insufficient length.", "c");
+				throw new DataLengthException ("Insufficient length.", "output");
 			}
 
-			XORNoChecks (a, aOff, b, bOff, output, outputOff, length);
+			XorInternal (a, aOff, b, bOff, output, outputOff, length);
 		}
 
-		internal static void XORNoChecks(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff, int length) {
+		internal static void XorInternal(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff, int length) {
 			#if INCLUDE_UNSAFE
 			int remainder;
 			int uintOps = Math.DivRem(length, sizeof(uint), out remainder);
@@ -142,7 +128,7 @@ namespace ObscurCore.Cryptography
 		/// <param name="b">Source #1 array.</param>
 		/// <param name="bOff">Source #1 array offset.</param>
 		/// <param name="length">Length to XOR.</param>
-		public static void XORInPlace(this byte[] a, int aOff, byte[] b, int bOff, int length) {
+		public static void XorInPlace(this byte[] a, int aOff, byte[] b, int bOff, int length) {
 			if (length <= 0) {
 				throw new ArgumentException ("Length is not positive.", "length");
 			} else if (aOff < 0) {
@@ -155,10 +141,10 @@ namespace ObscurCore.Cryptography
 				throw new ArgumentException ("Insufficient length.", "b");
 			}
 
-			XORInPlaceNoChecks (a, aOff, b, bOff, length);
+			XorInPlaceInternal (a, aOff, b, bOff, length);
 		}
 
-		internal static void XORInPlaceNoChecks(this byte[] a, int aOff, byte[] b, int bOff, int length) {
+		internal static void XorInPlaceInternal(this byte[] a, int aOff, byte[] b, int bOff, int length) {
 			#if INCLUDE_UNSAFE
 			int remainder;
 			int uintOps = Math.DivRem(length, sizeof(uint), out remainder);

@@ -161,13 +161,13 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 			try {
 				functionType = keyConfirmation.FunctionType.ToEnum<VerificationFunctionType> ();
 			} catch (EnumerationParsingException ex) {
-				throw new ConfigurationValueInvalidException ("Verification function type is unsupported/unknown.", ex);
+                throw new ConfigurationInvalidException("Verification function type is unsupported/unknown.", ex);
 			}
 
 			if (functionType == VerificationFunctionType.None) {
-				throw new ConfigurationValueInvalidException ("Verification function type cannot be None.");
+                throw new ConfigurationInvalidException("Verification function type cannot be None.");
 			} else if (String.IsNullOrEmpty(keyConfirmation.FunctionName)) {
-				throw new ConfigurationValueInvalidException ("Verification function name cannot be null or empty.");
+                throw new ConfigurationInvalidException("Verification function name cannot be null or empty.");
 			}
 
 			const string LengthIncompatibleString = "Expected length incompatible with function specified.";
@@ -179,9 +179,9 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 					try {
 						kdfEnum = keyConfirmation.FunctionName.ToEnum<KeyDerivationFunction> ();
 					} catch (EnumerationParsingException ex) {
-						throw new ConfigurationValueInvalidException ("Key derivation function is unsupported/unknown.", ex);
+                        throw new ConfigurationInvalidException("Key derivation function is unsupported/unknown.", ex);
 					}
-				validator = (key) => KeyDerivationUtility.DeriveKeyWithKdf (kdfEnum, key, keyConfirmation.Salt, 
+				    validator = (key) => KeyDerivationUtility.DeriveKeyWithKdf (kdfEnum, key, keyConfirmation.Salt, 
 						outputSizeBytes, keyConfirmation.FunctionConfiguration);
 			        break;
 			    case VerificationFunctionType.Mac:
@@ -189,7 +189,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 					try {
 						macFEnum = keyConfirmation.FunctionName.ToEnum<MacFunction> ();
 					} catch (EnumerationParsingException ex) {
-						throw new ConfigurationValueInvalidException ("MAC function is unsupported/unknown.", ex);
+                        throw new ConfigurationInvalidException("MAC function is unsupported/unknown.", ex);
 					}
 		        	validator = (key) => {
 					var macF = AuthenticatorFactory.CreateMacPrimitive (macFEnum, key, keyConfirmation.Salt, 
@@ -210,7 +210,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 					try {
 						hashFEnum = keyConfirmation.FunctionName.ToEnum<HashFunction> ();
 					} catch (EnumerationParsingException ex) {
-						throw new ConfigurationValueInvalidException ("Hash/digest function is unsupported/unknown.", ex);
+                        throw new ConfigurationInvalidException("Hash/digest function is unsupported/unknown.", ex);
 					}
 					validator = (key) => {
 						var hashF = AuthenticatorFactory.CreateHashPrimitive (hashFEnum);

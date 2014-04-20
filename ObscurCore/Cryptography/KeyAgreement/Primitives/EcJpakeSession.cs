@@ -237,8 +237,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 				throw new InvalidOperationException("Round1 payload already created for " + ParticipantId);
 			}
 
-			x1 = BigIntegers.CreateRandomInRange(BigInteger.One, Domain.N.Subtract(BigInteger.One), EntropySupply);
-			x2 = BigIntegers.CreateRandomInRange(BigInteger.One, Domain.N.Subtract(BigInteger.One), EntropySupply);
+			x1 = BigInteger.CreateRandomInRange(BigInteger.One, Domain.N.Subtract(BigInteger.One), EntropySupply);
+			x2 = BigInteger.CreateRandomInRange(BigInteger.One, Domain.N.Subtract(BigInteger.One), EntropySupply);
 			GX1 = BasePointMultiplier.Multiply(Domain.G, x1);
 			GX2 = BasePointMultiplier.Multiply(Domain.G, x2);
 
@@ -497,7 +497,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 			string participantId, out ECPoint V, out BigInteger r) 
 		{
 			// Generate a random v from [1, n-1], and compute V = G*v
-			BigInteger v = BigIntegers.CreateRandomInRange(BigInteger.One, 
+			BigInteger v = BigInteger.CreateRandomInRange(BigInteger.One, 
 				Domain.N.Subtract(BigInteger.One), EntropySupply);
 
 			V = BasePointMultiplier.Multiply (generator, v); // gV

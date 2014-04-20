@@ -99,7 +99,7 @@ namespace ObscurCore.Cryptography.Authentication
 		/// <summary>
 		/// Initialises a MAC authenticator stream using a pre-initialised MAC primitive.
 		/// </summary>
-		/// <param name="binding">Binding.</param>
+		/// <param name="binding">StreamBinding.</param>
 		/// <param name="writing">If set to <c>true</c> writing.</param>
 		/// <param name="macPrimitive">MAC primitive to use for authentication.</param>
 		/// <param name="output">Byte array where the finished MAC will be output to. Does not need to be initialised.</param>
@@ -163,7 +163,7 @@ namespace ObscurCore.Cryptography.Authentication
 				}
 				totalIn += iterIn;
 				_mac.BlockUpdate(_buffer, 0, iterIn);
-				Binding.Write (_buffer, 0, iterIn);
+				StreamBinding.Write (_buffer, 0, iterIn);
 			}
 
 			return totalIn;
@@ -181,7 +181,7 @@ namespace ObscurCore.Cryptography.Authentication
 			int iterIn = 0;
 			long totalIn = 0;
 			while(length > 0) {
-				iterIn = DecoratorBinding.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
+				iterIn = Binding.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
 				if(iterIn == 0) {
 					throw new EndOfStreamException ();
 				}

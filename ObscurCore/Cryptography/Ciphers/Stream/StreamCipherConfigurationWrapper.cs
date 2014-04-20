@@ -35,7 +35,7 @@ using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream
 {
-    public class StreamCipherConfigurationWrapper : SymmetricCipherConfigurationWrapper
+    public class StreamCipherConfigurationWrapper : CipherConfigurationWrapper
     {
         public StreamCipherConfigurationWrapper(SymmetricCipherConfiguration config) : base(config) {}
 
@@ -48,14 +48,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         /// <summary>
         /// Name of the cryptographic stream cipher transform being used e.g. Salsa20, VMPC, etc.
         /// </summary>
-        public SymmetricStreamCipher StreamCipher
+        public StreamCipher StreamCipher
         {
             get {
-                SymmetricStreamCipher streamCipherEnum;
+                StreamCipher streamCipherEnum;
                 try {
-                    streamCipherEnum = Configuration.CipherName.ToEnum<SymmetricStreamCipher>();
+                    streamCipherEnum = Configuration.CipherName.ToEnum<StreamCipher>();
                 } catch (EnumerationParsingException e) {
-					throw new ConfigurationValueInvalidException("Cipher unknown/unsupported.", e);
+                    throw new ConfigurationInvalidException("Cipher unknown/unsupported.", e);
                 }
                 return streamCipherEnum;
             }
@@ -68,7 +68,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         public byte[] Nonce
         {
             get {
-				return Configuration.IV == null ? null : Configuration.IV.CopyBytes();
+                return Configuration.IV == null ? null : Configuration.IV.DeepCopy();
             }
             set { Configuration.IV = value; }
         }

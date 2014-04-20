@@ -27,7 +27,7 @@ namespace ObscurCore.Cryptography
 
         protected BlockSizeException(SerializationInfo info, StreamingContext context) : base(info, context) {}
 
-        public BlockSizeException(SymmetricBlockCipher cipherEnum, int requestedSizeBits)
+        public BlockSizeException(BlockCipher cipherEnum, int requestedSizeBits)
             : base(String.Format("The size {0} is not supported for use with the {1} cipher.", requestedSizeBits, 
                 Athena.Cryptography.BlockCiphers[cipherEnum].DisplayName))
         {
@@ -46,7 +46,7 @@ namespace ObscurCore.Cryptography
         /// Mode of AEAD operation enacting the restriction. 
         /// Null if caller has not supplied this data.
         /// </summary>
-        public SymmetricBlockCipher? Mode { get; private set; }
+        public BlockCipher? Mode { get; private set; }
 
         /// <summary>
         /// Allowed sizes of MAC for the relevant mode. 

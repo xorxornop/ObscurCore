@@ -17,7 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ObscurCore.Cryptography.KeyAgreement.Information;
+using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC;
+using ObscurCore.Cryptography.Support.Math.EllipticCurve.Endomorphism;
 
 namespace ObscurCore.Cryptography.KeyAgreement
 {
@@ -63,81 +65,122 @@ namespace ObscurCore.Cryptography.KeyAgreement
 
 			/* Custom curves */
 
-			Curves.Add (Sec2EllipticCurve.Secp192k1.ToString (), new CustomFpEcNamedCurveInformation {
+			Curves.Add (Sec2EllipticCurve.Secp192k1.ToString (), new CustomFpEcNamedCurveInformation(
+                () => new SecP192K1Curve(), new GlvTypeBParameters(
+                    new BigInteger("BB85691939B869C1D087F601554B96B80CB4F55B35F433C2", 16),
+                    new BigInteger("3D84F26C12238D7B4F3D516613C1759033B1A5800175D0B1", 16),
+                    new [] {
+                        new BigInteger("71169BE7330B3038EDB025F1", 16),
+                        new BigInteger("-B3FB3400DEC5C4ADCEB8655C", 16) },
+                    new [] {
+                        new BigInteger("12511CFE811D0F4E6BC688B4D", 16),
+                        new BigInteger("71169BE7330B3038EDB025F1", 16) },
+                    new BigInteger("1C45A6F9CCC2CC0E3B6C097C7", 16),
+                    new BigInteger("2CFECD0037B1712B73AE19575", 16),
+                    194))
+            {
 				Name = Sec2EllipticCurve.Secp192k1.ToString (),
 				DisplayName = "secp192k1",
 				BitLength = 192,
-				Curve = () => new SecP192K1Curve(),
 				G = "04" + 	"DB4FF10EC057E9AE26B07D0280B7F4341DA5D1B1EAE06C7D" + 
 							"9B2F2F6D9C5628A7844163D015BE86344082AA88D95E2F9D",
 				Seed = null
 			});
 
-			Curves.Add (Sec2EllipticCurve.Secp192r1.ToString (), new CustomFpEcNamedCurveInformation {
+			Curves.Add (Sec2EllipticCurve.Secp192r1.ToString (), new CustomFpEcNamedCurveInformation(
+                () => new SecP192R1Curve())
+            {
 				Name = Sec2EllipticCurve.Secp192r1.ToString (),
 				DisplayName = "secp192r1",
 				BitLength = 192,
-				Curve = () => new SecP192R1Curve(),
 				G = "04" + 	"188DA80EB03090F67CBF20EB43A18800F4FF0AFD82FF1012" + 
 							"07192B95FFC8DA78631011ED6B24CDD573F977A11E794811",
 				Seed = "3045AE6FC8422F64ED579528D38120EAE12196D5"
 			});
 
-			Curves.Add (Sec2EllipticCurve.Secp224k1.ToString (), new CustomFpEcNamedCurveInformation {
+            Curves.Add(Sec2EllipticCurve.Secp224k1.ToString(), new CustomFpEcNamedCurveInformation(
+                () => new SecP224K1Curve(), new GlvTypeBParameters(
+                    new BigInteger("FE0E87005B4E83761908C5131D552A850B3F58B749C37CF5B84D6768", 16),
+                    new BigInteger("60DCD2104C4CBC0BE6EEEFC2BDD610739EC34E317F9B33046C9E4788", 16),
+                    new [] {
+                        new BigInteger("6B8CF07D4CA75C88957D9D670591", 16),
+                        new BigInteger("-B8ADF1378A6EB73409FA6C9C637D", 16) },
+                    new [] {
+                        new BigInteger("1243AE1B4D71613BC9F780A03690E", 16),
+                        new BigInteger("6B8CF07D4CA75C88957D9D670591", 16) },
+                    new BigInteger("35C6783EA653AE444ABECEB382C82", 16),
+                    new BigInteger("5C56F89BC5375B9A04FD364E31BDD", 16),
+                    227))
+            {
 				Name = Sec2EllipticCurve.Secp224k1.ToString (),
 				DisplayName = "secp224k1",
 				BitLength = 224,
-				Curve = () => new SecP224K1Curve(),
 				G = "04" + 	"A1455B334DF099DF30FC28A169A467E9E47075A90F7E650EB6B7A45C" + 
 							"7E089FED7FBA344282CAFBD6F7E319F7C0B0BD59E2CA4BDB556D61A5",
 				Seed = null
 			});
 
-			Curves.Add (Sec2EllipticCurve.Secp224r1.ToString (), new CustomFpEcNamedCurveInformation {
+			Curves.Add (Sec2EllipticCurve.Secp224r1.ToString (), new CustomFpEcNamedCurveInformation(
+                () => new SecP224R1Curve()) 
+            {
 				Name = Sec2EllipticCurve.Secp224r1.ToString (),
 				DisplayName = "secp224r1",
 				BitLength = 224,
-				Curve = () => new SecP224R1Curve(),
 				G = "04" + 	"B70E0CBD6BB4BF7F321390B94A03C1D356C21122343280D6115C1D21" + 
 							"BD376388B5F723FB4C22DFE6CD4375A05A07476444D5819985007E34",
 				Seed = "BD71344799D5C7FCDC45B59FA3B9AB8F6A948BC5"
 			});
 
-			Curves.Add (Sec2EllipticCurve.Secp256k1.ToString (), new CustomFpEcNamedCurveInformation {
+            Curves.Add(Sec2EllipticCurve.Secp256k1.ToString(), new CustomFpEcNamedCurveInformation(
+                () => new SecP256K1Curve(), new GlvTypeBParameters(
+                    new BigInteger("7AE96A2B657C07106E64479EAC3434E99CF0497512F58995C1396C28719501EE", 16),
+                    new BigInteger("5363AD4CC05C30E0A5261C028812645A122E22EA20816678DF02967C1B23BD72", 16),
+                    new [] {
+                        new BigInteger("3086D221A7D46BCDE86C90E49284EB15", 16),
+                        new BigInteger("-E4437ED6010E88286F547FA90ABFE4C3", 16) },
+                    new [] {
+                        new BigInteger("114CA50F7A8E2F3F657C1108D9D44CFD8", 16),
+                        new BigInteger("3086D221A7D46BCDE86C90E49284EB15", 16) },
+                    new BigInteger("C21B48869F51AF37A1B243924A13AC55", 16),
+                    new BigInteger("3910DFB58043A20A1BD51FEA42AFF9311", 16),
+                    258))
+            {
 				Name = Sec2EllipticCurve.Secp256k1.ToString (),
 				DisplayName = "secp256k1",
 				BitLength = 256,
-				Curve = () => new SecP256K1Curve(),
 				G = "04" + 	"79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798" + 
 							"483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8",
 				Seed = null
 			});
 
-			Curves.Add (Sec2EllipticCurve.Secp256r1.ToString (), new CustomFpEcNamedCurveInformation {
+			Curves.Add (Sec2EllipticCurve.Secp256r1.ToString (), new CustomFpEcNamedCurveInformation (
+                () => new SecP256R1Curve())
+            {
 				Name = Sec2EllipticCurve.Secp256r1.ToString (),
 				DisplayName = "secp256r1",
 				BitLength = 256,
-				Curve = () => new SecP256R1Curve(),
 				G = "04" + 	"6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296" + 
 				    		"4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5",
 				Seed = "C49D360886E704936A6678E1139D26B7819F7E90"
 			});
 
-			Curves.Add (Sec2EllipticCurve.Secp384r1.ToString (), new CustomFpEcNamedCurveInformation {
+			Curves.Add (Sec2EllipticCurve.Secp384r1.ToString (), new CustomFpEcNamedCurveInformation (
+                () => new SecP384R1Curve())
+            {
 				Name = Sec2EllipticCurve.Secp384r1.ToString (),
 				DisplayName = "secp384r1",
 				BitLength = 384,
-				Curve = () => new SecP384R1Curve(),
 				G = "04" + 	"AA87CA22BE8B05378EB1C71EF320AD746E1D3B628BA79B9859F741E082542A385502F25DBF55296C3A545E3872760AB7" + 
 							"3617DE4A96262C6F5D9E98BF9292DC29F8F41DBD289A147CE9DA3113B5F0B8C00A60B1CE1D7E819D7A431D7C90EA0E5F",
 				Seed = "A335926AA319A27A1D00896A6773A4827ACDAC73"
 			});
 
-			Curves.Add (Sec2EllipticCurve.Secp521r1.ToString (), new CustomFpEcNamedCurveInformation {
+			Curves.Add (Sec2EllipticCurve.Secp521r1.ToString (), new CustomFpEcNamedCurveInformation (
+                () => new SecP521R1Curve())
+            {
 				Name = Sec2EllipticCurve.Secp521r1.ToString (),
 				DisplayName = "secp521r1",
 				BitLength = 521,
-				Curve = () => new SecP521R1Curve(),
 				G = "04" + 	"00C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2FFA8DE3348B3C1856A429BF97E7E31C2E5BD66" + 
 							"011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650",
 				Seed = "D09E8800291CB85396CC6717393284AAA0DA64BA"

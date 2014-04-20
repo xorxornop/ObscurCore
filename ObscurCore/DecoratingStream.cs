@@ -30,7 +30,7 @@ namespace ObscurCore
 
 		protected bool Disposed;
 		protected bool Finished;
-		protected Stream Binding;
+		protected Stream StreamBinding;
 
 		private readonly bool _closeOnDispose;
 
@@ -43,16 +43,16 @@ namespace ObscurCore
 		/// <summary>
 		/// Stream that decorator writes to or reads from.
 		/// </summary>
-		/// <value>Stream binding.</value>
-		public Stream DecoratorBinding { get { return Binding; } }
+		/// <value>Stream StreamBinding.</value>
+		public Stream Binding { get { return StreamBinding; } }
 
 		/// <summary>
 		/// Whether the stream that decorator writes/reads to/from is also a <see cref="ObscurCore.DecoratingStream"/>.
 		/// </summary>
-		/// <value><c>true</c> if binding is decorator; otherwise, <c>false</c>.</value>
+		/// <value><c>true</c> if StreamBinding is decorator; otherwise, <c>false</c>.</value>
 		public bool BindingIsDecorator
 		{
-			get { return DecoratorBinding is DecoratingStream; }
+			get { return Binding is DecoratingStream; }
 		}
 
 		/// <summary>
@@ -87,7 +87,7 @@ namespace ObscurCore
 		/// <param name="closeOnDispose">If set to <c>true</c>, when stream is closed, bound stream will also be closed.</param>
 		protected DecoratingStream (Stream binding, bool writing, bool closeOnDispose) 
 		{
-			Binding = binding;
+			StreamBinding = binding;
 			Writing = writing;
 			_closeOnDispose = closeOnDispose;
 		}
@@ -99,7 +99,7 @@ namespace ObscurCore
 		/// <returns>The buffer requirement.</returns>
 		/// <param name="maxFound">Maximum of the minimum sizes found thus far in recursive call.</param>
 		protected int? GetBufferRequirement(int maxFound) {
-			var dc = DecoratorBinding as DecoratingStream;
+			var dc = Binding as DecoratingStream;
 			if (dc != null) {
 				var bindingRequirement = dc.GetBufferRequirement (maxFound);
 				if (bindingRequirement.HasValue) {
@@ -121,14 +121,14 @@ namespace ObscurCore
 
 		public override void WriteByte (byte b) {
 			CheckIfCanDecorate ();
-			DecoratorBinding.WriteByte(b);
+			Binding.WriteByte(b);
 			BytesIn++;
 			BytesOut++;
 		}
 
 		public override void Write (byte[] buffer, int offset, int count) {
 			CheckIfCanDecorate ();
-			DecoratorBinding.Write(buffer, offset, count);
+			Binding.Write(buffer, offset, count);
 			BytesIn += count;
 			BytesOut += count;
 		}
@@ -148,19 +148,19 @@ namespace ObscurCore
 				return -1;
 			BytesIn++;
 			BytesOut++;
-			return DecoratorBinding.ReadByte();
+			return Binding.ReadByte();
 		}
 
 		public override int Read (byte[] buffer, int offset, int count) {
 			CheckIfCanDecorate ();
-			int readBytes = DecoratorBinding.Read(buffer, offset, count);
+			int readBytes = Binding.Read(buffer, offset, count);
 			BytesIn += readBytes;
 			BytesOut += readBytes;
 			return readBytes;
 		}
 
 		/// <summary>
-		/// Read an exact amount of bytes from the stream binding and write them 
+		/// Read an exact amount of bytes from the stream StreamBinding and write them 
 		/// (after decoration) to the destination.
 		/// </summary>
 		/// <returns>The quantity of bytes written to the destination stream.</returns>
@@ -169,42 +169,42 @@ namespace ObscurCore
 		public abstract long ReadExactlyTo(Stream destination, long length, bool finishing = false);
 
 		public override bool CanRead {
-			get { return DecoratorBinding.CanRead; }
+			get { return Binding.CanRead; }
 		}
 
 		public override bool CanWrite {
-			get { return DecoratorBinding.CanWrite; }
+			get { return Binding.CanWrite; }
 		}
 
 		public override bool CanSeek {
-			get { return Binding.CanSeek; }
+			get { return StreamBinding.CanSeek; }
 		}
 
 		public override long Length {
-			get { return Binding.Length; }
+			get { return StreamBinding.Length; }
 		}
 
 		public override long Position {
-			get { return DecoratorBinding.Position; }
+			get { return Binding.Position; }
 			set {
 				if(!CanSeek) {
 					throw new NotSupportedException ();
 				}
-				//Binding.Position = value;
-				Binding.Seek (value, SeekOrigin.Begin);
+				//StreamBinding.Position = value;
+				StreamBinding.Seek (value, SeekOrigin.Begin);
 			}
 		}
 
         public override long Seek (long offset, SeekOrigin origin) {
-			return Binding.Seek (offset, origin);
+			return StreamBinding.Seek (offset, origin);
 		}
 
 		public override void SetLength (long length) {
-			Binding.SetLength(length);
+			StreamBinding.SetLength(length);
 		}
 
 		public override void Flush () {
-			Binding.Flush();
+			StreamBinding.Flush();
 		}
 
         /// <summary>
@@ -212,12 +212,12 @@ namespace ObscurCore
         /// Writing/Reading mode is not reassignable without object reconstruction.
         /// </summary>
         /// <param name="newBinding">The stream that the decorator will be bound to after method completion.</param>
-        /// <param name="reset">Whether to reset the rest of the decorator state in addition to the stream binding.</param>
+        /// <param name="reset">Whether to reset the rest of the decorator state in addition to the stream StreamBinding.</param>
 		/// <param name="finish">Whether to finalise the existing decoration operation before resetting. Only applicable if resetting.</param>
         public void ReassignBinding(Stream newBinding, bool reset = true, bool finish = false) {
             if(newBinding == null || newBinding == Stream.Null) throw new ArgumentNullException("newBinding", "Stream is null, cannot reassign.");
             if (reset) Reset (finish);
-			Binding = newBinding;
+			StreamBinding = newBinding;
 			Finished = false;
         }
 
@@ -249,17 +249,17 @@ namespace ObscurCore
 					if (disposing) {
 						// dispose managed resources
 						Finish ();
-						if(this.Binding != null && _closeOnDispose) {
-							this.Binding.Close ();
+						if(this.StreamBinding != null && _closeOnDispose) {
+							this.StreamBinding.Close ();
 						}
-						this.Binding = null;
+						this.StreamBinding = null;
 					}
 				}
 				Disposed = true;
 			}
 			finally {
-				if(this.Binding != null) {
-					this.Binding = null;
+				if(this.StreamBinding != null) {
+					this.StreamBinding = null;
 					base.Dispose(disposing);
 				}
 			}

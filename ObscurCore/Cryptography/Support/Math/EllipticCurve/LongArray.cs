@@ -3,15 +3,15 @@ using System.Text;
 
 namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 {
-	internal class LongArray
-	{
-		//private static long DEInterleave_MASK = 0x5555555555555555L;
+    internal class LongArray
+    {
+        //private static long DEInterleave_MASK = 0x5555555555555555L;
 
-		/*		
+        /*		
          * This expands 8 bit indices into 16 bit contents (high bit 14), by inserting 0s between bits.
          * In a binary field, this operation is the same as squaring an 8 bit number.
          */
-		private static readonly int[] INTERLEAVE2_TABLE = new int[]
+        private static readonly int[] INTERLEAVE2_TABLE = new int[]
 		{
 			0x0000, 0x0001, 0x0004, 0x0005, 0x0010, 0x0011, 0x0014, 0x0015,
 			0x0040, 0x0041, 0x0044, 0x0045, 0x0050, 0x0051, 0x0054, 0x0055,
@@ -47,10 +47,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			0x5540, 0x5541, 0x5544, 0x5545, 0x5550, 0x5551, 0x5554, 0x5555
 		};
 
-		/*		
+        /*		
          * This expands 7 bit indices into 21 bit contents (high bit 18), by inserting 0s between bits.
          */
-		private static readonly int[] INTERLEAVE3_TABLE = new  int[]
+        private static readonly int[] INTERLEAVE3_TABLE = new int[]
 		{
 			0x00000, 0x00001, 0x00008, 0x00009, 0x00040, 0x00041, 0x00048, 0x00049,
 			0x00200, 0x00201, 0x00208, 0x00209, 0x00240, 0x00241, 0x00248, 0x00249,
@@ -70,10 +70,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			0x49200, 0x49201, 0x49208, 0x49209, 0x49240, 0x49241, 0x49248, 0x49249
 		};
 
-		/*		
+        /*		
          * This expands 8 bit indices into 32 bit contents (high bit 28), by inserting 0s between bits.
          */
-		private static readonly int[] INTERLEAVE4_TABLE = new int[]
+        private static readonly int[] INTERLEAVE4_TABLE = new int[]
 		{
 			0x00000000, 0x00000001, 0x00000010, 0x00000011, 0x00000100, 0x00000101, 0x00000110, 0x00000111,
 			0x00001000, 0x00001001, 0x00001010, 0x00001011, 0x00001100, 0x00001101, 0x00001110, 0x00001111,
@@ -109,10 +109,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			0x11111000, 0x11111001, 0x11111010, 0x11111011, 0x11111100, 0x11111101, 0x11111110, 0x11111111
 		};
 
-		/*		
+        /*		
          * This expands 7 bit indices into 35 bit contents (high bit 30), by inserting 0s between bits.
          */
-		private static readonly int[] INTERLEAVE5_TABLE = new int[] {
+        private static readonly int[] INTERLEAVE5_TABLE = new int[] {
 			0x00000000, 0x00000001, 0x00000020, 0x00000021, 0x00000400, 0x00000401, 0x00000420, 0x00000421,
 			0x00008000, 0x00008001, 0x00008020, 0x00008021, 0x00008400, 0x00008401, 0x00008420, 0x00008421,
 			0x00100000, 0x00100001, 0x00100020, 0x00100021, 0x00100400, 0x00100401, 0x00100420, 0x00100421,
@@ -131,10 +131,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			0x42108000, 0x42108001, 0x42108020, 0x42108021, 0x42108400, 0x42108401, 0x42108420, 0x42108421
 		};
 
-		/*		
+        /*		
          * This expands 9 bit indices into 63 bit (long) contents (high bit 56), by inserting 0s between bits.
          */
-		private static readonly long[] INTERLEAVE7_TABLE = new long[]
+        private static readonly long[] INTERLEAVE7_TABLE = new long[]
 		{
 			0x0000000000000000L, 0x0000000000000001L, 0x0000000000000080L, 0x0000000000000081L,
 			0x0000000000004000L, 0x0000000000004001L, 0x0000000000004080L, 0x0000000000004081L,
@@ -266,10 +266,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			0x0102040810204000L, 0x0102040810204001L, 0x0102040810204080L, 0x0102040810204081L
 		};
 
-		// For toString(); must have length 64
-		private const string ZEROES = "0000000000000000000000000000000000000000000000000000000000000000";
+        // For toString(); must have length 64
+        private const string ZEROES = "0000000000000000000000000000000000000000000000000000000000000000";
 
-		internal static readonly byte[] BitLengths =
+        internal static readonly byte[] BitLengths =
 		{
 			0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
 			5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
@@ -289,1912 +289,1683 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
 		};
 
-		// TODO make m fixed for the LongArray, and hence compute T once and for all
+        // TODO make m fixed for the LongArray, and hence compute T once and for all
 
-		private long[] m_ints;
+        private long[] m_ints;
 
-		public LongArray(int intLen)
-		{
-			m_ints = new long[intLen];
-		}
+        public LongArray (int intLen) {
+            m_ints = new long[intLen];
+        }
 
-		public LongArray(long[] ints)
-		{
-			m_ints = ints;
-		}
+        public LongArray (long[] ints) {
+            m_ints = ints;
+        }
 
-		public LongArray(long[] ints, int off, int len)
-		{
-			if (off == 0 && len == ints.Length)
-			{
-				m_ints = ints;
-			}
-			else
-			{
-				m_ints = new long[len];
-				Array.Copy(ints, off, m_ints, 0, len);
-			}
-		}
+        public LongArray (long[] ints, int off, int len) {
+            if (off == 0 && len == ints.Length) {
+                m_ints = ints;
+            } else {
+                m_ints = new long[len];
+                Array.Copy(ints, off, m_ints, 0, len);
+            }
+        }
 
-		public LongArray(BigInteger bigInt)
-		{
-			if (bigInt == null || bigInt.SignValue < 0)
-			{
-				throw new ArgumentException("invalid F2m field value", "bigInt");
-			}
+        public LongArray (BigInteger bigInt) {
+            if (bigInt == null || bigInt.SignValue < 0) {
+                throw new ArgumentException("invalid F2m field value", "bigInt");
+            }
 
-			if (bigInt.SignValue == 0)
-			{
-				m_ints = new long[] { 0L };
-				return;
-			}
+            if (bigInt.SignValue == 0) {
+                m_ints = new long[] { 0L };
+                return;
+            }
 
-			byte[] barr = bigInt.ToByteArray();
-			int barrLen = barr.Length;
-			int barrStart = 0;
-			if (barr[0] == 0)
-			{
-				// First byte is 0 to enforce highest (=sign) bit is zero.
-				// In this case ignore barr[0].
-				barrLen--;
-				barrStart = 1;
-			}
-			int intLen = (barrLen + 7) / 8;
-			m_ints = new long[intLen];
+            byte[] barr = bigInt.ToByteArray();
+            int barrLen = barr.Length;
+            int barrStart = 0;
+            if (barr[0] == 0) {
+                // First byte is 0 to enforce highest (=sign) bit is zero.
+                // In this case ignore barr[0].
+                barrLen--;
+                barrStart = 1;
+            }
+            int intLen = (barrLen + 7) / 8;
+            m_ints = new long[intLen];
 
-			int iarrJ = intLen - 1;
-			int rem = barrLen % 8 + barrStart;
-			long temp = 0;
-			int barrI = barrStart;
-			if (barrStart < rem)
-			{
-				for (; barrI < rem; barrI++)
-				{
-					temp <<= 8;
-					uint barrBarrI = barr[barrI];
-					temp |= barrBarrI;
-				}
-				m_ints[iarrJ--] = temp;
-			}
+            int iarrJ = intLen - 1;
+            int rem = barrLen % 8 + barrStart;
+            long temp = 0;
+            int barrI = barrStart;
+            if (barrStart < rem) {
+                for (; barrI < rem; barrI++) {
+                    temp <<= 8;
+                    uint barrBarrI = barr[barrI];
+                    temp |= barrBarrI;
+                }
+                m_ints[iarrJ--] = temp;
+            }
 
-			for (; iarrJ >= 0; iarrJ--)
-			{
-				temp = 0;
-				for (int i = 0; i < 8; i++)
-				{
-					temp <<= 8;
-					uint barrBarrI = barr[barrI++];
-					temp |= barrBarrI;
-				}
-				m_ints[iarrJ] = temp;
-			}
-		}
+            for (; iarrJ >= 0; iarrJ--) {
+                temp = 0;
+                for (int i = 0; i < 8; i++) {
+                    temp <<= 8;
+                    uint barrBarrI = barr[barrI++];
+                    temp |= barrBarrI;
+                }
+                m_ints[iarrJ] = temp;
+            }
+        }
 
-		public bool IsOne()
-		{
-			long[] a = m_ints;
-			if (a[0] != 1L)
-			{
-				return false;
-			}
-			for (int i = 1; i < a.Length; ++i)
-			{
-				if (a[i] != 0L)
-				{
-					return false;
-				}
-			}
-			return true;
-		}
+        public bool IsOne () {
+            long[] a = m_ints;
+            if (a[0] != 1L) {
+                return false;
+            }
+            for (int i = 1; i < a.Length; ++i) {
+                if (a[i] != 0L) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-		public bool IsZero()
-		{
-			long[] a = m_ints;
-			for (int i = 0; i < a.Length; ++i)
-			{
-				if (a[i] != 0L)
-				{
-					return false;
-				}
-			}
-			return true;
-		}
+        public bool IsZero () {
+            long[] a = m_ints;
+            for (int i = 0; i < a.Length; ++i) {
+                if (a[i] != 0L) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-		public int GetUsedLength()
-		{
-			return GetUsedLengthFrom(m_ints.Length);
-		}
+        public int GetUsedLength () {
+            return GetUsedLengthFrom(m_ints.Length);
+        }
 
-		public int GetUsedLengthFrom(int from)
-		{
-			long[] a = m_ints;
-			from = System.Math.Min(from, a.Length);
+        public int GetUsedLengthFrom (int from) {
+            long[] a = m_ints;
+            from = System.Math.Min(from, a.Length);
 
-			if (from < 1)
-			{
-				return 0;
-			}
+            if (from < 1) {
+                return 0;
+            }
 
-			// Check if first element will act as sentinel
-			if (a[0] != 0)
-			{
-				while (a[--from] == 0)
-				{
-				}
-				return from + 1;
-			}
+            // Check if first element will act as sentinel
+            if (a[0] != 0) {
+                while (a[--from] == 0) {
+                }
+                return from + 1;
+            }
 
-			do
-			{
-				if (a[--from] != 0)
-				{
-					return from + 1;
-				}
-			}
-			while (from > 0);
+            do {
+                if (a[--from] != 0) {
+                    return from + 1;
+                }
+            }
+            while (from > 0);
 
-			return 0;
-		}
+            return 0;
+        }
 
-		public int Degree()
-		{
-			int i = m_ints.Length;
-			long w;
-			do
-			{
-				if (i == 0)
-				{
-					return 0;
-				}
-				w = m_ints[--i];
-			}
-			while (w == 0);
+        public int Degree () {
+            int i = m_ints.Length;
+            long w;
+            do {
+                if (i == 0) {
+                    return 0;
+                }
+                w = m_ints[--i];
+            }
+            while (w == 0);
 
-			return (i << 6) + BitLength(w);
-		}
+            return (i << 6) + BitLength(w);
+        }
 
-		private int DegreeFrom(int limit)
-		{
-			int i = (int)(((uint)limit + 62) >> 6);
-			long w;
-			do
-			{
-				if (i == 0)
-				{
-					return 0;
-				}
-				w = m_ints[--i];
-			}
-			while (w == 0);
+        private int DegreeFrom (int limit) {
+            int i = (int)(((uint)limit + 62) >> 6);
+            long w;
+            do {
+                if (i == 0) {
+                    return 0;
+                }
+                w = m_ints[--i];
+            }
+            while (w == 0);
 
-			return (i << 6) + BitLength(w);
-		}
+            return (i << 6) + BitLength(w);
+        }
 
-		//    private int lowestCoefficient()
-		//    {
-		//        for (int i = 0; i < m_ints.Length; ++i)
-		//        {
-		//            long mi = m_ints[i];
-		//            if (mi != 0)
-		//            {
-		//                int j = 0;
-		//                while ((mi & 0xFFL) == 0)
-		//                {
-		//                    j += 8;
-		//                    mi >>>= 8;
-		//                }
-		//                while ((mi & 1L) == 0)
-		//                {
-		//                    ++j;
-		//                    mi >>>= 1;
-		//                }
-		//                return (i << 6) + j;
-		//            }
-		//        }
-		//        return -1;
-		//    }
+        //    private int lowestCoefficient()
+        //    {
+        //        for (int i = 0; i < m_ints.Length; ++i)
+        //        {
+        //            long mi = m_ints[i];
+        //            if (mi != 0)
+        //            {
+        //                int j = 0;
+        //                while ((mi & 0xFFL) == 0)
+        //                {
+        //                    j += 8;
+        //                    mi >>>= 8;
+        //                }
+        //                while ((mi & 1L) == 0)
+        //                {
+        //                    ++j;
+        //                    mi >>>= 1;
+        //                }
+        //                return (i << 6) + j;
+        //            }
+        //        }
+        //        return -1;
+        //    }
 
-		private static int BitLength(long w)
-		{
-			int u = (int)((ulong)w >> 32), b;
-			if (u == 0)
-			{
-				u = (int)w;
-				b = 0;
-			}
-			else
-			{
-				b = 32;
-			}
+        private static int BitLength (long w) {
+            int u = (int)((ulong)w >> 32), b;
+            if (u == 0) {
+                u = (int)w;
+                b = 0;
+            } else {
+                b = 32;
+            }
 
-			int t = (int)((uint)u >> 16), k;
-			if (t == 0)
-			{
-				t = (int)((uint)u >> 8);
-				k = (t == 0) ? BitLengths[u] : 8 + BitLengths[t];
-			}
-			else
-			{
-				int v = (int)((uint)t >> 8);
-				k = (v == 0) ? 16 + BitLengths[t] : 24 + BitLengths[v];
-			}
+            int t = (int)((uint)u >> 16), k;
+            if (t == 0) {
+                t = (int)((uint)u >> 8);
+                k = (t == 0) ? BitLengths[u] : 8 + BitLengths[t];
+            } else {
+                int v = (int)((uint)t >> 8);
+                k = (v == 0) ? 16 + BitLengths[t] : 24 + BitLengths[v];
+            }
 
-			return b + k;
-		}
+            return b + k;
+        }
 
-		private long[] ResizedInts(int newLen)
-		{
-			long[] newInts = new long[newLen];
-			Array.Copy(m_ints, 0, newInts, 0, System.Math.Min(m_ints.Length, newLen));
-			return newInts;
-		}
+        private long[] ResizedInts (int newLen) {
+            long[] newInts = new long[newLen];
+            Array.Copy(m_ints, 0, newInts, 0, System.Math.Min(m_ints.Length, newLen));
+            return newInts;
+        }
 
-		public BigInteger ToBigInteger()
-		{
-			int usedLen = GetUsedLength();
-			if (usedLen == 0)
-			{
-				return BigInteger.Zero;
-			}
+        public BigInteger ToBigInteger () {
+            int usedLen = GetUsedLength();
+            if (usedLen == 0) {
+                return BigInteger.Zero;
+            }
 
-			long highestInt = m_ints[usedLen - 1];
-			byte[] temp = new byte[8];
-			int barrI = 0;
-			bool trailingZeroBytesDone = false;
-			for (int j = 7; j >= 0; j--)
-			{
-				byte thisByte = (byte)((ulong)highestInt >> (8 * j));
-				if (trailingZeroBytesDone || (thisByte != 0))
-				{
-					trailingZeroBytesDone = true;
-					temp[barrI++] = thisByte;
-				}
-			}
+            long highestInt = m_ints[usedLen - 1];
+            byte[] temp = new byte[8];
+            int barrI = 0;
+            bool trailingZeroBytesDone = false;
+            for (int j = 7; j >= 0; j--) {
+                byte thisByte = (byte)((ulong)highestInt >> (8 * j));
+                if (trailingZeroBytesDone || (thisByte != 0)) {
+                    trailingZeroBytesDone = true;
+                    temp[barrI++] = thisByte;
+                }
+            }
 
-			int barrLen = 8 * (usedLen - 1) + barrI;
-			byte[] barr = new byte[barrLen];
-			for (int j = 0; j < barrI; j++)
-			{
-				barr[j] = temp[j];
-			}
-			// Highest value int is done now
+            int barrLen = 8 * (usedLen - 1) + barrI;
+            byte[] barr = new byte[barrLen];
+            for (int j = 0; j < barrI; j++) {
+                barr[j] = temp[j];
+            }
+            // Highest value int is done now
 
-			for (int iarrJ = usedLen - 2; iarrJ >= 0; iarrJ--)
-			{
-				long mi = m_ints[iarrJ];
-				for (int j = 7; j >= 0; j--)
-				{
-					barr[barrI++] = (byte)((ulong)mi >> (8 * j));
-				}
-			}
-			return new BigInteger(1, barr);
-		}
+            for (int iarrJ = usedLen - 2; iarrJ >= 0; iarrJ--) {
+                long mi = m_ints[iarrJ];
+                for (int j = 7; j >= 0; j--) {
+                    barr[barrI++] = (byte)((ulong)mi >> (8 * j));
+                }
+            }
+            return new BigInteger(1, barr);
+        }
 
-		//    private static long shiftUp(long[] x, int xOff, int count)
-		//    {
-		//        long prev = 0;
-		//        for (int i = 0; i < count; ++i)
-		//        {
-		//            long next = x[xOff + i];
-		//            x[xOff + i] = (next << 1) | prev;
-		//            prev = next >>> 63;
-		//        }
-		//        return prev;
-		//    }
+        //    private static long shiftUp(long[] x, int xOff, int count)
+        //    {
+        //        long prev = 0;
+        //        for (int i = 0; i < count; ++i)
+        //        {
+        //            long next = x[xOff + i];
+        //            x[xOff + i] = (next << 1) | prev;
+        //            prev = next >>> 63;
+        //        }
+        //        return prev;
+        //    }
 
-		private static long ShiftUp(long[] x, int xOff, int count, int shift)
-		{
-			int shiftInv = 64 - shift;
-			long prev = 0;
-			for (int i = 0; i < count; ++i)
-			{
-				long next = x[xOff + i];
-				x[xOff + i] = (next << shift) | prev;
-				prev = (long)((ulong)next >> shiftInv);
-			}
-			return prev;
-		}
+        private static long ShiftUp (long[] x, int xOff, int count, int shift) {
+            int shiftInv = 64 - shift;
+            long prev = 0;
+            for (int i = 0; i < count; ++i) {
+                long next = x[xOff + i];
+                x[xOff + i] = (next << shift) | prev;
+                prev = (long)((ulong)next >> shiftInv);
+            }
+            return prev;
+        }
 
-		private static long ShiftUp(long[] x, int xOff, long[] z, int zOff, int count, int shift)
-		{
-			int shiftInv = 64 - shift;
-			long prev = 0;
-			for (int i = 0; i < count; ++i)
-			{
-				long next = x[xOff + i];
-				z[zOff + i] = (next << shift) | prev;
-				prev = (long)((ulong)next >> shiftInv);
-			}
-			return prev;
-		}
+        private static long ShiftUp (long[] x, int xOff, long[] z, int zOff, int count, int shift) {
+            int shiftInv = 64 - shift;
+            long prev = 0;
+            for (int i = 0; i < count; ++i) {
+                long next = x[xOff + i];
+                z[zOff + i] = (next << shift) | prev;
+                prev = (long)((ulong)next >> shiftInv);
+            }
+            return prev;
+        }
 
-		public LongArray AddOne()
-		{
-			if (m_ints.Length == 0)
-			{
-				return new LongArray(new long[]{ 1L });
-			}
+        public LongArray AddOne () {
+            if (m_ints.Length == 0) {
+                return new LongArray(new long[] { 1L });
+            }
 
-			int resultLen = System.Math.Max(1, GetUsedLength());
-			long[] ints = ResizedInts(resultLen);
-			ints[0] ^= 1L;
-			return new LongArray(ints);
-		}
+            int resultLen = System.Math.Max(1, GetUsedLength());
+            long[] ints = ResizedInts(resultLen);
+            ints[0] ^= 1L;
+            return new LongArray(ints);
+        }
 
-		//    private void addShiftedByBits(LongArray other, int bits)
-		//    {
-		//        int words = bits >>> 6;
-		//        int shift = bits & 0x3F;
-		//
-		//        if (shift == 0)
-		//        {
-		//            addShiftedByWords(other, words);
-		//            return;
-		//        }
-		//
-		//        int otherUsedLen = other.GetUsedLength();
-		//        if (otherUsedLen == 0)
-		//        {
-		//            return;
-		//        }
-		//
-		//        int minLen = otherUsedLen + words + 1;
-		//        if (minLen > m_ints.Length)
-		//        {
-		//            m_ints = resizedInts(minLen);
-		//        }
-		//
-		//        long carry = addShiftedByBits(m_ints, words, other.m_ints, 0, otherUsedLen, shift);
-		//        m_ints[otherUsedLen + words] ^= carry;
-		//    }
+        //    private void addShiftedByBits(LongArray other, int bits)
+        //    {
+        //        int words = bits >>> 6;
+        //        int shift = bits & 0x3F;
+        //
+        //        if (shift == 0)
+        //        {
+        //            addShiftedByWords(other, words);
+        //            return;
+        //        }
+        //
+        //        int otherUsedLen = other.GetUsedLength();
+        //        if (otherUsedLen == 0)
+        //        {
+        //            return;
+        //        }
+        //
+        //        int minLen = otherUsedLen + words + 1;
+        //        if (minLen > m_ints.Length)
+        //        {
+        //            m_ints = resizedInts(minLen);
+        //        }
+        //
+        //        long carry = addShiftedByBits(m_ints, words, other.m_ints, 0, otherUsedLen, shift);
+        //        m_ints[otherUsedLen + words] ^= carry;
+        //    }
 
-		private void AddShiftedByBitsSafe(LongArray other, int otherDegree, int bits)
-		{
-			int otherLen = (int)((uint)(otherDegree + 63) >> 6);
+        private void AddShiftedByBitsSafe (LongArray other, int otherDegree, int bits) {
+            int otherLen = (int)((uint)(otherDegree + 63) >> 6);
 
-			int words = (int)((uint)bits >> 6);
-			int shift = bits & 0x3F;
+            int words = (int)((uint)bits >> 6);
+            int shift = bits & 0x3F;
 
-			if (shift == 0)
-			{
-				Add(m_ints, words, other.m_ints, 0, otherLen);
-				return;
-			}
+            if (shift == 0) {
+                Add(m_ints, words, other.m_ints, 0, otherLen);
+                return;
+            }
 
-			long carry = AddShiftedUp(m_ints, words, other.m_ints, 0, otherLen, shift);
-			if (carry != 0L)
-			{
-				m_ints[otherLen + words] ^= carry;
-			}
-		}
+            long carry = AddShiftedUp(m_ints, words, other.m_ints, 0, otherLen, shift);
+            if (carry != 0L) {
+                m_ints[otherLen + words] ^= carry;
+            }
+        }
 
-		private static long AddShiftedUp(long[] x, int xOff, long[] y, int yOff, int count, int shift)
-		{
-			int shiftInv = 64 - shift;
-			long prev = 0;
-			for (int i = 0; i < count; ++i)
-			{
-				long next = y[yOff + i];
-				x[xOff + i] ^= (next << shift) | prev;
-				prev = (long)((ulong)next >> shiftInv);
-			}
-			return prev;
-		}
+        private static long AddShiftedUp (long[] x, int xOff, long[] y, int yOff, int count, int shift) {
+            int shiftInv = 64 - shift;
+            long prev = 0;
+            for (int i = 0; i < count; ++i) {
+                long next = y[yOff + i];
+                x[xOff + i] ^= (next << shift) | prev;
+                prev = (long)((ulong)next >> shiftInv);
+            }
+            return prev;
+        }
 
-		private static long AddShiftedDown(long[] x, int xOff, long[] y, int yOff, int count, int shift)
-		{
-			int shiftInv = 64 - shift;
-			long prev = 0;
-			int i = count;
-			while (--i >= 0)
-			{
-				long next = y[yOff + i];
-				x[xOff + i] ^= (long)((ulong)next >> shift) | prev;
-				prev = next << shiftInv;
-			}
-			return prev;
-		}
+        private static long AddShiftedDown (long[] x, int xOff, long[] y, int yOff, int count, int shift) {
+            int shiftInv = 64 - shift;
+            long prev = 0;
+            int i = count;
+            while (--i >= 0) {
+                long next = y[yOff + i];
+                x[xOff + i] ^= (long)((ulong)next >> shift) | prev;
+                prev = next << shiftInv;
+            }
+            return prev;
+        }
 
-		public void AddShiftedByWords(LongArray other, int words)
-		{
-			int otherUsedLen = other.GetUsedLength();
-			if (otherUsedLen == 0)
-			{
-				return;
-			}
+        public void AddShiftedByWords (LongArray other, int words) {
+            int otherUsedLen = other.GetUsedLength();
+            if (otherUsedLen == 0) {
+                return;
+            }
 
-			int minLen = otherUsedLen + words;
-			if (minLen > m_ints.Length)
-			{
-				m_ints = ResizedInts(minLen);
-			}
+            int minLen = otherUsedLen + words;
+            if (minLen > m_ints.Length) {
+                m_ints = ResizedInts(minLen);
+            }
 
-			Add(m_ints, words, other.m_ints, 0, otherUsedLen);
-		}
+            Add(m_ints, words, other.m_ints, 0, otherUsedLen);
+        }
 
-		private static void Add(long[] x, int xOff, long[] y, int yOff, int count)
-		{
-			for (int i = 0; i < count; ++i)
-			{
-				x[xOff + i] ^= y[yOff + i];
-			}
-		}
+        private static void Add (long[] x, int xOff, long[] y, int yOff, int count) {
+            for (int i = 0; i < count; ++i) {
+                x[xOff + i] ^= y[yOff + i];
+            }
+        }
 
-		private static void Add(long[] x, int xOff, long[] y, int yOff, long[] z, int zOff, int count)
-		{
-			for (int i = 0; i < count; ++i)
-			{
-				z[zOff + i] = x[xOff + i] ^ y[yOff + i];
-			}
-		}
+        private static void Add (long[] x, int xOff, long[] y, int yOff, long[] z, int zOff, int count) {
+            for (int i = 0; i < count; ++i) {
+                z[zOff + i] = x[xOff + i] ^ y[yOff + i];
+            }
+        }
 
-		private static void AddBoth(long[] x, int xOff, long[] y1, int y1Off, long[] y2, int y2Off, int count)
-		{
-			for (int i = 0; i < count; ++i)
-			{
-				x[xOff + i] ^= y1[y1Off + i] ^ y2[y2Off + i];
-			}
-		}
+        private static void AddBoth (long[] x, int xOff, long[] y1, int y1Off, long[] y2, int y2Off, int count) {
+            for (int i = 0; i < count; ++i) {
+                x[xOff + i] ^= y1[y1Off + i] ^ y2[y2Off + i];
+            }
+        }
 
-		private static void Distribute(long[] x, int src, int dst1, int dst2, int count)
-		{
-			for (int i = 0; i < count; ++i)
-			{
-				long v = x[src + i];
-				x[dst1 + i] ^= v;
-				x[dst2 + i] ^= v;
-			}
-		}
+        private static void Distribute (long[] x, int src, int dst1, int dst2, int count) {
+            for (int i = 0; i < count; ++i) {
+                long v = x[src + i];
+                x[dst1 + i] ^= v;
+                x[dst2 + i] ^= v;
+            }
+        }
 
-		public int Length
-		{
-			get { return m_ints.Length; }
-		}
+        public int Length {
+            get { return m_ints.Length; }
+        }
 
-		private static void FlipWord(long[] buf, int off, int bit, long word)
-		{
-			int n = off + (int)((uint)bit >> 6);
-			int shift = bit & 0x3F;
-			if (shift == 0)
-			{
-				buf[n] ^= word;
-			}
-			else
-			{
-				buf[n] ^= word << shift;
-				word = (long)((ulong)word >> (64 - shift));
-				if (word != 0)
-				{
-					buf[++n] ^= word;
-				}
-			}
-		}
+        private static void FlipWord (long[] buf, int off, int bit, long word) {
+            int n = off + (int)((uint)bit >> 6);
+            int shift = bit & 0x3F;
+            if (shift == 0) {
+                buf[n] ^= word;
+            } else {
+                buf[n] ^= word << shift;
+                word = (long)((ulong)word >> (64 - shift));
+                if (word != 0) {
+                    buf[++n] ^= word;
+                }
+            }
+        }
 
-		//    private static long getWord(long[] buf, int off, int len, int bit)
-		//    {
-		//        int n = off + (bit >>> 6);
-		//        int shift = bit & 0x3F;
-		//        if (shift == 0)
-		//        {
-		//            return buf[n];
-		//        }
-		//        long result = buf[n] >>> shift;
-		//        if (++n < len)
-		//        {
-		//            result |= buf[n] << (64 - shift);
-		//        }
-		//        return result;
-		//    }
+        //    private static long getWord(long[] buf, int off, int len, int bit)
+        //    {
+        //        int n = off + (bit >>> 6);
+        //        int shift = bit & 0x3F;
+        //        if (shift == 0)
+        //        {
+        //            return buf[n];
+        //        }
+        //        long result = buf[n] >>> shift;
+        //        if (++n < len)
+        //        {
+        //            result |= buf[n] << (64 - shift);
+        //        }
+        //        return result;
+        //    }
 
-		public bool TestBitZero()
-		{
-			return m_ints.Length > 0 && (m_ints[0] & 1L) != 0;
-		}
+        public bool TestBitZero () {
+            return m_ints.Length > 0 && (m_ints[0] & 1L) != 0;
+        }
 
-		private static bool TestBit(long[] buf, int off, int n)
-		{
-			// theInt = n / 64
-			int theInt = (int)((uint)n >> 6);
-			// theBit = n % 64
-			int theBit = n & 0x3F;
-			long tester = 1L << theBit;
-			return (buf[off + theInt] & tester) != 0;
-		}
+        private static bool TestBit (long[] buf, int off, int n) {
+            // theInt = n / 64
+            int theInt = (int)((uint)n >> 6);
+            // theBit = n % 64
+            int theBit = n & 0x3F;
+            long tester = 1L << theBit;
+            return (buf[off + theInt] & tester) != 0;
+        }
 
-		private static void FlipBit(long[] buf, int off, int n)
-		{
-			// theInt = n / 64
-			int theInt = (int)((uint)n >> 6);
-			// theBit = n % 64
-			int theBit = n & 0x3F;
-			long flipper = 1L << theBit;
-			buf[off + theInt] ^= flipper;
-		}
+        private static void FlipBit (long[] buf, int off, int n) {
+            // theInt = n / 64
+            int theInt = (int)((uint)n >> 6);
+            // theBit = n % 64
+            int theBit = n & 0x3F;
+            long flipper = 1L << theBit;
+            buf[off + theInt] ^= flipper;
+        }
 
-		//    private static void SetBit(long[] buf, int off, int n)
-		//    {
-		//        // theInt = n / 64
-		//        int theInt = n >>> 6;
-		//        // theBit = n % 64
-		//        int theBit = n & 0x3F;
-		//        long setter = 1L << theBit;
-		//        buf[off + theInt] |= setter;
-		//    }
-		//
-		//    private static void ClearBit(long[] buf, int off, int n)
-		//    {
-		//        // theInt = n / 64
-		//        int theInt = n >>> 6;
-		//        // theBit = n % 64
-		//        int theBit = n & 0x3F;
-		//        long setter = 1L << theBit;
-		//        buf[off + theInt] &= ~setter;
-		//    }
+        //    private static void SetBit(long[] buf, int off, int n)
+        //    {
+        //        // theInt = n / 64
+        //        int theInt = n >>> 6;
+        //        // theBit = n % 64
+        //        int theBit = n & 0x3F;
+        //        long setter = 1L << theBit;
+        //        buf[off + theInt] |= setter;
+        //    }
+        //
+        //    private static void ClearBit(long[] buf, int off, int n)
+        //    {
+        //        // theInt = n / 64
+        //        int theInt = n >>> 6;
+        //        // theBit = n % 64
+        //        int theBit = n & 0x3F;
+        //        long setter = 1L << theBit;
+        //        buf[off + theInt] &= ~setter;
+        //    }
 
-		private static void MultiplyWord(long a, long[] b, int bLen, long[] c, int cOff)
-		{
-			if ((a & 1L) != 0L)
-			{
-				Add(c, cOff, b, 0, bLen);
-			}
-			int k = 1;
-			while ((a = (long)((ulong)a >> 1)) != 0L)
-			{
-				if ((a & 1L) != 0L)
-				{
-					long carry = AddShiftedUp(c, cOff, b, 0, bLen, k);
-					if (carry != 0L)
-					{
-						c[cOff + bLen] ^= carry;
-					}
-				}
-				++k;
-			}
-		}
+        private static void MultiplyWord (long a, long[] b, int bLen, long[] c, int cOff) {
+            if ((a & 1L) != 0L) {
+                Add(c, cOff, b, 0, bLen);
+            }
+            int k = 1;
+            while ((a = (long)((ulong)a >> 1)) != 0L) {
+                if ((a & 1L) != 0L) {
+                    long carry = AddShiftedUp(c, cOff, b, 0, bLen, k);
+                    if (carry != 0L) {
+                        c[cOff + bLen] ^= carry;
+                    }
+                }
+                ++k;
+            }
+        }
 
-		public LongArray ModMultiplyLD(LongArray other, int m, int[] ks)
-		{
-			/*			
+        public LongArray ModMultiplyLD (LongArray other, int m, int[] ks) {
+            /*			
              * Find out the degree of each argument and handle the zero cases
              */
-			int aDeg = Degree();
-			if (aDeg == 0)
-			{
-				return this;
-			}
-			int bDeg = other.Degree();
-			if (bDeg == 0)
-			{
-				return other;
-			}
+            int aDeg = Degree();
+            if (aDeg == 0) {
+                return this;
+            }
+            int bDeg = other.Degree();
+            if (bDeg == 0) {
+                return other;
+            }
 
-			/*			
+            /*			
              * Swap if necessary so that A is the smaller argument
              */
-			LongArray A = this, B = other;
-			if (aDeg > bDeg)
-			{
-				A = other; B = this;
-				int tmp = aDeg; aDeg = bDeg; bDeg = tmp;
-			}
+            LongArray A = this, B = other;
+            if (aDeg > bDeg) {
+                A = other; B = this;
+                int tmp = aDeg; aDeg = bDeg; bDeg = tmp;
+            }
 
-			/*			
+            /*			
              * Establish the word lengths of the arguments and result
              */
-			int aLen = (int)((uint)(aDeg + 63) >> 6);
-			int bLen = (int)((uint)(bDeg + 63) >> 6);
-			int cLen = (int)((uint)(aDeg + bDeg + 62) >> 6);
+            int aLen = (int)((uint)(aDeg + 63) >> 6);
+            int bLen = (int)((uint)(bDeg + 63) >> 6);
+            int cLen = (int)((uint)(aDeg + bDeg + 62) >> 6);
 
-			if (aLen == 1)
-			{
-				long a0 = A.m_ints[0];
-				if (a0 == 1L)
-				{
-					return B;
-				}
+            if (aLen == 1) {
+                long a0 = A.m_ints[0];
+                if (a0 == 1L) {
+                    return B;
+                }
 
-				/*				
+                /*				
                  * Fast path for small A, with performance dependent only on the number of set bits
                  */
-				long[] c0 = new long[cLen];
-				MultiplyWord(a0, B.m_ints, bLen, c0, 0);
+                long[] c0 = new long[cLen];
+                MultiplyWord(a0, B.m_ints, bLen, c0, 0);
 
-				/*				
+                /*				
                  * Reduce the raw answer against the reduction coefficients
                  */
-				return ReduceResult(c0, 0, cLen, m, ks);
-			}
+                return ReduceResult(c0, 0, cLen, m, ks);
+            }
 
-			/*			
+            /*			
              * Determine if B will get bigger during shifting
              */
-			int bMax = (int)((uint)(bDeg + 7 + 63) >> 6);
+            int bMax = (int)((uint)(bDeg + 7 + 63) >> 6);
 
-			/*			
+            /*			
              * Lookup table for the offset of each B in the tables
              */
-			int[] ti = new int[16];
+            int[] ti = new int[16];
 
-			/*			
+            /*			
              * Precompute table of all 4-bit products of B
              */
-			long[] T0 = new long[bMax << 4];
-			int tOff = bMax;
-			ti[1] = tOff;
-			Array.Copy(B.m_ints, 0, T0, tOff, bLen);
-			for (int i = 2; i < 16; ++i)
-			{
-				ti[i] = (tOff += bMax);
-				if ((i & 1) == 0)
-				{
-					ShiftUp(T0, (int)((uint)tOff >> 1), T0, tOff, bMax, 1);
-				}
-				else
-				{
-					Add(T0, bMax, T0, tOff - bMax, T0, tOff, bMax);
-				}
-			}
+            long[] T0 = new long[bMax << 4];
+            int tOff = bMax;
+            ti[1] = tOff;
+            Array.Copy(B.m_ints, 0, T0, tOff, bLen);
+            for (int i = 2; i < 16; ++i) {
+                ti[i] = (tOff += bMax);
+                if ((i & 1) == 0) {
+                    ShiftUp(T0, (int)((uint)tOff >> 1), T0, tOff, bMax, 1);
+                } else {
+                    Add(T0, bMax, T0, tOff - bMax, T0, tOff, bMax);
+                }
+            }
 
-			/*			
+            /*			
              * Second table with all 4-bit products of B shifted 4 bits
              */
-			long[] T1 = new long[T0.Length];
-			ShiftUp(T0, 0, T1, 0, T0.Length, 4);
-			//        shiftUp(T0, bMax, T1, bMax, tOff, 4);
+            long[] T1 = new long[T0.Length];
+            ShiftUp(T0, 0, T1, 0, T0.Length, 4);
+            //        shiftUp(T0, bMax, T1, bMax, tOff, 4);
 
-			long[] a = A.m_ints;
-			long[] c = new long[cLen];
+            long[] a = A.m_ints;
+            long[] c = new long[cLen];
 
-			int MASK = 0xF;
+            int MASK = 0xF;
 
-			/*			
+            /*			
              * Lopez-Dahab algorithm
              */
 
-			for (int k = 56; k >= 0; k -= 8)
-			{
-				for (int j = 1; j < aLen; j += 2)
-				{
-					int aVal = (int)((ulong)a[j] >> k);
-					int u = aVal & MASK;
-					int v = (int)((uint)aVal >> 4) & MASK;
-					AddBoth(c, j - 1, T0, ti[u], T1, ti[v], bMax);
-				}
-				ShiftUp(c, 0, cLen, 8);
-			}
+            for (int k = 56; k >= 0; k -= 8) {
+                for (int j = 1; j < aLen; j += 2) {
+                    int aVal = (int)((ulong)a[j] >> k);
+                    int u = aVal & MASK;
+                    int v = (int)((uint)aVal >> 4) & MASK;
+                    AddBoth(c, j - 1, T0, ti[u], T1, ti[v], bMax);
+                }
+                ShiftUp(c, 0, cLen, 8);
+            }
 
-			for (int k = 56; k >= 0; k -= 8)
-			{
-				for (int j = 0; j < aLen; j += 2)
-				{
-					int aVal = (int)((ulong)a[j] >> k);
-					int u = aVal & MASK;
-					int v = (int)((uint)aVal >> 4) & MASK;
-					AddBoth(c, j, T0, ti[u], T1, ti[v], bMax);
-				}
-				if (k > 0)
-				{
-					ShiftUp(c, 0, cLen, 8);
-				}
-			}
+            for (int k = 56; k >= 0; k -= 8) {
+                for (int j = 0; j < aLen; j += 2) {
+                    int aVal = (int)((ulong)a[j] >> k);
+                    int u = aVal & MASK;
+                    int v = (int)((uint)aVal >> 4) & MASK;
+                    AddBoth(c, j, T0, ti[u], T1, ti[v], bMax);
+                }
+                if (k > 0) {
+                    ShiftUp(c, 0, cLen, 8);
+                }
+            }
 
-			/*			
+            /*			
              * Finally the raw answer is collected, reduce it against the reduction coefficients
              */
-			return ReduceResult(c, 0, cLen, m, ks);
-		}
+            return ReduceResult(c, 0, cLen, m, ks);
+        }
 
-		public LongArray ModMultiply(LongArray other, int m, int[] ks)
-		{
-			/*			
+        public LongArray ModMultiply (LongArray other, int m, int[] ks) {
+            /*			
              * Find out the degree of each argument and handle the zero cases
              */
-			int aDeg = Degree();
-			if (aDeg == 0)
-			{
-				return this;
-			}
-			int bDeg = other.Degree();
-			if (bDeg == 0)
-			{
-				return other;
-			}
+            int aDeg = Degree();
+            if (aDeg == 0) {
+                return this;
+            }
+            int bDeg = other.Degree();
+            if (bDeg == 0) {
+                return other;
+            }
 
-			/*			
+            /*			
              * Swap if necessary so that A is the smaller argument
              */
-			LongArray A = this, B = other;
-			if (aDeg > bDeg)
-			{
-				A = other; B = this;
-				int tmp = aDeg; aDeg = bDeg; bDeg = tmp;
-			}
+            LongArray A = this, B = other;
+            if (aDeg > bDeg) {
+                A = other; B = this;
+                int tmp = aDeg; aDeg = bDeg; bDeg = tmp;
+            }
 
-			/*			
+            /*			
              * Establish the word lengths of the arguments and result
              */
-			int aLen = (int)((uint)(aDeg + 63) >> 6);
-			int bLen = (int)((uint)(bDeg + 63) >> 6);
-			int cLen = (int)((uint)(aDeg + bDeg + 62) >> 6);
+            int aLen = (int)((uint)(aDeg + 63) >> 6);
+            int bLen = (int)((uint)(bDeg + 63) >> 6);
+            int cLen = (int)((uint)(aDeg + bDeg + 62) >> 6);
 
-			if (aLen == 1)
-			{
-				long a0 = A.m_ints[0];
-				if (a0 == 1L)
-				{
-					return B;
-				}
+            if (aLen == 1) {
+                long a0 = A.m_ints[0];
+                if (a0 == 1L) {
+                    return B;
+                }
 
-				/*				
+                /*				
                  * Fast path for small A, with performance dependent only on the number of set bits
                  */
-				long[] c0 = new long[cLen];
-				MultiplyWord(a0, B.m_ints, bLen, c0, 0);
+                long[] c0 = new long[cLen];
+                MultiplyWord(a0, B.m_ints, bLen, c0, 0);
 
-				/*				
+                /*				
                  * Reduce the raw answer against the reduction coefficients
                  */
-				return ReduceResult(c0, 0, cLen, m, ks);
-			}
+                return ReduceResult(c0, 0, cLen, m, ks);
+            }
 
-			/*			
+            /*			
              * Determine if B will get bigger during shifting
              */
-			int bMax = (int)((uint)(bDeg + 7 + 63) >> 6);
+            int bMax = (int)((uint)(bDeg + 7 + 63) >> 6);
 
-			/*			
+            /*			
              * Lookup table for the offset of each B in the tables
              */
-			int[] ti = new int[16];
+            int[] ti = new int[16];
 
-			/*			
+            /*			
              * Precompute table of all 4-bit products of B
              */
-			long[] T0 = new long[bMax << 4];
-			int tOff = bMax;
-			ti[1] = tOff;
-			Array.Copy(B.m_ints, 0, T0, tOff, bLen);
-			for (int i = 2; i < 16; ++i)
-			{
-				ti[i] = (tOff += bMax);
-				if ((i & 1) == 0)
-				{
-					ShiftUp(T0, (int)((uint)tOff >> 1), T0, tOff, bMax, 1);
-				}
-				else
-				{
-					Add(T0, bMax, T0, tOff - bMax, T0, tOff, bMax);
-				}
-			}
+            long[] T0 = new long[bMax << 4];
+            int tOff = bMax;
+            ti[1] = tOff;
+            Array.Copy(B.m_ints, 0, T0, tOff, bLen);
+            for (int i = 2; i < 16; ++i) {
+                ti[i] = (tOff += bMax);
+                if ((i & 1) == 0) {
+                    ShiftUp(T0, (int)((uint)tOff >> 1), T0, tOff, bMax, 1);
+                } else {
+                    Add(T0, bMax, T0, tOff - bMax, T0, tOff, bMax);
+                }
+            }
 
-			/*			
+            /*			
              * Second table with all 4-bit products of B shifted 4 bits
              */
-			long[] T1 = new long[T0.Length];
-			ShiftUp(T0, 0, T1, 0, T0.Length, 4);
-			//        ShiftUp(T0, bMax, T1, bMax, tOff, 4);
+            long[] T1 = new long[T0.Length];
+            ShiftUp(T0, 0, T1, 0, T0.Length, 4);
+            //        ShiftUp(T0, bMax, T1, bMax, tOff, 4);
 
-			long[] a = A.m_ints;
-			long[] c = new long[cLen << 3];
+            long[] a = A.m_ints;
+            long[] c = new long[cLen << 3];
 
-			int MASK = 0xF;
+            int MASK = 0xF;
 
-			/*			
+            /*			
              * Lopez-Dahab (Modified) algorithm
              */
 
-			for (int aPos = 0; aPos < aLen; ++aPos)
-			{
-				long aVal = a[aPos];
-				int cOff = aPos;
-				for (;;)
-				{
-					int u = (int)aVal & MASK;
-					aVal = (long)((ulong)aVal >> 4);
-					int v = (int)aVal & MASK;
-					AddBoth(c, cOff, T0, ti[u], T1, ti[v], bMax);
-					aVal = (long)((ulong)aVal >> 4);
-					if (aVal == 0L)
-					{
-						break;
-					}
-					cOff += cLen;
-				}
-			}
+            for (int aPos = 0; aPos < aLen; ++aPos) {
+                long aVal = a[aPos];
+                int cOff = aPos;
+                for (; ; ) {
+                    int u = (int)aVal & MASK;
+                    aVal = (long)((ulong)aVal >> 4);
+                    int v = (int)aVal & MASK;
+                    AddBoth(c, cOff, T0, ti[u], T1, ti[v], bMax);
+                    aVal = (long)((ulong)aVal >> 4);
+                    if (aVal == 0L) {
+                        break;
+                    }
+                    cOff += cLen;
+                }
+            }
 
-			{
-				int cOff = c.Length;
-				while ((cOff -= cLen) != 0)
-				{
-					AddShiftedUp(c, cOff - cLen, c, cOff, cLen, 8);
-				}
-			}
+            {
+                int cOff = c.Length;
+                while ((cOff -= cLen) != 0) {
+                    AddShiftedUp(c, cOff - cLen, c, cOff, cLen, 8);
+                }
+            }
 
-			/*			
+            /*			
              * Finally the raw answer is collected, reduce it against the reduction coefficients
              */
-			return ReduceResult(c, 0, cLen, m, ks);
-		}
+            return ReduceResult(c, 0, cLen, m, ks);
+        }
 
-		public LongArray ModMultiplyAlt(LongArray other, int m, int[] ks)
-		{
-			/*			
+        public LongArray ModMultiplyAlt (LongArray other, int m, int[] ks) {
+            /*			
              * Find out the degree of each argument and handle the zero cases
              */
-			int aDeg = Degree();
-			if (aDeg == 0)
-			{
-				return this;
-			}
-			int bDeg = other.Degree();
-			if (bDeg == 0)
-			{
-				return other;
-			}
+            int aDeg = Degree();
+            if (aDeg == 0) {
+                return this;
+            }
+            int bDeg = other.Degree();
+            if (bDeg == 0) {
+                return other;
+            }
 
-			/*			
+            /*			
              * Swap if necessary so that A is the smaller argument
              */
-			LongArray A = this, B = other;
-			if (aDeg > bDeg)
-			{
-				A = other; B = this;
-				int tmp = aDeg; aDeg = bDeg; bDeg = tmp;
-			}
+            LongArray A = this, B = other;
+            if (aDeg > bDeg) {
+                A = other; B = this;
+                int tmp = aDeg; aDeg = bDeg; bDeg = tmp;
+            }
 
-			/*			
+            /*			
              * Establish the word lengths of the arguments and result
              */
-			int aLen = (int)((uint)(aDeg + 63) >> 6);
-			int bLen = (int)((uint)(bDeg + 63) >> 6);
-			int cLen = (int)((uint)(aDeg + bDeg + 62) >> 6);
+            int aLen = (int)((uint)(aDeg + 63) >> 6);
+            int bLen = (int)((uint)(bDeg + 63) >> 6);
+            int cLen = (int)((uint)(aDeg + bDeg + 62) >> 6);
 
-			if (aLen == 1)
-			{
-				long a0 = A.m_ints[0];
-				if (a0 == 1L)
-				{
-					return B;
-				}
+            if (aLen == 1) {
+                long a0 = A.m_ints[0];
+                if (a0 == 1L) {
+                    return B;
+                }
 
-				/*				
+                /*				
                  * Fast path for small A, with performance dependent only on the number of set bits
                  */
-				long[] c0 = new long[cLen];
-				MultiplyWord(a0, B.m_ints, bLen, c0, 0);
+                long[] c0 = new long[cLen];
+                MultiplyWord(a0, B.m_ints, bLen, c0, 0);
 
-				/*				
+                /*				
                  * Reduce the raw answer against the reduction coefficients
                  */
-				return ReduceResult(c0, 0, cLen, m, ks);
-			}
+                return ReduceResult(c0, 0, cLen, m, ks);
+            }
 
-			// NOTE: This works, but is slower than width 4 processing
-			//        if (aLen == 2)
-			//        {
-			//            /*
-			//             * Use common-multiplicand optimization to save ~1/4 of the adds
-			//             */
-			//            long a1 = A.m_ints[0], a2 = A.m_ints[1];
-			//            long aa = a1 & a2; a1 ^= aa; a2 ^= aa;
-			//
-			//            long[] b = B.m_ints;
-			//            long[] c = new long[cLen];
-			//            multiplyWord(aa, b, bLen, c, 1);
-			//            add(c, 0, c, 1, cLen - 1);
-			//            multiplyWord(a1, b, bLen, c, 0);
-			//            multiplyWord(a2, b, bLen, c, 1);
-			//
-			//            /*
-			//             * Reduce the raw answer against the reduction coefficients
-			//             */
-			//            return ReduceResult(c, 0, cLen, m, ks);
-			//        }
+            // NOTE: This works, but is slower than width 4 processing
+            //        if (aLen == 2)
+            //        {
+            //            /*
+            //             * Use common-multiplicand optimization to save ~1/4 of the adds
+            //             */
+            //            long a1 = A.m_ints[0], a2 = A.m_ints[1];
+            //            long aa = a1 & a2; a1 ^= aa; a2 ^= aa;
+            //
+            //            long[] b = B.m_ints;
+            //            long[] c = new long[cLen];
+            //            multiplyWord(aa, b, bLen, c, 1);
+            //            add(c, 0, c, 1, cLen - 1);
+            //            multiplyWord(a1, b, bLen, c, 0);
+            //            multiplyWord(a2, b, bLen, c, 1);
+            //
+            //            /*
+            //             * Reduce the raw answer against the reduction coefficients
+            //             */
+            //            return ReduceResult(c, 0, cLen, m, ks);
+            //        }
 
-			/*			
+            /*			
              * Determine the parameters of the Interleaved window algorithm: the 'width' in bits to
              * process together, the number of evaluation 'positions' implied by that width, and the
              * 'top' position at which the regular window algorithm stops.
              */
-			int width, positions, top, banks;
+            int width, positions, top, banks;
 
-			// NOTE: width 4 is the fastest over the entire range of sizes used in current crypto 
-			//        width = 1; positions = 64; top = 64; banks = 4;
-			//        width = 2; positions = 32; top = 64; banks = 4;
-			//        width = 3; positions = 21; top = 63; banks = 3;
-			width = 4; positions = 16; top = 64; banks = 8;
-			//        width = 5; positions = 13; top = 65; banks = 7;
-			//        width = 7; positions = 9; top = 63; banks = 9;
-			//        width = 8; positions = 8; top = 64; banks = 8;
+            // NOTE: width 4 is the fastest over the entire range of sizes used in current crypto 
+            //        width = 1; positions = 64; top = 64; banks = 4;
+            //        width = 2; positions = 32; top = 64; banks = 4;
+            //        width = 3; positions = 21; top = 63; banks = 3;
+            width = 4; positions = 16; top = 64; banks = 8;
+            //        width = 5; positions = 13; top = 65; banks = 7;
+            //        width = 7; positions = 9; top = 63; banks = 9;
+            //        width = 8; positions = 8; top = 64; banks = 8;
 
-			/*			
+            /*			
              * Determine if B will get bigger during shifting
              */
-			int shifts = top < 64 ? positions : positions - 1;
-			int bMax = (int)((uint)(bDeg + shifts + 63) >> 6);
+            int shifts = top < 64 ? positions : positions - 1;
+            int bMax = (int)((uint)(bDeg + shifts + 63) >> 6);
 
-			int bTotal = bMax * banks, stride = width * banks;
+            int bTotal = bMax * banks, stride = width * banks;
 
-			/*			
+            /*			
              * Create a single temporary buffer, with an offset table to find the positions of things in it 
              */
-			int[] ci = new int[1 << width];
-			int cTotal = aLen;
-			{
-				ci[0] = cTotal;
-				cTotal += bTotal;
-				ci[1] = cTotal;
-				for (int i = 2; i < ci.Length; ++i)
-				{
-					cTotal += cLen;
-					ci[i] = cTotal;
-				}
-				cTotal += cLen;
-			}
-			// NOTE: Provide a safe dump for "high zeroes" since we are adding 'bMax' and not 'bLen'
-			++cTotal;
+            int[] ci = new int[1 << width];
+            int cTotal = aLen;
+            {
+                ci[0] = cTotal;
+                cTotal += bTotal;
+                ci[1] = cTotal;
+                for (int i = 2; i < ci.Length; ++i) {
+                    cTotal += cLen;
+                    ci[i] = cTotal;
+                }
+                cTotal += cLen;
+            }
+            // NOTE: Provide a safe dump for "high zeroes" since we are adding 'bMax' and not 'bLen'
+            ++cTotal;
 
-			long[] c = new long[cTotal];
+            long[] c = new long[cTotal];
 
-			// Prepare A in Interleaved form, according to the chosen width
-			Interleave(A.m_ints, 0, c, 0, aLen, width);
+            // Prepare A in Interleaved form, according to the chosen width
+            Interleave(A.m_ints, 0, c, 0, aLen, width);
 
-			// Make a working copy of B, since we will be shifting it
-			{
-				int bOff = aLen;
-				Array.Copy(B.m_ints, 0, c, bOff, bLen);
-				for (int bank = 1; bank < banks; ++bank)
-				{
-					ShiftUp(c, aLen, c, bOff += bMax, bMax, bank);
-				}
-			}
+            // Make a working copy of B, since we will be shifting it
+            {
+                int bOff = aLen;
+                Array.Copy(B.m_ints, 0, c, bOff, bLen);
+                for (int bank = 1; bank < banks; ++bank) {
+                    ShiftUp(c, aLen, c, bOff += bMax, bMax, bank);
+                }
+            }
 
-			/*			
+            /*			
              * The main loop analyzes the Interleaved windows in A, and for each non-zero window
              * a single word-array XOR is performed to a carefully selected slice of 'c'. The loop is
              * breadth-first, checking the lowest window in each word, then looping again for the
              * next higher window position.
              */
-			int MASK = (1 << width) - 1;
+            int MASK = (1 << width) - 1;
 
-			int k = 0;
-			for (;;)
-			{
-				int aPos = 0;
-				do
-				{
-					long aVal = (long)((ulong)c[aPos] >> k);
-					int bank = 0, bOff = aLen;
-					for (;;)
-					{
-						int index = (int)(aVal) & MASK;
-						if (index != 0)
-						{
-							/*							
+            int k = 0;
+            for (; ; ) {
+                int aPos = 0;
+                do {
+                    long aVal = (long)((ulong)c[aPos] >> k);
+                    int bank = 0, bOff = aLen;
+                    for (; ; ) {
+                        int index = (int)(aVal) & MASK;
+                        if (index != 0) {
+                            /*							
                              * Add to a 'c' buffer based on the bit-pattern of 'index'. Since A is in
                              * Interleaved form, the bits represent the current B shifted by 0, 'positions',
                              * 'positions' * 2, ..., 'positions' * ('width' - 1)
                              */
-							Add(c, aPos + ci[index], c, bOff, bMax);
-						}
-						if (++bank == banks)
-						{
-							break;
-						}
-						bOff += bMax;
-						aVal = (long)((ulong)aVal >> width);
-					}
-				}
-				while (++aPos < aLen);
+                            Add(c, aPos + ci[index], c, bOff, bMax);
+                        }
+                        if (++bank == banks) {
+                            break;
+                        }
+                        bOff += bMax;
+                        aVal = (long)((ulong)aVal >> width);
+                    }
+                }
+                while (++aPos < aLen);
 
-				if ((k += stride) >= top)
-				{
-					if (k >= 64)
-					{
-						break;
-					}
+                if ((k += stride) >= top) {
+                    if (k >= 64) {
+                        break;
+                    }
 
-					/*					
+                    /*					
                      * Adjustment for window setups with top == 63, the final bit (if any) is processed
                      * as the top-bit of a window
                      */
-					k = 64 - width;
-					MASK &= MASK << (top - k);
-				}
+                    k = 64 - width;
+                    MASK &= MASK << (top - k);
+                }
 
-				/*				
+                /*				
                  * After each position has been checked for all words of A, B is shifted up 1 place
                  */
-				ShiftUp(c, aLen, bTotal, banks);
-			}
+                ShiftUp(c, aLen, bTotal, banks);
+            }
 
-			int ciPos = ci.Length;
-			while (--ciPos > 1)
-			{
-				if ((ciPos & 1L) == 0L)
-				{
-					/*					
+            int ciPos = ci.Length;
+            while (--ciPos > 1) {
+                if ((ciPos & 1L) == 0L) {
+                    /*					
                      * For even numbers, shift contents and add to the half-position
                      */
-					AddShiftedUp(c, ci[(uint)ciPos >> 1], c, ci[ciPos], cLen, positions);
-				}
-				else
-				{
-					/*					
+                    AddShiftedUp(c, ci[(uint)ciPos >> 1], c, ci[ciPos], cLen, positions);
+                } else {
+                    /*					
                      * For odd numbers, 'distribute' contents to the result and the next-lowest position
                      */
-					Distribute(c, ci[ciPos], ci[ciPos - 1], ci[1], cLen);
-				}
-			}
+                    Distribute(c, ci[ciPos], ci[ciPos - 1], ci[1], cLen);
+                }
+            }
 
-			/*			
+            /*			
              * Finally the raw answer is collected, reduce it against the reduction coefficients
              */
-			return ReduceResult(c, ci[1], cLen, m, ks);
-		}
+            return ReduceResult(c, ci[1], cLen, m, ks);
+        }
 
-		public LongArray ModReduce(int m, int[] ks)
-		{
-			long[] buf = m_ints.DeepCopy();
-			int rLen = ReduceInPlace(buf, 0, buf.Length, m, ks);
-			return new LongArray(buf, 0, rLen);
-		}
+        public LongArray ModReduce (int m, int[] ks) {
+            long[] buf = m_ints.DeepCopy();
+            int rLen = ReduceInPlace(buf, 0, buf.Length, m, ks);
+            return new LongArray(buf, 0, rLen);
+        }
 
-		public LongArray Multiply(LongArray other, int m, int[] ks)
-		{
-			/*			
+        public LongArray Multiply (LongArray other, int m, int[] ks) {
+            /*			
              * Find out the degree of each argument and handle the zero cases
              */
-			int aDeg = Degree();
-			if (aDeg == 0)
-			{
-				return this;
-			}
-			int bDeg = other.Degree();
-			if (bDeg == 0)
-			{
-				return other;
-			}
+            int aDeg = Degree();
+            if (aDeg == 0) {
+                return this;
+            }
+            int bDeg = other.Degree();
+            if (bDeg == 0) {
+                return other;
+            }
 
-			/*			
+            /*			
              * Swap if necessary so that A is the smaller argument
              */
-			LongArray A = this, B = other;
-			if (aDeg > bDeg)
-			{
-				A = other; B = this;
-				int tmp = aDeg; aDeg = bDeg; bDeg = tmp;
-			}
+            LongArray A = this, B = other;
+            if (aDeg > bDeg) {
+                A = other; B = this;
+                int tmp = aDeg; aDeg = bDeg; bDeg = tmp;
+            }
 
-			/*			
+            /*			
              * Establish the word lengths of the arguments and result
              */
-			int aLen = (int)((uint)(aDeg + 63) >> 6);
-			int bLen = (int)((uint)(bDeg + 63) >> 6);
-			int cLen = (int)((uint)(aDeg + bDeg + 62) >> 6);
+            int aLen = (int)((uint)(aDeg + 63) >> 6);
+            int bLen = (int)((uint)(bDeg + 63) >> 6);
+            int cLen = (int)((uint)(aDeg + bDeg + 62) >> 6);
 
-			if (aLen == 1)
-			{
-				long a0 = A.m_ints[0];
-				if (a0 == 1L)
-				{
-					return B;
-				}
+            if (aLen == 1) {
+                long a0 = A.m_ints[0];
+                if (a0 == 1L) {
+                    return B;
+                }
 
-				/*				
+                /*				
                  * Fast path for small A, with performance dependent only on the number of set bits
                  */
-				long[] c0 = new long[cLen];
-				MultiplyWord(a0, B.m_ints, bLen, c0, 0);
+                long[] c0 = new long[cLen];
+                MultiplyWord(a0, B.m_ints, bLen, c0, 0);
 
-				/*				
+                /*				
                  * Reduce the raw answer against the reduction coefficients
                  */
-				//return ReduceResult(c0, 0, cLen, m, ks);
-				return new LongArray(c0, 0, cLen);
-			}
+                //return ReduceResult(c0, 0, cLen, m, ks);
+                return new LongArray(c0, 0, cLen);
+            }
 
-			/*			
+            /*			
              * Determine if B will get bigger during shifting
              */
-			int bMax = (int)((uint)(bDeg + 7 + 63) >> 6);
+            int bMax = (int)((uint)(bDeg + 7 + 63) >> 6);
 
-			/*			
+            /*			
              * Lookup table for the offset of each B in the tables
              */
-			int[] ti = new int[16];
+            int[] ti = new int[16];
 
-			/*			
+            /*			
              * Precompute table of all 4-bit products of B
              */
-			long[] T0 = new long[bMax << 4];
-			int tOff = bMax;
-			ti[1] = tOff;
-			Array.Copy(B.m_ints, 0, T0, tOff, bLen);
-			for (int i = 2; i < 16; ++i)
-			{
-				ti[i] = (tOff += bMax);
-				if ((i & 1) == 0)
-				{
-					ShiftUp(T0, (int)((uint)tOff >> 1), T0, tOff, bMax, 1);
-				}
-				else
-				{
-					Add(T0, bMax, T0, tOff - bMax, T0, tOff, bMax);
-				}
-			}
+            long[] T0 = new long[bMax << 4];
+            int tOff = bMax;
+            ti[1] = tOff;
+            Array.Copy(B.m_ints, 0, T0, tOff, bLen);
+            for (int i = 2; i < 16; ++i) {
+                ti[i] = (tOff += bMax);
+                if ((i & 1) == 0) {
+                    ShiftUp(T0, (int)((uint)tOff >> 1), T0, tOff, bMax, 1);
+                } else {
+                    Add(T0, bMax, T0, tOff - bMax, T0, tOff, bMax);
+                }
+            }
 
-			/*			
+            /*			
              * Second table with all 4-bit products of B shifted 4 bits
              */
-			long[] T1 = new long[T0.Length];
-			ShiftUp(T0, 0, T1, 0, T0.Length, 4);
-			//        ShiftUp(T0, bMax, T1, bMax, tOff, 4);
+            long[] T1 = new long[T0.Length];
+            ShiftUp(T0, 0, T1, 0, T0.Length, 4);
+            //        ShiftUp(T0, bMax, T1, bMax, tOff, 4);
 
-			long[] a = A.m_ints;
-			long[] c = new long[cLen << 3];
+            long[] a = A.m_ints;
+            long[] c = new long[cLen << 3];
 
-			int MASK = 0xF;
+            int MASK = 0xF;
 
-			/*			
+            /*			
              * Lopez-Dahab (Modified) algorithm
              */
 
-			for (int aPos = 0; aPos < aLen; ++aPos)
-			{
-				long aVal = a[aPos];
-				int cOff = aPos;
-				for (; ; )
-				{
-					int u = (int)aVal & MASK;
-					aVal = (long)((ulong)aVal >> 4);
-					int v = (int)aVal & MASK;
-					AddBoth(c, cOff, T0, ti[u], T1, ti[v], bMax);
-					aVal = (long)((ulong)aVal >> 4);
-					if (aVal == 0L)
-					{
-						break;
-					}
-					cOff += cLen;
-				}
-			}
+            for (int aPos = 0; aPos < aLen; ++aPos) {
+                long aVal = a[aPos];
+                int cOff = aPos;
+                for (; ; ) {
+                    int u = (int)aVal & MASK;
+                    aVal = (long)((ulong)aVal >> 4);
+                    int v = (int)aVal & MASK;
+                    AddBoth(c, cOff, T0, ti[u], T1, ti[v], bMax);
+                    aVal = (long)((ulong)aVal >> 4);
+                    if (aVal == 0L) {
+                        break;
+                    }
+                    cOff += cLen;
+                }
+            }
 
-			{
-				int cOff = c.Length;
-				while ((cOff -= cLen) != 0)
-				{
-					AddShiftedUp(c, cOff - cLen, c, cOff, cLen, 8);
-				}
-			}
+            {
+                int cOff = c.Length;
+                while ((cOff -= cLen) != 0) {
+                    AddShiftedUp(c, cOff - cLen, c, cOff, cLen, 8);
+                }
+            }
 
-			/*			
+            /*			
              * Finally the raw answer is collected, reduce it against the reduction coefficients
              */
-			//return ReduceResult(c, 0, cLen, m, ks);
-			return new LongArray(c, 0, cLen);
-		}
+            //return ReduceResult(c, 0, cLen, m, ks);
+            return new LongArray(c, 0, cLen);
+        }
 
-		public void Reduce(int m, int[] ks)
-		{
-			long[] buf = m_ints;
-			int rLen = ReduceInPlace(buf, 0, buf.Length, m, ks);
-			if (rLen < buf.Length)
-			{
-				m_ints = new long[rLen];
-				Array.Copy(buf, 0, m_ints, 0, rLen);
-			}
-		}
+        public void Reduce (int m, int[] ks) {
+            long[] buf = m_ints;
+            int rLen = ReduceInPlace(buf, 0, buf.Length, m, ks);
+            if (rLen < buf.Length) {
+                m_ints = new long[rLen];
+                Array.Copy(buf, 0, m_ints, 0, rLen);
+            }
+        }
 
-		private static LongArray ReduceResult(long[] buf, int off, int len, int m, int[] ks)
-		{
-			int rLen = ReduceInPlace(buf, off, len, m, ks);
-			return new LongArray(buf, off, rLen);
-		}
+        private static LongArray ReduceResult (long[] buf, int off, int len, int m, int[] ks) {
+            int rLen = ReduceInPlace(buf, off, len, m, ks);
+            return new LongArray(buf, off, rLen);
+        }
 
-		//    private static void deInterleave(long[] x, int xOff, long[] z, int zOff, int count, int rounds)
-		//    {
-		//        for (int i = 0; i < count; ++i)
-		//        {
-		//            z[zOff + i] = deInterleave(x[zOff + i], rounds);
-		//        }
-		//    }
-		//
-		//    private static long deInterleave(long x, int rounds)
-		//    {
-		//        while (--rounds >= 0)
-		//        {
-		//            x = deInterleave32(x & DEInterleave_MASK) | (deInterleave32((x >>> 1) & DEInterleave_MASK) << 32);
-		//        }
-		//        return x;
-		//    }
-		//
-		//    private static long deInterleave32(long x)
-		//    {
-		//        x = (x | (x >>> 1)) & 0x3333333333333333L;
-		//        x = (x | (x >>> 2)) & 0x0F0F0F0F0F0F0F0FL;
-		//        x = (x | (x >>> 4)) & 0x00FF00FF00FF00FFL;
-		//        x = (x | (x >>> 8)) & 0x0000FFFF0000FFFFL;
-		//        x = (x | (x >>> 16)) & 0x00000000FFFFFFFFL;
-		//        return x;
-		//    }
+        //    private static void deInterleave(long[] x, int xOff, long[] z, int zOff, int count, int rounds)
+        //    {
+        //        for (int i = 0; i < count; ++i)
+        //        {
+        //            z[zOff + i] = deInterleave(x[zOff + i], rounds);
+        //        }
+        //    }
+        //
+        //    private static long deInterleave(long x, int rounds)
+        //    {
+        //        while (--rounds >= 0)
+        //        {
+        //            x = deInterleave32(x & DEInterleave_MASK) | (deInterleave32((x >>> 1) & DEInterleave_MASK) << 32);
+        //        }
+        //        return x;
+        //    }
+        //
+        //    private static long deInterleave32(long x)
+        //    {
+        //        x = (x | (x >>> 1)) & 0x3333333333333333L;
+        //        x = (x | (x >>> 2)) & 0x0F0F0F0F0F0F0F0FL;
+        //        x = (x | (x >>> 4)) & 0x00FF00FF00FF00FFL;
+        //        x = (x | (x >>> 8)) & 0x0000FFFF0000FFFFL;
+        //        x = (x | (x >>> 16)) & 0x00000000FFFFFFFFL;
+        //        return x;
+        //    }
 
-		private static int ReduceInPlace(long[] buf, int off, int len, int m, int[] ks)
-		{
-			int mLen = (m + 63) >> 6;
-			if (len < mLen)
-			{
-				return len;
-			}
+        private static int ReduceInPlace (long[] buf, int off, int len, int m, int[] ks) {
+            int mLen = (m + 63) >> 6;
+            if (len < mLen) {
+                return len;
+            }
 
-			int numBits = System.Math.Min(len << 6, (m << 1) - 1); // TODO use actual degree?
-			int excessBits = (len << 6) - numBits;
-			while (excessBits >= 64)
-			{
-				--len;
-				excessBits -= 64;
-			}
+            int numBits = System.Math.Min(len << 6, (m << 1) - 1); // TODO use actual degree?
+            int excessBits = (len << 6) - numBits;
+            while (excessBits >= 64) {
+                --len;
+                excessBits -= 64;
+            }
 
-			int kLen = ks.Length, kMax = ks[kLen - 1], kNext = kLen > 1 ? ks[kLen - 2] : 0;
-			int wordWiseLimit = System.Math.Max(m, kMax + 64);
-			int vectorableWords = (excessBits + System.Math.Min(numBits - wordWiseLimit, m - kNext)) >> 6;
-			if (vectorableWords > 1)
-			{
-				int vectorWiseWords = len - vectorableWords;
-				ReduceVectorWise(buf, off, len, vectorWiseWords, m, ks);
-				while (len > vectorWiseWords)
-				{
-					buf[off + --len] = 0L;
-				}
-				numBits = vectorWiseWords << 6;
-			}
+            int kLen = ks.Length, kMax = ks[kLen - 1], kNext = kLen > 1 ? ks[kLen - 2] : 0;
+            int wordWiseLimit = System.Math.Max(m, kMax + 64);
+            int vectorableWords = (excessBits + System.Math.Min(numBits - wordWiseLimit, m - kNext)) >> 6;
+            if (vectorableWords > 1) {
+                int vectorWiseWords = len - vectorableWords;
+                ReduceVectorWise(buf, off, len, vectorWiseWords, m, ks);
+                while (len > vectorWiseWords) {
+                    buf[off + --len] = 0L;
+                }
+                numBits = vectorWiseWords << 6;
+            }
 
-			if (numBits > wordWiseLimit)
-			{
-				ReduceWordWise(buf, off, len, wordWiseLimit, m, ks);
-				numBits = wordWiseLimit;
-			}
+            if (numBits > wordWiseLimit) {
+                ReduceWordWise(buf, off, len, wordWiseLimit, m, ks);
+                numBits = wordWiseLimit;
+            }
 
-			if (numBits > m)
-			{
-				ReduceBitWise(buf, off, numBits, m, ks);
-			}
+            if (numBits > m) {
+                ReduceBitWise(buf, off, numBits, m, ks);
+            }
 
-			return mLen;
-		}
+            return mLen;
+        }
 
-		private static void ReduceBitWise(long[] buf, int off, int BitLength, int m, int[] ks)
-		{
-			while (--BitLength >= m)
-			{
-				if (TestBit(buf, off, BitLength))
-				{
-					ReduceBit(buf, off, BitLength, m, ks);
-				}
-			}
-		}
+        private static void ReduceBitWise (long[] buf, int off, int BitLength, int m, int[] ks) {
+            while (--BitLength >= m) {
+                if (TestBit(buf, off, BitLength)) {
+                    ReduceBit(buf, off, BitLength, m, ks);
+                }
+            }
+        }
 
-		private static void ReduceBit(long[] buf, int off, int bit, int m, int[] ks)
-		{
-			FlipBit(buf, off, bit);
-			int n = bit - m;
-			int j = ks.Length;
-			while (--j >= 0)
-			{
-				FlipBit(buf, off, ks[j] + n);
-			}
-			FlipBit(buf, off, n);
-		}
+        private static void ReduceBit (long[] buf, int off, int bit, int m, int[] ks) {
+            FlipBit(buf, off, bit);
+            int n = bit - m;
+            int j = ks.Length;
+            while (--j >= 0) {
+                FlipBit(buf, off, ks[j] + n);
+            }
+            FlipBit(buf, off, n);
+        }
 
-		private static void ReduceWordWise(long[] buf, int off, int len, int toBit, int m, int[] ks)
-		{
-			int toPos = (int)((uint)toBit >> 6);
+        private static void ReduceWordWise (long[] buf, int off, int len, int toBit, int m, int[] ks) {
+            int toPos = (int)((uint)toBit >> 6);
 
-			while (--len > toPos)
-			{
-				long word = buf[off + len];
-				if (word != 0)
-				{
-					buf[off + len] = 0;
-					ReduceWord(buf, off, (len << 6), word, m, ks);
-				}
-			}
+            while (--len > toPos) {
+                long word = buf[off + len];
+                if (word != 0) {
+                    buf[off + len] = 0;
+                    ReduceWord(buf, off, (len << 6), word, m, ks);
+                }
+            }
 
-			{
-				int partial = toBit & 0x3F;
-				long word = (long)((ulong)buf[off + toPos] >> partial);
-				if (word != 0)
-				{
-					buf[off + toPos] ^= word << partial;
-					ReduceWord(buf, off, toBit, word, m, ks);
-				}
-			}
-		}
+            {
+                int partial = toBit & 0x3F;
+                long word = (long)((ulong)buf[off + toPos] >> partial);
+                if (word != 0) {
+                    buf[off + toPos] ^= word << partial;
+                    ReduceWord(buf, off, toBit, word, m, ks);
+                }
+            }
+        }
 
-		private static void ReduceWord(long[] buf, int off, int bit, long word, int m, int[] ks)
-		{
-			int offset = bit - m;
-			int j = ks.Length;
-			while (--j >= 0)
-			{
-				FlipWord(buf, off, offset + ks[j], word);
-			}
-			FlipWord(buf, off, offset, word);
-		}
+        private static void ReduceWord (long[] buf, int off, int bit, long word, int m, int[] ks) {
+            int offset = bit - m;
+            int j = ks.Length;
+            while (--j >= 0) {
+                FlipWord(buf, off, offset + ks[j], word);
+            }
+            FlipWord(buf, off, offset, word);
+        }
 
-		private static void ReduceVectorWise(long[] buf, int off, int len, int words, int m, int[] ks)
-		{
-			/*			
+        private static void ReduceVectorWise (long[] buf, int off, int len, int words, int m, int[] ks) {
+            /*			
              * NOTE: It's important we go from highest coefficient to lowest, because for the highest
              * one (only) we allow the ranges to partially overlap, and therefore any changes must take
              * effect for the subsequent lower coefficients.
              */
-			int baseBit = (words << 6) - m;
-			int j = ks.Length;
-			while (--j >= 0)
-			{
-				FlipVector(buf, off, buf, off + words, len - words, baseBit + ks[j]);
-			}
-			FlipVector(buf, off, buf, off + words, len - words, baseBit);
-		}
+            int baseBit = (words << 6) - m;
+            int j = ks.Length;
+            while (--j >= 0) {
+                FlipVector(buf, off, buf, off + words, len - words, baseBit + ks[j]);
+            }
+            FlipVector(buf, off, buf, off + words, len - words, baseBit);
+        }
 
-		private static void FlipVector(long[] x, int xOff, long[] y, int yOff, int yLen, int bits)
-		{
-			xOff += (int)((uint)bits >> 6);
-			bits &= 0x3F;
+        private static void FlipVector (long[] x, int xOff, long[] y, int yOff, int yLen, int bits) {
+            xOff += (int)((uint)bits >> 6);
+            bits &= 0x3F;
 
-			if (bits == 0)
-			{
-				Add(x, xOff, y, yOff, yLen);
-			}
-			else
-			{
-				long carry = AddShiftedDown(x, xOff + 1, y, yOff, yLen, 64 - bits);
-				x[xOff] ^= carry;
-			}
-		}
+            if (bits == 0) {
+                Add(x, xOff, y, yOff, yLen);
+            } else {
+                long carry = AddShiftedDown(x, xOff + 1, y, yOff, yLen, 64 - bits);
+                x[xOff] ^= carry;
+            }
+        }
 
-		public LongArray ModSquare(int m, int[] ks)
-		{
-			int len = GetUsedLength();
-			if (len == 0)
-			{
-				return this;
-			}
+        public LongArray ModSquare (int m, int[] ks) {
+            int len = GetUsedLength();
+            if (len == 0) {
+                return this;
+            }
 
-			int _2len = len << 1;
-			long[] r = new long[_2len];
+            int _2len = len << 1;
+            long[] r = new long[_2len];
 
-			int pos = 0;
-			while (pos < _2len)
-			{
-				long mi = m_ints[(uint)pos >> 1];
-				r[pos++] = Interleave2_32to64((int)mi);
-				r[pos++] = Interleave2_32to64((int)((ulong)mi >> 32));
-			}
+            int pos = 0;
+            while (pos < _2len) {
+                long mi = m_ints[(uint)pos >> 1];
+                r[pos++] = Interleave2_32to64((int)mi);
+                r[pos++] = Interleave2_32to64((int)((ulong)mi >> 32));
+            }
 
-			return new LongArray(r, 0, ReduceInPlace(r, 0, r.Length, m, ks));
-		}
+            return new LongArray(r, 0, ReduceInPlace(r, 0, r.Length, m, ks));
+        }
 
-		public LongArray ModSquareN(int n, int m, int[] ks)
-		{
-			int len = GetUsedLength();
-			if (len == 0)
-			{
-				return this;
-			}
+        public LongArray ModSquareN (int n, int m, int[] ks) {
+            int len = GetUsedLength();
+            if (len == 0) {
+                return this;
+            }
 
-			int mLen = (m + 63) >> 6;
-			long[] r = new long[mLen << 1];
-			Array.Copy(m_ints, 0, r, 0, len);
+            int mLen = (m + 63) >> 6;
+            long[] r = new long[mLen << 1];
+            Array.Copy(m_ints, 0, r, 0, len);
 
-			while (--n >= 0)
-			{
-				SquareInPlace(r, len, m, ks);
-				len = ReduceInPlace(r, 0, r.Length, m, ks);
-			}
+            while (--n >= 0) {
+                SquareInPlace(r, len, m, ks);
+                len = ReduceInPlace(r, 0, r.Length, m, ks);
+            }
 
-			return new LongArray(r, 0, len);
-		}
+            return new LongArray(r, 0, len);
+        }
 
-		public LongArray Square(int m, int[] ks)
-		{
-			int len = GetUsedLength();
-			if (len == 0)
-			{
-				return this;
-			}
+        public LongArray Square (int m, int[] ks) {
+            int len = GetUsedLength();
+            if (len == 0) {
+                return this;
+            }
 
-			int _2len = len << 1;
-			long[] r = new long[_2len];
+            int _2len = len << 1;
+            long[] r = new long[_2len];
 
-			int pos = 0;
-			while (pos < _2len)
-			{
-				long mi = m_ints[(uint)pos >> 1];
-				r[pos++] = Interleave2_32to64((int)mi);
-				r[pos++] = Interleave2_32to64((int)((ulong)mi >> 32));
-			}
+            int pos = 0;
+            while (pos < _2len) {
+                long mi = m_ints[(uint)pos >> 1];
+                r[pos++] = Interleave2_32to64((int)mi);
+                r[pos++] = Interleave2_32to64((int)((ulong)mi >> 32));
+            }
 
-			return new LongArray(r, 0, r.Length);
-		}
+            return new LongArray(r, 0, r.Length);
+        }
 
-		private static void SquareInPlace(long[] x, int xLen, int m, int[] ks)
-		{
-			int pos = xLen << 1;
-			while (--xLen >= 0)
-			{
-				long xVal = x[xLen];
-				x[--pos] = Interleave2_32to64((int)((ulong)xVal >> 32));
-				x[--pos] = Interleave2_32to64((int)xVal);
-			}
-		}
+        private static void SquareInPlace (long[] x, int xLen, int m, int[] ks) {
+            int pos = xLen << 1;
+            while (--xLen >= 0) {
+                long xVal = x[xLen];
+                x[--pos] = Interleave2_32to64((int)((ulong)xVal >> 32));
+                x[--pos] = Interleave2_32to64((int)xVal);
+            }
+        }
 
-		private static void Interleave(long[] x, int xOff, long[] z, int zOff, int count, int width)
-		{
-			switch (width)
-			{
-			case 3:
-				Interleave3(x, xOff, z, zOff, count);
-				break;
-			case 5:
-				Interleave5(x, xOff, z, zOff, count);
-				break;
-			case 7:
-				Interleave7(x, xOff, z, zOff, count);
-				break;
-			default:
-				Interleave2_n(x, xOff, z, zOff, count, BitLengths[width] - 1);
-				break;
-			}
-		}
+        private static void Interleave (long[] x, int xOff, long[] z, int zOff, int count, int width) {
+            switch (width) {
+                case 3:
+                    Interleave3(x, xOff, z, zOff, count);
+                    break;
+                case 5:
+                    Interleave5(x, xOff, z, zOff, count);
+                    break;
+                case 7:
+                    Interleave7(x, xOff, z, zOff, count);
+                    break;
+                default:
+                    Interleave2_n(x, xOff, z, zOff, count, BitLengths[width] - 1);
+                    break;
+            }
+        }
 
-		private static void Interleave3(long[] x, int xOff, long[] z, int zOff, int count)
-		{
-			for (int i = 0; i < count; ++i)
-			{
-				z[zOff + i] = Interleave3(x[xOff + i]);
-			}
-		}
+        private static void Interleave3 (long[] x, int xOff, long[] z, int zOff, int count) {
+            for (int i = 0; i < count; ++i) {
+                z[zOff + i] = Interleave3(x[xOff + i]);
+            }
+        }
 
-		private static long Interleave3(long x)
-		{
-			long z = x & (1L << 63);
-			return z
-				| Interleave3_21to63((int)x & 0x1FFFFF)
-				| Interleave3_21to63((int)((ulong)x >> 21) & 0x1FFFFF) << 1
-				| Interleave3_21to63((int)((ulong)x >> 42) & 0x1FFFFF) << 2;
+        private static long Interleave3 (long x) {
+            long z = x & (1L << 63);
+            return z
+                | Interleave3_21to63((int)x & 0x1FFFFF)
+                | Interleave3_21to63((int)((ulong)x >> 21) & 0x1FFFFF) << 1
+                | Interleave3_21to63((int)((ulong)x >> 42) & 0x1FFFFF) << 2;
 
-			//        int zPos = 0, wPos = 0, xPos = 0;
-			//        for (;;)
-			//        {
-			//            z |= ((x >>> xPos) & 1L) << zPos;
-			//            if (++zPos == 63)
-			//            {
-			//                String sz2 = Long.toBinaryString(z);
-			//                return z;
-			//            }
-			//            if ((xPos += 21) >= 63)
-			//            {
-			//                xPos = ++wPos;
-			//            }
-			//        }
-		}
+            //        int zPos = 0, wPos = 0, xPos = 0;
+            //        for (;;)
+            //        {
+            //            z |= ((x >>> xPos) & 1L) << zPos;
+            //            if (++zPos == 63)
+            //            {
+            //                String sz2 = Long.toBinaryString(z);
+            //                return z;
+            //            }
+            //            if ((xPos += 21) >= 63)
+            //            {
+            //                xPos = ++wPos;
+            //            }
+            //        }
+        }
 
-		private static long Interleave3_21to63(int x)
-		{
-			int r00 = INTERLEAVE3_TABLE[x & 0x7F];
-			int r21 = INTERLEAVE3_TABLE[((uint)x >> 7) & 0x7F];
-			int r42 = INTERLEAVE3_TABLE[(uint)x >> 14];
-			return (r42 & 0xFFFFFFFFL) << 42 | (r21 & 0xFFFFFFFFL) << 21 | (r00 & 0xFFFFFFFFL);
-		}
+        private static long Interleave3_21to63 (int x) {
+            int r00 = INTERLEAVE3_TABLE[x & 0x7F];
+            int r21 = INTERLEAVE3_TABLE[((uint)x >> 7) & 0x7F];
+            int r42 = INTERLEAVE3_TABLE[(uint)x >> 14];
+            return (r42 & 0xFFFFFFFFL) << 42 | (r21 & 0xFFFFFFFFL) << 21 | (r00 & 0xFFFFFFFFL);
+        }
 
-		private static void Interleave5(long[] x, int xOff, long[] z, int zOff, int count)
-		{
-			for (int i = 0; i < count; ++i)
-			{
-				z[zOff + i] = Interleave5(x[xOff + i]);
-			}
-		}
+        private static void Interleave5 (long[] x, int xOff, long[] z, int zOff, int count) {
+            for (int i = 0; i < count; ++i) {
+                z[zOff + i] = Interleave5(x[xOff + i]);
+            }
+        }
 
-		private static long Interleave5(long x)
-		{
-			return Interleave3_13to65((int)x & 0x1FFF)
-				| Interleave3_13to65((int)((ulong)x >> 13) & 0x1FFF) << 1
-				| Interleave3_13to65((int)((ulong)x >> 26) & 0x1FFF) << 2
-				| Interleave3_13to65((int)((ulong)x >> 39) & 0x1FFF) << 3
-				| Interleave3_13to65((int)((ulong)x >> 52) & 0x1FFF) << 4;
+        private static long Interleave5 (long x) {
+            return Interleave3_13to65((int)x & 0x1FFF)
+                | Interleave3_13to65((int)((ulong)x >> 13) & 0x1FFF) << 1
+                | Interleave3_13to65((int)((ulong)x >> 26) & 0x1FFF) << 2
+                | Interleave3_13to65((int)((ulong)x >> 39) & 0x1FFF) << 3
+                | Interleave3_13to65((int)((ulong)x >> 52) & 0x1FFF) << 4;
 
-			//        long z = 0;
-			//        int zPos = 0, wPos = 0, xPos = 0;
-			//        for (;;)
-			//        {
-			//            z |= ((x >>> xPos) & 1L) << zPos;
-			//            if (++zPos == 64)
-			//            {
-			//                return z;
-			//            }
-			//            if ((xPos += 13) >= 64)
-			//            {
-			//                xPos = ++wPos;
-			//            }
-			//        }
-		}
+            //        long z = 0;
+            //        int zPos = 0, wPos = 0, xPos = 0;
+            //        for (;;)
+            //        {
+            //            z |= ((x >>> xPos) & 1L) << zPos;
+            //            if (++zPos == 64)
+            //            {
+            //                return z;
+            //            }
+            //            if ((xPos += 13) >= 64)
+            //            {
+            //                xPos = ++wPos;
+            //            }
+            //        }
+        }
 
-		private static long Interleave3_13to65(int x)
-		{
-			int r00 = INTERLEAVE5_TABLE[x & 0x7F];
-			int r35 = INTERLEAVE5_TABLE[(uint)x >> 7];
-			return (r35 & 0xFFFFFFFFL) << 35 | (r00 & 0xFFFFFFFFL);
-		}
+        private static long Interleave3_13to65 (int x) {
+            int r00 = INTERLEAVE5_TABLE[x & 0x7F];
+            int r35 = INTERLEAVE5_TABLE[(uint)x >> 7];
+            return (r35 & 0xFFFFFFFFL) << 35 | (r00 & 0xFFFFFFFFL);
+        }
 
-		private static void Interleave7(long[] x, int xOff, long[] z, int zOff, int count)
-		{
-			for (int i = 0; i < count; ++i)
-			{
-				z[zOff + i] = Interleave7(x[xOff + i]);
-			}
-		}
+        private static void Interleave7 (long[] x, int xOff, long[] z, int zOff, int count) {
+            for (int i = 0; i < count; ++i) {
+                z[zOff + i] = Interleave7(x[xOff + i]);
+            }
+        }
 
-		private static long Interleave7(long x)
-		{
-			long z = x & (1L << 63);
-			return z
-				| INTERLEAVE7_TABLE[(int)x & 0x1FF]
-				| INTERLEAVE7_TABLE[(int)((ulong)x >> 9) & 0x1FF] << 1
-				| INTERLEAVE7_TABLE[(int)((ulong)x >> 18) & 0x1FF] << 2
-				| INTERLEAVE7_TABLE[(int)((ulong)x >> 27) & 0x1FF] << 3
-				| INTERLEAVE7_TABLE[(int)((ulong)x >> 36) & 0x1FF] << 4
-				| INTERLEAVE7_TABLE[(int)((ulong)x >> 45) & 0x1FF] << 5
-				| INTERLEAVE7_TABLE[(int)((ulong)x >> 54) & 0x1FF] << 6;
+        private static long Interleave7 (long x) {
+            long z = x & (1L << 63);
+            return z
+                | INTERLEAVE7_TABLE[(int)x & 0x1FF]
+                | INTERLEAVE7_TABLE[(int)((ulong)x >> 9) & 0x1FF] << 1
+                | INTERLEAVE7_TABLE[(int)((ulong)x >> 18) & 0x1FF] << 2
+                | INTERLEAVE7_TABLE[(int)((ulong)x >> 27) & 0x1FF] << 3
+                | INTERLEAVE7_TABLE[(int)((ulong)x >> 36) & 0x1FF] << 4
+                | INTERLEAVE7_TABLE[(int)((ulong)x >> 45) & 0x1FF] << 5
+                | INTERLEAVE7_TABLE[(int)((ulong)x >> 54) & 0x1FF] << 6;
 
-			//        int zPos = 0, wPos = 0, xPos = 0;
-			//        for (;;)
-			//        {
-			//            z |= ((x >>> xPos) & 1L) << zPos;
-			//            if (++zPos == 63)
-			//            {
-			//                return z;
-			//            }
-			//            if ((xPos += 9) >= 63)
-			//            {
-			//                xPos = ++wPos;
-			//            }
-			//        }
-		}
+            //        int zPos = 0, wPos = 0, xPos = 0;
+            //        for (;;)
+            //        {
+            //            z |= ((x >>> xPos) & 1L) << zPos;
+            //            if (++zPos == 63)
+            //            {
+            //                return z;
+            //            }
+            //            if ((xPos += 9) >= 63)
+            //            {
+            //                xPos = ++wPos;
+            //            }
+            //        }
+        }
 
-		private static void Interleave2_n(long[] x, int xOff, long[] z, int zOff, int count, int rounds)
-		{
-			for (int i = 0; i < count; ++i)
-			{
-				z[zOff + i] = Interleave2_n(x[xOff + i], rounds);
-			}
-		}
+        private static void Interleave2_n (long[] x, int xOff, long[] z, int zOff, int count, int rounds) {
+            for (int i = 0; i < count; ++i) {
+                z[zOff + i] = Interleave2_n(x[xOff + i], rounds);
+            }
+        }
 
-		private static long Interleave2_n(long x, int rounds)
-		{
-			while (rounds > 1)
-			{
-				rounds -= 2;
-				x = Interleave4_16to64((int)x & 0xFFFF)
-				    | Interleave4_16to64((int)((ulong)x >> 16) & 0xFFFF) << 1
-				    | Interleave4_16to64((int)((ulong)x >> 32) & 0xFFFF) << 2
-				    | Interleave4_16to64((int)((ulong)x >> 48) & 0xFFFF) << 3;
-			}
-			if (rounds > 0)
-			{
-				x = Interleave2_32to64((int)x) | Interleave2_32to64((int)((ulong)x >> 32)) << 1;
-			}
-			return x;
-		}
+        private static long Interleave2_n (long x, int rounds) {
+            while (rounds > 1) {
+                rounds -= 2;
+                x = Interleave4_16to64((int)x & 0xFFFF)
+                    | Interleave4_16to64((int)((ulong)x >> 16) & 0xFFFF) << 1
+                    | Interleave4_16to64((int)((ulong)x >> 32) & 0xFFFF) << 2
+                    | Interleave4_16to64((int)((ulong)x >> 48) & 0xFFFF) << 3;
+            }
+            if (rounds > 0) {
+                x = Interleave2_32to64((int)x) | Interleave2_32to64((int)((ulong)x >> 32)) << 1;
+            }
+            return x;
+        }
 
-		private static long Interleave4_16to64(int x)
-		{
-			int r00 = INTERLEAVE4_TABLE[x & 0xFF];
-			int r32 = INTERLEAVE4_TABLE[(uint)x >> 8];
-			return (r32 & 0xFFFFFFFFL) << 32 | (r00 & 0xFFFFFFFFL);
-		}
+        private static long Interleave4_16to64 (int x) {
+            int r00 = INTERLEAVE4_TABLE[x & 0xFF];
+            int r32 = INTERLEAVE4_TABLE[(uint)x >> 8];
+            return (r32 & 0xFFFFFFFFL) << 32 | (r00 & 0xFFFFFFFFL);
+        }
 
-		private static long Interleave2_32to64(int x)
-		{
-			int r00 = INTERLEAVE2_TABLE[x & 0xFF] | INTERLEAVE2_TABLE[((uint)x >> 8) & 0xFF] << 16;
-			int r32 = INTERLEAVE2_TABLE[((uint)x >> 16) & 0xFF] | INTERLEAVE2_TABLE[(uint)x >> 24] << 16;
-			return (r32 & 0xFFFFFFFFL) << 32 | (r00 & 0xFFFFFFFFL);
-		}
+        private static long Interleave2_32to64 (int x) {
+            int r00 = INTERLEAVE2_TABLE[x & 0xFF] | INTERLEAVE2_TABLE[((uint)x >> 8) & 0xFF] << 16;
+            int r32 = INTERLEAVE2_TABLE[((uint)x >> 16) & 0xFF] | INTERLEAVE2_TABLE[(uint)x >> 24] << 16;
+            return (r32 & 0xFFFFFFFFL) << 32 | (r00 & 0xFFFFFFFFL);
+        }
 
-		//    private static LongArray ExpItohTsujii2(LongArray B, int n, int m, int[] ks)
-		//    {
-		//        LongArray t1 = B, t3 = new LongArray(new long[]{ 1L });
-		//        int scale = 1;
-		//
-		//        int numTerms = n;
-		//        while (numTerms > 1)
-		//        {
-		//            if ((numTerms & 1) != 0)
-		//            {
-		//                t3 = t3.ModMultiply(t1, m, ks);
-		//                t1 = t1.modSquareN(scale, m, ks);
-		//            }
-		//
-		//            LongArray t2 = t1.modSquareN(scale, m, ks);
-		//            t1 = t1.ModMultiply(t2, m, ks);
-		//            numTerms >>>= 1; scale <<= 1;
-		//        }
-		//
-		//        return t3.ModMultiply(t1, m, ks);
-		//    }
-		//
-		//    private static LongArray ExpItohTsujii23(LongArray B, int n, int m, int[] ks)
-		//    {
-		//        LongArray t1 = B, t3 = new LongArray(new long[]{ 1L });
-		//        int scale = 1;
-		//
-		//        int numTerms = n;
-		//        while (numTerms > 1)
-		//        {
-		//            bool m03 = numTerms % 3 == 0;
-		//            bool m14 = !m03 && (numTerms & 1) != 0;
-		//
-		//            if (m14)
-		//            {
-		//                t3 = t3.ModMultiply(t1, m, ks);
-		//                t1 = t1.modSquareN(scale, m, ks);
-		//            }
-		//
-		//            LongArray t2 = t1.modSquareN(scale, m, ks);
-		//            t1 = t1.ModMultiply(t2, m, ks);
-		//
-		//            if (m03)
-		//            {
-		//                t2 = t2.modSquareN(scale, m, ks);
-		//                t1 = t1.ModMultiply(t2, m, ks);
-		//                numTerms /= 3; scale *= 3;
-		//            }
-		//            else
-		//            {
-		//                numTerms >>>= 1; scale <<= 1;
-		//            }
-		//        }
-		//
-		//        return t3.ModMultiply(t1, m, ks);
-		//    }
-		//
-		//    private static LongArray ExpItohTsujii235(LongArray B, int n, int m, int[] ks)
-		//    {
-		//        LongArray t1 = B, t4 = new LongArray(new long[]{ 1L });
-		//        int scale = 1;
-		//
-		//        int numTerms = n;
-		//        while (numTerms > 1)
-		//        {
-		//            if (numTerms % 5 == 0)
-		//            {
-		////                t1 = ExpItohTsujii23(t1, 5, m, ks);
-		//
-		//                LongArray t3 = t1;
-		//                t1 = t1.modSquareN(scale, m, ks);
-		//
-		//                LongArray t2 = t1.modSquareN(scale, m, ks);
-		//                t1 = t1.ModMultiply(t2, m, ks);
-		//                t2 = t1.modSquareN(scale << 1, m, ks);
-		//                t1 = t1.ModMultiply(t2, m, ks);
-		//
-		//                t1 = t1.ModMultiply(t3, m, ks);
-		//
-		//                numTerms /= 5; scale *= 5;
-		//                continue;
-		//            }
-		//
-		//            bool m03 = numTerms % 3 == 0;
-		//            bool m14 = !m03 && (numTerms & 1) != 0;
-		//
-		//            if (m14)
-		//            {
-		//                t4 = t4.ModMultiply(t1, m, ks);
-		//                t1 = t1.modSquareN(scale, m, ks);
-		//            }
-		//
-		//            LongArray t2 = t1.modSquareN(scale, m, ks);
-		//            t1 = t1.ModMultiply(t2, m, ks);
-		//
-		//            if (m03)
-		//            {
-		//                t2 = t2.modSquareN(scale, m, ks);
-		//                t1 = t1.ModMultiply(t2, m, ks);
-		//                numTerms /= 3; scale *= 3;
-		//            }
-		//            else
-		//            {
-		//                numTerms >>>= 1; scale <<= 1;
-		//            }
-		//        }
-		//
-		//        return t4.ModMultiply(t1, m, ks);
-		//    }
+        //    private static LongArray ExpItohTsujii2(LongArray B, int n, int m, int[] ks)
+        //    {
+        //        LongArray t1 = B, t3 = new LongArray(new long[]{ 1L });
+        //        int scale = 1;
+        //
+        //        int numTerms = n;
+        //        while (numTerms > 1)
+        //        {
+        //            if ((numTerms & 1) != 0)
+        //            {
+        //                t3 = t3.ModMultiply(t1, m, ks);
+        //                t1 = t1.modSquareN(scale, m, ks);
+        //            }
+        //
+        //            LongArray t2 = t1.modSquareN(scale, m, ks);
+        //            t1 = t1.ModMultiply(t2, m, ks);
+        //            numTerms >>>= 1; scale <<= 1;
+        //        }
+        //
+        //        return t3.ModMultiply(t1, m, ks);
+        //    }
+        //
+        //    private static LongArray ExpItohTsujii23(LongArray B, int n, int m, int[] ks)
+        //    {
+        //        LongArray t1 = B, t3 = new LongArray(new long[]{ 1L });
+        //        int scale = 1;
+        //
+        //        int numTerms = n;
+        //        while (numTerms > 1)
+        //        {
+        //            bool m03 = numTerms % 3 == 0;
+        //            bool m14 = !m03 && (numTerms & 1) != 0;
+        //
+        //            if (m14)
+        //            {
+        //                t3 = t3.ModMultiply(t1, m, ks);
+        //                t1 = t1.modSquareN(scale, m, ks);
+        //            }
+        //
+        //            LongArray t2 = t1.modSquareN(scale, m, ks);
+        //            t1 = t1.ModMultiply(t2, m, ks);
+        //
+        //            if (m03)
+        //            {
+        //                t2 = t2.modSquareN(scale, m, ks);
+        //                t1 = t1.ModMultiply(t2, m, ks);
+        //                numTerms /= 3; scale *= 3;
+        //            }
+        //            else
+        //            {
+        //                numTerms >>>= 1; scale <<= 1;
+        //            }
+        //        }
+        //
+        //        return t3.ModMultiply(t1, m, ks);
+        //    }
+        //
+        //    private static LongArray ExpItohTsujii235(LongArray B, int n, int m, int[] ks)
+        //    {
+        //        LongArray t1 = B, t4 = new LongArray(new long[]{ 1L });
+        //        int scale = 1;
+        //
+        //        int numTerms = n;
+        //        while (numTerms > 1)
+        //        {
+        //            if (numTerms % 5 == 0)
+        //            {
+        ////                t1 = ExpItohTsujii23(t1, 5, m, ks);
+        //
+        //                LongArray t3 = t1;
+        //                t1 = t1.modSquareN(scale, m, ks);
+        //
+        //                LongArray t2 = t1.modSquareN(scale, m, ks);
+        //                t1 = t1.ModMultiply(t2, m, ks);
+        //                t2 = t1.modSquareN(scale << 1, m, ks);
+        //                t1 = t1.ModMultiply(t2, m, ks);
+        //
+        //                t1 = t1.ModMultiply(t3, m, ks);
+        //
+        //                numTerms /= 5; scale *= 5;
+        //                continue;
+        //            }
+        //
+        //            bool m03 = numTerms % 3 == 0;
+        //            bool m14 = !m03 && (numTerms & 1) != 0;
+        //
+        //            if (m14)
+        //            {
+        //                t4 = t4.ModMultiply(t1, m, ks);
+        //                t1 = t1.modSquareN(scale, m, ks);
+        //            }
+        //
+        //            LongArray t2 = t1.modSquareN(scale, m, ks);
+        //            t1 = t1.ModMultiply(t2, m, ks);
+        //
+        //            if (m03)
+        //            {
+        //                t2 = t2.modSquareN(scale, m, ks);
+        //                t1 = t1.ModMultiply(t2, m, ks);
+        //                numTerms /= 3; scale *= 3;
+        //            }
+        //            else
+        //            {
+        //                numTerms >>>= 1; scale <<= 1;
+        //            }
+        //        }
+        //
+        //        return t4.ModMultiply(t1, m, ks);
+        //    }
 
-		public LongArray ModInverse(int m, int[] ks)
-		{
-			/*			
+        public LongArray ModInverse (int m, int[] ks) {
+            /*			
              * Fermat's Little Theorem
              */
-			//        LongArray A = this;
-			//        LongArray B = A.modSquare(m, ks);
-			//        LongArray R0 = B, R1 = B;
-			//        for (int i = 2; i < m; ++i)
-			//        {
-			//            R1 = R1.modSquare(m, ks);
-			//            R0 = R0.ModMultiply(R1, m, ks);
-			//        }
-			//
-			//        return R0;
+            //        LongArray A = this;
+            //        LongArray B = A.modSquare(m, ks);
+            //        LongArray R0 = B, R1 = B;
+            //        for (int i = 2; i < m; ++i)
+            //        {
+            //            R1 = R1.modSquare(m, ks);
+            //            R0 = R0.ModMultiply(R1, m, ks);
+            //        }
+            //
+            //        return R0;
 
-			/*			
+            /*			
              * Itoh-Tsujii
              */
-			//        LongArray B = modSquare(m, ks);
-			//        switch (m)
-			//        {
-			//        case 409:
-			//            return ExpItohTsujii23(B, m - 1, m, ks);
-			//        case 571:
-			//            return ExpItohTsujii235(B, m - 1, m, ks);
-			//        case 163:
-			//        case 233:
-			//        case 283:
-			//        default:
-			//            return ExpItohTsujii2(B, m - 1, m, ks);
-			//        }
+            //        LongArray B = modSquare(m, ks);
+            //        switch (m)
+            //        {
+            //        case 409:
+            //            return ExpItohTsujii23(B, m - 1, m, ks);
+            //        case 571:
+            //            return ExpItohTsujii235(B, m - 1, m, ks);
+            //        case 163:
+            //        case 233:
+            //        case 283:
+            //        default:
+            //            return ExpItohTsujii2(B, m - 1, m, ks);
+            //        }
 
-			/*			
+            /*			
              * Inversion in F2m using the extended Euclidean algorithm
              * 
              * Input: A nonzero polynomial a(z) of degree at most m-1
              * Output: a(z)^(-1) mod f(z)
              */
-			int uzDegree = Degree();
-			if (uzDegree == 0)
-			{
-				throw new InvalidOperationException();
-			}
-			if (uzDegree == 1)
-			{
-				return this;
-			}
+            int uzDegree = Degree();
+            if (uzDegree == 0) {
+                throw new InvalidOperationException();
+            }
+            if (uzDegree == 1) {
+                return this;
+            }
 
-			// u(z) := a(z)
-			LongArray uz = (LongArray)Copy();
+            // u(z) := a(z)
+            LongArray uz = (LongArray)Copy();
 
-			int t = (m + 63) >> 6;
+            int t = (m + 63) >> 6;
 
-			// v(z) := f(z)
-			LongArray vz = new LongArray(t);
-			ReduceBit(vz.m_ints, 0, m, m, ks);
+            // v(z) := f(z)
+            LongArray vz = new LongArray(t);
+            ReduceBit(vz.m_ints, 0, m, m, ks);
 
-			// g1(z) := 1, g2(z) := 0
-			LongArray g1z = new LongArray(t);
-			g1z.m_ints[0] = 1L;
-			LongArray g2z = new LongArray(t);
+            // g1(z) := 1, g2(z) := 0
+            LongArray g1z = new LongArray(t);
+            g1z.m_ints[0] = 1L;
+            LongArray g2z = new LongArray(t);
 
-			int[] uvDeg = new int[]{ uzDegree, m + 1 };
-			LongArray[] uv = new LongArray[]{ uz, vz };
+            int[] uvDeg = new int[] { uzDegree, m + 1 };
+            LongArray[] uv = new LongArray[] { uz, vz };
 
-			int[] ggDeg = new int[]{ 1, 0 };
-			LongArray[] gg = new LongArray[]{ g1z, g2z };
+            int[] ggDeg = new int[] { 1, 0 };
+            LongArray[] gg = new LongArray[] { g1z, g2z };
 
-			int b = 1;
-			int duv1 = uvDeg[b];
-			int dgg1 = ggDeg[b];
-			int j = duv1 - uvDeg[1 - b];
+            int b = 1;
+            int duv1 = uvDeg[b];
+            int dgg1 = ggDeg[b];
+            int j = duv1 - uvDeg[1 - b];
 
-			for (;;)
-			{
-				if (j < 0)
-				{
-					j = -j;
-					uvDeg[b] = duv1;
-					ggDeg[b] = dgg1;
-					b = 1 - b;
-					duv1 = uvDeg[b];
-					dgg1 = ggDeg[b];
-				}
+            for (; ; ) {
+                if (j < 0) {
+                    j = -j;
+                    uvDeg[b] = duv1;
+                    ggDeg[b] = dgg1;
+                    b = 1 - b;
+                    duv1 = uvDeg[b];
+                    dgg1 = ggDeg[b];
+                }
 
-				uv[b].AddShiftedByBitsSafe(uv[1 - b], uvDeg[1 - b], j);
+                uv[b].AddShiftedByBitsSafe(uv[1 - b], uvDeg[1 - b], j);
 
-				int duv2 = uv[b].DegreeFrom(duv1);
-				if (duv2 == 0)
-				{
-					return gg[1 - b];
-				}
+                int duv2 = uv[b].DegreeFrom(duv1);
+                if (duv2 == 0) {
+                    return gg[1 - b];
+                }
 
-				{
-					int dgg2 = ggDeg[1 - b];
-					gg[b].AddShiftedByBitsSafe(gg[1 - b], dgg2, j);
-					dgg2 += j;
+                {
+                    int dgg2 = ggDeg[1 - b];
+                    gg[b].AddShiftedByBitsSafe(gg[1 - b], dgg2, j);
+                    dgg2 += j;
 
-					if (dgg2 > dgg1)
-					{
-						dgg1 = dgg2;
-					}
-					else if (dgg2 == dgg1)
-					{
-						dgg1 = gg[b].DegreeFrom(dgg1);
-					}
-				}
+                    if (dgg2 > dgg1) {
+                        dgg1 = dgg2;
+                    } else if (dgg2 == dgg1) {
+                        dgg1 = gg[b].DegreeFrom(dgg1);
+                    }
+                }
 
-				j += (duv2 - duv1);
-				duv1 = duv2;
-			}
-		}
+                j += (duv2 - duv1);
+                duv1 = duv2;
+            }
+        }
 
-		public override bool Equals(object obj)
-		{
-			return Equals(obj as LongArray);
-		}
+        public override bool Equals (object obj) {
+            return Equals(obj as LongArray);
+        }
 
-		public virtual bool Equals(LongArray other)
-		{
-			if (this == other)
-				return true;
-			if (null == other)
-				return false;
-			int usedLen = GetUsedLength();
-			if (other.GetUsedLength() != usedLen)
-			{
-				return false;
-			}
-			for (int i = 0; i < usedLen; i++)
-			{
-				if (m_ints[i] != other.m_ints[i])
-				{
-					return false;
-				}
-			}
-			return true;
-		}
+        public virtual bool Equals (LongArray other) {
+            if (this == other)
+                return true;
+            if (null == other)
+                return false;
+            int usedLen = GetUsedLength();
+            if (other.GetUsedLength() != usedLen) {
+                return false;
+            }
+            for (int i = 0; i < usedLen; i++) {
+                if (m_ints[i] != other.m_ints[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-		public override int GetHashCode()
-		{
-			int usedLen = GetUsedLength();
-			int hash = 1;
-			for (int i = 0; i < usedLen; i++)
-			{
-				long mi = m_ints[i];
-				hash *= 31;
-				hash ^= (int)mi;
-				hash *= 31;
-				hash ^= (int)((ulong)mi >> 32);
-			}
-			return hash;
-		}
+        public override int GetHashCode () {
+            int usedLen = GetUsedLength();
+            int hash = 1;
+            for (int i = 0; i < usedLen; i++) {
+                long mi = m_ints[i];
+                hash *= 31;
+                hash ^= (int)mi;
+                hash *= 31;
+                hash ^= (int)((ulong)mi >> 32);
+            }
+            return hash;
+        }
 
-		public LongArray Copy()
-		{
-			return new LongArray(m_ints.DeepCopy());
-		}
+        public LongArray Copy () {
+            return new LongArray((long[])m_ints.Clone());
+        }
 
-		public override string ToString()
-		{
-			int i = GetUsedLength();
-			if (i == 0)
-			{
-				return "0";
-			}
+        public override string ToString () {
+            int i = GetUsedLength();
+            if (i == 0) {
+                return "0";
+            }
 
-			StringBuilder sb = new StringBuilder(Convert.ToString(m_ints[--i], 2));
-			while (--i >= 0)
-			{
-				string s = Convert.ToString(m_ints[i], 2);
+            StringBuilder sb = new StringBuilder(Convert.ToString(m_ints[--i], 2));
+            while (--i >= 0) {
+                string s = Convert.ToString(m_ints[i], 2);
 
-				// Add leading zeroes, except for highest significant word
-				int len = s.Length;
-				if (len < 64)
-				{
-					sb.Append(ZEROES.Substring(len));
-				}
+                // Add leading zeroes, except for highest significant word
+                int len = s.Length;
+                if (len < 64) {
+                    sb.Append(ZEROES.Substring(len));
+                }
 
-				sb.Append(s);
-			}
-			return sb.ToString();
-		}
-	}
+                sb.Append(s);
+            }
+            return sb.ToString();
+        }
+    }
 }
 

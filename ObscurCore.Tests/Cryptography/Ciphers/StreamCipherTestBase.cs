@@ -7,22 +7,22 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 {
 	public abstract class StreamCipherTestBase : CipherTestBase
     {
-		protected SymmetricStreamCipher Cipher;
+		protected StreamCipher Cipher;
 
-		protected StreamCipherTestBase(SymmetricStreamCipher cipher) 
+		protected StreamCipherTestBase(StreamCipher cipher) 
 		{ 
 			Cipher = cipher;
 		}
 
 		protected override ObscurCore.DTO.SymmetricCipherConfiguration GetCipherConfiguration (CipherTestCase testCase) {
-			var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration (Cipher, testCase.Key.Length * 8);
+			var config = CipherConfigurationFactory.CreateStreamCipherConfiguration (Cipher, testCase.Key.Length * 8);
 			config.IV = testCase.IV;
 			return config;
 		}
 
 		[Test]
 		public void StreamingPerformance () {
-			var config = SymmetricCipherConfigurationFactory.CreateStreamCipherConfiguration(Cipher);
+			var config = CipherConfigurationFactory.CreateStreamCipherConfiguration(Cipher);
 			RunPerformanceTest(config);
 		}
     }

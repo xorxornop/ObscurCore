@@ -27,10 +27,10 @@ namespace ObscurCore.Cryptography.Ciphers
 {
 	public static class CipherFactory
 	{
-		private readonly static IDictionary<SymmetricBlockCipher, Func<int, IBlockCipher>> EngineInstantiatorsBlock =
-			new Dictionary<SymmetricBlockCipher, Func<int, IBlockCipher>>();
-		private readonly static IDictionary<SymmetricStreamCipher, Func<IStreamCipher>> EngineInstantiatorsStream =
-			new Dictionary<SymmetricStreamCipher, Func<IStreamCipher>>();
+		private readonly static IDictionary<BlockCipher, Func<int, IBlockCipher>> EngineInstantiatorsBlock =
+			new Dictionary<BlockCipher, Func<int, IBlockCipher>>();
+		private readonly static IDictionary<StreamCipher, Func<IStreamCipher>> EngineInstantiatorsStream =
+			new Dictionary<StreamCipher, Func<IStreamCipher>>();
 
 		private readonly static IDictionary<BlockCipherMode, Func<IBlockCipher, IBlockCipher>> ModeInstantiatorsBlock =
 			new Dictionary<BlockCipherMode, Func<IBlockCipher, IBlockCipher>>();
@@ -42,13 +42,13 @@ namespace ObscurCore.Cryptography.Ciphers
 		/// Instantiates and returns an implementation of the requested symmetric block cipher.
 		/// </summary>
 		/// <returns>An IBlockCipher cipher object implementing the relevant cipher algorithm.</returns>
-		public static IBlockCipher CreateBlockCipher (SymmetricBlockCipher cipherEnum, int? blockSize = null) {
+		public static IBlockCipher CreateBlockCipher (BlockCipher cipherEnum, int? blockSize = null) {
 			if (blockSize == null) blockSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
 			return EngineInstantiatorsBlock[cipherEnum](blockSize.Value);
 		}
 
 		public static IBlockCipher CreateBlockCipher (string cipherName, int? blockSize = null) {
-			return CreateBlockCipher(cipherName.ToEnum<SymmetricBlockCipher>(), blockSize);
+			return CreateBlockCipher(cipherName.ToEnum<BlockCipher>(), blockSize);
 		}
 
 		/// <summary>
@@ -56,7 +56,6 @@ namespace ObscurCore.Cryptography.Ciphers
 		/// </summary>
 		/// <param name="cipher">The block cipher to implement this mode of operation on top of.</param>
 		/// <param name="modeEnum">The mode of operation to implement.</param>
-		/// <param name="size">Where applicable, the size parameter required for some modes of operation.</param>
 		/// <returns>
 		/// IBlockCipher object implementing the relevant mode of operation, 
 		/// overlaying the supplied symmetric block cipher.
@@ -94,40 +93,44 @@ namespace ObscurCore.Cryptography.Ciphers
 		/// Instantiates and returns a symmetric stream cipher of the algorithm type that the instance this method was called from describes.
 		/// </summary>
 		/// <returns>An IStreamCipher cipher object implementing the relevant cipher algorithm.</returns>
-		public static IStreamCipher CreateStreamCipher (SymmetricStreamCipher cipherEnum) {
+		public static IStreamCipher CreateStreamCipher (StreamCipher cipherEnum) {
 			return EngineInstantiatorsStream[cipherEnum]();
 		}
 
 		public static IStreamCipher CreateStreamCipher (string cipherName) {
-			return EngineInstantiatorsStream[cipherName.ToEnum<SymmetricStreamCipher>()]();
+			return EngineInstantiatorsStream[cipherName.ToEnum<StreamCipher>()]();
 		}
 
 		static CipherFactory() {
 			// ######################################## ENGINES ########################################
 			// Block engines
-			EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Aes, blockSize => new AesFastEngine());
-			EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Blowfish, blockSize => new BlowfishEngine());
-			EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Cast5, blockSize => new Cast5Engine());
-			EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Cast6, blockSize => new Cast6Engine());
-			EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Camellia, blockSize => new CamelliaEngine());
-			EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Idea, blockSize => new IdeaEngine());
-			EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Noekeon, blockSize => new NoekeonEngine());
-			EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Rc6, blockSize => new Rc6Engine());
-			EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Serpent, blockSize => new SerpentEngine());
-			EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Threefish, blockSize => new ThreefishEngine(blockSize));
-			EngineInstantiatorsBlock.Add(SymmetricBlockCipher.Twofish, blockSize => new TwofishEngine());
+			EngineInstantiatorsBlock.Add(BlockCipher.Aes, blockSize => new AesFastEngine());
+			EngineInstantiatorsBlock.Add(BlockCipher.Blowfish, blockSize => new BlowfishEngine());
+#if INCLUDE_CAST5AND6
+			EngineInstantiatorsBlock.Add(BlockCipher.Cast5, blockSize => new Cast5Engine());
+			EngineInstantiatorsBlock.Add(BlockCipher.Cast6, blockSize => new Cast6Engine());
+#endif
+			EngineInstantiatorsBlock.Add(BlockCipher.Camellia, blockSize => new CamelliaEngine());
+#if INCLUDE_IDEA
+			EngineInstantiatorsBlock.Add(BlockCipher.Idea, blockSize => new IdeaEngine());
+#endif
+			EngineInstantiatorsBlock.Add(BlockCipher.Noekeon, blockSize => new NoekeonEngine());
+			EngineInstantiatorsBlock.Add(BlockCipher.Rc6, blockSize => new Rc6Engine());
+			EngineInstantiatorsBlock.Add(BlockCipher.Serpent, blockSize => new SerpentEngine());
+			EngineInstantiatorsBlock.Add(BlockCipher.Threefish, blockSize => new ThreefishEngine(blockSize));
+			EngineInstantiatorsBlock.Add(BlockCipher.Twofish, blockSize => new TwofishEngine());
 
 			// Stream engines
-			EngineInstantiatorsStream.Add(SymmetricStreamCipher.Hc128, () => new Hc128Engine());
-			EngineInstantiatorsStream.Add(SymmetricStreamCipher.Hc256, () => new Hc256Engine());
-			EngineInstantiatorsStream.Add(SymmetricStreamCipher.Rabbit, () => new RabbitEngine());
+			EngineInstantiatorsStream.Add(StreamCipher.Hc128, () => new Hc128Engine());
+			EngineInstantiatorsStream.Add(StreamCipher.Hc256, () => new Hc256Engine());
+			EngineInstantiatorsStream.Add(StreamCipher.Rabbit, () => new RabbitEngine());
 			#if INCLUDE_RC4
-			EngineInstantiatorsStream.Add(SymmetricStreamCipher.Rc4, () => new Rc4Engine());
+			EngineInstantiatorsStream.Add(StreamCipher.Rc4, () => new Rc4Engine());
 			#endif
-			EngineInstantiatorsStream.Add(SymmetricStreamCipher.Salsa20, () => new Salsa20Engine());
-			EngineInstantiatorsStream.Add(SymmetricStreamCipher.ChaCha, () => new ChaChaEngine());
-			EngineInstantiatorsStream.Add(SymmetricStreamCipher.XSalsa20, () => new XSalsa20Engine());
-			EngineInstantiatorsStream.Add(SymmetricStreamCipher.Sosemanuk, () => new SosemanukEngine());
+			EngineInstantiatorsStream.Add(StreamCipher.Salsa20, () => new Salsa20Engine());
+			EngineInstantiatorsStream.Add(StreamCipher.ChaCha, () => new ChaChaEngine());
+			EngineInstantiatorsStream.Add(StreamCipher.XSalsa20, () => new XSalsa20Engine());
+			EngineInstantiatorsStream.Add(StreamCipher.Sosemanuk, () => new SosemanukEngine());
 
 			// ######################################## BLOCK MODES ########################################
 			ModeInstantiatorsBlock.Add(BlockCipherMode.Cbc, (cipher) => new CbcBlockCipher(cipher));
