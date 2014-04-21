@@ -30,19 +30,57 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 			TestEcJPake (BrainpoolEllipticCurve.BrainpoolP256t1.ToString (), HashFunction.Blake2B256);
 		}
 
+        [Test]
+        public void Brainpool256t1_Keccak256()
+        {
+            TestEcJPake(BrainpoolEllipticCurve.BrainpoolP256t1.ToString(), HashFunction.Keccak256);
+        }
+
 		[Test]
 		public void Brainpool512t1_Blake2B512() {
 			TestEcJPake (BrainpoolEllipticCurve.BrainpoolP512t1.ToString (), HashFunction.Blake2B512);
 		}
 
         [Test]
-        public void Secp256r1_Keccak256() {
-            TestEcJPake(Sec2EllipticCurve.Secp256r1.ToString(), HashFunction.Keccak256);
+        public void Brainpool512t1_Keccak512()
+        {
+            TestEcJPake(BrainpoolEllipticCurve.BrainpoolP512t1.ToString(), HashFunction.Keccak512);
         }
 
         [Test]
-        public void Secp521r1_Keccak512() {
-            TestEcJPake(Sec2EllipticCurve.Secp521r1.ToString(), HashFunction.Keccak512);
+        public void Secp192r1_Ripemd160()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp192r1.ToString(), HashFunction.Ripemd160);
+        }
+
+        [Test]
+        public void Secp192k1_Ripemd160()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp192k1.ToString(), HashFunction.Ripemd160);
+        }
+
+        [Test]
+        public void Secp192r1_Tiger()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp192r1.ToString(), HashFunction.Tiger);
+        }
+
+        [Test]
+        public void Secp192k1_Tiger()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp192k1.ToString(), HashFunction.Tiger);
+        }
+
+        [Test]
+        public void Secp384r1_Keccak224()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp224r1.ToString(), HashFunction.Keccak224);
+        }
+
+        [Test]
+        public void Secp224k1_Keccak224()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp224k1.ToString(), HashFunction.Keccak224);
         }
 
         [Test]
@@ -51,8 +89,62 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         }
 
         [Test]
+        public void Secp256k1_Blake2B256()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp256k1.ToString(), HashFunction.Blake2B256);
+        }
+
+        [Test]
+        public void Secp256r1_Keccak256()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp256r1.ToString(), HashFunction.Keccak256);
+        }
+
+        [Test]
+        public void Secp256k1_Keccak256()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp256k1.ToString(), HashFunction.Keccak256);
+        }
+
+        [Test]
+        public void Secp256r1_Sha256()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp256r1.ToString(), HashFunction.Sha256);
+        }
+
+        [Test]
+        public void Secp256k1_Sha256()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp256k1.ToString(), HashFunction.Sha256);
+        }
+
+        [Test]
+        public void Secp384r1_Blake2B384()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp384r1.ToString(), HashFunction.Blake2B384);
+        }
+
+        [Test]
+        public void Secp384r1_Keccak384()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp384r1.ToString(), HashFunction.Keccak384);
+        }
+
+        [Test]
         public void Secp521r1_Blake2B512() {
             TestEcJPake(Sec2EllipticCurve.Secp521r1.ToString(), HashFunction.Blake2B512);
+        }
+
+        [Test]
+        public void Secp521r1_Keccak512()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp521r1.ToString(), HashFunction.Keccak512);
+        }
+
+        [Test]
+        public void Secp521r1_Sha512()
+        {
+            TestEcJPake(Sec2EllipticCurve.Secp521r1.ToString(), HashFunction.Sha512);
         }
 
 		private static void TestEcJPake(string curveName, HashFunction hashFunction) {
