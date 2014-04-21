@@ -13,7 +13,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using System;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.Support.Math;
@@ -65,9 +64,19 @@ namespace ObscurCore.Cryptography.KeyAgreement
 		internal static void GenerateEcKeypair (ECDomainParameters domain, out ECPoint Q, out BigInteger d) {
 			ECPoint g = domain.G;
 			BigInteger n = domain.N;
+		    var minWeight = n.BitLength >> 2;
 
 			do {
-				d = new BigInteger(n.BitLength, StratCom.EntropySupplier);
+			    do {
+                    d = new BigInteger(n.BitLength, StratCom.EntropySupplier);
+                    /*
+                     * WNAF requirement in while condition:
+                     * A minimum weight of the NAF representation, since low-weight primes may be 
+                     * weak against a version of the number-field-sieve for the discrete-logarithm-problem.
+                     * 
+                     * See "The number field sieve for integers of low weight", Oliver Schirokauer.
+                     */
+                } while ((d.CompareTo(BigInteger.Two) < 0 || d.CompareTo(n) >= 0) && WNafUtilities.GetNafWeight(d) < minWeight);
 			} while (d.SignValue == 0 || (d.CompareTo(n) >= 0));
 
 			Q = EcBasePointMultiplier.Multiply(g, d);
