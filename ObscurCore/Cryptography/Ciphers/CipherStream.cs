@@ -72,39 +72,30 @@ namespace ObscurCore.Cryptography.Ciphers
                 case SymmetricCipherType.None:
                     throw new ConfigurationInvalidException("Type: None/null value is never set in a valid cipher configuration.");
                 case SymmetricCipherType.Block:
-                    BlockCipher blockCipherEnum;
-                    try {
-                        blockCipherEnum = config.CipherName.ToEnum<BlockCipher>();
-                    } catch (EnumerationParsingException e) {
-                        throw new ConfigurationInvalidException("Cipher unknown/unsupported.", e);
-                    }
-
-                    if (key.Length.Equals(config.KeySizeBits / 8) == false)
-                        throw new InvalidDataException("Key is not of the declared length.");
-                    if (Athena.Cryptography.BlockCiphers[blockCipherEnum].AllowableBlockSizes.Contains(config.BlockSizeBits) == false)
-                        throw new NotSupportedException("Specified block size is unsupported.");
-
                     var blockConfigWrapper = new BlockCipherConfigurationWrapper(config);
-                    var blockCipher = CipherFactory.CreateBlockCipher(blockCipherEnum, blockConfigWrapper.BlockSizeBits);
+                    if (key.Length != blockConfigWrapper.KeySizeBytes)
+                        throw new ArgumentException("Key is not of the length declared in the cipher configuration.", "key");
+
+                    var blockCipher = CipherFactory.CreateBlockCipher(blockConfigWrapper.BlockCipher, blockConfigWrapper.BlockSizeBits);
                     // Overlay the cipher with the mode of operation
                     blockCipher = CipherFactory.OverlayBlockCipherWithMode(blockCipher, blockConfigWrapper.Mode);
-
                     IBlockCipherPadding padding = null;
                     BlockCipherPadding paddingEnum = blockConfigWrapper.Padding;
                     if (paddingEnum != BlockCipherPadding.None) {
                         padding = CipherFactory.CreatePadding(paddingEnum);
                         padding.Init(StratCom.EntropySupplier);
                     }
-
                     blockCipher.Init(encrypting, key, blockConfigWrapper.IV);
                     _cipher = new BlockCipherWrapper(encrypting, blockCipher, padding);
 
                     break;
                 case SymmetricCipherType.Stream:
-                    var streamWrapper = new StreamCipherConfigurationWrapper(config);
-                    // Instantiate the cipher
-                    var streamCipher = CipherFactory.CreateStreamCipher(streamWrapper.StreamCipher);
-                    streamCipher.Init(encrypting, key, streamWrapper.Nonce);
+                    var streamConfigWrapper = new StreamCipherConfigurationWrapper(config);
+                    if (key.Length != streamConfigWrapper.KeySizeBytes)
+                        throw new ArgumentException("Key is not of the length declared in the cipher configuration.", "key");
+
+                    var streamCipher = CipherFactory.CreateStreamCipher(streamConfigWrapper.StreamCipher);
+                    streamCipher.Init(encrypting, key, streamConfigWrapper.Nonce);
                     _cipher = new StreamCipherWrapper(encrypting, streamCipher, strideIncreaseFactor: 2);
 
                     break;
