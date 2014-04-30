@@ -35,7 +35,7 @@ namespace ObscurCore.Tests.Packaging
 			TimeSpan enc, dec;
 			using (var ms = new MemoryStream ()) {
 				var sw = Stopwatch.StartNew ();
-				var package = new PackageWriter (preKey, false, scheme); // low entropy = false
+				var package = new PackageWriter (preKey, true, scheme); // low entropy = false
 				foreach (var file in IOTestBase.LargeBinaryFileList) {
 					package.AddFile (file.FullName);
 				}

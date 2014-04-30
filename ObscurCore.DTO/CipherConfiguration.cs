@@ -14,19 +14,17 @@
 //    limitations under the License.
 
 using System;
-using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using ProtoBuf;
 
 namespace ObscurCore.DTO
 {
     /// <summary>
-    /// Configuration for CryptoStream [en/de]crypting streams.
+    /// Configuration for CipherStream [en/de]crypting streams.
     /// </summary>
     [ProtoContract]
-    public class SymmetricCipherConfiguration : ISymmetricCipherConfiguration, 
-        IDataTransferObject, IEquatable<SymmetricCipherConfiguration>
+    public class CipherConfiguration : ICipherConfiguration, 
+        IDataTransferObject, IEquatable<CipherConfiguration>
     {
         #region Data relevant to all symmetric ciphers
 
@@ -34,7 +32,7 @@ namespace ObscurCore.DTO
 		/// Category/type of the cipher primitive, e.g. block or stream.
         /// </summary>
 		[ProtoMember(1, IsRequired = true)]
-        public SymmetricCipherType Type { get; set; }
+        public CipherType Type { get; set; }
 
         /// <summary>
         /// Name of the cipher primitive, e.g. AES.
@@ -79,7 +77,7 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((SymmetricCipherConfiguration) obj);
+            return Equals((CipherConfiguration) obj);
         }
 
         /// <summary>
@@ -89,7 +87,7 @@ namespace ObscurCore.DTO
         /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
-        public bool Equals (SymmetricCipherConfiguration other) {
+        public bool Equals (CipherConfiguration other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Type.Equals(other.Type) &&
@@ -129,13 +127,13 @@ namespace ObscurCore.DTO
         }
     }
 
-    public interface ISymmetricCipherConfiguration
+    public interface ICipherConfiguration
     {
         /// <summary>
         /// Category/type of the cipher primitive, e.g. block, AEAD, or stream. 
         /// AEAD must be specified if using a block cipher in a AEAD mode of operation.
         /// </summary>
-        SymmetricCipherType Type { get; }
+        CipherType Type { get; }
 
         /// <summary>
         /// Name of the cipher primitive, e.g. AES.

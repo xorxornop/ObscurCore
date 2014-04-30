@@ -108,7 +108,7 @@ namespace ObscurCore.DTO
         /// Encryption configuration for this payload item.
         /// </summary>
         [ProtoMember(6, IsRequired = true)]
-        public SymmetricCipherConfiguration Encryption { get; set; }
+        public CipherConfiguration Encryption { get; set; }
 
 		/// <summary>
 		/// Cryptographic key for encryption of the payload item. 
@@ -280,7 +280,7 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Encryption configuration for this payload item.
         /// </summary>
-        SymmetricCipherConfiguration Encryption { get; }
+        CipherConfiguration Encryption { get; }
 
 		byte[] EncryptionKey { get; }
 

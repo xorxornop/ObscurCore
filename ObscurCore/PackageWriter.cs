@@ -82,7 +82,7 @@ namespace ObscurCore
 		/// <summary>
 		/// Configuration of symmetric cipher used for encryption of the manifest.
 		/// </summary>
-		internal SymmetricCipherConfiguration ManifestCipher {
+		internal CipherConfiguration ManifestCipher {
 			get { return _manifestCryptoConfig.SymmetricCipher; }
 			private set {
 				switch (ManifestCryptoScheme) {
@@ -164,12 +164,13 @@ namespace ObscurCore
 
 		// Constructors
 
-		/// <summary>
-		/// Create a new package using default symmetric-only encryption for security.
-		/// </summary>
-		/// <param name="key">Cryptographic key known to the receiver to use for the manifest.</param>
-		/// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-		public PackageWriter (byte[] key, bool lowEntropy, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Frameshift) {
+	    /// <summary>
+	    /// Create a new package using default symmetric-only encryption for security.
+	    /// </summary>
+	    /// <param name="key">Cryptographic key known to the receiver to use for the manifest.</param>
+	    /// <param name="lowEntropy">Byte key supplied has low entropy (e.g. from a human password).</param>
+	    /// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
+	    public PackageWriter (byte[] key, bool lowEntropy, PayloadLayoutScheme layoutScheme = PayloadLayoutScheme.Frameshift) {
 			_manifest = new Manifest();
 			_manifestHeader = new ManifestHeader
 			{
@@ -278,7 +279,6 @@ namespace ObscurCore
 			}
 		}
 
-
 		/// <summary>
 		/// Creates a new PayloadItem DTO object.
 		/// </summary>
@@ -334,8 +334,8 @@ namespace ObscurCore
 		private static PayloadItem CreateItem(Func<Stream> itemData, PayloadItemType itemType, long externalLength, 
 			string relativePath, byte[] preKey, bool lowEntropyKey = true)
 		{
-			byte[] keyConfirmatConfVerifiedOutput;
-			var keyConfirmatConf = CreateDefaultPayloadItemKeyConfirmationConfiguration (preKey, out keyConfirmatConfVerifiedOutput);
+			byte[] keyConfirmationVerifiedOutput;
+			var keyConfirmatConf = CreateDefaultPayloadItemKeyConfirmationConfiguration (preKey, out keyConfirmationVerifiedOutput);
 			var kdfConf = CreateDefaultPayloadItemKeyDerivation (preKey.Length, lowEntropyKey);
 
 			var newItem = new PayloadItem {
@@ -345,7 +345,7 @@ namespace ObscurCore
 				Encryption = CreateDefaultPayloadItemCipherConfiguration(),
 				Authentication = CreateDefaultPayloadItemAuthenticationConfiguration(),
 				KeyConfirmation = keyConfirmatConf,
-				KeyConfirmationVerifiedOutput = keyConfirmatConfVerifiedOutput,
+				KeyConfirmationVerifiedOutput = keyConfirmationVerifiedOutput,
 				KeyDerivation = kdfConf
 			};
 
@@ -353,7 +353,7 @@ namespace ObscurCore
 			return newItem;
 		}
 
-		private static SymmetricCipherConfiguration CreateDefaultPayloadItemCipherConfiguration() {
+		private static CipherConfiguration CreateDefaultPayloadItemCipherConfiguration() {
 			return CipherConfigurationFactory.CreateStreamCipherConfiguration (StreamCipher.Hc128);
 		}
 
@@ -374,9 +374,9 @@ namespace ObscurCore
 		/// <param name="lowEntropyPreKey">Pre-key has low entropy, e.g. a human-memorisable passphrase.</param>
 		private static KeyDerivationConfiguration CreateDefaultPayloadItemKeyDerivation (int keyLengthBytes, bool lowEntropyPreKey = true) {
 			var schemeConfig = new ScryptConfiguration {
-                Iterations = lowEntropyPreKey ? 32768 : 4096,
+                Iterations = lowEntropyPreKey ? 16384 : 1024, // 2^14 : 2^10
 				Blocks = 8,
-				Parallelism = 2
+				Parallelism = 1
 			};
 			var config = new KeyDerivationConfiguration {
 				FunctionName = KeyDerivationFunction.Scrypt.ToString(),
@@ -413,7 +413,7 @@ namespace ObscurCore
 		/// <param name="key">Passphrase known to the receiver of the package.</param>
 		/// <exception cref="ArgumentException">Array is null or zero-length.</exception>
 		public void SetManifestCryptoSymmetric (string key) {
-			SetManifestCryptoSymmetric (Encoding.UTF8.GetBytes(key), lowEntropy: true);
+			SetManifestCryptoSymmetric (Encoding.UTF8.GetBytes(key), lowEntropy:true);
 		}
 
 		/// <summary>
@@ -436,7 +436,7 @@ namespace ObscurCore
 			Debug.Print(DebugUtility.CreateReportString("PackageWriter", "SetManifestCryptoSymmetric", "Manifest pre-key",
 				_writingPreManifestKey.ToHexString()));
 
-			SymmetricCipherConfiguration cipherConfig = _manifestCryptoConfig == null
+			CipherConfiguration cipherConfig = _manifestCryptoConfig == null
                 ? CreateDefaultManifestCipherConfiguration()
                 : _manifestCryptoConfig.SymmetricCipher ?? CreateDefaultManifestCipherConfiguration();
 
@@ -515,7 +515,7 @@ namespace ObscurCore
 			Debug.Print(DebugUtility.CreateReportString("PackageWriter", "SetManifestCryptoUM1", "Manifest pre-key",
 				_writingPreManifestKey.ToHexString()));
 
-			SymmetricCipherConfiguration cipherConfig = _manifestCryptoConfig == null
+			CipherConfiguration cipherConfig = _manifestCryptoConfig == null
 	            ? CreateDefaultManifestCipherConfiguration()
 	            : _manifestCryptoConfig.SymmetricCipher ?? CreateDefaultManifestCipherConfiguration();
 
@@ -542,7 +542,7 @@ namespace ObscurCore
 			_manifestHeader.CryptographySchemeName = ManifestCryptographyScheme.UM1Hybrid.ToString();
 		}
 
-		private static SymmetricCipherConfiguration CreateDefaultManifestCipherConfiguration () {
+		private static CipherConfiguration CreateDefaultManifestCipherConfiguration () {
 			return CipherConfigurationFactory.CreateStreamCipherConfiguration (StreamCipher.XSalsa20);
 		}
 
@@ -564,8 +564,8 @@ namespace ObscurCore
 		/// <param name="lowEntropyPreKey">Pre-key has low entropy, e.g. a human-memorisable passphrase.</param>
 		private static KeyDerivationConfiguration CreateDefaultManifestKeyDerivation (int keyLengthBytes, bool lowEntropyPreKey = true) {
 			var schemeConfig = new ScryptConfiguration {
-				Iterations = lowEntropyPreKey ? 32768 : 1024,
-				Blocks = 8,
+				Iterations = lowEntropyPreKey ? 65536 : 1024, // 2^16 : 2^10
+                Blocks = lowEntropyPreKey ? 16 : 8,
 				Parallelism = 2
 			};
 			var config = new KeyDerivationConfiguration {

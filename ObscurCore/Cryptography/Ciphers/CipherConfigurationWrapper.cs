@@ -22,13 +22,13 @@ namespace ObscurCore.Cryptography.Ciphers
     /// </summary>
     public abstract class CipherConfigurationWrapper
     {
-        protected readonly SymmetricCipherConfiguration Configuration;
+        protected readonly CipherConfiguration Configuration;
 
-        protected CipherConfigurationWrapper(SymmetricCipherConfiguration config) {
+        protected CipherConfigurationWrapper(CipherConfiguration config) {
             Configuration = config;
         }
 
-        public SymmetricCipherConfiguration RawConfiguration {
+        public CipherConfiguration RawConfiguration {
             get { return Configuration; }
         }
 

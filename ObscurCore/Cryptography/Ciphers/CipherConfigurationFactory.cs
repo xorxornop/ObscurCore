@@ -24,10 +24,10 @@ namespace ObscurCore.Cryptography.Ciphers
 {
     public static class CipherConfigurationFactory
     {
-        public static SymmetricCipherConfiguration CreateBlockCipherConfiguration(BlockCipher cipher,
+        public static CipherConfiguration CreateBlockCipherConfiguration(BlockCipher cipher,
         	BlockCipherMode mode, BlockCipherPadding padding, int? keySize = null, int? blockSize = null)
         {
-            var config = new SymmetricCipherConfiguration { Type = SymmetricCipherType.Block };
+            var config = new CipherConfiguration { Type = CipherType.Block };
 
             // Set the key size
             var keySizeNonNull = keySize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultKeySize;
@@ -63,10 +63,10 @@ namespace ObscurCore.Cryptography.Ciphers
             return config;
         }
 
-        public static SymmetricCipherConfiguration CreateStreamCipherConfiguration(StreamCipher cipher,
+        public static CipherConfiguration CreateStreamCipherConfiguration(StreamCipher cipher,
         	int? keySize = null)
         {
-            var config = new SymmetricCipherConfiguration {Type = SymmetricCipherType.Stream};
+            var config = new CipherConfiguration {Type = CipherType.Stream};
 
             var keySizeNonNull = keySize ?? Athena.Cryptography.StreamCiphers[cipher].DefaultKeySize;
             if (Athena.Cryptography.StreamCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {

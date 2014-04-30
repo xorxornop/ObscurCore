@@ -14,7 +14,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 			Cipher = cipher;
 		}
 
-		protected override ObscurCore.DTO.SymmetricCipherConfiguration GetCipherConfiguration (CipherTestCase testCase) {
+		protected override ObscurCore.DTO.CipherConfiguration GetCipherConfiguration (CipherTestCase testCase) {
 			var config = CipherConfigurationFactory.CreateStreamCipherConfiguration (Cipher, testCase.Key.Length * 8);
 			config.IV = testCase.IV;
 			return config;

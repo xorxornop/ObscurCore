@@ -140,7 +140,7 @@ namespace ObscurCore.Tests.Cryptography
 			RunDiscreteVectorTest (number, testCase);
 		}
 
-		protected abstract SymmetricCipherConfiguration GetCipherConfiguration (CipherTestCase testCase);
+		protected abstract CipherConfiguration GetCipherConfiguration (CipherTestCase testCase);
 
 		protected void RunDiscreteVectorTest(int number, DiscreteVectorTestCase testCase) {
 			var config = GetCipherConfiguration (testCase);
@@ -187,7 +187,7 @@ namespace ObscurCore.Tests.Cryptography
 
 		// Performance testing resources (not called in this base class, but called from derived classes)
 
-        protected void RunPerformanceTest (SymmetricCipherConfiguration config, byte[] overrideKey = null) {
+        protected void RunPerformanceTest (CipherConfiguration config, byte[] overrideKey = null) {
 			MemoryStream msInputPlaintext = LargeBinaryFile;
 			byte[] key = overrideKey ?? CreateRandomByteArray (config.KeySizeBits);
 			TimeSpan encryptTime, decryptTime;

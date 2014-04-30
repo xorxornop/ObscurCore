@@ -34,7 +34,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		/// <param name="cipherKeySize">Cipher key size in bytes.</param>
 		/// <param name="macKeySize">MAC key size in bytes.</param>
 		/// <param name="kdfConfig">Key derivation function configuration.</param>
-		/// <param name="encryptionKey">Cipher key.</param>
+		/// <param name="cipherKey">Cipher key.</param>
 		/// <param name="macKey">Authentication key.</param>
 		public static void DeriveWorkingKeys (byte[] preKey, int cipherKeySize, int macKeySize, 
 			KeyDerivationConfiguration kdfConfig, out byte[] cipherKey, out byte[] macKey)

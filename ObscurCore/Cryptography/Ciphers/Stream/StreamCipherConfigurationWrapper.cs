@@ -37,7 +37,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
 {
     public class StreamCipherConfigurationWrapper : CipherConfigurationWrapper
     {
-        public StreamCipherConfigurationWrapper(SymmetricCipherConfiguration config) : base(config) {}
+        public StreamCipherConfigurationWrapper(CipherConfiguration config) : base(config) {}
 
         protected override void ThrowIfKeySizeIncompatible() {
             if (!Athena.Cryptography.StreamCiphers[StreamCipher].AllowableKeySizes.Contains(Configuration.KeySizeBits)) {
@@ -80,10 +80,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
             {
                 return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                     "Nonce, hex: {3}",
-					SymmetricCipherType.Stream, cipher, KeySizeBits, Nonce.IsNullOrZeroLength() ? "none" : Nonce.ToHexString());
+					CipherType.Stream, cipher, KeySizeBits, Nonce.IsNullOrZeroLength() ? "none" : Nonce.ToHexString());
             }
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}",
-					SymmetricCipherType.Stream, cipher, KeySizeBits);
+					CipherType.Stream, cipher, KeySizeBits);
         }
     }
 }

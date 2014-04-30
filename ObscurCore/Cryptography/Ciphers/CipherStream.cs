@@ -58,7 +58,7 @@ namespace ObscurCore.Cryptography.Ciphers
         /// <param name="config">Configuration object describing how to set up the internal cipher and associated services.</param>
         /// <param name="key">Derived cryptographic key for the internal cipher to operate with. Overrides key in configuration.</param>
         /// <param name="closeOnDispose">Set to <c>true</c> to also close the base stream when closing, or vice-versa.</param>
-        public CipherStream (System.IO.Stream binding, bool encrypting, SymmetricCipherConfiguration config,
+        public CipherStream (System.IO.Stream binding, bool encrypting, CipherConfiguration config,
                                       byte[] key, bool closeOnDispose)
             : base(binding, encrypting, closeOnDispose) {
             if (binding == null)
@@ -69,9 +69,9 @@ namespace ObscurCore.Cryptography.Ciphers
                 throw new ArgumentException("No key provided.", "key");
 
             switch (config.Type) {
-                case SymmetricCipherType.None:
+                case CipherType.None:
                     throw new ConfigurationInvalidException("Type: None/null value is never set in a valid cipher configuration.");
-                case SymmetricCipherType.Block:
+                case CipherType.Block:
                     var blockConfigWrapper = new BlockCipherConfigurationWrapper(config);
                     if (key.Length != blockConfigWrapper.KeySizeBytes)
                         throw new ArgumentException("Key is not of the length declared in the cipher configuration.", "key");
@@ -89,7 +89,7 @@ namespace ObscurCore.Cryptography.Ciphers
                     _cipher = new BlockCipherWrapper(encrypting, blockCipher, padding);
 
                     break;
-                case SymmetricCipherType.Stream:
+                case CipherType.Stream:
                     var streamConfigWrapper = new StreamCipherConfigurationWrapper(config);
                     if (key.Length != streamConfigWrapper.KeySizeBytes)
                         throw new ArgumentException("Key is not of the length declared in the cipher configuration.", "key");

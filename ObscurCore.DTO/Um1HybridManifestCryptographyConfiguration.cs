@@ -53,7 +53,7 @@ namespace ObscurCore.DTO
 		/// Configuration of the cipher used in encryption of the manifest.
 		/// </summary>
 		[ProtoMember(4, IsRequired = true)]
-		public SymmetricCipherConfiguration SymmetricCipher { get; set; }
+		public CipherConfiguration SymmetricCipher { get; set; }
 
 		/// <summary>
 		/// Configuration for the authentication of the manifest and cipher configuration.
@@ -142,7 +142,7 @@ namespace ObscurCore.DTO
 		/// <summary>
 		/// Configuration of the cipher used in encryption of the manifest.
 		/// </summary>
-		SymmetricCipherConfiguration SymmetricCipher { get; }
+		CipherConfiguration SymmetricCipher { get; }
 
 		/// <summary>
 		/// Configuration for the authentication of the manifest and cipher configuration.

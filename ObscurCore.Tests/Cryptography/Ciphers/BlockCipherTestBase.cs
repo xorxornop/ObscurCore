@@ -32,7 +32,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 			Cipher = cipher;
 		}
 
-		protected override ObscurCore.DTO.SymmetricCipherConfiguration GetCipherConfiguration (CipherTestCase testCase) {
+		protected override ObscurCore.DTO.CipherConfiguration GetCipherConfiguration (CipherTestCase testCase) {
 			if (String.IsNullOrEmpty(testCase.Extra)) {
 				throw new InvalidOperationException ("Block cipher test cases require block & padding information (extra is null/empty).");
 			}

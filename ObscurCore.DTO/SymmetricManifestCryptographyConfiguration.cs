@@ -14,7 +14,6 @@
 //    limitations under the License.
 
 using System;
-using System.IO;
 using System.Linq;
 using ProtoBuf;
 
@@ -22,8 +21,9 @@ namespace ObscurCore.DTO
 {
     // ***************************************************************************************************************************************************
     // *             This object is not explicitly included in the Manifest supraobject, but may be included in byte-array-serialised form.              *
-    // *             They may however incorporate objects in the Manifest superstructure, such as a SymmetricCipherConfiguration or similar.             *
+    // *             They may however incorporate objects in the Manifest superstructure, such as a CipherConfiguration or similar.                      *
     // ***************************************************************************************************************************************************
+
 
     /// <summary>
     /// Configuration of a symmetric cryptosystem to secure a package manifest.
@@ -56,7 +56,7 @@ namespace ObscurCore.DTO
 		/// Configuration of the cipher used in encryption of the manifest.
 		/// </summary>
 		[ProtoMember(4, IsRequired = true)]
-		public SymmetricCipherConfiguration SymmetricCipher { get; set; }
+		public CipherConfiguration SymmetricCipher { get; set; }
 
 		/// <summary>
 		/// Configuration for the authentication of the manifest and cipher configuration.

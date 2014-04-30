@@ -75,7 +75,7 @@ namespace ObscurCore
 		/// Configuration of symmetric cipher used for encryption of the manifest.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Package is being read, not written.</exception>
-		internal SymmetricCipherConfiguration ManifestCipher {
+		internal CipherConfiguration ManifestCipher {
 			get { return _manifestCryptoConfig.SymmetricCipher; }
 		}
 

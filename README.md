@@ -59,7 +59,7 @@ The collection of items in the package is termed the "payload". There is a choic
 
 +	Simple
 +	Frameshift
-+	Fabric
++	Fabric [disabled in build until intermittent issues fixed - sorry]
 
 Simple just concatenates them together in varied (or sequential) order.
 Frameshift does the same but inserts variable (or fixed) lengths of bytes before and after each item.
@@ -79,10 +79,9 @@ Here's an example using the packager:
     }
 
 The above...
-*	Creates the symmetric-encryption package using XSalsa20 encryption, BLAKE2B256 key confirmation, BLAKE2B256 authentication, and key derivation with scrypt for the manifest
-* 	The package is set up with fabric payload layout (default) and a Salsa20-based CSPRNG
-*	Sets up key confirmation for the manifest with BLAKE2B-256 (default)
-*	Adds a file to a package with HC-128 encryption (random key & IV, default) and Poly1305-AES EtM authentication (random key and nonce, default). Key confirmation and derivation is not used due to the keys being random and stored in the manifest
+*	Creates the symmetric-encryption package, the manifest being configured to use XSalsa20 encryption, Keccak256 key confirmation, Keccak256 authentication, and scrypt key derivation
+* 	The package is set up with frameshifting payload layout (default) and a Salsa20-based CSPRNG
+*	Adds a file to a package with HC-128 encryption (random key & IV, default) and Poly1305-AES EtM authentication (random key and nonce, default). Key confirmation and derivation is not used due to the keys being random and stored in the manifest. If keys are to be supplied by recipient, then the defaults are Keccak256 key confirmation and scrypt key derivation.
 *	Derives a package/manifest key (from the supplied one) with scrypt KDF
 *	Writes it out to the output stream
 

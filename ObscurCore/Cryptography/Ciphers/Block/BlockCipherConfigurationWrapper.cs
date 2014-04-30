@@ -23,7 +23,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 {
     public class BlockCipherConfigurationWrapper : CipherConfigurationWrapper
     {
-        public BlockCipherConfigurationWrapper(SymmetricCipherConfiguration config) : base(config) {}
+        public BlockCipherConfigurationWrapper(CipherConfiguration config) : base(config) {}
 
         protected override void ThrowIfKeySizeIncompatible() {
             if (!Athena.Cryptography.BlockCiphers[BlockCipher].AllowableKeySizes.Contains(Configuration.KeySizeBits)) {
@@ -130,11 +130,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block
                 return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                     "Block size, bits: {3}\nMode: {4}\nPadding: {5}\n" +
                     "IV, hex: {6}",
-                    SymmetricCipherType.Block, cipher, KeySizeBits, BlockSizeBits, mode, padding, hexIV);
+                    CipherType.Block, cipher, KeySizeBits, BlockSizeBits, mode, padding, hexIV);
             }
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                 "Block size, bits: {3}\nMode: {4}\nPadding: {5}",
-                SymmetricCipherType.Block, cipher, KeySizeBits, BlockSizeBits, mode, padding);
+                CipherType.Block, cipher, KeySizeBits, BlockSizeBits, mode, padding);
         }
     }
 }
