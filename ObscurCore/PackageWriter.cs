@@ -727,11 +727,12 @@ namespace ObscurCore
                 // Prepare to write manifest length prefix
                 Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest length prefix offset (absolute)",
 					outputStream.Position));
-				var manifestLengthHeaderLE = ((uint)manifestTemp.Length).ToLittleEndian();
+				var manifestLengthHeaderLE = ((UInt32)manifestTemp.Length).ToLittleEndian();
+                Debug.Assert(manifestLengthHeaderLE.Length == sizeof(UInt32));
                 // Obfuscate the manifest length header by XORing it with the derived manifest MAC key
-                manifestLengthHeaderLE.XorInPlaceInternal(0, workingManifestMacKey, 0, sizeof(uint));
+                manifestLengthHeaderLE.XorInPlaceInternal(0, workingManifestMacKey, 0, sizeof(UInt32));
                 // Write the now-obfuscated manifest length header
-				outputStream.Write(manifestLengthHeaderLE, 0, 4);
+                outputStream.Write(manifestLengthHeaderLE, 0, sizeof(UInt32));
 				Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest offset (absolute)",
 					outputStream.Position));
 

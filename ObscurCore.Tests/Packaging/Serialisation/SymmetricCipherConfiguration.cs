@@ -1,19 +1,18 @@
 using System.IO;
 using NUnit.Framework;
-using ObscurCore.Cryptography;
-using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Ciphers.Block;
+using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Tests.Packaging.Serialisation
 {
-	public class CipherConfiguration : SerialisationTestBase
+	public class SymmetricCipherConfiguration : SerialisationTestBase
 	{
 		[Test]
-		public void BlockCipher() {
+		public void BlockCipherConfiguration() {
             var inputObj = new CipherConfiguration() {
                 Type = CipherType.Block,
-                CipherName = "AES",
+                CipherName = BlockCipher.Aes.ToString(),
                 KeySizeBits = 128,
                 IV = new byte[] { 0x01, 0x02, 0x03 },
                 ModeName = BlockCipherMode.Ctr.ToString(),
@@ -25,16 +24,14 @@ namespace ObscurCore.Tests.Packaging.Serialisation
             stream.Seek(0, SeekOrigin.Begin);
 			var outputObj = DeserialiseFromMemory<CipherConfiguration>(stream);
 
-		    bool equal = inputObj.Equals(outputObj);
-
-			Assert.IsTrue (equal);
+			Assert.IsTrue (inputObj.Equals(outputObj));
 		}
 
         [Test]
-        public void StreamCipher () {
+        public void StreamCipherConfiguration() {
             var inputObj = new CipherConfiguration() {
                 Type = CipherType.Stream,
-                CipherName = "Salsa20",
+                CipherName = StreamCipher.Salsa20.ToString(),
                 KeySizeBits = 256,
                 IV = new byte[] { 0x01, 0x02, 0x03 }
             };
@@ -43,11 +40,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
             stream.Seek(0, SeekOrigin.Begin);
             var outputObj = DeserialiseFromMemory<CipherConfiguration>(stream);
 
-            bool equal = inputObj.Equals(outputObj);
-
-            Assert.IsTrue(equal);
+            Assert.IsTrue(inputObj.Equals(outputObj));
         }
-
-
 	}
 }

@@ -1,4 +1,5 @@
 using System;
+using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Support;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
@@ -6,16 +7,34 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	/// <summary>
 	/// Implementation of Daniel J. Bernstein's ChaCha stream cipher.
 	/// </summary>
-	public class ChaChaEngine : Salsa20Engine
+	public class ChaChaEngine : IStreamCipher, ICsprngCompatible
 	{
-		private const string CIPHER_NAME = "ChaCha";
+        /* Constants */
+        private const int STATE_SIZE = 16; // 16, 32 bit ints = 64 bytes
+        protected const int STRIDE_SIZE = STATE_SIZE * 4;
+        protected const int DEFAULT_ROUNDS = 20;
+
+		private const string CipherName = "ChaCha";
+
+        protected readonly static byte[]
+            Sigma = System.Text.Encoding.ASCII.GetBytes("expand 32-byte k"),
+            Tau = System.Text.Encoding.ASCII.GetBytes("expand 16-byte k");
+
+        /* Variables */
+        protected readonly int rounds;
+        protected bool initialised;
+        private int index;
+        protected readonly uint[] engineState = new uint[STATE_SIZE]; // state
+        protected readonly uint[] x = new uint[STATE_SIZE]; // internal buffer
+        private readonly byte[] keyStream = new byte[STATE_SIZE * 4];
+
+        private uint cW0, cW1, cW2;
 
 		/// <summary>
 		/// Creates a 20 round ChaCha engine.
 		/// </summary>
-		public ChaChaEngine()
+		public ChaChaEngine() : this(DEFAULT_ROUNDS)
 		{
-			CipherName = CIPHER_NAME;
 		}
 
 		/// <summary>
@@ -23,27 +42,166 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		/// </summary>
 		/// <param name="rounds">the number of rounds (must be an even number).</param>
 		public ChaChaEngine(int rounds)
-			: base(rounds)
 		{
-			CipherName = CIPHER_NAME;
+            if (rounds <= 0 || (rounds & 1) != 0) {
+                throw new ArgumentException("'rounds' must be a positive, even number.");
+            }
+
+            this.rounds = rounds;
 		}
 
-		public override string AlgorithmName
-		{
-			get { return CIPHER_NAME + rounds; }
-		}
+        public void Init(bool encrypting, byte[] key, byte[] iv)
+        {
+            if (iv == null)
+                throw new ArgumentNullException("iv", "ChaCha initialisation requires an IV.");
+            else if (iv.Length != 8)
+                throw new ArgumentException("ChaCha requires 8 bytes of IV.", "iv");
 
-		protected override void AdvanceCounter() {
+            if (key == null)
+                throw new ArgumentNullException("key", "ChaCha initialisation requires a key.");
+            else if (key.Length != 16 && key.Length != 32) {
+                throw new ArgumentException("ChaCha requires a 16 or 32 byte key");
+            }
+
+            SetKey(key, iv);
+            Reset();
+            initialised = true;
+        }
+
+        protected int NonceSize
+        {
+            get { return 8; }
+        }
+
+        public virtual string AlgorithmName
+        {
+            get {
+                if (rounds != DEFAULT_ROUNDS) 
+                    return CipherName + rounds;
+                else return CipherName;
+            }
+        }
+
+        public int StateSize
+        {
+            get { return 64; }
+        }
+
+        public byte ReturnByte(
+            byte input)
+        {
+            if (LimitExceeded()) {
+                throw new MaxBytesExceededException("2^70 byte limit per IV; Change IV");
+            }
+
+            if (index == 0) {
+                GenerateKeyStream(keyStream, 0);
+                AdvanceCounter();
+            }
+
+            byte output = (byte)(keyStream[index] ^ input);
+            index = (index + 1) & 63;
+
+            return output;
+        }
+
+		protected void AdvanceCounter() {
 			if (++engineState[12] == 0) {
 				++engineState[13];
 			}
 		}
 
-		protected override void ResetCounter() {
+        public void ProcessBytes(
+            byte[] inBytes,
+            int inOff,
+            int len,
+            byte[] outBytes,
+            int outOff)
+        {
+            if (!initialised)
+                throw new InvalidOperationException(AlgorithmName + " not initialised.");
+            if ((inOff + len) > inBytes.Length)
+                throw new ArgumentException("Input buffer too short.");
+            if ((outOff + len) > outBytes.Length)
+                throw new ArgumentException("Output buffer too short.");
+
+            if (LimitExceeded((uint)len)) {
+                throw new MaxBytesExceededException("2^70 byte limit per IV would be exceeded; Change IV");
+            }
+
+            if (len < 1)
+                return;
+
+            // Any left over from last time?
+            if (index > 0) {
+                var blen = STRIDE_SIZE - index;
+                if (blen > len)
+                    blen = len;
+                inBytes.Xor(inOff, keyStream, index, outBytes, outOff, blen);
+                index += blen;
+                inOff += blen;
+                outOff += blen;
+                len -= blen;
+            }
+
+            int remainder;
+            var blocks = Math.DivRem(len, STRIDE_SIZE, out remainder);
+
+            for (var i = 0; i < blocks; i++) {
+                GenerateKeyStream(keyStream, 0);
+                AdvanceCounter();
+                inBytes.Xor(inOff, keyStream, 0, outBytes, outOff, STRIDE_SIZE);
+                inOff += STRIDE_SIZE;
+                outOff += STRIDE_SIZE;
+            }
+
+            if (remainder > 0) {
+                GenerateKeyStream(keyStream, 0);
+                AdvanceCounter();
+                inBytes.Xor(inOff, keyStream, 0, outBytes, outOff, remainder);
+            }
+            index = remainder;
+        }
+
+        public void GetKeystream(byte[] buffer, int offset, int length)
+        {
+            if (index > 0) {
+                var blen = STRIDE_SIZE - index;
+                if (blen > length)
+                    blen = length;
+                keyStream.CopyBytes(index, buffer, offset, blen);
+                index += blen;
+                offset += blen;
+                length -= blen;
+            }
+            while (length > 0) {
+                if (length >= STRIDE_SIZE) {
+                    GenerateKeyStream(buffer, offset);
+                    AdvanceCounter();
+                    offset += STRIDE_SIZE;
+                    length -= STRIDE_SIZE;
+                } else {
+                    GenerateKeyStream(keyStream, 0);
+                    AdvanceCounter();
+                    keyStream.CopyBytes(0, buffer, offset, length);
+                    index = length;
+                    length = 0;
+                }
+            }
+        }
+
+        public void Reset()
+        {
+            index = 0;
+            ResetLimitCounter();
+            ResetCounter();
+        }
+
+		protected void ResetCounter() {
 			engineState[12] = engineState[13] = 0;
 		}
 
-		protected override void SetKey(byte[] keyBytes, byte[] ivBytes) {
+		protected void SetKey(byte[] keyBytes, byte[] ivBytes) {
 			int offset = 0;
 			byte[] constants;
 
@@ -78,7 +236,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			engineState[15] = Pack.LE_To_UInt32(ivBytes, 4);
 		}
 
-		protected override void GenerateKeyStream(byte[] output, int offset)
+		protected void GenerateKeyStream(byte[] output, int offset)
 		{
 			ChaChaCoreNoChecks(rounds, engineState, x);
 			Pack.UInt32_To_LE(x, output, offset);
@@ -173,5 +331,40 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			x[14] = x14 + input[14];
 			x[15] = x15 + input[15];
 		}
+
+        internal static uint R(uint x, int y)
+        {
+            return (x << y) | (x >> (32 - y));
+        }
+
+        private void ResetLimitCounter()
+        {
+            cW0 = 0;
+            cW1 = 0;
+            cW2 = 0;
+        }
+        private bool LimitExceeded()
+        {
+            if (++cW0 == 0) {
+                if (++cW1 == 0) {
+                    return (++cW2 & 0x20) != 0;          // 2^(32 + 32 + 6)
+                }
+            }
+
+            return false;
+        }
+
+        private bool LimitExceeded(uint len)
+        {
+            uint old = cW0;
+            cW0 += len;
+            if (cW0 < old) {
+                if (++cW1 == 0) {
+                    return (++cW2 & 0x20) != 0;          // 2^(32 + 32 + 6)
+                }
+            }
+
+            return false;
+        }
 	}
 }

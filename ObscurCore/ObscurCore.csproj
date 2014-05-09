@@ -37,7 +37,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
@@ -48,7 +48,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -107,8 +107,10 @@
     <Compile Include="Cryptography\Ciphers\Block\Primitives\IdeaEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\NoekeonEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\Rc6Engine.cs" />
+    <Compile Include="Cryptography\Entropy\Primitives\StreamCipherGenerator.cs" />
     <Compile Include="Cryptography\CiphertextAuthenticationException.cs" />
     <Compile Include="Cryptography\CryptoException.cs" />
+    <Compile Include="Cryptography\Entropy\Primitives\RabbitGenerator.cs" />
     <Compile Include="Cryptography\IncompleteBlockException.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\DJB\Curve25519.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\DJB\Curve25519Field.cs" />

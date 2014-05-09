@@ -77,14 +77,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 		public virtual string AlgorithmName
 		{
-			get { 
-				string name = CipherName;
-				if (rounds != DEFAULT_ROUNDS)
-				{
-					name += "/" + rounds;
-				}
-				return name;
-			}
+		    get {
+		        if (rounds != DEFAULT_ROUNDS)
+		            return CipherName + "/" + rounds;
+		        else return CipherName;
+		    }
 		}
 
 		public int StateSize
@@ -112,7 +109,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return output;
 		}
 
-		protected virtual void AdvanceCounter ()
+		protected void AdvanceCounter ()
 		{
 			if (++engineState[8] == 0)
 			{
@@ -206,7 +203,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			ResetCounter();
 		}
 
-		protected virtual void ResetCounter ()
+		protected void ResetCounter ()
 		{
 			engineState[8] = engineState[9] = 0;
 		}

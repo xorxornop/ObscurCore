@@ -21,8 +21,6 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
 	public sealed class RabbitEngine : IStreamCipher, ICsprngCompatible
     {
-		private const int KEYSTREAM_LENGTH = 16;
-
 		private static uint[] A = new uint[] { 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D,
 			0xD34D34D3 };
 
@@ -38,9 +36,9 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 		private uint[] X = new uint[8];
 		private uint[] C = new uint[8];
-		private byte b = 0;
+	    private byte b;
 
-		private byte[] 			_keyStream 		= new byte[16];
+		private readonly byte[] _keyStream 		= new byte[16];
 		private int 			_keyStreamPtr 	= 16;
 
 
@@ -85,7 +83,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             //}
             if (!_initialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
 
-			if(_keyStreamPtr == 16) {
+			if (_keyStreamPtr == 16) {
 				GenerateKeystream (_keyStream, 0);
 				_keyStreamPtr = 0;
 			}
@@ -109,11 +107,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				return;
 
 			if(_keyStreamPtr < 16) {
-				int blockLength = 16 - _keyStreamPtr;
+				var blockLength = 16 - _keyStreamPtr;
 				if (blockLength > len) {
 					blockLength = len;
 				}
-				for (int i = 0; i < blockLength; i++) {
+				for (var i = 0; i < blockLength; i++) {
 					outBytes [outOff + i] = (byte)(_keyStream [_keyStreamPtr + i] ^ inBytes [inOff + i]);
 				}
 				_keyStreamPtr += blockLength;
@@ -135,7 +133,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 						fixed (byte* outPtr = outBytes) {
 							uint* inLongPtr = (uint*)(inPtr + inOff);
 							uint* outLongPtr = (uint*)(outPtr + outOff);
-							for (int i = 0; i < blocks; i++) {
+							for (var i = 0; i < blocks; i++) {
 								NextState();
 								outLongPtr[0] = inLongPtr[0] ^ X[6] ^ (X[3] >> 16) ^ (X[1] << 16);
 								outLongPtr[1] = inLongPtr[1] ^ X[4] ^ (X[1] >> 16) ^ (X[7] << 16);
@@ -150,7 +148,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				inOff += 16 * blocks;
 				outOff += 16 * blocks;
 			} else {
-				for (int i = 0; i < blocks; i++) {
+				for (var i = 0; i < blocks; i++) {
 					NextState();
 					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 0) ^ X[6] ^ (X[3] >> 16) ^ (X[1] << 16), outBytes, outOff + 0);
 					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ X[4] ^ (X[1] >> 16) ^ (X[7] << 16), outBytes, outOff + 4);
@@ -161,32 +159,16 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				}
 			}
 			#else
-			for (int i = 0; i < blocks; i++) {
+			for (var i = 0; i < blocks; i++) {
 				NextState();
-				uint x = Pack.LE_To_UInt32(inBytes, inOff + 0) ^ X[6] ^ X[3] >> 16 ^ X[1] << 16;
+				UInt32 x = Pack.LE_To_UInt32(inBytes, inOff + 0) ^ X[6] ^ X[3] >> 16 ^ X[1] << 16;
 				Pack.UInt32_To_LE(x, outBytes, outOff + 0);
-//				outBytes[outOff + 0] = (byte)((x >> 24) ^ inBytes[inOff + 0]);
-//				outBytes[outOff + 1] = (byte)((x >> 16) ^ inBytes[inOff + 1]);
-//				outBytes[outOff + 2] = (byte)((x >> 8) ^ inBytes[inOff + 2]);
-//				outBytes[outOff + 3] = (byte)(x ^ inBytes[inOff + 3]);
 				x = Pack.LE_To_UInt32(inBytes, inOff + 4) ^ X[4] ^ X[1] >> 16 ^ X[7] << 16;
 				Pack.UInt32_To_LE(x, outBytes, outOff + 4);
-//				outBytes[outOff + 4] = (byte)((x >> 24) ^ inBytes[inOff + 4]);
-//				outBytes[outOff + 5] = (byte)((x >> 16) ^ inBytes[inOff + 5]);
-//				outBytes[outOff + 6] = (byte)((x >> 8) ^ inBytes[inOff + 6]);
-//				outBytes[outOff + 7] = (byte)(x ^ inBytes[inOff + 7]);
 				x = Pack.LE_To_UInt32(inBytes, inOff + 8) ^ X[2] ^ X[7] >> 16 ^ X[5] << 16;
 				Pack.UInt32_To_LE(x, outBytes, outOff + 8);
-//				outBytes[outOff + 8] = (byte)((x >> 24) ^ inBytes[inOff + 8]);
-//				outBytes[outOff + 9]= (byte)((x >> 16) ^ inBytes[inOff + 9]);
-//				outBytes[outOff + 10] = (byte)((x >> 8) ^ inBytes[inOff + 10]);
-//				outBytes[outOff + 11] = (byte)(x ^ inBytes[inOff + 11]);
 				x = Pack.LE_To_UInt32(inBytes, inOff + 12) ^ X[0] ^ X[5] >> 16 ^ X[3] << 16;
 				Pack.UInt32_To_LE(x, outBytes, outOff + 12);
-//				outBytes[outOff + 12] = (byte)((x >> 24) ^ inBytes[inOff + 12]);
-//				outBytes[outOff + 13] = (byte)((x >> 16) ^ inBytes[inOff + 13]);
-//				outBytes[outOff + 14] = (byte)((x >> 8) ^ inBytes[inOff + 14]);
-//				outBytes[outOff + 15] = (byte)(x ^ inBytes[inOff + 15]);
 				inOff += 16;
 				outOff += 16;
 			}
@@ -195,7 +177,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			if (remainder == 0) return;
 
 			GenerateKeystream (_keyStream, 0);
-			for (int i = 0; i < remainder; i++) {
+			for (var i = 0; i < remainder; i++) {
 				outBytes[outOff + i] = (byte) (inBytes[inOff + i] ^ _keyStream[i]);
 			}
 			_keyStreamPtr = remainder;
@@ -203,7 +185,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 		public void GetKeystream(byte[] buffer, int offset, int length) {
 			if (_keyStreamPtr < 16) {
-				int blockLength = 16 - _keyStreamPtr;
+				var blockLength = 16 - _keyStreamPtr;
 				if (blockLength > length) {
 					blockLength = length;
 				}
@@ -218,7 +200,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				offset += 16;
 				length -= 16;
 			}
-			if(length > 0) {
+			if (length > 0) {
 				GenerateKeystream (_keyStream, 0);
 				Array.Copy(_keyStream, 0, buffer, offset, length);
 				_keyStreamPtr = length;
@@ -227,30 +209,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 		private void GenerateKeystream(byte[] buffer, int offset) {
 			NextState();
-			uint x = X[6] ^ X[3] >> 16 ^ X[1] << 16;
+			UInt32 x = X[6] ^ X[3] >> 16 ^ X[1] << 16;
 			Pack.UInt32_To_LE(x, buffer, offset + 0);
-//			buffer[offset + 0] = (byte) (x >> 24);
-//			buffer[offset + 1] = (byte) (x >> 16);
-//			buffer[offset + 2] = (byte) (x >> 8);
-//			buffer[offset + 3] = (byte) x;
 			x = X[4] ^ X[1] >> 16 ^ X[7] << 16;
 			Pack.UInt32_To_LE(x, buffer, offset + 4);
-//			buffer[offset + 4] = (byte) (x >> 24);
-//			buffer[offset + 5] = (byte) (x >> 16);
-//			buffer[offset + 6] = (byte) (x >> 8);
-//			buffer[offset + 7] = (byte) x;
 			x = X[2] ^ X[7] >> 16 ^ X[5] << 16;
 			Pack.UInt32_To_LE(x, buffer, offset + 8);
-//			buffer[offset + 8] = (byte) (x >> 24);
-//			buffer[offset + 9] = (byte) (x >> 16);
-//			buffer[offset + 10] = (byte) (x >> 8);
-//			buffer[offset + 11] = (byte) x;
 			x = X[0] ^ X[5] >> 16 ^ X[3] << 16;
 			Pack.UInt32_To_LE(x, buffer, offset + 12);
-//			buffer[offset + 12] = (byte) (x >> 24);
-//			buffer[offset + 13] = (byte) (x >> 16);
-//			buffer[offset + 14] = (byte) (x >> 8);
-//			buffer[offset + 15] = (byte) x;
 		}
 
         #region Private implementation
@@ -259,14 +225,15 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         /// Initialise the engine state with key material.
         /// </summary>
         private void KeySetup (byte[] key) {
-			ushort[] sKey = new ushort[key.Length>>1];
-			for (int i = 0; i < sKey.Length; ++i) {
-				sKey [i] = (ushort)((key [i << 1] << 8) | key [(2 << 1) + 1]);
+			var sKey = new UInt16[key.Length >> 1];
+			for (var i = 0; i < sKey.Length; ++i) {
+                sKey[i] = (UInt16)((key[i << 1] << 8) | key[(2 << 1) + 1]);
 			}
 			setupKey(sKey);
         }
 
-		public void setupKey(ushort[] key) {
+        public void setupKey(UInt16[] key)
+        {
 			/*			 unroll */
 			X[0] = (uint)key[1] << 16 | (uint)(key[0] & 0xFFFF);
 			X[1] = (uint)key[6] << 16 | (uint)(key[5] & 0xFFFF);
@@ -307,14 +274,15 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             if (iv.Length != 8) 
 				throw new ArgumentException("IV must be 8 bytes in length.");
 
-			ushort[] sIV = new ushort[iv.Length >> 1];
-			for(int i = 0; i < sIV.Length; i++) {
-				sIV[i] = (ushort)((iv[i << 1] << 8) | iv[(2 << 1) + 1]);
+            var sIV = new UInt16[iv.Length >> 1];
+			for (var i = 0; i < sIV.Length; i++) {
+                sIV[i] = (UInt16)((iv[i << 1] << 8) | iv[(2 << 1) + 1]);
 			}
 			setupIVPost (sIV);
         }
 
-		private void setupIVPost(ushort[] iv) {
+        private void setupIVPost(UInt16[] iv)
+        {
 			/*			 unroll */
 			C[0] ^= (uint)iv[1] << 16 | (uint)(iv[0] & 0xFFFF);
 			C[1] ^= (uint)iv[3] << 16 | (uint)(iv[1] & 0xFFFF);
@@ -335,17 +303,17 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
         private void NextState () {
 			/* counter update */
-			for(int j = 0; j < 8; ++j) {
-				ulong t = (C[j] & 0xFFFFFFFFul) + (A[j] & 0xFFFFFFFFul) + b;
+			for (var j = 0; j < 8; ++j) {
+                UInt64 t = (C[j] & 0xFFFFFFFFul) + (A[j] & 0xFFFFFFFFul) + b;
 				b = (byte) (t >> 32);
 				C[j] = (uint) (t & 0xFFFFFFFF);
 			}
 			/*			 next state function */
-			uint[] G = new uint[8];
-			for(int j = 0; j < 8; ++j) {
+			var G = new UInt32[8];
+			for (var j = 0; j < 8; ++j) {
 				// TODO: reduce this to use 32 bits only
-				ulong t = X[j] + C[j] & 0xFFFFFFFFul;
-				G[j] = (uint) ((t *= t) ^ t >> 32);
+				UInt64 t = X[j] + C[j] & 0xFFFFFFFFul;
+                G[j] = (UInt32)((t *= t) ^ t >> 32);
 			}
 			/*			 unroll */
 			X[0] = G[0] + rotl(G[7], 16) + rotl(G[6], 16);

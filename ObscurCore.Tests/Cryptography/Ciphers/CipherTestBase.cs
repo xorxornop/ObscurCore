@@ -121,18 +121,19 @@ namespace ObscurCore.Tests.Cryptography
 
 		[Test]
 		public void Correctness() {
+            Assume.That(DiscreteVectorTests.Count + SegmentedVectorTests.Count > 0, "No tests to run.");
+
 			var sb = new System.Text.StringBuilder (DiscreteVectorTests.Count + " discrete vector tests ran successfully:\n\n");
 			for (int i = 0; i < DiscreteVectorTests.Count; i++) {
 				RunDiscreteVectorTest (i, DiscreteVectorTests [i]);
 				sb.AppendLine ("> " + DiscreteVectorTests[i].Name);
 			}
 			sb.AppendLine ();
-			sb.AppendLine (SegmentedVectorTests.Count + " segmented vector tests ran successfully:\n");
+			sb.AppendLine (SegmentedVectorTests.Count + " segmented vectors:\n");
 			for (int i = 0; i < SegmentedVectorTests.Count; i++) {
 				RunSegmentedVectorTest (i, SegmentedVectorTests [i]);
 				sb.AppendLine ("> " + SegmentedVectorTests[i].Name);
 			}
-
 			Assert.Pass (sb.ToString());
 		}
 
@@ -149,20 +150,20 @@ namespace ObscurCore.Tests.Cryptography
 			byte[] ciphertext;
 			using (var msCiphertext = new MemoryStream ()) {
 				using (var cs = new CipherStream(msCiphertext, true, config, testCase.Key, false)) {
-					cs.Write (testCase.Plaintext, 0, testCase.Plaintext.Length);
+					cs.Write (plaintext, 0, plaintext.Length);
 				}
 				ciphertext = msCiphertext.ToArray ();
 			}
 
-			Assert.IsTrue (testCase.Ciphertext.SequenceEqualConstantTime(ciphertext), 
+			Assert.IsTrue (testCase.Ciphertext.SequenceEqual(ciphertext), 
 				"Test #{0} (\"{1}\") failed!", number, testCase.Name);
 		}
 
 		protected void RunSegmentedVectorTest(int number, SegmentedVectorTestCase testCase) {
 			var config = GetCipherConfiguration (testCase);
-			byte[] plaintext = new byte[testCase.IV.Length];
+			var plaintext = new byte[testCase.IV.Length];
 			var lastSegment = testCase.Segments.Last();
-			int requiredCiphertextLength = lastSegment.Offset + lastSegment.Length;
+			var requiredCiphertextLength = lastSegment.Offset + lastSegment.Length;
 			var msCiphertext = new MemoryStream ();
 
 			using (var cs = new CipherStream(msCiphertext, true, config, testCase.Key, false)) {
@@ -172,14 +173,13 @@ namespace ObscurCore.Tests.Cryptography
 			}
 
 			// Now we analyse the ciphertext segment-wise
-
 			foreach (var segment in testCase.Segments) {
 				msCiphertext.Seek (segment.Offset, SeekOrigin.Begin);
 				var segmentCiphertext = new byte[segment.Length];
 				msCiphertext.Read (segmentCiphertext, 0, segment.Length);
 				var referenceCiphertext = segment.Ciphertext;
 				// Validate the segment
-				Assert.IsTrue (referenceCiphertext.SequenceEqualConstantTime (segmentCiphertext), 
+				Assert.IsTrue (referenceCiphertext.SequenceEqual(segmentCiphertext), 
 					"Segmented vector test #{0} (\"{1}\") failed at segment {2}!", 
 					number, testCase.Name, segment.Name);
 			}
@@ -188,11 +188,10 @@ namespace ObscurCore.Tests.Cryptography
 		// Performance testing resources (not called in this base class, but called from derived classes)
 
         protected void RunPerformanceTest (CipherConfiguration config, byte[] overrideKey = null) {
-			MemoryStream msInputPlaintext = LargeBinaryFile;
-			byte[] key = overrideKey ?? CreateRandomByteArray (config.KeySizeBits);
-			TimeSpan encryptTime, decryptTime;
+			var msInputPlaintext = LargeBinaryFile;
+			var key = overrideKey ?? CreateRandomByteArray (config.KeySizeBits);
 
-			var msCiphertext = new MemoryStream();
+            var msCiphertext = new MemoryStream();
 			var sw = new Stopwatch();
 
 			// TEST STARTS HERE
@@ -202,7 +201,7 @@ namespace ObscurCore.Tests.Cryptography
 				msInputPlaintext.CopyTo(cs, GetBufferSize());
 			}
 			sw.Stop();
-			encryptTime = sw.Elapsed;
+			var encryptionElapsed = sw.Elapsed;
 
 			var msOutputPlaintext = new MemoryStream();
 			msCiphertext.Seek(0, SeekOrigin.Begin);
@@ -213,7 +212,7 @@ namespace ObscurCore.Tests.Cryptography
 				cs.CopyTo(msOutputPlaintext, GetBufferSize());
 			}
 			sw.Stop();
-			decryptTime = sw.Elapsed;
+			var decryptionElapsed = sw.Elapsed;
 
 			// TEST ENDS HERE
 
@@ -227,18 +226,17 @@ namespace ObscurCore.Tests.Cryptography
 
 			// OUTPUT SUCCESS STATISTICS
 
-			double encSpeed = ((double) msInputPlaintext.Length / 1048576) / encryptTime.TotalSeconds, decSpeed = 
-				((double) msInputPlaintext.Length / 1048576) / decryptTime.TotalSeconds;
+			double encSpeed = ((double) msInputPlaintext.Length / 1048576) / encryptionElapsed.TotalSeconds, decSpeed = 
+				((double) msInputPlaintext.Length / 1048576) / decryptionElapsed.TotalSeconds;
 			Assert.Pass("{0:N0} ms ({1:N2} MB/s) : {2:N0} ms ({3:N2} MB/s)", 
-				encryptTime.TotalMilliseconds, encSpeed, decryptTime.TotalMilliseconds, decSpeed);
+				encryptionElapsed.TotalMilliseconds, encSpeed, decryptionElapsed.TotalMilliseconds, decSpeed);
         }
 
 		protected static bool StreamsContentMatches (Stream a, Stream b, int length, out int failurePosition) {
-			for (int i = 0; i < length; i++) {
-				if (a.ReadByte() != b.ReadByte()) {
-					failurePosition = i;
-					return false;
-				}
+			for (var i = 0; i < length; i++) {
+			    if (a.ReadByte() == b.ReadByte()) continue;
+			    failurePosition = i;
+			    return false;
 			}
 			failurePosition = -1;
 			return true;

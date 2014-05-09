@@ -13,7 +13,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
 
@@ -26,12 +25,14 @@ namespace ObscurCore.Packaging
 		/// If fine-tuning is desired, use the specialised constructors.
 		/// </summary>
 		/// <param name="schemeEnum">Desired payload layout scheme.</param>
-		public static PayloadConfiguration CreateDefault(PayloadLayoutScheme schemeEnum) {
+		public static PayloadConfiguration CreateDefault(PayloadLayoutScheme schemeEnum)
+		{
+		    const CsPseudorandomNumberGenerator defaultCsprng = CsPseudorandomNumberGenerator.Rabbit; // Fast initialisation!
+
 			var config = new PayloadConfiguration {
                 SchemeName = schemeEnum.ToString(),
-				PrngName = CsPseudorandomNumberGenerator.Salsa20.ToString(),
-				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
-					CsPseudorandomNumberGenerator.Salsa20).SerialiseDto()
+                PrngName = defaultCsprng.ToString(),
+				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(defaultCsprng).SerialiseDto()
 			};
 			
 			switch (schemeEnum) {
@@ -89,7 +90,8 @@ namespace ObscurCore.Packaging
 			};
             return config;
 	    }
-        #if INCLUDE_FABRIC
+
+#if INCLUDE_FABRIC
 	    public static PayloadConfiguration CreateFabricFixed(CsPseudorandomNumberGenerator csprngEnum, int? stripeSize = null) {
 	        var fixedSize = stripeSize == null ? FabricPayloadMux.DefaultFixedStripeLength : stripeSize.Value;
             var config = new PayloadConfiguration {

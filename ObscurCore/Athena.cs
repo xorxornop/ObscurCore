@@ -470,6 +470,7 @@ namespace ObscurCore
             public const int HeaderVersion = 1;
 
             public const char PathDirectorySeperator = '/';
+            public static string PathRelativeUp = ".." + PathDirectorySeperator;
 
             public static readonly byte[] HeaderTagBytes = Encoding.UTF8.GetBytes("OCpkg-OHAI");
             

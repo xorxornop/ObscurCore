@@ -1,4 +1,5 @@
-//  Copyright 2013  Matthew Ducker
+﻿//
+//  Copyright 2014  Matthew Ducker
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -12,23 +13,22 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
+using ObscurCore.Cryptography.Ciphers;
+using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.Entropy.Primitives
 {
     /// <summary>
     /// Generates deterministic cryptographically secure pseudorandom number sequence 
-    /// using internal Salsa20 stream cipher.
+    /// using internal Rabbit stream cipher.
     /// </summary>
-    public sealed class Salsa20Generator : StreamCsprng
+    public sealed class StreamCipherGenerator : StreamCsprng
     {
-		public Salsa20Generator(StreamCipherCsprngConfiguration config) : base(new Salsa20Engine(), config) {
-			Cipher.Init(true, Config.Key, Config.Nonce);
-        }
-
-        public Salsa20Generator(byte[] config) : base(new Salsa20Engine(), config) {
-			Cipher.Init(true, Config.Key, Config.Nonce);
+        public StreamCipherGenerator(StreamCipherCsprngConfiguration config)
+            : base(CipherFactory.CreateStreamCipher(config.CipherName.ToEnum<StreamCipher>()), config)
+        {
+            Cipher.Init(true, Config.Key, Config.Nonce);
         }
     }
 }

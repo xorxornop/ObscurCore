@@ -19,7 +19,7 @@ using ObscurCore.Cryptography.Support;
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
 	/// <summary>
-	/// Variant of Salsa20 with a extended nonce (192 bit versus 64) for greater security.
+	/// Variant of Salsa20 with a extended nonce for greater security.
 	/// </summary>
 	public class XSalsa20Engine : Salsa20Engine
 	{

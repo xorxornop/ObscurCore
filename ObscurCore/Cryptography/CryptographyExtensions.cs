@@ -91,31 +91,53 @@ namespace ObscurCore.Cryptography
 		}
 
 		internal static void XorInternal(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff, int length) {
-			#if INCLUDE_UNSAFE
+			#if (INCLUDE_UNSAFE && !X64)
 			int remainder;
-			int uintOps = Math.DivRem(length, sizeof(uint), out remainder);
+            var uintOps = Math.DivRem(length, sizeof(uint), out remainder);
 			unsafe {
 				fixed (byte* aPtr = a) {
 					fixed (byte* bPtr = b) {
 						fixed (byte* outputPtr = output) {
-							uint* aUintPtr = (uint*)(aPtr + aOff);
-							uint* bUintPtr = (uint*)(bPtr + bOff);
-							uint* outputUintPtr = (uint*)(outputPtr + outputOff);
-							for (int i = 0; i < uintOps; i++) {
+                            var aUintPtr = (uint*)(aPtr + aOff);
+                            var bUintPtr = (uint*)(bPtr + bOff);
+                            var outputUintPtr = (uint*)(outputPtr + outputOff);
+                            for (var i = 0; i < uintOps; i++) {
 								outputUintPtr[i] = aUintPtr[i] ^ bUintPtr[i];
 							}
 						}
 					}
 				}
 			}
-			int increment = uintOps * sizeof(uint);
+            var increment = uintOps * sizeof(uint);
 			aOff += increment;
 			bOff += increment;
 			outputOff += increment;
 			length = remainder;
-			#endif
+            #elif (INCLUDE_UNSAFE && X64)
+			int remainder;
+            var ulongOps = Math.DivRem(length, sizeof(ulong), out remainder);
+			unsafe {
+				fixed (byte* aPtr = a) {
+					fixed (byte* bPtr = b) {
+						fixed (byte* outputPtr = output) {
+							var aUlongPtr = (ulong*)(aPtr + aOff);
+							var bUlongPtr = (ulong*)(bPtr + bOff);
+							var outputUlongPtr = (ulong*)(outputPtr + outputOff);
+							for (var i = 0; i < ulongOps; i++) {
+								outputUlongPtr[i] = aUlongPtr[i] ^ bUlongPtr[i];
+							}
+						}
+					}
+				}
+			}
+            var increment = ulongOps * sizeof(ulong);
+            aOff += increment;
+			bOff += increment;
+			outputOff += increment;
+			length = remainder;	
+#endif
 
-			for (int i = 0; i < length; i++) {
+            for (var i = 0; i < length; i++) {
 				output[outputOff + i] = (byte)(a[aOff + i] ^ b[bOff + i]);
 			}
 		}
@@ -145,28 +167,45 @@ namespace ObscurCore.Cryptography
 		}
 
 		internal static void XorInPlaceInternal(this byte[] a, int aOff, byte[] b, int bOff, int length) {
-			#if INCLUDE_UNSAFE
+			#if (INCLUDE_UNSAFE && !X64)
 			int remainder;
 			int uintOps = Math.DivRem(length, sizeof(uint), out remainder);
 			unsafe {
 				fixed (byte* aPtr = a) {
 					fixed (byte* bPtr = b) {
-						uint* aUintPtr = (uint*)(aPtr + aOff);
-						uint* bUintPtr = (uint*)(bPtr + bOff);
-						for (int i = 0; i < uintOps; i++) {
+						var aUintPtr = (uint*)(aPtr + aOff);
+						var bUintPtr = (uint*)(bPtr + bOff);
+						for (var i = 0; i < uintOps; i++) {
 							aUintPtr[i] ^= bUintPtr[i];
 						}
-
 					}
 				}
 			}
-			int increment = uintOps * sizeof(uint);
+			var increment = uintOps * sizeof(uint);
 			aOff += increment;
 			bOff += increment;
 			length = remainder;
-			#endif
+            #elif (INCLUDE_UNSAFE && X64)
+            int remainder;
+			var ulongOps = Math.DivRem(length, sizeof(ulong), out remainder);
+			unsafe {
+				fixed (byte* aPtr = a) {
+					fixed (byte* bPtr = b) {
+						var aUlongPtr = (ulong*)(aPtr + aOff);
+						var bUlongPtr = (ulong*)(bPtr + bOff);
+						for (var i = 0; i < ulongOps; i++) {
+							aUlongPtr[i] ^= bUlongPtr[i];
+						}
+					}
+				}
+			}
+			var increment = ulongOps * sizeof(ulong);
+			aOff += increment;
+			bOff += increment;
+			length = remainder;
+            #endif
 
-			for (int i = 0; i < length; i++) {
+            for (var i = 0; i < length; i++) {
 				a[aOff + i] ^= b[bOff + i];
 			}
 		}

@@ -51,6 +51,7 @@ namespace ObscurCore.Cryptography.Entropy
 		{
 			PrngInstantiators.Add(CsPseudorandomNumberGenerator.Salsa20, config => new Salsa20Generator(config));
 			PrngInstantiators.Add(CsPseudorandomNumberGenerator.Sosemanuk, config => new SosemanukGenerator(config));
+            PrngInstantiators.Add(CsPseudorandomNumberGenerator.Rabbit, config => new RabbitGenerator(config));
 		}
 	}
 }

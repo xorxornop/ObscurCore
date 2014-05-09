@@ -160,18 +160,34 @@ namespace ObscurCore.Cryptography.Support
 
 		internal static void UInt32_To_LE(uint n, byte[] bs)
 		{
+            #if INCLUDE_UNSAFE
+            unsafe {
+                fixed (byte* p = bs) {
+                    *((uint*)p) = n;
+                }
+            }
+            #else
 			bs[0] = (byte)(n);
 			bs[1] = (byte)(n >> 8);
 			bs[2] = (byte)(n >> 16);
 			bs[3] = (byte)(n >> 24);
+            #endif
 		}
 
 		internal static void UInt32_To_LE(uint n, byte[] bs, int off)
 		{
+            #if INCLUDE_UNSAFE
+		    unsafe {
+		        fixed (byte* p = bs) {
+                    *((uint*)(p + off)) = n;
+		        }
+		    }
+            #else
 			bs[off] = (byte)(n);
 			bs[off + 1] = (byte)(n >> 8);
 			bs[off + 2] = (byte)(n >> 16);
 			bs[off + 3] = (byte)(n >> 24);
+            #endif
 		}
 
 		internal static byte[] UInt32_To_LE(uint[] ns)
@@ -183,27 +199,63 @@ namespace ObscurCore.Cryptography.Support
 
 		internal static void UInt32_To_LE(uint[] ns, byte[] bs, int off)
 		{
-			for (int i = 0; i < ns.Length; ++i)
+		    int len = ns.Length;
+            #if INCLUDE_UNSAFE
+            unsafe {
+                fixed (uint* inPtr = ns) {
+                    fixed (byte* outPtr = bs) {
+                        var outUintPtr = (uint*)(outPtr + off);
+                        for (var i = 0; i < len; i++) {
+                            outUintPtr[i] = inPtr[i];
+                        }
+                    }
+                }
+            }
+            #else
+            for (int i = 0; i < len; ++i)
 			{
 				UInt32_To_LE(ns[i], bs, off);
 				off += 4;
 			}
+            #endif
 		}
+
+        internal static void UInt32_To_LE(uint[] input, int inOff, byte[] output, int outOff)
+        {
+            var len = input.Length - inOff;
+#if INCLUDE_UNSAFE
+            unsafe {
+                fixed (uint* inPtr = input) {
+                    fixed (byte* outPtr = output) {
+                        var outUintPtr = (uint*)(outPtr + outOff);
+                        for (var i = 0; i < len; i++) {
+                            outUintPtr[i + outOff] = inPtr[i + inOff];
+                        }
+                    }
+                }
+            }
+#else
+            for (int i = 0; i < len; ++i)
+			{
+				UInt32_To_LE(input[i + inOff], output, i + outOff);
+			}
+#endif
+        }
 
 		internal static uint LE_To_UInt32(byte[] bs)
 		{
-			return (uint)bs[0]
-				| (uint)bs[1] << 8
-				| (uint)bs[2] << 16
-				| (uint)bs[3] << 24;
+            return (uint)bs[0]
+                | (uint)bs[1] << 8
+                | (uint)bs[2] << 16
+                | (uint)bs[3] << 24;
 		}
 
 		internal static uint LE_To_UInt32(byte[] bs, int off)
 		{
-			return (uint)bs[off]
-				| (uint)bs[off + 1] << 8
-				| (uint)bs[off + 2] << 16
-				| (uint)bs[off + 3] << 24;
+            return (uint)bs[off]
+                | (uint)bs[off + 1] << 8
+                | (uint)bs[off + 2] << 16
+                | (uint)bs[off + 3] << 24;
 		}
 
 		internal static void LE_To_UInt32(byte[] bs, int off, uint[] ns)
@@ -213,6 +265,18 @@ namespace ObscurCore.Cryptography.Support
 				ns[i] = LE_To_UInt32(bs, off);
 				off += 4;
 			}
+
+            //var len = bs.Length - off;
+            //unsafe {
+            //    fixed (byte* inPtr = bs) {
+            //        var inUintPtr = (uint*)inPtr + off;
+            //        fixed (uint* outPtr = ns) {
+            //            for (var i = 0; i < len; i++) {
+            //                outPtr[i] = inUintPtr[i];
+            //            }
+            //        }
+            //    }
+            //}
 		}
 
 		internal static byte[] UInt64_To_LE(ulong n)
