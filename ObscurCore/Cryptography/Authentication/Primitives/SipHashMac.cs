@@ -140,26 +140,19 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			{
 				v0 += v1;
 				v2 += v3;
-				v1 = RotateLeft(v1, 13);
-				v3 = RotateLeft(v3, 16);
+				v1 = v1.RotateLeft(13);
+                v3 = v3.RotateLeft(16);
 				v1 ^= v0;
 				v3 ^= v2;
-				v0 = RotateLeft(v0, 32);
+                v0 = v0.RotateLeft(32);
 				v2 += v1;
 				v0 += v3;
-				v1 = RotateLeft(v1, 17);
-				v3 = RotateLeft(v3, 21);
+                v1 = v1.RotateLeft(17);
+                v3 = v3.RotateLeft(21);
 				v1 ^= v2;
 				v3 ^= v0;
-				v2 = RotateLeft(v2, 32);
+                v2 = v2.RotateLeft(32);
 			}
-		}
-
-		protected static long RotateLeft(long x, int n)
-		{
-			ulong ux = (ulong)x;
-			ux = (ux << n) | (ux >> (64 - n));
-			return (long)ux;
 		}
 	}
 }

@@ -35,15 +35,15 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 		/// <param name="key">Key for the cipher.</param>
 		/// <param name="iv">Initialisation vector for the cipher mode.</param>
 		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			if(iv.IsNullOrZeroLength()) {
+			if (iv.IsNullOrZeroLength()) {
 				throw new ArgumentException ("CTR/SIC block cipher mode requires an initialisation vector for security.");
 			}
 
 			// Prepend the supplied IV with zeros (as per FIPS PUB 81)
-			iv.CopyBytes (0, _iv, _iv.Length - iv.Length, iv.Length);
-			Array.Clear (_iv, 0, _iv.Length - iv.Length);
+			iv.CopyBytes(0, _iv, _iv.Length - iv.Length, iv.Length);
+			Array.Clear(_iv, 0, _iv.Length - iv.Length);
 			Reset();
-			_cipher.Init (true, key, null); // Streaming mode - cipher always used in encryption mode
+			_cipher.Init(true, key, null); // Streaming mode - cipher always used in encryption mode
 		}
 
 		public string AlgorithmName
@@ -69,18 +69,18 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 			_cipher.ProcessBlock(_counter, 0, _counterOut, 0);
 
 			// XOR the counterOut with the plaintext producing the cipher text
-			input.XorInternal (inOff, _counterOut, 0, output, outOff, _counterOut.Length);
+			input.XorInternal(inOff, _counterOut, 0, output, outOff, _blockSize);
 
 			// Increment the counter
-			int j = _counter.Length;
+			int j = _blockSize;
 			while (--j >= 0 && ++_counter[j] == 0) { }
 
-			return _counter.Length;
+			return _blockSize;
 		}
 
 		public void Reset()
 		{
-			_iv.CopyBytes (0, _counter, 0, _counter.Length);
+            _iv.CopyBytes(0, _counter, 0, _blockSize);
 			_cipher.Reset();
 		}
 	}

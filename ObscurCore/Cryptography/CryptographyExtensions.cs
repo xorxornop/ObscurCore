@@ -210,22 +210,52 @@ namespace ObscurCore.Cryptography
 			}
 		}
 
-		public static int RotateLeft(this int i, int distance) {
+        public static uint RotateLeft (this uint i, int distance)
+        {
+            return (i << distance) | (i >> -distance);
+        }
+
+		public static int RotateLeft (this int i, int distance) {
 			return (i << distance) ^ (int)((uint)i >> -distance);
 		}
 
-		public static int RotateRight(this int i, int distance) {
+        public static ulong RotateLeft (this ulong i, int distance)
+        {
+            return (i << distance) | (i >> -distance);
+        }
+
+        public static long RotateLeft(this long i, int distance)
+        {
+            return (i << distance) ^ (long)((ulong)i >> -distance);
+		}
+
+        public static uint RotateRight (this uint i, int distance)
+        {
+            return (i >> distance) | (i << -distance);
+        }
+
+		public static int RotateRight (this int i, int distance) {
 			return (int)((uint)i >> distance) ^ (i << -distance);
 		}
 
-		public static void SecureWipe(this byte[] data) {
+        public static ulong RotateRight (this ulong i, int distance)
+        {
+            return (i >> distance) | (i << -distance);
+        }
+
+        public static long RotateRight(this long i, int distance)
+        {
+            return (long)((ulong)i >> distance) ^ (i << -distance);
+        }
+
+		public static void SecureWipe (this byte[] data) {
 			if (data == null)
 				throw new ArgumentNullException("data");
 
 			InternalWipe(data, 0, data.Length);
 		}
 
-		public static void SecureWipe(this byte[] data, int offset, int count) {
+		public static void SecureWipe (this byte[] data, int offset, int count) {
 			if (data == null)
 				throw new ArgumentNullException("data");
 			if (offset < 0)

@@ -33,7 +33,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				uint x = _p[(j - 3 & 0x3FF)];
 				uint y = _p[(j - 1023 & 0x3FF)];
 				_p[j] += _p[(j - 10 & 0x3FF)]
-					+ (RotateRight(x, 10) ^ RotateRight(y, 23))
+                    + (x.RotateRight(10) ^ y.RotateRight(23))
 					+ _q[((x ^ y) & 0x3FF)];
 
 				x = _p[(j - 12 & 0x3FF)];
@@ -46,7 +46,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				uint x = _q[(j - 3 & 0x3FF)];
 				uint y = _q[(j - 1023 & 0x3FF)];
 				_q[j] += _q[(j - 10 & 0x3FF)]
-					+ (RotateRight(x, 10) ^ RotateRight(y, 23))
+                    + (x.RotateRight(10) ^ y.RotateRight(23))
 					+ _p[((x ^ y) & 0x3FF)];
 
 				x = _q[(j - 12 & 0x3FF)];
@@ -99,10 +99,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			{
 				uint x = w[i - 2];
 				uint y = w[i - 15];
-				w[i] = (RotateRight(x, 17) ^ RotateRight(x, 19) ^ (x >> 10))
-					+ w[i - 7]
-					+ (RotateRight(y, 7) ^ RotateRight(y, 18) ^ (y >> 3))
-					+ w[i - 16] + i;
+                w[i] = (x.RotateRight(17) ^ x.RotateRight(19) ^ (x >> 10))
+                    + w[i - 7]
+                    + (y.RotateRight(7) ^ y.RotateRight(18) ^ (y >> 3))
+                    + w[i - 16] + i;
 			}
 
 			Buffer.BlockCopy(w, 512 * sizeof(uint), _p, 0, 1024 * sizeof(uint));
@@ -146,7 +146,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			initialised = true;
 		}
 
-		private byte[] buf = new byte[4];
+		private readonly byte[] buf = new byte[4];
 		private int idx;
 
 		private byte GetByte()
@@ -184,14 +184,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			int blocks = Math.DivRem (len, 4, out remainder);
 
 			#if INCLUDE_UNSAFE
-			if(BitConverter.IsLittleEndian) {
+			if (BitConverter.IsLittleEndian) {
 				unsafe {
 					fixed (byte* inPtr = input) {
 						fixed (byte* outPtr = output) {
 							uint* inUintPtr = (uint*)(inPtr + inOff);
 							uint* outUintPtr = (uint*)(outPtr + outOff);
 							for (int i = 0; i < blocks; i++) {
-								outUintPtr [i] = inUintPtr [i] ^ Step ();
+								outUintPtr [i] = inUintPtr[i] ^ Step ();
 							}
 						}
 					}
@@ -240,11 +240,6 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		public byte ReturnByte(byte input)
 		{
 			return (byte)(input ^ GetByte());
-		}
-
-		private static uint RotateRight(uint x, int bits)
-		{
-			return (x >> bits) | (x << -bits);
 		}
 	}
 	
