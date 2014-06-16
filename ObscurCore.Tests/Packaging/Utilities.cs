@@ -24,12 +24,12 @@ namespace ObscurCore.Tests.Packaging
                     RelativePath = t.Name,
                     ExternalLength = t.Length,
                     Type = PayloadItemType.Binary,
-					Encryption = CipherConfigurationFactory.CreateStreamCipherConfiguration(StreamCipher.Sosemanuk),
+					SymmetricCipher = CipherConfigurationFactory.CreateStreamCipherConfiguration(StreamCipher.Sosemanuk),
 					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B256, out authOutputSize)
                 };
 
-				payloadItem.EncryptionKey = new byte[payloadItem.Encryption.KeySizeBits / 8];
-				StratCom.EntropySupplier.NextBytes(payloadItem.EncryptionKey);
+				payloadItem.CipherKey = new byte[payloadItem.SymmetricCipher.KeySizeBits / 8];
+				StratCom.EntropySupplier.NextBytes(payloadItem.CipherKey);
 				payloadItem.AuthenticationKey = new byte[payloadItem.Authentication.KeySizeBits.Value / 8];
 				StratCom.EntropySupplier.NextBytes(payloadItem.AuthenticationKey);
 
@@ -51,13 +51,13 @@ namespace ObscurCore.Tests.Packaging
                     RelativePath = t.Name,
                     ExternalLength = t.Length,
                     Type = PayloadItemType.Binary,
-                    Encryption = CipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher.Serpent, 
+                    SymmetricCipher = CipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher.Serpent, 
 						BlockCipherMode.Ctr, BlockCipherPadding.None),
 					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B256, out authOutputSize)
                 };
 
-                payloadItem.EncryptionKey = new byte[payloadItem.Encryption.KeySizeBits / 8];
-                StratCom.EntropySupplier.NextBytes(payloadItem.EncryptionKey);
+                payloadItem.CipherKey = new byte[payloadItem.SymmetricCipher.KeySizeBits / 8];
+                StratCom.EntropySupplier.NextBytes(payloadItem.CipherKey);
 				payloadItem.AuthenticationKey = new byte[payloadItem.Authentication.KeySizeBits.Value / 8];
 				StratCom.EntropySupplier.NextBytes(payloadItem.AuthenticationKey);
 

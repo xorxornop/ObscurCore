@@ -49,7 +49,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 #endif
 #if INCLUDE_IDEA
         /// <summary>
-        /// International Data Encryption Algorithm - patent unencumbered as of 2012. 64 bit block size.
+        /// International Data SymmetricCipher Algorithm - patent unencumbered as of 2012. 64 bit block size.
         /// </summary>
         Idea,
 #endif

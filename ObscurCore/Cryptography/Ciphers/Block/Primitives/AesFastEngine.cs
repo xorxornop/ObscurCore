@@ -112,8 +112,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 		};
 
 		// precomputation tables of calculations for rounds
-		private static readonly uint[] T0 =
+		private static readonly uint[] T =
 		{
+            // T0
 			0xa56363c6, 0x847c7cf8, 0x997777ee, 0x8d7b7bf6, 0x0df2f2ff,
 			0xbd6b6bd6, 0xb16f6fde, 0x54c5c591, 0x50303060, 0x03010102,
 			0xa96767ce, 0x7d2b2b56, 0x19fefee7, 0x62d7d7b5, 0xe6abab4d,
@@ -165,11 +166,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			0x8f8c8c03, 0xf8a1a159, 0x80898909, 0x170d0d1a, 0xdabfbf65,
 			0x31e6e6d7, 0xc6424284, 0xb86868d0, 0xc3414182, 0xb0999929,
 			0x772d2d5a, 0x110f0f1e, 0xcbb0b07b, 0xfc5454a8, 0xd6bbbb6d,
-			0x3a16162c
-		};
-
-		private static readonly uint[] T1 =
-		{
+			0x3a16162c,
+            // T1
 			0x6363c6a5, 0x7c7cf884, 0x7777ee99, 0x7b7bf68d, 0xf2f2ff0d,
 			0x6b6bd6bd, 0x6f6fdeb1, 0xc5c59154, 0x30306050, 0x01010203,
 			0x6767cea9, 0x2b2b567d, 0xfefee719, 0xd7d7b562, 0xabab4de6,
@@ -221,11 +219,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			0x8c8c038f, 0xa1a159f8, 0x89890980, 0x0d0d1a17, 0xbfbf65da,
 			0xe6e6d731, 0x424284c6, 0x6868d0b8, 0x414182c3, 0x999929b0,
 			0x2d2d5a77, 0x0f0f1e11, 0xb0b07bcb, 0x5454a8fc, 0xbbbb6dd6,
-			0x16162c3a
-		};
-
-		private static readonly uint[] T2 =
-		{
+			0x16162c3a,
+            // T2
 			0x63c6a563, 0x7cf8847c, 0x77ee9977, 0x7bf68d7b, 0xf2ff0df2,
 			0x6bd6bd6b, 0x6fdeb16f, 0xc59154c5, 0x30605030, 0x01020301,
 			0x67cea967, 0x2b567d2b, 0xfee719fe, 0xd7b562d7, 0xab4de6ab,
@@ -277,11 +272,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			0x8c038f8c, 0xa159f8a1, 0x89098089, 0x0d1a170d, 0xbf65dabf,
 			0xe6d731e6, 0x4284c642, 0x68d0b868, 0x4182c341, 0x9929b099,
 			0x2d5a772d, 0x0f1e110f, 0xb07bcbb0, 0x54a8fc54, 0xbb6dd6bb,
-			0x162c3a16
-		};
-
-		private static readonly uint[] T3 =
-		{
+			0x162c3a16,
+            // T3
 			0xc6a56363, 0xf8847c7c, 0xee997777, 0xf68d7b7b, 0xff0df2f2,
 			0xd6bd6b6b, 0xdeb16f6f, 0x9154c5c5, 0x60503030, 0x02030101,
 			0xcea96767, 0x567d2b2b, 0xe719fefe, 0xb562d7d7, 0x4de6abab,
@@ -336,8 +328,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			0x2c3a1616
 		};
 
-		private static readonly uint[] Tinv0 =
+		private static readonly uint[] Tinv =
 		{
+            // Tinv0
 			0x50a7f451, 0x5365417e, 0xc3a4171a, 0x965e273a, 0xcb6bab3b,
 			0xf1459d1f, 0xab58faac, 0x9303e34b, 0x55fa3020, 0xf66d76ad,
 			0x9176cc88, 0x254c02f5, 0xfcd7e54f, 0xd7cb2ac5, 0x80443526,
@@ -389,11 +382,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			0x81f3afca, 0x3ec468b9, 0x2c342438, 0x5f40a3c2, 0x72c31d16,
 			0x0c25e2bc, 0x8b493c28, 0x41950dff, 0x7101a839, 0xdeb30c08,
 			0x9ce4b4d8, 0x90c15664, 0x6184cb7b, 0x70b632d5, 0x745c6c48,
-			0x4257b8d0
-		};
-
-		private static readonly uint[] Tinv1 =
-		{
+			0x4257b8d0,
+            // Tinv1
 			0xa7f45150, 0x65417e53, 0xa4171ac3, 0x5e273a96, 0x6bab3bcb,
 			0x459d1ff1, 0x58faacab, 0x03e34b93, 0xfa302055, 0x6d76adf6,
 			0x76cc8891, 0x4c02f525, 0xd7e54ffc, 0xcb2ac5d7, 0x44352680,
@@ -445,12 +435,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			0xf3afca81, 0xc468b93e, 0x3424382c, 0x40a3c25f, 0xc31d1672,
 			0x25e2bc0c, 0x493c288b, 0x950dff41, 0x01a83971, 0xb30c08de,
 			0xe4b4d89c, 0xc1566490, 0x84cb7b61, 0xb632d570, 0x5c6c4874,
-			0x57b8d042
-		};
-
-		private static readonly uint[] Tinv2 =
-		{
-			0xf45150a7, 0x417e5365, 0x171ac3a4, 0x273a965e, 0xab3bcb6b,
+			0x57b8d042,
+            // Tinv2
+            0xf45150a7, 0x417e5365, 0x171ac3a4, 0x273a965e, 0xab3bcb6b,
 			0x9d1ff145, 0xfaacab58, 0xe34b9303, 0x302055fa, 0x76adf66d,
 			0xcc889176, 0x02f5254c, 0xe54ffcd7, 0x2ac5d7cb, 0x35268044,
 			0x62b58fa3, 0xb1de495a, 0xba25671b, 0xea45980e, 0xfe5de1c0,
@@ -501,12 +488,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			0xafca81f3, 0x68b93ec4, 0x24382c34, 0xa3c25f40, 0x1d1672c3,
 			0xe2bc0c25, 0x3c288b49, 0x0dff4195, 0xa8397101, 0x0c08deb3,
 			0xb4d89ce4, 0x566490c1, 0xcb7b6184, 0x32d570b6, 0x6c48745c,
-			0xb8d04257
-		};
-
-		private static readonly uint[] Tinv3 =
-		{
-			0x5150a7f4, 0x7e536541, 0x1ac3a417, 0x3a965e27, 0x3bcb6bab,
+			0xb8d04257,
+            // Tinv3
+            0x5150a7f4, 0x7e536541, 0x1ac3a417, 0x3a965e27, 0x3bcb6bab,
 			0x1ff1459d, 0xacab58fa, 0x4b9303e3, 0x2055fa30, 0xadf66d76,
 			0x889176cc, 0xf5254c02, 0x4ffcd7e5, 0xc5d7cb2a, 0x26804435,
 			0xb58fa362, 0xde495ab1, 0x25671bba, 0x45980eea, 0x5de1c0fe,
@@ -769,40 +753,57 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             int r;
 			uint r0, r1, r2, r3;
 
-            C0 ^= KW[0,0];
-            C1 ^= KW[0,1];
-            C2 ^= KW[0,2];
-            C3 ^= KW[0,3];
+            //C0 ^= KW[0,0];
+            //C1 ^= KW[0,1];
+            //C2 ^= KW[0,2];
+            //C3 ^= KW[0,3];
 
-            for (r = 1; r < ROUNDS - 1;)
-			{
-                r0 = T0[C0&255] ^ T1[(C1>>8)&255] ^ T2[(C2>>16)&255] ^ T3[C3>>24] ^ KW[r,0];
-                r1 = T0[C1&255] ^ T1[(C2>>8)&255] ^ T2[(C3>>16)&255] ^ T3[C0>>24] ^ KW[r,1];
-                r2 = T0[C2&255] ^ T1[(C3>>8)&255] ^ T2[(C0>>16)&255] ^ T3[C1>>24] ^ KW[r,2];
-                r3 = T0[C3&255] ^ T1[(C0>>8)&255] ^ T2[(C1>>16)&255] ^ T3[C2>>24] ^ KW[r++,3];
-                C0 = T0[r0&255] ^ T1[(r1>>8)&255] ^ T2[(r2>>16)&255] ^ T3[r3>>24] ^ KW[r,0];
-                C1 = T0[r1&255] ^ T1[(r2>>8)&255] ^ T2[(r3>>16)&255] ^ T3[r0>>24] ^ KW[r,1];
-                C2 = T0[r2&255] ^ T1[(r3>>8)&255] ^ T2[(r0>>16)&255] ^ T3[r1>>24] ^ KW[r,2];
-                C3 = T0[r3&255] ^ T1[(r0>>8)&255] ^ T2[(r1>>16)&255] ^ T3[r2>>24] ^ KW[r++,3];
+            // Registerising helps fast engine encrypt on x64, but hurts decrypt and AESEngine
+            uint C0 = this.C0 ^ KW[0, 0];
+            uint C1 = this.C1 ^ KW[0, 1];
+            uint C2 = this.C2 ^ KW[0, 2];
+            uint C3 = this.C3 ^ KW[0, 3];
+
+            /*
+             * Fast engine has precomputed rotr(T0, 8/16/24) tables T1/T2/T3.
+             * Placing all precomputes in one array requires offsets additions for 8/16/24 rotations but avoids 
+             * additional array range checks on 3 more arrays (which are more expensive than the offset additions).
+             */
+
+            r = 1;
+            while (r < ROUNDS - 1) {
+                r0 = T[C0 & 255] ^ T[((C1 >> 8) & 255) | 256] ^ T[((C2 >> 16) & 255) | 512] ^ T[((C3 >> 24) & 255) | 768] ^ KW[r,0];
+                r1 = T[C1 & 255] ^ T[((C2 >> 8) & 255) | 256] ^ T[((C3 >> 16) & 255) | 512] ^ T[((C0 >> 24) & 255) | 768] ^ KW[r,1];
+                r2 = T[C2 & 255] ^ T[((C3 >> 8) & 255) | 256] ^ T[((C0 >> 16) & 255) | 512] ^ T[((C1 >> 24) & 255) | 768] ^ KW[r,2];
+                r3 = T[C3 & 255] ^ T[((C0 >> 8) & 255) | 256] ^ T[((C1 >> 16) & 255) | 512] ^ T[((C2 >> 24) & 255) | 768] ^ KW[r++,3];
+                C0 = T[r0 & 255] ^ T[((r1 >> 8) & 255) | 256] ^ T[((r2 >> 16) & 255) | 512] ^ T[((r3 >> 24) & 255) | 768] ^ KW[r,0];
+                C1 = T[r1 & 255] ^ T[((r2 >> 8) & 255) | 256] ^ T[((r3 >> 16) & 255) | 512] ^ T[((r0 >> 24) & 255) | 768] ^ KW[r,1];
+                C2 = T[r2 & 255] ^ T[((r3 >> 8) & 255) | 256] ^ T[((r0 >> 16) & 255) | 512] ^ T[((r1 >> 24) & 255) | 768] ^ KW[r,2];
+                C3 = T[r3 & 255] ^ T[((r0 >> 8) & 255) | 256] ^ T[((r1 >> 16) & 255) | 512] ^ T[((r2 >> 24) & 255) | 768] ^ KW[r++,3];
             }
 
-            r0 = T0[C0&255] ^ T1[(C1>>8)&255] ^ T2[(C2>>16)&255] ^ T3[C3>>24] ^ KW[r,0];
-            r1 = T0[C1&255] ^ T1[(C2>>8)&255] ^ T2[(C3>>16)&255] ^ T3[C0>>24] ^ KW[r,1];
-            r2 = T0[C2&255] ^ T1[(C3>>8)&255] ^ T2[(C0>>16)&255] ^ T3[C1>>24] ^ KW[r,2];
-            r3 = T0[C3&255] ^ T1[(C0>>8)&255] ^ T2[(C1>>16)&255] ^ T3[C2>>24] ^ KW[r++,3];
+            r0 = T[C0 & 255] ^ T[((C1 >> 8) & 255) | 256] ^ T[((C2 >> 16) & 255) | 512] ^ T[((C3 >> 24) & 255) | 768] ^ KW[r,0];
+            r1 = T[C1 & 255] ^ T[((C2 >> 8) & 255) | 256] ^ T[((C3 >> 16) & 255) | 512] ^ T[((C0 >> 24) & 255) | 768] ^ KW[r,1];
+            r2 = T[C2 & 255] ^ T[((C3 >> 8) & 255) | 256] ^ T[((C0 >> 16) & 255) | 512] ^ T[((C1 >> 24) & 255) | 768] ^ KW[r,2];
+            r3 = T[C3 & 255] ^ T[((C0 >> 8) & 255) | 256] ^ T[((C1 >> 16) & 255) | 512] ^ T[((C2 >> 24) & 255) | 768] ^ KW[r++,3];
 
             // the final round's table is a simple function of S so we don't use a whole other four tables for it
 
-			C0 = (uint)S[r0&255] ^ (((uint)S[(r1>>8)&255])<<8) ^ (((uint)S[(r2>>16)&255])<<16) ^ (((uint)S[r3>>24])<<24) ^ KW[r,0];
-			C1 = (uint)S[r1&255] ^ (((uint)S[(r2>>8)&255])<<8) ^ (((uint)S[(r3>>16)&255])<<16) ^ (((uint)S[r0>>24])<<24) ^ KW[r,1];
-			C2 = (uint)S[r2&255] ^ (((uint)S[(r3>>8)&255])<<8) ^ (((uint)S[(r0>>16)&255])<<16) ^ (((uint)S[r1>>24])<<24) ^ KW[r,2];
-			C3 = (uint)S[r3&255] ^ (((uint)S[(r0>>8)&255])<<8) ^ (((uint)S[(r1>>16)&255])<<16) ^ (((uint)S[r2>>24])<<24) ^ KW[r,3];
+            C0 = (uint)S[r0 & 255] ^ (((uint)S[(r1 >> 8) & 255]) << 8) ^ (((uint)S[(r2 >> 16) & 255]) << 16) ^ (((uint)S[r3 >> 24]) << 24) ^ KW[r, 0];
+            C1 = (uint)S[r1 & 255] ^ (((uint)S[(r2 >> 8) & 255]) << 8) ^ (((uint)S[(r3 >> 16) & 255]) << 16) ^ (((uint)S[r0 >> 24]) << 24) ^ KW[r, 1];
+            C2 = (uint)S[r2 & 255] ^ (((uint)S[(r3 >> 8) & 255]) << 8) ^ (((uint)S[(r0 >> 16) & 255]) << 16) ^ (((uint)S[r1 >> 24]) << 24) ^ KW[r, 2];
+            C3 = (uint)S[r3 & 255] ^ (((uint)S[(r0 >> 8) & 255]) << 8) ^ (((uint)S[(r1 >> 16) & 255]) << 16) ^ (((uint)S[r2 >> 24]) << 24) ^ KW[r, 3];
+
+            // Deregisterise
+            this.C0 = C0;
+            this.C1 = C1;
+            this.C2 = C2;
+            this.C3 = C3;
 		}
 
         private  void DecryptBlock(
 			uint[,] KW)
         {
-            int r;
 			uint r0, r1, r2, r3;
 
             C0 ^= KW[ROUNDS,0];
@@ -810,28 +811,30 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             C2 ^= KW[ROUNDS,2];
             C3 ^= KW[ROUNDS,3];
 
-            for (r = ROUNDS-1; r>1;) {
-                r0 = Tinv0[C0&255] ^ Tinv1[(C3>>8)&255] ^ Tinv2[(C2>>16)&255] ^ Tinv3[C1>>24] ^ KW[r,0];
-                r1 = Tinv0[C1&255] ^ Tinv1[(C0>>8)&255] ^ Tinv2[(C3>>16)&255] ^ Tinv3[C2>>24] ^ KW[r,1];
-                r2 = Tinv0[C2&255] ^ Tinv1[(C1>>8)&255] ^ Tinv2[(C0>>16)&255] ^ Tinv3[C3>>24] ^ KW[r,2];
-                r3 = Tinv0[C3&255] ^ Tinv1[(C2>>8)&255] ^ Tinv2[(C1>>16)&255] ^ Tinv3[C0>>24] ^ KW[r--,3];
-                C0 = Tinv0[r0&255] ^ Tinv1[(r3>>8)&255] ^ Tinv2[(r2>>16)&255] ^ Tinv3[r1>>24] ^ KW[r,0];
-                C1 = Tinv0[r1&255] ^ Tinv1[(r0>>8)&255] ^ Tinv2[(r3>>16)&255] ^ Tinv3[r2>>24] ^ KW[r,1];
-                C2 = Tinv0[r2&255] ^ Tinv1[(r1>>8)&255] ^ Tinv2[(r0>>16)&255] ^ Tinv3[r3>>24] ^ KW[r,2];
-                C3 = Tinv0[r3&255] ^ Tinv1[(r2>>8)&255] ^ Tinv2[(r1>>16)&255] ^ Tinv3[r0>>24] ^ KW[r--,3];
+            int r = ROUNDS - 1;
+
+            while (r > 1) {
+                r0 = Tinv[C0 & 255] ^ Tinv[((C3 >> 8) & 255) | 256] ^ Tinv[((C2 >> 16) & 255) | 512] ^ Tinv[((C1 >> 24) & 255) | 768] ^ KW[r,0];
+                r1 = Tinv[C1 & 255] ^ Tinv[((C0 >> 8) & 255) | 256] ^ Tinv[((C3 >> 16) & 255) | 512] ^ Tinv[((C2 >> 24) & 255) | 768] ^ KW[r,1];
+                r2 = Tinv[C2 & 255] ^ Tinv[((C1 >> 8) & 255) | 256] ^ Tinv[((C0 >> 16) & 255) | 512] ^ Tinv[((C3 >> 24) & 255) | 768] ^ KW[r,2];
+                r3 = Tinv[C3 & 255] ^ Tinv[((C2 >> 8) & 255) | 256] ^ Tinv[((C1 >> 16) & 255) | 512] ^ Tinv[((C0 >> 24) & 255) | 768] ^ KW[r--,3];
+                C0 = Tinv[r0 & 255] ^ Tinv[((r3 >> 8) & 255) | 256] ^ Tinv[((r2 >> 16) & 255) | 512] ^ Tinv[((r1 >> 24) & 255) | 768] ^ KW[r,0];
+                C1 = Tinv[r1 & 255] ^ Tinv[((r0 >> 8) & 255) | 256] ^ Tinv[((r3 >> 16) & 255) | 512] ^ Tinv[((r2 >> 24) & 255) | 768] ^ KW[r,1];
+                C2 = Tinv[r2 & 255] ^ Tinv[((r1 >> 8) & 255) | 256] ^ Tinv[((r0 >> 16) & 255) | 512] ^ Tinv[((r3 >> 24) & 255) | 768] ^ KW[r,2];
+                C3 = Tinv[r3 & 255] ^ Tinv[((r2 >> 8) & 255) | 256] ^ Tinv[((r1 >> 16) & 255) | 512] ^ Tinv[((r0 >> 24) & 255) | 768] ^ KW[r--,3];
             }
 
-            r0 = Tinv0[C0&255] ^ Tinv1[(C3>>8)&255] ^ Tinv2[(C2>>16)&255] ^ Tinv3[C1>>24] ^ KW[r,0];
-            r1 = Tinv0[C1&255] ^ Tinv1[(C0>>8)&255] ^ Tinv2[(C3>>16)&255] ^ Tinv3[C2>>24] ^ KW[r,1];
-            r2 = Tinv0[C2&255] ^ Tinv1[(C1>>8)&255] ^ Tinv2[(C0>>16)&255] ^ Tinv3[C3>>24] ^ KW[r,2];
-            r3 = Tinv0[C3&255] ^ Tinv1[(C2>>8)&255] ^ Tinv2[(C1>>16)&255] ^ Tinv3[C0>>24] ^ KW[r,3];
+            r0 = Tinv[C0 & 255] ^ Tinv[((C3 >> 8) & 255) | 256] ^ Tinv[((C2 >> 16) & 255) | 512] ^ Tinv[((C1 >> 24) & 255) | 768] ^ KW[r,0];
+            r1 = Tinv[C1 & 255] ^ Tinv[((C0 >> 8) & 255) | 256] ^ Tinv[((C3 >> 16) & 255) | 512] ^ Tinv[((C2 >> 24) & 255) | 768] ^ KW[r,1];
+            r2 = Tinv[C2 & 255] ^ Tinv[((C1 >> 8) & 255) | 256] ^ Tinv[((C0 >> 16) & 255) | 512] ^ Tinv[((C3 >> 24) & 255) | 768] ^ KW[r,2];
+            r3 = Tinv[C3 & 255] ^ Tinv[((C2 >> 8) & 255) | 256] ^ Tinv[((C1 >> 16) & 255) | 512] ^ Tinv[((C0 >> 24) & 255) | 768] ^ KW[r,3];
 
             // the final round's table is a simple function of Si so we don't use a whole other four tables for it
 
-			C0 = (uint)Si[r0&255] ^ (((uint)Si[(r3>>8)&255])<<8) ^ (((uint)Si[(r2>>16)&255])<<16) ^ (((uint)Si[r1>>24])<<24) ^ KW[0,0];
-			C1 = (uint)Si[r1&255] ^ (((uint)Si[(r0>>8)&255])<<8) ^ (((uint)Si[(r3>>16)&255])<<16) ^ (((uint)Si[r2>>24])<<24) ^ KW[0,1];
-			C2 = (uint)Si[r2&255] ^ (((uint)Si[(r1>>8)&255])<<8) ^ (((uint)Si[(r0>>16)&255])<<16) ^ (((uint)Si[r3>>24])<<24) ^ KW[0,2];
-			C3 = (uint)Si[r3&255] ^ (((uint)Si[(r2>>8)&255])<<8) ^ (((uint)Si[(r1>>16)&255])<<16) ^ (((uint)Si[r0>>24])<<24) ^ KW[0,3];
+            C0 = (uint)Si[r0 & 255] ^ (((uint)Si[(r3 >> 8) & 255]) << 8) ^ (((uint)Si[(r2 >> 16) & 255]) << 16) ^ (((uint)Si[r1 >> 24]) << 24) ^ KW[0, 0];
+            C1 = (uint)Si[r1 & 255] ^ (((uint)Si[(r0 >> 8) & 255]) << 8) ^ (((uint)Si[(r3 >> 16) & 255]) << 16) ^ (((uint)Si[r2 >> 24]) << 24) ^ KW[0, 1];
+            C2 = (uint)Si[r2 & 255] ^ (((uint)Si[(r1 >> 8) & 255]) << 8) ^ (((uint)Si[(r0 >> 16) & 255]) << 16) ^ (((uint)Si[r3 >> 24]) << 24) ^ KW[0, 2];
+            C3 = (uint)Si[r3 & 255] ^ (((uint)Si[(r2 >> 8) & 255]) << 8) ^ (((uint)Si[(r1 >> 16) & 255]) << 16) ^ (((uint)Si[r0 >> 24]) << 24) ^ KW[0, 3];
 		}
     }
 }

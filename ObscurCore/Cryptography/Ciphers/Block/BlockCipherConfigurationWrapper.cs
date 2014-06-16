@@ -15,7 +15,6 @@
 
 using System;
 using System.Linq;
-using ObscurCore.Cryptography.Authentication;
 using ObscurCore.DTO;
 using ObscurCore.Information;
 
@@ -25,14 +24,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block
     {
         public BlockCipherConfigurationWrapper(CipherConfiguration config) : base(config) {}
 
-        protected override void ThrowIfKeySizeIncompatible() {
-            if (!Athena.Cryptography.BlockCiphers[BlockCipher].AllowableKeySizes.Contains(Configuration.KeySizeBits)) {
-                throw new KeySizeException(BlockCipher, Configuration.KeySizeBits);
-            }
-        }
-
         /// <summary>
-        /// Name of the cryptographic block cipher transform being used e.g. AES, Blowfish, etc.
+        /// Block cipher to be used, e.g. AES, Twofish, etc.
         /// </summary>
         public BlockCipher BlockCipher
         {
@@ -66,7 +59,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         {
             get {
                 var paddingEnum = RawConfiguration.PaddingName.ToEnum<BlockCipherPadding>();
-                if (!Athena.Cryptography.BlockCipherModes[Mode].PaddingRequirement.Equals(PaddingRequirement.None) && paddingEnum == BlockCipherPadding.None) {
+                if (Athena.Cryptography.BlockCipherModes[Mode].PaddingRequirement.Equals(PaddingRequirement.None) == false && 
+                    paddingEnum == BlockCipherPadding.None) 
+                {
 					throw new ConfigurationInvalidException("Block cipher mode requires padding."); // TODO: make new custom exception
                 }
                 return paddingEnum;
@@ -92,12 +87,14 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 			set { BlockSizeBits = value * 8; }
 		}
 
-        protected void ThrowIfBlockSizeIncompatible() {
-            if (!Athena.Cryptography.BlockCiphers[BlockCipher].AllowableBlockSizes.Contains(Configuration.BlockSizeBits)) {
-                throw new BlockSizeException(BlockCipher, Configuration.BlockSizeBits);
-            }
-        }
-
+        /// <summary>
+        /// Initialisation vector (also called a nonce in this context, which is a specialised subset). 
+        /// </summary>
+        /// <remarks>
+        /// Typically used by the mode of operation, rather than the cipher itself. 
+        /// An IV ensures that if identical data and key is used twice, the resulting ciphertext is different (if a different IV is used). 
+        /// It is not a value usually required to be kept secret, although it can contribute additional security if it is.
+        /// </remarks>
         public byte[] IV
         {
             get {
@@ -112,11 +109,24 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             set { RawConfiguration.IV = value; }
         }
 
+        protected override void ThrowIfKeySizeIncompatible()
+        {
+            if (Athena.Cryptography.BlockCiphers[BlockCipher].AllowableKeySizes.Contains(Configuration.KeySizeBits) == false) {
+                throw new KeySizeException(BlockCipher, Configuration.KeySizeBits);
+            }
+        }
+
+        protected void ThrowIfBlockSizeIncompatible()
+        {
+            if (Athena.Cryptography.BlockCiphers[BlockCipher].AllowableBlockSizes.Contains(Configuration.BlockSizeBits) == false) {
+                throw new BlockSizeException(BlockCipher, Configuration.BlockSizeBits);
+            }
+        }
+
         /// <summary>
-        /// Outputs a summary of the configuration, optionally including the actual values of IV and Salt.
+        /// Outputs a summary of the configuration, optionally including the IV.
         /// </summary>
         /// <param name="includeValues">Whether to include values of relevant byte arrays as hex strings.</param>
-        /// <returns></returns>
         public override string ToString(bool includeValues)
         {
             var cipher = Athena.Cryptography.BlockCiphers[BlockCipher].DisplayName;
@@ -124,13 +134,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             var padding = Padding == BlockCipherPadding.None
                 ? "None"
                 : Athena.Cryptography.BlockCipherPaddings[Padding].DisplayName;
-            if (includeValues)
-            {
-                var hexIV = IV.ToHexString();
+            if (includeValues) {
                 return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                     "Block size, bits: {3}\nMode: {4}\nPadding: {5}\n" +
-                    "IV, hex: {6}",
-                    CipherType.Block, cipher, KeySizeBits, BlockSizeBits, mode, padding, hexIV);
+                    "IV: {6}",
+                    CipherType.Block, cipher, KeySizeBits, BlockSizeBits, mode, padding, IV.ToHexString());
             }
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                 "Block size, bits: {3}\nMode: {4}\nPadding: {5}",

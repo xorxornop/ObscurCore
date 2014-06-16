@@ -5,18 +5,21 @@ namespace ObscurCore.DTO
     /// </summary>
     public enum ManifestCryptographyScheme
     {
+        None,
+
         /// <summary>
-        /// Using a key known to both parties (sender and receiver).
+        /// A key known to both parties (sender and recipient) is used by a KDF to generate cipher and MAC keys.
         /// </summary>
         SymmetricOnly, 
 
         /// <summary>
-        /// Unified Model 1 EC-hybrid (PKC-derived-key symmetric encryption) scheme.
+        /// Unified Model 1-pass EC-hybrid (PKC-derived-keyed symmetric encryption) scheme.
         /// </summary>
         /// <remarks>
-        /// Uses UM1 to generate a secret value, which is further derived with a KDF. 
-        /// This derived secret is used as a symmetric cipher key, and optionally, for key confirmation.
+        /// Uses UM1 public key scheme to generate a shared secret 
+        /// (sender and recipient derive an identical value from their public and private keys, 
+        /// and the ephemeral, one-use UM1 public key), which is used by a KDF to generate symmetric cipher and MAC keys.
         /// </remarks>
-        UM1Hybrid
+        Um1Hybrid
     }
 }

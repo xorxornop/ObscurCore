@@ -26,7 +26,7 @@ namespace ObscurCore.DTO
     public sealed class Manifest : IManifest, IDataTransferObject, IEquatable<Manifest>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// Initializes a new instance of the <see cref="T:ObscurCore.DTO.Manifest"/> class.
         /// </summary>
         public Manifest() {
             PayloadItems = new List<PayloadItem>();
@@ -40,7 +40,7 @@ namespace ObscurCore.DTO
         /// This may be a file system path or other schema. If used for file system, path seperator is '/' .
         /// Path may be omitted, and use this only for item naming.
         /// <para>WARNING: Ordering of this list of items MUST be maintained!
-        /// Failure to ensure this will result in most probably total, non-recoverable loss of package contents at unpackaging stage.</para>
+        /// Failure to ensure this will result in almost certain total, non-recoverable loss of package contents at unpackaging stage.</para>
         /// </remarks>
         [ProtoMember(1, IsRequired = true)]
         public List<PayloadItem> PayloadItems { get; set; }
@@ -54,8 +54,7 @@ namespace ObscurCore.DTO
         public override bool Equals (object obj) {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Manifest) obj);
+            return obj.GetType() == this.GetType() && Equals((Manifest) obj);
         }
 
         /// <summary>

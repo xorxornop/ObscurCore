@@ -22,7 +22,6 @@ using System.Threading.Tasks;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.KeyDerivation;
-using ObscurCore.Cryptography.Support;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.KeyConfirmation
@@ -33,23 +32,46 @@ namespace ObscurCore.Cryptography.KeyConfirmation
     public static class ConfirmationUtility
     {
         /// <summary>
+        /// Generate a verified output of a function given the correct key, to be used as a key confirmation.
+        /// </summary>
+        /// <param name="configuration">Configuration of the verification function.</param>
+        /// <param name="key">Key to generate a confirmation output verification for.</param>
+        /// <returns>Output of the verification function, given the correct key.</returns>
+        /// <exception cref="ArgumentException">Key is null or zero-length.</exception>
+        public static byte[] GenerateVerifiedOutput(IVerificationFunctionConfiguration configuration, byte[] key)
+        {
+            if (key.IsNullOrZeroLength()) {
+                throw new ArgumentException("Key is null or zero-length.", "key");
+            }
+
+            var validator = GetValidator(configuration);
+            var verifiedOutput = validator(key);
+
+            Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "GenerateVerifiedOutput", "Verified output",
+                verifiedOutput.ToHexString()));
+
+            return verifiedOutput;
+        }
+
+        /// <summary>
         /// Determines which (if any) key is valid from a set of potential keys. 
         /// Where appropriate, computes confirmations in parallel.
         /// </summary>
         /// <param name="keyConfirmation">Key confirmation configuration.</param>
+        /// <param name="verifiedOutput">Output of verification function, given the correct key.</param>
         /// <param name="ephemeralKey">Ephemeral key in the agreement.</param>
-        /// <param name="manifestKeysECSender">Set of potential sender keys.</param>
-        /// <param name="manifestKeysECRecipient">Set of potential receiver keys.</param>
+        /// <param name="senderKeys">Set of potential sender keys.</param>
+        /// <param name="receiverKeys">Set of potential receiver keys.</param>
         /// <returns>Valid key, or null if none are validated as being correct.</returns>
-		/// <exception cref="ArgumentNullException">Any of the supplied parameters are null.</exception>
-		/// <exception cref="ArgumentException">
-		/// Curve provider and/or name of all key components do not match, 
-		/// or either/both of the sender/receiver enumerations are of zero length.
-		/// </exception>
-		/// <exception cref="ConfigurationValueInvalidException">
-		/// Confirmation configuration has an invalid element.
-		/// </exception>
-		public static byte[] ConfirmUM1HybridKey(IVerificationFunctionConfiguration keyConfirmation, byte[] verifiedOutput, 
+        /// <exception cref="ArgumentNullException">Any of the supplied parameters are null.</exception>
+        /// <exception cref="ArgumentException">
+        /// Curve provider and/or name of all key components do not match, 
+        /// or either/both of the sender/receiver enumerations are of zero length.
+        /// </exception>
+        /// <exception cref="ConfigurationInvalidException">
+        /// Confirmation configuration has an invalid element.
+        /// </exception>
+        public static byte[] ConfirmUM1HybridKey(IVerificationFunctionConfiguration keyConfirmation, byte[] verifiedOutput, 
 			EcKeyConfiguration ephemeralKey, IEnumerable<EcKeyConfiguration> senderKeys, IEnumerable<EcKeyConfiguration> receiverKeys)
         {
             if (keyConfirmation == null) {
@@ -120,6 +142,10 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// <param name="keyConfirmation">Key confirmation configuration.</param>
 		/// <param name="verifiedOutput">Known/verified output of the function if correct key is input.</param>
         /// <param name="potentialKeys">Set of potential keys.</param>
+        /// <exception cref="ArgumentNullException">Key confirmation configuration or verified output is null.</exception>
+        /// <exception cref="ConfigurationInvalidException">
+        /// Some aspect of configuration invalid - detailed inside exception message.
+        /// </exception>
         /// <returns>Valid key, or null if none are validated as being correct.</returns>
 		public static byte[] ConfirmSymmetricKey(IVerificationFunctionConfiguration keyConfirmation, byte[] verifiedOutput, 
 			IEnumerable<byte[]> potentialKeys) 
@@ -153,10 +179,10 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 		/// <returns>Callable validation function.</returns>
 		/// <param name="keyConfirmation">Key confirmation configuration defining validation method to be employed.</param>
 		/// <param name="outputSizeBytes">Expected length of output of verification function in bytes.</param>
-		/// <exception cref="ConfigurationValueInvalidException">
+		/// <exception cref="ConfigurationInvalidException">
 		/// Some aspect of configuration invalid - detailed inside exception message.
 		/// </exception>
-		private static Func<byte[], byte[]> GetValidator(IVerificationFunctionConfiguration keyConfirmation, int outputSizeBytes) {
+		internal static Func<byte[], byte[]> GetValidator(IVerificationFunctionConfiguration keyConfirmation, int? outputSizeBytes = null) {
 			VerificationFunctionType functionType;
 			try {
 				functionType = keyConfirmation.FunctionType.ToEnum<VerificationFunctionType> ();
@@ -170,11 +196,13 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                 throw new ConfigurationInvalidException("Verification function name cannot be null or empty.");
 			}
 
-			const string LengthIncompatibleString = "Expected length incompatible with function specified.";
+			const string lengthIncompatibleString = "Expected length incompatible with function specified.";
 
             Func<byte[], byte[]> validator; // Used as an adaptor between different validation methods
 			switch (functionType) {
 				case VerificationFunctionType.Kdf:
+                    if (outputSizeBytes == null) 
+                        throw new ArgumentNullException("outputSizeBytes", "Cannot be null if KDF is being used.");
 					KeyDerivationFunction kdfEnum;
 					try {
 						kdfEnum = keyConfirmation.FunctionName.ToEnum<KeyDerivationFunction> ();
@@ -182,7 +210,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                         throw new ConfigurationInvalidException("Key derivation function is unsupported/unknown.", ex);
 					}
 				    validator = (key) => KeyDerivationUtility.DeriveKeyWithKdf (kdfEnum, key, keyConfirmation.Salt, 
-						outputSizeBytes, keyConfirmation.FunctionConfiguration);
+						outputSizeBytes.Value, keyConfirmation.FunctionConfiguration);
 			        break;
 			    case VerificationFunctionType.Mac:
 					MacFunction macFEnum;
@@ -195,8 +223,8 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 					var macF = AuthenticatorFactory.CreateMacPrimitive (macFEnum, key, keyConfirmation.Salt, 
 						keyConfirmation.FunctionConfiguration, keyConfirmation.Nonce);
 
-						if (outputSizeBytes != macF.MacSize)
-							throw new ArgumentException(LengthIncompatibleString, "outputSizeBytes");
+                        if (outputSizeBytes != null && outputSizeBytes != macF.MacSize)
+							throw new ArgumentException(lengthIncompatibleString, "outputSizeBytes");
 
 						if (keyConfirmation.AdditionalData.IsNullOrZeroLength() == false) 
 			                macF.BlockUpdate (keyConfirmation.AdditionalData, 0, keyConfirmation.AdditionalData.Length);
@@ -206,7 +234,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 			        };
 			        break;
 			    case VerificationFunctionType.Digest:
-				HashFunction hashFEnum;
+				    HashFunction hashFEnum;
 					try {
 						hashFEnum = keyConfirmation.FunctionName.ToEnum<HashFunction> ();
 					} catch (EnumerationParsingException ex) {
@@ -215,8 +243,8 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 					validator = (key) => {
 						var hashF = AuthenticatorFactory.CreateHashPrimitive (hashFEnum);
 
-						if (outputSizeBytes != hashF.DigestSize)
-							throw new ArgumentException(LengthIncompatibleString, "outputSizeBytes");
+                        if (outputSizeBytes != null && outputSizeBytes != hashF.DigestSize)
+							throw new ArgumentException(lengthIncompatibleString, "outputSizeBytes");
 
 						if (keyConfirmation.Salt.IsNullOrZeroLength() == false) 
 			                hashF.BlockUpdate (keyConfirmation.Salt, 0, keyConfirmation.Salt.Length);
@@ -234,7 +262,5 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 
             return validator;
         }
-
-
     }
 }

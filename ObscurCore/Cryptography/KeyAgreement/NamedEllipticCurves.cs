@@ -66,17 +66,17 @@ namespace ObscurCore.Cryptography.KeyAgreement
 			/* Custom curves */
 
 			Curves.Add (Sec2EllipticCurve.Secp192k1.ToString (), new CustomFpEcNamedCurveInformation(
-                () => new SecP192K1Curve(), new GlvTypeBParameters(
-                    new BigInteger("BB85691939B869C1D087F601554B96B80CB4F55B35F433C2", 16),
-                    new BigInteger("3D84F26C12238D7B4F3D516613C1759033B1A5800175D0B1", 16),
+                () => new SecP192K1Curve(), CustomFpEcNamedCurveInformation.CreateEndomorphismParameters(
+                    "BB85691939B869C1D087F601554B96B80CB4F55B35F433C2",
+                    "3D84F26C12238D7B4F3D516613C1759033B1A5800175D0B1",
                     new [] {
-                        new BigInteger("71169BE7330B3038EDB025F1", 16),
-                        new BigInteger("-B3FB3400DEC5C4ADCEB8655C", 16) },
+                        "71169BE7330B3038EDB025F1",
+                        "-B3FB3400DEC5C4ADCEB8655C"},
                     new [] {
-                        new BigInteger("12511CFE811D0F4E6BC688B4D", 16),
-                        new BigInteger("71169BE7330B3038EDB025F1", 16) },
-                    new BigInteger("1C45A6F9CCC2CC0E3B6C097C7", 16),
-                    new BigInteger("2CFECD0037B1712B73AE19575", 16),
+                        "12511CFE811D0F4E6BC688B4D",
+                        "71169BE7330B3038EDB025F1"},
+                    "1C45A6F9CCC2CC0E3B6C097C7",
+                    "2CFECD0037B1712B73AE19575",
                     194))
             {
 				Name = Sec2EllipticCurve.Secp192k1.ToString (),

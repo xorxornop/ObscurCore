@@ -34,7 +34,7 @@ namespace ObscurCore.Cryptography
         public KeySizeException(StreamCipher cipherEnum, int requestedSizeBits)
             : this(cipherEnum.ToString(), requestedSizeBits, Athena.Cryptography.StreamCiphers[cipherEnum].AllowableKeySizes.ToList()) {}
 
-        protected KeySizeException(string cipherName, int requestedSizeBits, List<int> allowedSizes)
+        protected KeySizeException(string cipherName, int requestedSizeBits, IReadOnlyList<int> allowedSizes)
             : base(String.Format("The size {0} is not supported for use with the {1} cipher.", requestedSizeBits, 
                 cipherName))
         {
@@ -56,7 +56,7 @@ namespace ObscurCore.Cryptography
         public string Cipher { get; private set; }
 
         /// <summary>
-        /// Allowed sizes of key. 
+        /// Allowed sizes of key in bits. 
         /// Null if caller has not supplied this data.
         /// </summary>
         public IReadOnlyList<int> AllowedSizes { get; private set; } 

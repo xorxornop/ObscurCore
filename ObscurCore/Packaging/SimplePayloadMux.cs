@@ -21,7 +21,6 @@ using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
-using ObscurCore.Cryptography.Support;
 
 namespace ObscurCore.Packaging
 {
@@ -57,24 +56,40 @@ namespace ObscurCore.Packaging
 
         protected override void ExecuteOperation() {
             var item = PayloadItems[Index];
-            DecoratingStream itemDecorator;
-            MacStream itemAuthenticator;
-            CreateEtMSchemeStreams(item, out itemDecorator, out itemAuthenticator);
 
-            if (Writing) EmitHeader(itemAuthenticator);
-            else ConsumeHeader(itemAuthenticator);
+            bool skip = ItemSkipRegister != null && ItemSkipRegister.Contains(item.Identifier);
 
-            if (Writing) {
-                var iterIn = 0;
-                do {
-                    iterIn = item.StreamBinding.Read(Buffer, 0, BufferSize);
-                    itemDecorator.Write(Buffer, 0, iterIn);
-                } while (iterIn > 0);
-            } else {
-                itemDecorator.ReadExactlyTo(item.StreamBinding, item.InternalLength, true);
+            if (Writing || skip == false) {
+                DecoratingStream itemDecorator;
+                MacStream itemAuthenticator;
+                CreateEtMDecorator(item, out itemDecorator, out itemAuthenticator);
+
+                if (Writing) EmitHeader(itemAuthenticator);
+                else ConsumeHeader(itemAuthenticator);
+
+                if (Writing) {
+                    int iterIn;
+                    do {
+                        iterIn = item.StreamBinding.Read(Buffer, 0, BufferSize);
+                        itemDecorator.Write(Buffer, 0, iterIn);
+                    } while (iterIn > 0);
+                } else {
+                    itemDecorator.ReadExactlyTo(item.StreamBinding, item.InternalLength, true);
+                }
+
+                // Emission/consumption of trailers is done in this method before item completion.
+                FinishItem(item, itemDecorator, itemAuthenticator);
+
+                // Close the source/destination
+                item.StreamBinding.Close();
             }
 
-            FinishItem(item, itemDecorator, itemAuthenticator);
+            // Mark the item as completed in the register
+            ItemCompletionRegister[Index] = true;
+            ItemsCompleted += 1;
+            
+            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "ExecuteOperation", skip ? "[*** SKIPPED ITEM" : "[*** END OF ITEM",
+                String.Format("{0} ({1}) ***]", Index, item.Identifier)));
         }
 
         protected override void FinishItem(PayloadItem item, DecoratingStream decorator, MacStream authenticator) {
@@ -115,14 +130,6 @@ namespace ObscurCore.Packaging
                     throw new CiphertextAuthenticationException("Payload item not authenticated.");
                 }
             }
-
-            // Mark the item as completed in the register
-            ItemCompletionRegister[Index] = true;
-            ItemsCompleted += 1;
-            // Close the source/destination
-            item.StreamBinding.Close();
-            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "ExecuteOperation", "[*** END OF ITEM",
-                Index + " ***]"));
         }
 
         /// <summary>

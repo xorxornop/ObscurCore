@@ -47,7 +47,8 @@ namespace ObscurCore.Cryptography.Authentication
 		}
 
 		/// <summary>
-		/// Instantiates and initialises a Message Authentication Code (MAC) primitive.
+		/// Instantiates and initialises a Message Authentication Code (MAC) primitive. 
+        /// If salt is used, it is applied as: salt||message, where || is concatenation.
 		/// </summary>
 		/// <param name="macEnum">MAC function to instantiate.</param>
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
@@ -61,23 +62,28 @@ namespace ObscurCore.Cryptography.Authentication
 			byte[] config = null, byte[] nonce = null) 
 		{
 			IMac macObj;
-			if (macEnum == MacFunction.Hmac) {
-				if (config == null)
-					throw new ArgumentException ("No hash function specified (encoded as UTF-8 bytes).", "config");
-				return macObj = CreateHmacPrimitive (Encoding.UTF8.GetString (config).ToEnum<HashFunction> (), key, salt);
-			} else if (macEnum == MacFunction.Cmac) {
-				if (config == null)
-					throw new ArgumentException ("No block cipher specified (encoded as UTF-8 bytes).", "config");
-				macObj = CreateCmacPrimitive (Encoding.UTF8.GetString (config).ToEnum<BlockCipher> (), key, salt);
-			} else if (macEnum == MacFunction.Poly1305) {
-				if (config != null && nonce == null)
-					throw new ArgumentException ("No nonce/IV supplied for the block cipher.", "nonce");
-				macObj = CreatePoly1305Primitive (Encoding.UTF8.GetString (config).ToEnum<BlockCipher> (), key, nonce, salt);
-			} else {
-				macObj = MacInstantiators[macEnum]();
-				macObj.Init (key);
-				if (salt.IsNullOrZeroLength() == false) 
-					macObj.BlockUpdate(salt, 0, salt.Length);
+			switch (macEnum) {
+			    case MacFunction.Hmac:
+			        if (config == null)
+			            throw new ArgumentException("No hash function specified (encoded as UTF-8 bytes).", "config");
+			        macObj = CreateHmacPrimitive(Encoding.UTF8.GetString (config).ToEnum<HashFunction> (), key, salt);
+			        break;
+			    case MacFunction.Cmac:
+			        if (config == null)
+			            throw new ArgumentException("No block cipher specified (encoded as UTF-8 bytes).", "config");
+			        macObj = CreateCmacPrimitive(Encoding.UTF8.GetString (config).ToEnum<BlockCipher> (), key, salt);
+			        break;
+			    case MacFunction.Poly1305:
+			        if (config != null && nonce == null)
+			            throw new ArgumentException("No nonce/IV supplied for the block cipher.", "nonce");
+			        macObj = CreatePoly1305Primitive(Encoding.UTF8.GetString (config).ToEnum<BlockCipher> (), key, nonce, salt);
+			        break;
+			    default:
+			        macObj = MacInstantiators[macEnum]();
+			        macObj.Init(key);
+			        if (salt.IsNullOrZeroLength() == false) 
+			            macObj.BlockUpdate(salt, 0, salt.Length);
+			        break;
 			}
 
 			return macObj;
@@ -91,7 +97,7 @@ namespace ObscurCore.Cryptography.Authentication
 		/// Creates a CMAC primitive using a symmetric block cipher primitive configured with default block size. 
 		/// Default block sizes (and so, output sizes) can be found by querying Athena.
 		/// </summary>
-		/// <param name="cipherEnum">Cipher primitive to use as the basis for the CMAC construction.</param>
+		/// <param name="cipherEnum">Cipher primitive to use as the basis for the CMAC construction. Block size must be 64 or 128 bits.</param>
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
 		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
 		/// <returns>Pre-initialised CMAC primitive.</returns>
@@ -109,7 +115,8 @@ namespace ObscurCore.Cryptography.Authentication
 		}
 
 		/// <summary>
-		/// Creates a HMAC primitive using a hash/digest primitive.
+        /// Creates a HMAC primitive using a hash/digest primitive. 
+        /// If salt is used, it is applied as: salt||message, where || is concatenation.
 		/// </summary>
 		/// <param name="hashEnum">Hash/digest primitive to use as the basis for the HMAC construction.</param>
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
@@ -125,27 +132,28 @@ namespace ObscurCore.Cryptography.Authentication
 		}
 
 		/// <summary>
-		/// Creates a Poly1305 primitive using a symmetric block cipher primitive 
-		/// (cipher must have a block size of 128 bits).
+		/// Creates a Poly1305 primitive using a symmetric block cipher primitive (cipher must have a block size of 128 bits). 
+        /// If salt is used, it is applied as: salt||message, where || is concatenation.
 		/// </summary>
 		/// <param name="cipherEnum">Cipher primitive to use as the basis for the Poly1305 construction.</param>
 		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
-		/// <param name="iv">Initialisation vector/nonce. Required.</param>
-		/// <returns>Pre-initialised Poly1305 primitive.</returns>
+		/// <param name="nonce">Initialisation vector/nonce. Required.</param>
+		/// <returns>Pre-initialised Poly1305 MAC primitive.</returns>
 		public static IMac CreatePoly1305Primitive(BlockCipher cipherEnum, byte[] key, byte[] nonce, byte[] salt = null) {
-			if(Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize != 128) {
+			if (Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize != 128) {
 				throw new NotSupportedException ();
 			}
 
 			var macObj = new Poly1305Mac (CipherFactory.CreateBlockCipher (cipherEnum));
 			macObj.Init (key, nonce);
+            if (salt.IsNullOrZeroLength() == false)
+                macObj.BlockUpdate(salt, 0, salt.Length);
 
 			return macObj;
 		}
 
-
 		static AuthenticatorFactory() {
-			// ######################################## HASHING ########################################
+			// ######################################## HASH FUNCTIONS ########################################
 
 			DigestInstantiators.Add(HashFunction.Blake2B256, () => new Blake2BDigest(256, true));
 			DigestInstantiators.Add(HashFunction.Blake2B384, () => new Blake2BDigest(384, true));
@@ -162,7 +170,7 @@ namespace ObscurCore.Cryptography.Authentication
 			DigestInstantiators.Add(HashFunction.Ripemd160, () => new RipeMD160Digest());
 			DigestInstantiators.Add(HashFunction.Tiger, () => new TigerDigest());
 
-			// ######################################## MAC ########################################
+			// ######################################## MAC FUNCTIONS ########################################
 
 			MacInstantiators.Add(MacFunction.Blake2B256, () => new Blake2BMac(256, true));
 			MacInstantiators.Add(MacFunction.Blake2B384, () => new Blake2BMac(384, true));

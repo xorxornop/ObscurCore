@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System;
+using System.Linq;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve;
@@ -64,8 +65,20 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
         public string Q { get; protected internal set; }
         public string A { get; protected internal set; }
         public string B { get; protected internal set; }
+
+        /// <summary>
+        /// Base point
+        /// </summary>
         public string G { get; protected internal set; }
+
+        /// <summary>
+        /// Order
+        /// </summary>
         public string N { get; protected internal set; }
+
+        /// <summary>
+        /// Cofactor
+        /// </summary>
         public string H { get; protected internal set; }
 
         public string Seed { get; internal set; }
@@ -110,6 +123,9 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
             }
         }
 
+        /// <summary>
+        /// Base point
+        /// </summary>
         public string G { get; protected internal set; }
 
         public string Seed { get; protected internal set; }
@@ -118,6 +134,21 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
             var curve = CurveFunc();
             return new ECDomainParameters(curve, curve.DecodePoint(G.HexToBinary()), curve.Order, curve.Cofactor,
                 String.IsNullOrEmpty(Seed) ? null : Seed.HexToBinary());
+        }
+
+        public static GlvTypeBParameters CreateEndomorphismParameters(string beta, string lambda, string[] v1, string[] v2, string g1, string g2, int bits)
+        {
+            var v1_ = v1.Select(s => new BigInteger(s, 16));
+            var v2_ = v2.Select(s => new BigInteger(s, 16));
+
+            return new GlvTypeBParameters(
+                new BigInteger(beta, 16),
+                new BigInteger(lambda, 16),
+                v1_.ToArray(),
+                v2_.ToArray(),
+                new BigInteger(g1, 16),
+                new BigInteger(g2, 16),
+                bits);
         }
     }
 

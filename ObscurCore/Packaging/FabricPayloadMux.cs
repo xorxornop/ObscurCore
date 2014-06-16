@@ -85,7 +85,7 @@ namespace ObscurCore.Packaging
 		private MuxItemResourceContainer CreateEtMSchemeResources(PayloadItem item) {
 			DecoratingStream decorator;
 			MacStream authenticator;
-			CreateEtMSchemeStreams(item, out decorator, out authenticator);
+			CreateEtMDecorator(item, out decorator, out authenticator);
 			var container = new MuxItemResourceContainer(decorator, authenticator, _maxStripe + decorator.BufferSizeRequirement);
 			return container;
 		}

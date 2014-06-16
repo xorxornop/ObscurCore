@@ -28,7 +28,8 @@ namespace ObscurCore.Cryptography.Ciphers
             Configuration = config;
         }
 
-        public CipherConfiguration RawConfiguration {
+        public CipherConfiguration RawConfiguration 
+        {
             get { return Configuration; }
         }
 

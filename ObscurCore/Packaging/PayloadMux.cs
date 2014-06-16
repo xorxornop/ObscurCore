@@ -17,13 +17,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 
-using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Ciphers;
-using ObscurCore.DTO;
 using ObscurCore.Cryptography.KeyDerivation;
+using ObscurCore.DTO;
 
 namespace ObscurCore.Packaging
 {
@@ -43,9 +41,10 @@ namespace ObscurCore.Packaging
 		protected IReadOnlyList<PayloadItem> PayloadItems;
 		protected IReadOnlyDictionary<Guid, byte[]> PayloadItemPreKeys;
 		protected readonly bool[] ItemCompletionRegister;
+        protected readonly ICollection<Guid> ItemSkipRegister;
 
 	    protected PayloadMux(bool writing, Stream payloadStream, IReadOnlyList<PayloadItem> payloadItems,
-	        IReadOnlyDictionary<Guid, byte[]> itemPreKeys)
+	        IReadOnlyDictionary<Guid, byte[]> itemPreKeys, ICollection<Guid> skips = null)
         {
 	        if (payloadStream == null) {
 	            throw new ArgumentNullException("payloadStream");
@@ -58,20 +57,28 @@ namespace ObscurCore.Packaging
 			this.Writing = writing;
 			this.PayloadStream = payloadStream;
 			this.PayloadItems = payloadItems;
+	        this.PayloadItemPreKeys = itemPreKeys;
+            this.ItemSkipRegister = writing ? null : skips;
 
 			ItemCompletionRegister = new bool[PayloadItems.Count];
 		}
 
-		protected void CreateEtMSchemeStreams(PayloadItem item, out DecoratingStream decorator, out MacStream authenticator) {
+        /// <summary>
+        /// Create decorator streams implementing the Encrypt-then-MAC scheme (CipherStream bound to a MacStream).
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="decorator"></param>
+        /// <param name="authenticator"></param>
+		protected void CreateEtMDecorator(PayloadItem item, out DecoratingStream decorator, out MacStream authenticator) {
 			byte[] encryptionKey, authenticationKey;
-			if (item.EncryptionKey.IsNullOrZeroLength() == false && item.AuthenticationKey.IsNullOrZeroLength() == false) {
-				encryptionKey = item.EncryptionKey;
+			if (item.CipherKey.IsNullOrZeroLength() == false && item.AuthenticationKey.IsNullOrZeroLength() == false) {
+				encryptionKey = item.CipherKey;
 				authenticationKey = item.AuthenticationKey;
 			} else if (PayloadItemPreKeys.ContainsKey(item.Identifier)) {
 				if (item.Authentication.KeySizeBits.HasValue == false) {
 					throw new ConfigurationInvalidException("Payload item authentication configuration is missing size specification of MAC key.");
 				}
-				KeyStretchingUtility.DeriveWorkingKeys(PayloadItemPreKeys [item.Identifier], item.Encryption.KeySizeBits / 8, 
+				KeyStretchingUtility.DeriveWorkingKeys(PayloadItemPreKeys [item.Identifier], item.SymmetricCipher.KeySizeBits / 8, 
 					item.Authentication.KeySizeBits.Value / 8, item.KeyDerivation, out encryptionKey, out authenticationKey);
 			} else {
 				throw new ItemKeyMissingException (item);
@@ -79,7 +86,7 @@ namespace ObscurCore.Packaging
 
 			authenticator = new MacStream (PayloadStream, Writing, item.Authentication, 
 				authenticationKey, closeOnDispose:false);
-			decorator = new CipherStream (authenticator, Writing, item.Encryption, 
+			decorator = new CipherStream (authenticator, Writing, item.SymmetricCipher, 
 				encryptionKey, closeOnDispose:false);
 		}
 

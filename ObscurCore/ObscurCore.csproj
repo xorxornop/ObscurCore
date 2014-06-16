@@ -113,6 +113,7 @@
     <Compile Include="Cryptography\CryptoException.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\RabbitGenerator.cs" />
     <Compile Include="Cryptography\IncompleteBlockException.cs" />
+    <Compile Include="Cryptography\KeyConfirmation\ConfirmationConfigurationFactory.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\DJB\Curve25519.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\DJB\Curve25519Field.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\DJB\Curve25519FieldElement.cs" />
@@ -383,7 +384,6 @@
     <Compile Include="Cryptography\Ciphers\CipherFactory.cs" />
     <Compile Include="Cryptography\KeyDerivation\KeyDerivationUtility.cs" />
     <Compile Include="Cryptography\Entropy\CsprngFactory.cs" />
-    <Compile Include="Cryptography\KeyConfirmation\ConfirmationFactory.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\Nat224.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224R1Curve.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224R1Field.cs" />

@@ -30,7 +30,6 @@
 
 using System;
 using System.Linq;
-using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream
@@ -39,14 +38,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
     {
         public StreamCipherConfigurationWrapper(CipherConfiguration config) : base(config) {}
 
-        protected override void ThrowIfKeySizeIncompatible() {
-            if (!Athena.Cryptography.StreamCiphers[StreamCipher].AllowableKeySizes.Contains(Configuration.KeySizeBits)) {
-                throw new KeySizeException(StreamCipher, Configuration.KeySizeBits);
-            }
-        }
-
         /// <summary>
-        /// Name of the cryptographic stream cipher transform being used e.g. Salsa20, VMPC, etc.
+        /// Stream cipher to be used e.g. Salsa20, HC-128, etc.
         /// </summary>
         public StreamCipher StreamCipher
         {
@@ -63,23 +56,46 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         }
 
         /// <summary>
-        /// Number-used-once.
+        /// Number-used-once for the cipher.
         /// </summary>
+        /// <remarks>
+        /// Nonces are sometimes called an initialisation vector, although nonce is more accurate for stream ciphers. 
+        /// They should not be reused when used with a given key (as their name suggests), 
+        /// as it frequently results in total loss of security properties.
+        /// </remarks>
         public byte[] Nonce
         {
             get {
+                var athenaInfo = Athena.Cryptography.StreamCiphers[StreamCipher];
+
+                if (athenaInfo.DefaultIvSize == -1 && Configuration.IV.IsNullOrZeroLength() == false) {
+                    throw new ConfigurationInvalidException("Nonce (initialisation vector) should not be used with the " + StreamCipher + " cipher.");
+                } else if (athenaInfo.AllowableIvSizes.Contains(Configuration.IV.Length * 8) == false) {
+                    throw new ConfigurationInvalidException("Nonce (initialisation vector) should not be a different length to the block size.");
+                }
+
                 return Configuration.IV == null ? null : Configuration.IV.DeepCopy();
             }
             set { Configuration.IV = value; }
         }
 
+        protected override void ThrowIfKeySizeIncompatible()
+        {
+            if (Athena.Cryptography.StreamCiphers[StreamCipher].AllowableKeySizes.Contains(Configuration.KeySizeBits) == false) {
+                throw new KeySizeException(StreamCipher, Configuration.KeySizeBits);
+            }
+        }
+
+        /// <summary>
+        /// Outputs a summary of the configuration, optionally including the nonce.
+        /// </summary>
+        /// <param name="includeValues">Whether to include values of relevant byte arrays as hex strings.</param>
         public override string ToString(bool includeValues)
         {
             var cipher = Athena.Cryptography.StreamCiphers[StreamCipher].DisplayName;
-            if (includeValues)
-            {
+            if (includeValues) {
                 return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
-                    "Nonce, hex: {3}",
+                    "Nonce: {3}",
 					CipherType.Stream, cipher, KeySizeBits, Nonce.IsNullOrZeroLength() ? "none" : Nonce.ToHexString());
             }
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}",

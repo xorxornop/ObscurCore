@@ -99,35 +99,35 @@ namespace ObscurCore.DTO
         public long ExternalLength { get; set; }
 
 		/// <summary>
-		/// Length of the item inside of the payload, excluding any additional length imparted by the payload layout scheme, if any.
+		/// Length of the item inside of the payload, 
+		/// excluding any additional length imparted by the payload layout scheme, if any.
 		/// </summary>
 		[ProtoMember(4, IsRequired = true)]
 		public long InternalLength { get; set; }
 		
         /// <summary>
-        /// Encryption configuration for this payload item.
+        /// SymmetricCipher configuration for this payload item.
         /// </summary>
         [ProtoMember(6, IsRequired = true)]
-        public CipherConfiguration Encryption { get; set; }
+        public CipherConfiguration SymmetricCipher { get; set; }
 
 		/// <summary>
 		/// Cryptographic key for encryption of the payload item. 
-		/// Required if key confirmation not used.
+        /// Required if <see cref="PayloadItem.KeyDerivation"/> is not present.
 		/// </summary>
 		[ProtoMember(7, IsRequired = false)]
-		public byte[] EncryptionKey { get; set; }
+		public byte[] CipherKey { get; set; }
 
 		/// <summary>
 		/// Authentication configuration for the payload item. 
 		/// Must be of a MAC type.
 		/// </summary>
-		/// <value>The authentication.</value>
 		[ProtoMember(8, IsRequired = true)]
 		public VerificationFunctionConfiguration Authentication { get; set; }
 
 		/// <summary>
 		/// Cryptographic key for authentication of the payload item. 
-		/// Required if key confirmation not used.
+        /// Required if <see cref="PayloadItem.KeyDerivation"/> is not present.
 		/// </summary>
 		[ProtoMember(9, IsRequired = false)]
 		public byte[] AuthenticationKey { get; set; }
@@ -141,20 +141,22 @@ namespace ObscurCore.DTO
         /// <summary>
         /// Key confirmation configuration for this payload item. 
 		/// Used to validate the existence and validity of keying material 
-		/// at the respondent's side without disclosing the key itself.
+		/// at the respondent's side without disclosing the key itself. 
+        /// Required if <see cref="PayloadItem.CipherKey"/> and <see cref="PayloadItem.AuthenticationKey"/> are not present.
         /// </summary>
 		[ProtoMember(11, IsRequired = false)]
 		public VerificationFunctionConfiguration KeyConfirmation { get; set; }
 
 		/// <summary>
-		/// Output of the key confirmation scheme given correct input data.
+		/// Output of the key confirmation scheme given the correct key.
 		/// </summary>
 		[ProtoMember(12, IsRequired = false)]
 		public byte[] KeyConfirmationVerifiedOutput { get; set; }
 
         /// <summary>
 		/// Key derivation configuration for this payload item. 
-		/// Required if key confirmation not used.
+        /// Used to derive cipher and authentication keys from a single pre-established key. 
+        /// Required if <see cref="PayloadItem.CipherKey"/> and <see cref="PayloadItem.AuthenticationKey"/> are not present.
         /// </summary>
 		[ProtoMember(13, IsRequired = false)]
         public KeyDerivationConfiguration KeyDerivation { get; set; }
@@ -165,8 +167,8 @@ namespace ObscurCore.DTO
 				RelativePath = this.RelativePath,
 				ExternalLength = this.ExternalLength,
 				InternalLength = this.InternalLength,
-				Encryption = this.Encryption,
-				EncryptionKey = this.EncryptionKey,
+				SymmetricCipher = this.SymmetricCipher,
+				CipherKey = this.CipherKey,
 				Authentication = this.Authentication,
 				AuthenticationKey = this.AuthenticationKey,
 				AuthenticationVerifiedOutput = null,
@@ -192,7 +194,7 @@ namespace ObscurCore.DTO
 				String.Equals(RelativePath, other.RelativePath, Type != PayloadItemType.KeyAction ? 
 					StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) && 
 				InternalLength == other.InternalLength && ExternalLength == other.ExternalLength && 
-				Encryption.Equals(other.Encryption) && 
+				SymmetricCipher.Equals(other.SymmetricCipher) && 
 				Authentication.Equals(other.Authentication) && 
 				(AuthenticationKey == null ? other.AuthenticationKey == null : AuthenticationKey.SequenceEqual(other.AuthenticationKey)) &&
 				AuthenticationVerifiedOutput.SequenceEqual(other.AuthenticationVerifiedOutput) && 
@@ -208,7 +210,7 @@ namespace ObscurCore.DTO
 				hashCode = (hashCode * 397) ^ RelativePath.GetHashCode();
                 hashCode = (hashCode * 397) ^ InternalLength.GetHashCode();
                 hashCode = (hashCode * 397) ^ ExternalLength.GetHashCode();
-                hashCode = (hashCode * 397) ^ Encryption.GetHashCode();
+                hashCode = (hashCode * 397) ^ SymmetricCipher.GetHashCode();
 				hashCode = (hashCode * 397) ^ Authentication.GetHashCode();
 				hashCode = (hashCode * 397) ^ (AuthenticationKey != null ? AuthenticationKey.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ AuthenticationVerifiedOutput.GetHashCode();
@@ -278,11 +280,11 @@ namespace ObscurCore.DTO
         long ExternalLength { get; }
 
         /// <summary>
-        /// Encryption configuration for this payload item.
+        /// Symmetric cipher configuration for this payload item.
         /// </summary>
-        CipherConfiguration Encryption { get; }
+        CipherConfiguration SymmetricCipher { get; }
 
-		byte[] EncryptionKey { get; }
+		byte[] CipherKey { get; }
 
 		VerificationFunctionConfiguration Authentication { get; }
 
@@ -307,7 +309,8 @@ namespace ObscurCore.DTO
 		byte[] KeyConfirmationVerifiedOutput { get; set; }
 
         /// <summary>
-        /// Key derivation configuration for this payload item.
+        /// Key derivation configuration for this payload item. 
+        /// Used to derive cipher and authentication keys from a single pre-established key.
         /// </summary>
         KeyDerivationConfiguration KeyDerivation { get; set; }
     }

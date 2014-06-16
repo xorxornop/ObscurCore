@@ -43,7 +43,12 @@ namespace ObscurCore.Cryptography.Ciphers
 		/// </summary>
 		/// <returns>An IBlockCipher cipher object implementing the relevant cipher algorithm.</returns>
 		public static IBlockCipher CreateBlockCipher (BlockCipher cipherEnum, int? blockSize = null) {
-			if (blockSize == null) blockSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
+            if (cipherEnum == BlockCipher.None) {
+                throw new ArgumentException("Cipher set to None.", "cipherEnum", new InvalidOperationException("Cannot instantiate null block cipher."));
+            }
+		    if (blockSize == null) {
+		        blockSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
+		    }
 			return EngineInstantiatorsBlock[cipherEnum](blockSize.Value);
 		}
 
@@ -63,7 +68,9 @@ namespace ObscurCore.Cryptography.Ciphers
 		public static IBlockCipher OverlayBlockCipherWithMode (IBlockCipher cipher, BlockCipherMode modeEnum) {
 			if (cipher == null) {
 				throw new ArgumentNullException();
-			}
+            } else if (modeEnum == BlockCipherMode.None) {
+                throw new ArgumentException("Mode set to none.", "modeEnum", new InvalidOperationException("Cannot instantiate null mode of operation."));
+            }
 			var cipherMode = ModeInstantiatorsBlock[modeEnum](cipher);
 			return cipherMode;
 		}
@@ -80,6 +87,9 @@ namespace ObscurCore.Cryptography.Ciphers
 		/// An IBlockCipherPadding cipher object implementing the relevant padding scheme.
 		/// </returns>
 		public static IBlockCipherPadding CreatePadding (BlockCipherPadding paddingEnum) {
+		    if (paddingEnum == BlockCipherPadding.None) {
+                throw new ArgumentException("Padding set to None.", "paddingEnum", new InvalidOperationException("Cannot instantiate null block cipher padding."));
+		    }
 			return PaddingInstantiators[paddingEnum]();
 		}
 
@@ -94,6 +104,9 @@ namespace ObscurCore.Cryptography.Ciphers
 		/// </summary>
 		/// <returns>An IStreamCipher cipher object implementing the relevant cipher algorithm.</returns>
 		public static IStreamCipher CreateStreamCipher (StreamCipher cipherEnum) {
+            if (cipherEnum == StreamCipher.None) {
+                throw new ArgumentException("Cipher set to none.", "cipherEnum", new InvalidOperationException("Cannot instantiate null stream cipher."));
+            }
 			return EngineInstantiatorsStream[cipherEnum]();
 		}
 
