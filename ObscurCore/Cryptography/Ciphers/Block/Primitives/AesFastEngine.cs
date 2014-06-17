@@ -753,11 +753,6 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             int r;
 			uint r0, r1, r2, r3;
 
-            //C0 ^= KW[0,0];
-            //C1 ^= KW[0,1];
-            //C2 ^= KW[0,2];
-            //C3 ^= KW[0,3];
-
             // Registerising helps fast engine encrypt on x64, but hurts decrypt and AESEngine
             uint C0 = this.C0 ^ KW[0, 0];
             uint C1 = this.C1 ^ KW[0, 1];

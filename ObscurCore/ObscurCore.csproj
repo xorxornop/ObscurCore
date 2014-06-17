@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Athena.cs" />
+    <Compile Include="Packaging\ContentTreeNode.cs" />
     <Compile Include="Cryptography\Authentication\IDigest.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Blake2BDigest.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\ScaleXPointMap.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\ScaleYPointMap.cs" />
     <Compile Include="Cryptography\Support\Pack.cs" />
+    <Compile Include="Packaging\DirectoryTreeNode.cs" />
     <Compile Include="ItemKeyMissingException.cs" />
     <Compile Include="Cryptography\KeyAgreement\Sec2EllipticCurve.cs" />
     <Compile Include="Cryptography\Entropy\ICsprngCompatible.cs" />
@@ -179,8 +181,10 @@
     <Compile Include="Packaging\PayloadLayoutScheme.cs" />
     <Compile Include="Packaging\FabricPayloadMux.cs" />
     <Compile Include="Packaging\FrameshiftPayloadMux.cs" />
+    <Compile Include="Packaging\PayloadTree.cs" />
     <Compile Include="Packaging\SimplePayloadMux.cs" />
     <Compile Include="Information\PaddingRequirement.cs" />
+    <Compile Include="Packaging\TreeNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StratCom.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\Salsa20Generator.cs" />
