@@ -13,6 +13,9 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+// Controls whether, when debugging, the length of an item's DTO object is reported when authenticating it.
+#define PRINT_DTO_LENGTH
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -43,7 +46,8 @@ namespace ObscurCore.Packaging
         /// <param name="config">Configuration of stream selection.</param>
         public SimplePayloadMux(bool writing, Stream multiplexedStream, IReadOnlyList<PayloadItem> payloadItems,
             IReadOnlyDictionary<Guid, byte[]> itemPreKeys, IPayloadConfiguration config)
-            : base(writing, multiplexedStream, payloadItems, itemPreKeys) {
+            : base(writing, multiplexedStream, payloadItems, itemPreKeys)
+        {
             if (config == null)
                 throw new ArgumentNullException("config");
 
@@ -54,7 +58,8 @@ namespace ObscurCore.Packaging
 
         public int Overhead { get; protected set; }
 
-        protected override void ExecuteOperation() {
+        protected override void ExecuteOperation()
+        {
             var item = PayloadItems[Index];
 
             bool skip = ItemSkipRegister != null && ItemSkipRegister.Contains(item.Identifier);
@@ -87,12 +92,13 @@ namespace ObscurCore.Packaging
             // Mark the item as completed in the register
             ItemCompletionRegister[Index] = true;
             ItemsCompleted += 1;
-            
+
             Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "ExecuteOperation", skip ? "[*** SKIPPED ITEM" : "[*** END OF ITEM",
                 String.Format("{0} ({1}) ***]", Index, item.Identifier)));
         }
 
-        protected override void FinishItem(PayloadItem item, DecoratingStream decorator, MacStream authenticator) {
+        protected override void FinishItem(PayloadItem item, DecoratingStream decorator, MacStream authenticator)
+        {
             // Item is finished, we need to do some things.
             decorator.Close();
             if (Writing) EmitTrailer(authenticator);
@@ -116,6 +122,9 @@ namespace ObscurCore.Packaging
 
             // Final stages of Encrypt-then-MAC authentication scheme
             byte[] itemDtoAuthBytes = item.CreateAuthenticatibleClone().SerialiseDto();
+#if PRINT_DTO_LENGTH
+            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "FinishItem", "Payload item DTO length", itemDtoAuthBytes.Length));
+#endif
             authenticator.Update(itemDtoAuthBytes, 0, itemDtoAuthBytes.Length);
             authenticator.Close();
 

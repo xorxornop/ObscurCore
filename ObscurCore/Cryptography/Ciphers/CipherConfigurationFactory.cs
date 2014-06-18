@@ -38,7 +38,7 @@ namespace ObscurCore.Cryptography.Ciphers
             }
 
             // Set the block size
-            var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize;
+            var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize.Value;
             if (blockSize == null || Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
                 config.BlockSizeBits = blockSizeNonNull;
             } else {

@@ -401,12 +401,16 @@ namespace ObscurCore
 
                 CsprngDictionary.Add(CsPseudorandomNumberGenerator.Salsa20, new CsprngDescription {
                     Name = CsPseudorandomNumberGenerator.Salsa20.ToString(),
-                    DisplayName = "Salsa20 cipher-based CSPRNG"
+                    DisplayName = "Salsa20 keystream CSPRNG"
                 });
 				CsprngDictionary.Add(CsPseudorandomNumberGenerator.Sosemanuk, new CsprngDescription {
 					Name = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-					DisplayName = "SOSEMANUK cipher-based CSPRNG"
+					DisplayName = "SOSEMANUK keystream CSPRNG"
 				});
+                CsprngDictionary.Add(CsPseudorandomNumberGenerator.Rabbit, new CsprngDescription {
+                    Name = CsPseudorandomNumberGenerator.Rabbit.ToString(),
+                    DisplayName = "Rabbit keystream CSPRNG"
+                });
             }
 
             // Data storage.
@@ -471,11 +475,9 @@ namespace ObscurCore
 
             public const char PathDirectorySeperator = '/';
             public static string PathRelativeUp = ".." + PathDirectorySeperator;
-
-            public static readonly byte[] HeaderTagBytes = Encoding.UTF8.GetBytes("OCpkg-OHAI");
             
             public static byte[] GetHeaderTag() {
-                return HeaderTagBytes;
+                return Encoding.UTF8.GetBytes("OCpkg-OHAI");
             }
 
             public static byte[] GetTrailerTag() {

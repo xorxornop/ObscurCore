@@ -229,9 +229,9 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 			var sw = System.Diagnostics.Stopwatch.StartNew ();
 
 			EcKeyConfiguration ephemeral;
-			var initiatorSS = UM1Exchange.Initiate(keypair.Responder.ExportPublicKey(),
+			var initiatorSS = Um1Exchange.Initiate(keypair.Responder.ExportPublicKey(),
 				keypair.Initiator.GetPrivateKey(), out ephemeral);
-			var responderSS = UM1Exchange.Respond(keypair.Initiator.ExportPublicKey(), 
+			var responderSS = Um1Exchange.Respond(keypair.Initiator.ExportPublicKey(), 
 				keypair.Responder.GetPrivateKey(), ephemeral);
 
 			sw.Stop ();

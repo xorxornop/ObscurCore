@@ -90,7 +90,7 @@ namespace ObscurCore.Cryptography.Authentication
         /// <param name="cipherEnum">Block cipher to use as basis of the CMAC construction.</param>
 		/// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
 		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationCmac(BlockCipher cipherEnum, out int outputSize) {
-			outputSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
+			outputSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize.Value;
 			int keySize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultKeySize;
 			byte[] functionConfig = Encoding.UTF8.GetBytes(cipherEnum.ToString());
 

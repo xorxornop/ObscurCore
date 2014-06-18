@@ -37,7 +37,7 @@ namespace ObscurCore.Information
         /// <summary>
         /// If no block size size is supplied when configuring the cipher, this is the size that should be used, where applicable. Set to -1 if stream cipher.
         /// </summary>
-        public int DefaultBlockSize { get; internal set; }
+        public int? DefaultBlockSize { get; internal set; }
 
         /// <summary>
         /// Array of allowable sizes (in bits) for the cipher initialisation vector (IV).

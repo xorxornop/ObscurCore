@@ -101,7 +101,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 
 			var validator = GetValidator(keyConfirmation, verifiedOutput.Length);
 			var um1SecretFunc = new Func<EcKeyConfiguration, EcKeyConfiguration, byte[]> ((pubKey, privKey) => 
-				UM1Exchange.Respond(pubKey, privKey, ephemeralKey));
+				Um1Exchange.Respond(pubKey, privKey, ephemeralKey));
 
 			byte[] preKey = null;
 

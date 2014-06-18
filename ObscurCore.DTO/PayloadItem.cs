@@ -77,7 +77,6 @@ namespace ObscurCore.DTO
         [ProtoIgnore]
         public bool StreamHasBinding { get { return _stream != null; } }
 
-
         /// <summary>
         /// Item handling behaviour category. 
         /// Key actions should be handled differently from the others.

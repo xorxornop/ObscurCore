@@ -31,7 +31,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 	/// with cofactor multiplication, but with the initiator also using an ephemeral 
 	/// keypair for unilateral forward secrecy.
 	/// </remarks>
-    public static class UM1Exchange
+    public static class Um1Exchange
     {
 
 		/// <summary>

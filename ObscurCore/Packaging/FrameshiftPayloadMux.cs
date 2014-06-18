@@ -14,8 +14,8 @@
 //    limitations under the License.
 
 /* Controls whether items' padding is authenticated along with their actual content.
- * Comment out to disable */
-#define AUTHENTICATE_FRAMESHIFT_PADDING 
+ * Comment out to disable. Doing so will cause it to be out of ObscurCore specification. */
+#define AUTHENTICATE_FRAMESHIFT_PADDING
 
 using System;
 using System.Collections.Generic;

@@ -48,7 +48,7 @@ namespace ObscurCore.Tests
 
 
         public static readonly string RawPayloadExtension = ".payload";
-        public static readonly string PackageExtension = ".ocpackage";
+        public static readonly string PackageExtension = ".ocpkg";
 
         private const int RandomStreamLength = 1024 * 1024; // 1 MB
 		protected static readonly MemoryStream RandomStream = new MemoryStream();

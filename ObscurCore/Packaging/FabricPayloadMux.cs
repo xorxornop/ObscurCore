@@ -24,7 +24,7 @@ using RingByteBuffer;
 
 namespace ObscurCore.Packaging
 {
-    #if INCLUDE_FABRIC
+#if INCLUDE_FABRIC
     /// <summary>
     /// Derived payload multiplexer implementing item layout in stripes of either 
 	/// constant or PRNG-varied length.

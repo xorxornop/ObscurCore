@@ -329,7 +329,7 @@ namespace ObscurCore
             }
 
             EcKeyConfiguration ephemeral;
-            _writingPreManifestKey = UM1Exchange.Initiate(receiverKey, senderKey, out ephemeral);
+            _writingPreManifestKey = Um1Exchange.Initiate(receiverKey, senderKey, out ephemeral);
             Debug.Print(DebugUtility.CreateReportString("PackageWriter", "SetManifestCryptoUM1", "Manifest pre-key",
                 _writingPreManifestKey.ToHexString()));
 
@@ -754,7 +754,9 @@ namespace ObscurCore
 
             if (writingTemp == null) {
                 // Default to writing to memory
-                writingTemp = new MemoryStream();
+                var totalLen = _manifest.PayloadItems.Aggregate(0, (i, item) => i += (int) item.ExternalLength);
+                var expLen = (int)(totalLen * 0.1);
+                writingTemp = new MemoryStream(expLen);
             }
 
             // Write the header tag
@@ -800,7 +802,6 @@ namespace ObscurCore
                         workingManifestCipherKey, false)) {
                         _manifest.SerialiseDto(cs, prefixLength: false);
                     }
-
                     authenticator.Update(((UInt32)authenticator.BytesOut).ToLittleEndian(), 0, sizeof(UInt32));
 
                     byte[] manifestCryptoDtoForAuth = null;
@@ -818,7 +819,6 @@ namespace ObscurCore
                         default:
                             throw new NotImplementedException();
                     }
-
                     authenticator.Update(manifestCryptoDtoForAuth, 0, manifestCryptoDtoForAuth.Length);
                 }
 

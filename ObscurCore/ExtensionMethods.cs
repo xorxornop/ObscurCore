@@ -81,7 +81,7 @@ namespace ObscurCore
 		/// <typeparam name="T">Enumeration type.</typeparam>
 		public static T ToEnum<T>(this string stringValue, bool ignoreCase = true) where T : struct, IConvertible
         {
-            if (!typeof(T).IsEnum) 
+            if (typeof(T).IsEnum == false) 
 				throw new InvalidOperationException("T must be an enumeration type.");
 
             T value;
