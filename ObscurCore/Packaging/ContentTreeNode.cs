@@ -19,8 +19,8 @@ namespace ObscurCore.Packaging
     {
         public ContentTreeNode(string name, DirectoryTreeNode<T> parent, T content)
         {
-            base.Name = name;
-            base.Parent = parent;
+            Name = name;
+            Parent = parent;
             Content = content;
         }
 

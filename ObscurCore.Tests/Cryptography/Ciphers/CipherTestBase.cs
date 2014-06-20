@@ -155,7 +155,7 @@ namespace ObscurCore.Tests.Cryptography
 				ciphertext = msCiphertext.ToArray ();
 			}
 
-			Assert.IsTrue (testCase.Ciphertext.SequenceEqual(ciphertext), 
+			Assert.IsTrue (testCase.Ciphertext.SequenceEqualShortCircuiting(ciphertext), 
 				"Test #{0} (\"{1}\") failed!", number, testCase.Name);
 		}
 
@@ -179,7 +179,7 @@ namespace ObscurCore.Tests.Cryptography
 				msCiphertext.Read (segmentCiphertext, 0, segment.Length);
 				var referenceCiphertext = segment.Ciphertext;
 				// Validate the segment
-				Assert.IsTrue (referenceCiphertext.SequenceEqual(segmentCiphertext), 
+				Assert.IsTrue (referenceCiphertext.SequenceEqualShortCircuiting(segmentCiphertext), 
 					"Segmented vector test #{0} (\"{1}\") failed at segment {2}!", 
 					number, testCase.Name, segment.Name);
 			}

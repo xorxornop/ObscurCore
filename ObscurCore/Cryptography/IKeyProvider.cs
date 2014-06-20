@@ -16,26 +16,26 @@
 using System.Collections.Generic;
 using ObscurCore.DTO;
 
-namespace ObscurCore
+namespace ObscurCore.Cryptography
 {
     /// <summary>
-    /// API for key providers to conform to. 
-    /// Key providers supply keys & keypairs for cryptographic operations.
+    ///     API for key providers to conform to.
+    ///     Key providers supply keys & keypairs for cryptographic operations.
     /// </summary>
     public interface IKeyProvider
     {
         /// <summary>
-        /// Symmetric key(s) that the local user owns.
+        ///     Symmetric key(s) that the local user owns.
         /// </summary>
         IEnumerable<byte[]> SymmetricKeys { get; }
 
         /// <summary>
-        /// Elliptic curve key(s) that the local user owns.
+        ///     Elliptic curve key(s) that the local user owns.
         /// </summary>
         IEnumerable<EcKeypair> EcKeypairs { get; }
 
         /// <summary>
-        /// Elliptic curve public key(s) of foreign entities.
+        ///     Elliptic curve public key(s) of foreign entities.
         /// </summary>
         IEnumerable<EcKeyConfiguration> ForeignEcKeys { get; }
     }

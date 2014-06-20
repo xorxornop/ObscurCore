@@ -61,7 +61,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		#endregion
 		
 		private static byte[] DeriveKey (byte[] key, byte[] salt, int outputSize, int iterations) {
-			var hmac = AuthenticatorFactory.CreateHmacPrimitive (ObscurCore.Cryptography.Authentication.HashFunction.Sha256, key, null);
+			var hmac = AuthenticatorFactory.CreateHmacPrimitive (HashFunction.Sha256, key, null);
 			return Pbkdf2.ComputeDerivedKey (hmac, salt, iterations, outputSize);
 		}
 		

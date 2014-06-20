@@ -56,9 +56,8 @@ namespace ObscurCore.Cryptography.Authentication
 			}
 				
 			outputSize = Athena.Cryptography.MacFunctions[macFunctionEnum].OutputSize.Value / 8;
-			int outputSizeBits = outputSize * 8;
 
-			return CreateAuthConf(macFunctionEnum.ToString(), outputSizeBits, outputSizeBits, null, null);
+            return CreateAuthConf(macFunctionEnum.ToString(), outputSize * 8, outputSize, null, null);
 		}
 
 	    /// <summary>
@@ -75,22 +74,23 @@ namespace ObscurCore.Cryptography.Authentication
 	    public static VerificationFunctionConfiguration CreateAuthenticationConfigurationHmac (HashFunction hashEnum, 
 			out int outputSize, int? keySize = null) 
 		{
-			outputSize = Athena.Cryptography.HashFunctions[hashEnum].OutputSize;
+			outputSize = Athena.Cryptography.HashFunctions[hashEnum].OutputSize / 8;
 			byte[] functionConfig = Encoding.UTF8.GetBytes(hashEnum.ToString ());
 			return CreateAuthConf(MacFunction.Hmac.ToString(), keySize ?? outputSize, outputSize, functionConfig, null);
 		}
 
-		/// <summary>
-		/// Creates a configuration for authentication using a CMAC/OMAC1 construction.
-		/// </summary>
-		/// <remarks>
-		/// The CMAC configuration generated may be used with a MacStream, 
-		/// e.g. package payload item authentication.
-		/// </remarks>
-        /// <param name="cipherEnum">Block cipher to use as basis of the CMAC construction.</param>
-		/// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
-		public static VerificationFunctionConfiguration CreateAuthenticationConfigurationCmac(BlockCipher cipherEnum, out int outputSize) {
-			outputSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize.Value;
+	    /// <summary>
+	    /// Creates a configuration for authentication using a CMAC/OMAC1 construction.
+	    /// </summary>
+	    /// <remarks>
+	    /// The CMAC configuration generated may be used with a MacStream, 
+	    /// e.g. package payload item authentication.
+	    /// </remarks>
+	    /// <param name="cipherEnum">Block cipher to use as basis of the CMAC construction.</param>
+	    /// <param name="outputSize">Output size of the CMAC in bytes.</param>
+	    /// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
+	    public static VerificationFunctionConfiguration CreateAuthenticationConfigurationCmac(BlockCipher cipherEnum, out int outputSize) {
+			outputSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize.Value / 8;
 			int keySize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultKeySize;
 			byte[] functionConfig = Encoding.UTF8.GetBytes(cipherEnum.ToString());
 
@@ -123,7 +123,7 @@ namespace ObscurCore.Cryptography.Authentication
 			return CreateAuthConf(MacFunction.Poly1305.ToString(), 256, 128, functionConfig, nonce);
 		}
 
-		private static VerificationFunctionConfiguration CreateAuthConf(string functionName, int keySizeBits, int outputSizeBits, byte[] functionConfig, byte[] nonce) {
+		private static VerificationFunctionConfiguration CreateAuthConf(string functionName, int keySizeBits, int outputSize, byte[] functionConfig, byte[] nonce) {
 			var config = new VerificationFunctionConfiguration {
 				FunctionType = VerificationFunctionType.Mac.ToString(),
 				FunctionName = functionName,

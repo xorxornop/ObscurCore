@@ -46,11 +46,12 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
 		{
 			if(cipher == null) {
 				throw new ArgumentNullException ("cipher");
-			} else if(strideIncreaseFactor < 0 || strideIncreaseFactor > 8) {
-				throw new ArgumentOutOfRangeException ("strideIncreaseFactor");
 			}
+		    if(strideIncreaseFactor < 0 || strideIncreaseFactor > 8) {
+		        throw new ArgumentOutOfRangeException ("strideIncreaseFactor");
+		    }
 
-			Encrypting = encrypting;
+		    Encrypting = encrypting;
 			_cipher = cipher;
 			_strideSize = _cipher.StateSize << strideIncreaseFactor;
 		}

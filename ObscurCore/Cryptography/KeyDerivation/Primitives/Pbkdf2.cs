@@ -33,8 +33,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 		/// Creates a new PBKDF2 stream.
 		/// </summary>
 		/// <param name="hmacAlgorithm">
-		///     The HMAC algorithm to use, for example <see cref="HMACSHA256"/>.
-		///     Make sure to set <see cref="KeyedHashAlgorithm.Key"/>.
+		///     The HMAC primitive instance to use. Must be pre-initialised.
 		/// </param>
 		/// <param name="salt">
 		///     The salt.
@@ -79,8 +78,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 		/// Computes a derived key.
 		/// </summary>
 		/// <param name="hmacAlgorithm">
-		///     The HMAC algorithm to use, for example <see cref="HMACSHA256"/>.
-		///     Make sure to set <see cref="KeyedHashAlgorithm.Key"/>.
+        ///     The HMAC primitive instance to use. Must be pre-initialised.
 		/// </param>
 		/// <param name="salt">
 		///     The salt.

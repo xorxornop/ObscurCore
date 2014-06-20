@@ -21,7 +21,7 @@ namespace ObscurCore.Cryptography.Authentication
 {
 	public sealed class HashStream : DecoratingStream
 	{
-		private IDigest _digest;
+		private readonly IDigest _digest;
 		private readonly byte[] _output;
 		private byte[] _buffer;
 		private const int BufferSize = 4096;
@@ -78,7 +78,7 @@ namespace ObscurCore.Cryptography.Authentication
 		}
 
 		public override int Read (byte[] buffer, int offset, int count) {
-			int readBytes = base.Read(buffer, offset, count);
+			var readBytes = base.Read(buffer, offset, count);
 			if (readBytes > 0) {
 				_digest.BlockUpdate(buffer, offset, readBytes);
 			}
@@ -94,16 +94,16 @@ namespace ObscurCore.Cryptography.Authentication
 			if(_buffer == null) {
 				_buffer = new byte[BufferSize];
 			}
-			int iterIn = 0;
-			long totalIn = 0;
+		    long totalIn = 0;
 			while(length > 0) {
-				iterIn = source.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
+				var iterIn = source.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
 				if(iterIn == 0) {
 					throw new EndOfStreamException ();
 				}
 				totalIn += iterIn;
 				_digest.BlockUpdate(_buffer, 0, iterIn);
 				StreamBinding.Write (_buffer, 0, iterIn);
+			    length -= iterIn;
 			}
 
 			return totalIn;
@@ -118,16 +118,16 @@ namespace ObscurCore.Cryptography.Authentication
 			if(_buffer == null) {
 				_buffer = new byte[BufferSize];
 			}
-			int iterIn = 0;
-			long totalIn = 0;
+		    long totalIn = 0;
 			while(length > 0) {
-				iterIn = Binding.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
+				var iterIn = Binding.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
 				if(iterIn == 0) {
 					throw new EndOfStreamException ();
 				}
 				totalIn += iterIn;
 				_digest.BlockUpdate(_buffer, 0, iterIn);
 				destination.Write (_buffer, 0, iterIn);
+			    length -= iterIn;
 			}
 			if(finishing) {
 				Finish ();

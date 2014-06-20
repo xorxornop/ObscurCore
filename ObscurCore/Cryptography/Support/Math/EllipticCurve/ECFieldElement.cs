@@ -608,7 +608,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
                 throw new ArgumentException("One of the F2m field elements has incorrect representation");
             }
 
-            if ((aF2m.m != bF2m.m) || !aF2m.ks.SequenceEqual(bF2m.ks)) {
+            if ((aF2m.m != bF2m.m) || !aF2m.ks.SequenceEqualShortCircuiting(bF2m.ks)) {
                 throw new ArgumentException("Field elements are not elements of the same field F2m");
             }
         }
@@ -785,7 +785,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             F2mFieldElement other) {
             return ((this.m == other.m)
                 && (this.representation == other.representation)
-                && this.ks.SequenceEqual(other.ks)
+                && this.ks.SequenceEqualShortCircuiting(other.ks)
                 && (this.x.Equals(other.x)));
         }
 

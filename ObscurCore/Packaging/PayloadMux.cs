@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.KeyDerivation;
@@ -25,43 +24,45 @@ using ObscurCore.DTO;
 
 namespace ObscurCore.Packaging
 {
-	/// <summary>
-	/// Multiplexer for stream sources/sinks. Mixes reads/writes among an arbitrary number of streams.
-	/// </summary>
-	/// <remarks>
-	/// Supports extensions for control of operation size (partial/split item writes), ordering, 
-	/// and item headers & trailers. Records I/O history itemwise and total.
-	/// </remarks>
-	public abstract class PayloadMux
-	{
-		protected readonly bool Writing;
-		protected int Index;
-		protected int ItemsCompleted;
-		protected readonly Stream PayloadStream;
-		protected IReadOnlyList<PayloadItem> PayloadItems;
-		protected IReadOnlyDictionary<Guid, byte[]> PayloadItemPreKeys;
-		protected readonly bool[] ItemCompletionRegister;
+    /// <summary>
+    /// Multiplexer for stream sources/sinks. Mixes reads/writes among an arbitrary number of streams.
+    /// </summary>
+    /// <remarks>
+    /// Supports extensions for control of operation size (partial/split item writes), ordering, 
+    /// and item headers & trailers. Records I/O history itemwise and total.
+    /// </remarks>
+    public abstract class PayloadMux
+    {
+        protected readonly bool Writing;
+        protected int Index;
+        protected int ItemsCompleted;
+        protected readonly Stream PayloadStream;
+        protected IReadOnlyList<PayloadItem> PayloadItems;
+        protected IReadOnlyDictionary<Guid, byte[]> PayloadItemPreKeys;
+        protected readonly bool[] ItemCompletionRegister;
         protected readonly ICollection<Guid> ItemSkipRegister;
 
-	    protected PayloadMux(bool writing, Stream payloadStream, IReadOnlyList<PayloadItem> payloadItems,
-	        IReadOnlyDictionary<Guid, byte[]> itemPreKeys, ICollection<Guid> skips = null)
+        protected PayloadMux(bool writing, Stream payloadStream, IReadOnlyList<PayloadItem> payloadItems,
+            IReadOnlyDictionary<Guid, byte[]> itemPreKeys, ICollection<Guid> skips = null)
         {
-	        if (payloadStream == null) {
-	            throw new ArgumentNullException("payloadStream");
-	        } else if (payloadItems == null) {
-	            throw new ArgumentNullException("payloadItems");
-	        } else if (itemPreKeys == null) {
-				throw new ArgumentNullException ("itemPreKeys");
+            if (payloadStream == null) {
+                throw new ArgumentNullException("payloadStream");
+            }
+            if (payloadItems == null) {
+                throw new ArgumentNullException("payloadItems");
+            }
+            if (itemPreKeys == null) {
+                throw new ArgumentNullException("itemPreKeys");
             }
 
-			this.Writing = writing;
-			this.PayloadStream = payloadStream;
-			this.PayloadItems = payloadItems;
-	        this.PayloadItemPreKeys = itemPreKeys;
-            this.ItemSkipRegister = writing ? null : skips;
+            Writing = writing;
+            PayloadStream = payloadStream;
+            PayloadItems = payloadItems;
+            PayloadItemPreKeys = itemPreKeys;
+            ItemSkipRegister = writing ? null : skips;
 
-			ItemCompletionRegister = new bool[PayloadItems.Count];
-		}
+            ItemCompletionRegister = new bool[PayloadItems.Count];
+        }
 
         /// <summary>
         /// Create decorator streams implementing the Encrypt-then-MAC scheme (CipherStream bound to a MacStream).
@@ -69,62 +70,67 @@ namespace ObscurCore.Packaging
         /// <param name="item"></param>
         /// <param name="decorator"></param>
         /// <param name="authenticator"></param>
-		protected void CreateEtMDecorator(PayloadItem item, out DecoratingStream decorator, out MacStream authenticator) {
-			byte[] encryptionKey, authenticationKey;
-			if (item.CipherKey.IsNullOrZeroLength() == false && item.AuthenticationKey.IsNullOrZeroLength() == false) {
-				encryptionKey = item.CipherKey;
-				authenticationKey = item.AuthenticationKey;
-			} else if (PayloadItemPreKeys.ContainsKey(item.Identifier)) {
-				if (item.Authentication.KeySizeBits.HasValue == false) {
-					throw new ConfigurationInvalidException("Payload item authentication configuration is missing size specification of MAC key.");
-				}
-				KeyStretchingUtility.DeriveWorkingKeys(PayloadItemPreKeys [item.Identifier], item.SymmetricCipher.KeySizeBits / 8, 
-					item.Authentication.KeySizeBits.Value / 8, item.KeyDerivation, out encryptionKey, out authenticationKey);
-			} else {
-				throw new ItemKeyMissingException (item);
-			}
+        protected void CreateEtMDecorator(PayloadItem item, out DecoratingStream decorator, out MacStream authenticator)
+        {
+            byte[] encryptionKey, authenticationKey;
+            if (item.CipherKey.IsNullOrZeroLength() == false && item.AuthenticationKey.IsNullOrZeroLength() == false) {
+                encryptionKey = item.CipherKey;
+                authenticationKey = item.AuthenticationKey;
+            } else if (PayloadItemPreKeys.ContainsKey(item.Identifier)) {
+                if (item.Authentication.KeySizeBits.HasValue == false) {
+                    throw new ConfigurationInvalidException(
+                        "Payload item authentication configuration is missing size specification of MAC key.");
+                }
+                KeyStretchingUtility.DeriveWorkingKeys(PayloadItemPreKeys[item.Identifier],
+                    item.SymmetricCipher.KeySizeBits / 8,
+                    item.Authentication.KeySizeBits.Value / 8, item.KeyDerivation, out encryptionKey,
+                    out authenticationKey);
+            } else {
+                throw new ItemKeyMissingException(item);
+            }
 
-			authenticator = new MacStream (PayloadStream, Writing, item.Authentication, 
-				authenticationKey, closeOnDispose:false);
-			decorator = new CipherStream (authenticator, Writing, item.SymmetricCipher, 
-				encryptionKey, closeOnDispose:false);
-		}
+            authenticator = new MacStream(PayloadStream, Writing, item.Authentication,
+                authenticationKey, closeOnDispose: false);
+            decorator = new CipherStream(authenticator, Writing, item.SymmetricCipher,
+                encryptionKey, closeOnDispose: false);
+        }
 
-		/// <summary>
-		/// Executes multiplexing operations until source(s) are exhausted.
-		/// </summary>
-		public void Execute() {
-			while (ItemsCompleted != PayloadItems.Count) {
-				ExecuteOperation();
-				do {
-					NextSource();
-					Debug.Print(DebugUtility.CreateReportString("PayloadMux", "Execute", "Generated index",
-						Index));
-				} while (ItemCompletionRegister[Index] == true && ItemsCompleted != PayloadItems.Count);
-				Debug.Print(DebugUtility.CreateReportString("PayloadMux", "Execute", "Selected stream",
-					Index));
-			}
-		}
+        /// <summary>
+        /// Executes multiplexing operations until source(s) are exhausted.
+        /// </summary>
+        public void Execute()
+        {
+            while (ItemsCompleted != PayloadItems.Count) {
+                ExecuteOperation();
+                do {
+                    NextSource();
+                    Debug.Print(DebugUtility.CreateReportString("PayloadMux", "Execute", "Generated index",
+                        Index));
+                } while (ItemCompletionRegister[Index] && ItemsCompleted != PayloadItems.Count);
+                Debug.Print(DebugUtility.CreateReportString("PayloadMux", "Execute", "Selected stream",
+                    Index));
+            }
+        }
 
-		/// <summary>
-		/// Executes a single mux/demux operation.
-		/// </summary>
-		protected abstract void ExecuteOperation();
+        /// <summary>
+        /// Executes a single mux/demux operation.
+        /// </summary>
+        protected abstract void ExecuteOperation();
 
-	    protected abstract void FinishItem(PayloadItem item, DecoratingStream decorator, MacStream authenticator);
+        protected abstract void FinishItem(PayloadItem item, DecoratingStream decorator, MacStream authenticator);
 
-		/// <summary>
-		/// Determine the index of the next stream to use in an I/O operation 
-		/// (whether to completion or otherwise, depending on implementation).
-		/// </summary>
-		/// <remarks>May be overriden in a derived class to provide for advanced stream selection logic.</remarks>
-		/// <returns>The next stream index.</returns>
-		protected virtual void NextSource() {
-			Index++;
-			if (Index == PayloadItems.Count) Index = 0;
-
-
-		}
-	}
+        /// <summary>
+        /// Determine the index of the next stream to use in an I/O operation 
+        /// (whether to completion or otherwise, depending on implementation).
+        /// </summary>
+        /// <remarks>May be overriden in a derived class to provide for advanced stream selection logic.</remarks>
+        /// <returns>The next stream index.</returns>
+        protected virtual void NextSource()
+        {
+            Index++;
+            if (Index == PayloadItems.Count) {
+                Index = 0;
+            }
+        }
+    }
 }
-

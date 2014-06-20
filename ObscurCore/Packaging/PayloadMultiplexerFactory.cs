@@ -23,20 +23,20 @@ namespace ObscurCore.Packaging
 {
 	public static class PayloadMultiplexerFactory
 	{
-		/// <summary>
-		/// Instantiates and returns a payload I/O module implementing the mode of operation that the
-		/// instance this method was called from describes.
-		/// </summary>
-		/// <param name="schemeEnum">Payload layout scheme to choose the correspknding multiplexer.</param>
-		/// <param name="writing">Whether the multiplexer will be multiplexing or demultiplexing.</param>
-		/// <param name="multiplexedStream">Stream to multiplex/demultiplex to/from.</param>
-		/// <param name="streams">Streams to multiplex/demultiplex to/from.</param>
-		/// <param name="transforms">Transforms to apply to the payload items (e.g. encryption).</param>
-		/// <param name="config">Configuration of the layout module/multiplexer.</param>
-		/// <returns>
-		/// An module object deriving from PayloadMultiplexer.
-		/// </returns>
-		public static PayloadMux CreatePayloadMultiplexer (PayloadLayoutScheme schemeEnum, bool writing, 
+	    /// <summary>
+	    /// Instantiates and returns a payload I/O module implementing the mode of operation that the
+	    /// instance this method was called from describes.
+	    /// </summary>
+	    /// <param name="schemeEnum">Payload layout scheme to choose the correspknding multiplexer.</param>
+	    /// <param name="writing">Whether the multiplexer will be multiplexing or demultiplexing.</param>
+	    /// <param name="multiplexedStream">Stream to multiplex/demultiplex to/from.</param>
+	    /// <param name="payloadItems"></param>
+        /// <param name="itemPreKeys"></param>
+        /// <param name="config">Configuration of the layout module/multiplexer.</param>
+	    /// <returns>
+	    /// An module object deriving from PayloadMultiplexer.
+	    /// </returns>
+	    public static PayloadMux CreatePayloadMultiplexer (PayloadLayoutScheme schemeEnum, bool writing, 
 			Stream multiplexedStream, List<PayloadItem> payloadItems, IReadOnlyDictionary<Guid, byte[]> itemPreKeys, 
 			IPayloadConfiguration config)
 		{

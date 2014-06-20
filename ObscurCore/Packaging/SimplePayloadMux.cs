@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 // Controls whether, when debugging, the length of an item's DTO object is reported when authenticating it.
+
 #define PRINT_DTO_LENGTH
 
 using System;
@@ -28,7 +29,7 @@ using ObscurCore.DTO;
 namespace ObscurCore.Packaging
 {
     /// <summary>
-    /// Payload multiplexer implementing stream selection order by CSPRNG.
+    ///     Payload multiplexer implementing stream selection order by CSPRNG.
     /// </summary>
     public class SimplePayloadMux : PayloadMux
     {
@@ -37,10 +38,13 @@ namespace ObscurCore.Packaging
         protected readonly Csprng SelectionSource;
 
         /// <summary>
-        /// Initializes a new instance of a payload multiplexer.
+        ///     Initializes a new instance of a payload multiplexer.
         /// </summary>
         /// <param name="writing">If set to <c>true</c>, writing a multiplexed stream (payload); otherwise, reading.</param>
-        /// <param name="multiplexedStream">Stream being written to (destination; multiplexing) or read from (source; demultiplexing).</param>
+        /// <param name="multiplexedStream">
+        ///     Stream being written to (destination; multiplexing) or read from (source;
+        ///     demultiplexing).
+        /// </param>
         /// <param name="payloadItems">Payload items to write.</param>
         /// <param name="itemPreKeys">Pre-keys for items (indexed by item identifiers).</param>
         /// <param name="config">Configuration of stream selection.</param>
@@ -48,8 +52,9 @@ namespace ObscurCore.Packaging
             IReadOnlyDictionary<Guid, byte[]> itemPreKeys, IPayloadConfiguration config)
             : base(writing, multiplexedStream, payloadItems, itemPreKeys)
         {
-            if (config == null)
+            if (config == null) {
                 throw new ArgumentNullException("config");
+            }
 
             SelectionSource = CsprngFactory.CreateCsprng(config.PrngName.ToEnum<CsPseudorandomNumberGenerator>(),
                 config.PrngConfiguration);
@@ -60,7 +65,7 @@ namespace ObscurCore.Packaging
 
         protected override void ExecuteOperation()
         {
-            var item = PayloadItems[Index];
+            PayloadItem item = PayloadItems[Index];
 
             bool skip = ItemSkipRegister != null && ItemSkipRegister.Contains(item.Identifier);
 
@@ -69,8 +74,11 @@ namespace ObscurCore.Packaging
                 MacStream itemAuthenticator;
                 CreateEtMDecorator(item, out itemDecorator, out itemAuthenticator);
 
-                if (Writing) EmitHeader(itemAuthenticator);
-                else ConsumeHeader(itemAuthenticator);
+                if (Writing) {
+                    EmitHeader(itemAuthenticator);
+                } else {
+                    ConsumeHeader(itemAuthenticator);
+                }
 
                 if (Writing) {
                     int iterIn;
@@ -93,7 +101,8 @@ namespace ObscurCore.Packaging
             ItemCompletionRegister[Index] = true;
             ItemsCompleted += 1;
 
-            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "ExecuteOperation", skip ? "[*** SKIPPED ITEM" : "[*** END OF ITEM",
+            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "ExecuteOperation",
+                skip ? "[*** SKIPPED ITEM" : "[*** END OF ITEM",
                 String.Format("{0} ({1}) ***]", Index, item.Identifier)));
         }
 
@@ -101,29 +110,36 @@ namespace ObscurCore.Packaging
         {
             // Item is finished, we need to do some things.
             decorator.Close();
-            if (Writing) EmitTrailer(authenticator);
-            else ConsumeTrailer(authenticator);
+            if (Writing) {
+                EmitTrailer(authenticator);
+            } else {
+                ConsumeTrailer(authenticator);
+            }
 
             // Length checks & commits
             if (Writing) {
                 // Check if pre-stated length matches what was actually written
                 if (item.ExternalLength > 0 && decorator.BytesIn != item.ExternalLength) {
-                    throw new InvalidDataException("Mismatch between stated item external length and actual input length.");
+                    throw new InvalidDataException(
+                        "Mismatch between stated item external length and actual input length.");
                 }
                 // Commit the determined internal length to item in payload manifest
                 item.InternalLength = decorator.BytesOut;
             } else {
                 if (decorator.BytesIn != item.InternalLength) {
                     throw new InvalidOperationException("Probable decorator stack malfunction.");
-                } else if (decorator.BytesOut != item.ExternalLength) {
-                    throw new InvalidDataException("Mismatch between stated item external length and actual output length.");
+                }
+                if (decorator.BytesOut != item.ExternalLength) {
+                    throw new InvalidDataException(
+                        "Mismatch between stated item external length and actual output length.");
                 }
             }
 
             // Final stages of Encrypt-then-MAC authentication scheme
             byte[] itemDtoAuthBytes = item.CreateAuthenticatibleClone().SerialiseDto();
 #if PRINT_DTO_LENGTH
-            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "FinishItem", "Payload item DTO length", itemDtoAuthBytes.Length));
+            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "FinishItem", "Payload item DTO length",
+                itemDtoAuthBytes.Length));
 #endif
             authenticator.Update(itemDtoAuthBytes, 0, itemDtoAuthBytes.Length);
             authenticator.Close();
@@ -142,33 +158,38 @@ namespace ObscurCore.Packaging
         }
 
         /// <summary>
-        /// Advances and returns the index of the next stream to use in an I/O operation (whether to completion or just a buffer-full).
+        ///     Advances and returns the index of the next stream to use in an I/O operation (whether to completion or just a
+        ///     buffer-full).
         /// </summary>
         /// <remarks>May be overriden in a derived class to provide for advanced stream selection logic.</remarks>
         /// <returns>The next stream index.</returns>
-        protected override sealed void NextSource() {
+        protected override sealed void NextSource()
+        {
             Index = SelectionSource.Next(0, PayloadItems.Count);
             Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "NextSource", "Generated index",
-                    Index));
+                Index));
         }
 
-        protected virtual void EmitHeader(MacStream authenticator) {
+        protected virtual void EmitHeader(MacStream authenticator)
+        {
             // Unused in this version
         }
 
-        protected virtual void EmitTrailer(MacStream authenticator) {
+        protected virtual void EmitTrailer(MacStream authenticator)
+        {
             // Unused in this version
         }
 
-        protected virtual void ConsumeHeader(MacStream authenticator) {
+        protected virtual void ConsumeHeader(MacStream authenticator)
+        {
             // Unused in this version
             // Could throw an exception in an implementation where a header must be present
         }
 
-        protected virtual void ConsumeTrailer(MacStream authenticator) {
+        protected virtual void ConsumeTrailer(MacStream authenticator)
+        {
             // Unused in this version
             // Could throw an exception in an implementation where a trailer must be present
         }
-
     }
 }

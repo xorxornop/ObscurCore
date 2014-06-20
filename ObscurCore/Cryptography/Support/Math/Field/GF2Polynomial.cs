@@ -27,7 +27,7 @@ namespace ObscurCore.Cryptography.Support.Math.Field
             if (null == other) {
                 return false;
             }
-            return exponents.SequenceEqual(other.exponents);
+            return exponents.SequenceEqualShortCircuiting(other.exponents);
         }
 
         public override int GetHashCode () {

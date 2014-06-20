@@ -4,16 +4,10 @@ using System.Linq;
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
 #if(INCLUDE_RC4)
-    public class Rc4Engine
-		: IStreamCipher
+    public class Rc4Engine : IStreamCipher
     {
         private const int StateLength = 256;
-
-        /*
-        * variables to hold the state of the RC4 engine
-        * during encryption and decryption
-        */
-
+        
         private byte[]	engineState;
         private int		x;
         private int		y;
@@ -22,7 +16,6 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		/// <summary>
 		/// Initialise the cipher.
 		/// </summary>
-		/// <param name="forEncryption">No effect for this cipher.</param>
 		/// <param name="encrypting">If set to <c>true</c> encrypting.</param>
 		/// <param name="key">Key for the cipher (required).</param>
 		/// <param name="iv">Not applicable for this cipher.</param>
@@ -30,7 +23,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		public void Init (bool encrypting, byte[] key, byte[] iv) {
 			if (key == null) 
 				throw new ArgumentNullException("key", "RC4 initialisation requires a key.");
-			if (!Athena.Cryptography.StreamCiphers[StreamCipher.Rc4].AllowableKeySizes.Contains(key.Length * 8))
+			if (Athena.Cryptography.StreamCiphers[StreamCipher.Rc4].AllowableKeySizes.Contains(key.Length * 8) == false)
 				throw new ArgumentException("Incompatible key size supplied.", "key");
 
 			SetKey (key);
@@ -59,7 +52,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             engineState[y] = tmp;
 
             // xor
-            return (byte)(input ^ engineState[(engineState[x] + engineState[y]) & 0xff]);
+            return (byte)(input ^ engineState[engineState[x] + engineState[y]]);
         }
 
         public void ProcessBytes(

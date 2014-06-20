@@ -98,7 +98,7 @@ namespace ObscurCore.Cryptography.Support
 				&&	g.Equals(other.g)
 				&&	n.Equals(other.n)
 				&&	h.Equals(other.h)
-				&&	seed.SequenceEqual(other.seed);
+				&&	seed.SequenceEqualShortCircuiting(other.seed);
 		}
 
 		public override int GetHashCode()

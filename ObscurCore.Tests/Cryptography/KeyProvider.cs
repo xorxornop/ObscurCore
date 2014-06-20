@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.DTO;
 using ObscurCore.Cryptography.KeyAgreement;

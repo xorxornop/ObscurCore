@@ -23,12 +23,15 @@ namespace ObscurCore.Packaging
     public abstract class TreeNode<T> : IEquatable<TreeNode<T>>
     {
         private string _name;
+
         public string Name
         {
             get { return _name; }
-            set {
-                if (Parent != null && Parent.Children.Any((t) => t.Name.Equals(_name))) {
-                    throw new InvalidOperationException("The parent node already has a child node with this name. Cannot duplicate.");
+            set
+            {
+                if (Parent != null && Parent.Children.Any(t => t.Name.Equals(_name))) {
+                    throw new InvalidOperationException(
+                        "The parent node already has a child node with this name. Cannot duplicate.");
                 }
                 _name = value;
             }
@@ -37,6 +40,7 @@ namespace ObscurCore.Packaging
         public DirectoryTreeNode<T> Parent { get; protected internal set; }
 
         private readonly Guid _identifier = new Guid();
+
         public Guid Identifier
         {
             get { return _identifier; }
@@ -46,7 +50,8 @@ namespace ObscurCore.Packaging
         {
             if (newParent == null) {
                 throw new ArgumentNullException("newParent");
-            } else if (Parent == null) {
+            }
+            if (Parent == null) {
                 throw new InvalidOperationException("Node has no current parent. Cannot move.");
             }
 
@@ -58,7 +63,7 @@ namespace ObscurCore.Packaging
 
         public TreeNode<T> GetRoot()
         {
-            var node = (this as DirectoryTreeNode<T>) ?? this.Parent;
+            var node = (this as DirectoryTreeNode<T>) ?? Parent;
             while (node.IsRoot() == false) {
                 node = node.Parent;
             }
@@ -68,7 +73,7 @@ namespace ObscurCore.Packaging
         public IEnumerable<TreeNode<T>> GetPath()
         {
             var pathStack = new Stack<TreeNode<T>>();
-            var node = (this as DirectoryTreeNode<T>) ?? this.Parent;
+            var node = (this as DirectoryTreeNode<T>) ?? Parent;
             while (node.IsRoot() == false) {
                 pathStack.Push(node);
                 node = node.Parent;
@@ -79,7 +84,7 @@ namespace ObscurCore.Packaging
 
         public bool Equals(TreeNode<T> other)
         {
-            return this.Identifier.Equals(other.Identifier);
+            return Identifier.Equals(other.Identifier);
         }
 
         /// <summary>
@@ -92,8 +97,9 @@ namespace ObscurCore.Packaging
         public static IEnumerable<TSrc> SelectRecursive<TSrc>(IEnumerable<TSrc> source,
             Func<TSrc, IEnumerable<TSrc>> selector, Func<TSrc, bool> emitPredicate)
         {
-            if (source == null)
+            if (source == null) {
                 yield break;
+            }
 
             var stack = new Stack<IEnumerator<TSrc>>();
             stack.Push(source.GetEnumerator());
@@ -102,8 +108,9 @@ namespace ObscurCore.Packaging
                 var item = stack.Peek();
                 if (item.MoveNext()) {
                     var current = item.Current;
-                    if (emitPredicate(current))
+                    if (emitPredicate(current)) {
                         yield return item.Current;
+                    }
                     stack.Push(selector(current).GetEnumerator());
                 } else {
                     stack.Pop();

@@ -236,7 +236,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 
 			sw.Stop ();
 
-			Assert.IsTrue(initiatorSS.SequenceEqual(responderSS));
+			Assert.IsTrue(initiatorSS.SequenceEqualShortCircuiting(responderSS));
 			Assert.Pass ("{0} ms. Key = {1}", 
 				sw.ElapsedMilliseconds, initiatorSS.ToHexString ());
 		}

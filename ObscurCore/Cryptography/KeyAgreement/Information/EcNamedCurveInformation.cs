@@ -14,7 +14,7 @@
 //    limitations under the License.
 
 using System;
-using System.Linq;
+using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve;
@@ -112,8 +112,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
             GlvParameters = glvParams;
 
             if (GlvParameters != null) {
-                CurveFunc = () =>
-                {
+                CurveFunc = () => {
                     var c = curve();
                     c.Configure().SetEndomorphism(new GlvTypeBEndomorphism(c, GlvParameters)).Create();
                     return c;
@@ -138,14 +137,14 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 
         public static GlvTypeBParameters CreateEndomorphismParameters(string beta, string lambda, string[] v1, string[] v2, string g1, string g2, int bits)
         {
-            var v1_ = v1.Select(s => new BigInteger(s, 16));
-            var v2_ = v2.Select(s => new BigInteger(s, 16));
+            var v1_ = v1.AsQueryExpr().Select(s => new BigInteger(s, 16)).ToArray().Run();
+            var v2_ = v2.AsQueryExpr().Select(s => new BigInteger(s, 16)).ToArray().Run();
 
             return new GlvTypeBParameters(
                 new BigInteger(beta, 16),
                 new BigInteger(lambda, 16),
-                v1_.ToArray(),
-                v2_.ToArray(),
+                v1_,
+                v2_,
                 new BigInteger(g1, 16),
                 new BigInteger(g2, 16),
                 bits);

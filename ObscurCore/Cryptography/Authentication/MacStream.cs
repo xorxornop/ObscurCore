@@ -31,33 +31,37 @@ namespace ObscurCore.Cryptography.Authentication
 		/// </summary>
 		public byte[] Mac { get { return _output; } }
 
-		/// <summary>
-		/// Initialises a new instance of the <see cref="ObscurCore.Cryptography.Authentication.MacStream"/> class.
-		/// </summary>
-		/// <param name="binding">Stream to write to or read from.</param>
-		/// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
-		/// <param name="function">MAC function to instantiate.</param>
-		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
-		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
-		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
-		public MacStream (Stream binding, bool writing, MacFunction function, byte[] key, byte[] salt = null,
+	    /// <summary>
+	    /// Initialises a new instance of the <see cref="ObscurCore.Cryptography.Authentication.MacStream"/> class.
+	    /// </summary>
+	    /// <param name="binding">Stream to write to or read from.</param>
+	    /// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
+	    /// <param name="function">MAC function to instantiate.</param>
+	    /// <param name="key">Cryptographic key to use in the MAC operation.</param>
+	    /// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
+	    /// <param name="nonce"></param>
+	    /// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
+	    /// <param name="config"></param>
+	    public MacStream (Stream binding, bool writing, MacFunction function, byte[] key, byte[] salt = null,
 			byte[] config = null, byte[] nonce = null, bool closeOnDispose = true) : base (binding, writing, closeOnDispose)
 		{
 			_mac = AuthenticatorFactory.CreateMacPrimitive (function, key, salt, config, nonce);
 			_output = new byte[_mac.MacSize];
 		}
 
-		/// <summary>
-		/// Initialises a new instance of the <see cref="ObscurCore.Cryptography.Authentication.MacStream"/> class.
-		/// </summary>
-		/// <param name="binding">Stream to write to or read from.</param>
-		/// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
-		/// <param name="function">MAC function to instantiate.</param>
-		/// <param name="key">Cryptographic key to use in the MAC operation.</param>
-		/// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
-		/// <param name="output">Byte array where the finished MAC will be output to. Does not need to be initialised.</param>
-		/// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
-		public MacStream (Stream binding, bool writing, MacFunction function, out byte[] output, byte[] key, byte[] salt = null,
+	    /// <summary>
+	    /// Initialises a new instance of the <see cref="ObscurCore.Cryptography.Authentication.MacStream"/> class.
+	    /// </summary>
+	    /// <param name="binding">Stream to write to or read from.</param>
+	    /// <param name="writing">If set to <c>true</c>, writing; otherwise, reading.</param>
+	    /// <param name="function">MAC function to instantiate.</param>
+	    /// <param name="key">Cryptographic key to use in the MAC operation.</param>
+	    /// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
+	    /// <param name="output">Byte array where the finished MAC will be output to. Does not need to be initialised.</param>
+	    /// <param name="config"></param>
+	    /// <param name="nonce"></param>
+	    /// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
+	    public MacStream (Stream binding, bool writing, MacFunction function, out byte[] output, byte[] key, byte[] salt = null,
 			byte[] config = null, byte[] nonce = null, bool closeOnDispose = true) 
 			: this (binding, writing, function, key, salt, config, nonce, closeOnDispose)
 		{
@@ -154,16 +158,16 @@ namespace ObscurCore.Cryptography.Authentication
 			if(_buffer == null) {
 				_buffer = new byte[BufferSize];
 			}
-			int iterIn = 0;
-			long totalIn = 0;
+		    long totalIn = 0;
 			while(length > 0) {
-				iterIn = source.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
+				var iterIn = source.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
 				if(iterIn == 0) {
 					throw new EndOfStreamException ();
 				}
 				totalIn += iterIn;
 				_mac.BlockUpdate(_buffer, 0, iterIn);
 				StreamBinding.Write (_buffer, 0, iterIn);
+			    length -= iterIn;
 			}
 
 			return totalIn;
@@ -178,16 +182,16 @@ namespace ObscurCore.Cryptography.Authentication
 			if(_buffer == null) {
 				_buffer = new byte[BufferSize];
 			}
-			int iterIn = 0;
-			long totalIn = 0;
+		    long totalIn = 0;
 			while(length > 0) {
-				iterIn = Binding.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
+				var iterIn = Binding.Read (_buffer, 0, (int) Math.Min (BufferSize, length));
 				if(iterIn == 0) {
 					throw new EndOfStreamException ();
 				}
 				totalIn += iterIn;
 				_mac.BlockUpdate(_buffer, 0, iterIn);
 				destination.Write (_buffer, 0, iterIn);
+                length -= iterIn;
 			}
 			if(finishing) {
 				Finish ();

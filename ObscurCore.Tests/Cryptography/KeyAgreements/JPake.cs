@@ -179,7 +179,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 
 			sw.Stop ();
 
-			Assert.IsTrue (aliceKey.SequenceEqual (bobKey), "Keys produced ARE NOT equal! Protocol implementation is broken.");
+			Assert.IsTrue (aliceKey.SequenceEqualShortCircuiting (bobKey), "Keys produced ARE NOT equal! Protocol implementation is broken.");
 
 			Assert.Pass ("{0} ms.\nKey = {1}", sw.ElapsedMilliseconds, aliceKey.ToHexString ());
 		}

@@ -14,46 +14,48 @@
 //    limitations under the License.
 
 using System;
-using System.IO;
 using System.Collections.Generic;
-using ObscurCore.Cryptography.Ciphers;
-using ObscurCore.DTO;
-using ObscurCore.Packaging;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
-
+using System.Threading.Tasks;
+using Nessos.LinqOptimizer.Base;
+using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.KeyConfirmation;
 using ObscurCore.Cryptography.KeyDerivation;
+using ObscurCore.DTO;
+using ObscurCore.Packaging;
 
 namespace ObscurCore
 {
     /// <summary>
-    /// Provides capability of reading ObscurCore packages.
+    ///     Provides capability of reading ObscurCore packages.
     /// </summary>
     public class PackageReader
     {
         #region Instance variables
 
-        /// <summary>
-        /// Stream that package is being read from.
-        /// </summary>
-        private readonly Stream _readingStream;
-
+        private readonly Dictionary<Guid, byte[]> _itemPreKeys = new Dictionary<Guid, byte[]>();
         private readonly Manifest _manifest;
-        private readonly ManifestHeader _manifestHeader;
 
         /// <summary>
-        /// Configuration of the manifest cipher. Must be serialised into ManifestHeader when writing package.
+        ///     Configuration of the manifest cipher. Must be serialised into ManifestHeader when writing package.
         /// </summary>
         private readonly IManifestCryptographySchemeConfiguration _manifestCryptoConfig;
 
-        private readonly Dictionary<Guid, byte[]> _itemPreKeys = new Dictionary<Guid, byte[]>();
+        private readonly ManifestHeader _manifestHeader;
 
         /// <summary>
-        /// Offset at which the payload starts.
+        ///     Stream that package is being read from.
+        /// </summary>
+        private readonly Stream _readingStream;
+
+        /// <summary>
+        ///     Offset at which the payload starts.
         /// </summary>
         private long _readingPayloadStreamOffset;
 
@@ -62,7 +64,7 @@ namespace ObscurCore
         #region Properties
 
         /// <summary>
-        /// Format version specification of the data transfer objects and logic used in the package.
+        ///     Format version specification of the data transfer objects and logic used in the package.
         /// </summary>
         public int FormatVersion
         {
@@ -70,7 +72,7 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Cryptographic scheme used for the manifest.
+        ///     Cryptographic scheme used for the manifest.
         /// </summary>
         public ManifestCryptographyScheme ManifestCryptoScheme
         {
@@ -78,7 +80,7 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Configuration of symmetric cipher used for encryption of the manifest.
+        ///     Configuration of symmetric cipher used for encryption of the manifest.
         /// </summary>
         public ICipherConfiguration ManifestCipher
         {
@@ -86,7 +88,7 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Configuration of function used in verifying the authenticity/integrity of the manifest.
+        ///     Configuration of function used in verifying the authenticity/integrity of the manifest.
         /// </summary>
         public IVerificationFunctionConfiguration ManifestAuthentication
         {
@@ -94,8 +96,8 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Configuration of key derivation used to derive encryption and authentication keys from prior key material. 
-        /// These keys are used in those functions of manifest encryption/authentication, respectively.
+        ///     Configuration of key derivation used to derive encryption and authentication keys from prior key material.
+        ///     These keys are used in those functions of manifest encryption/authentication, respectively.
         /// </summary>
         public IKeyDerivationConfiguration ManifestKeyDerivation
         {
@@ -103,8 +105,8 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Configuration of key confirmation used for confirming the cryptographic key 
-        /// to be used as the basis for key derivation.
+        ///     Configuration of key confirmation used for confirming the cryptographic key
+        ///     to be used as the basis for key derivation.
         /// </summary>
         public IVerificationFunctionConfiguration ManifestKeyConfirmation
         {
@@ -112,22 +114,16 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Layout scheme configuration of the items in the payload.
+        ///     Layout scheme configuration of the items in the payload.
         /// </summary>
         public PayloadLayoutScheme PayloadLayout
         {
-            get
-            {
-                return _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>();
-            }
+            get { return _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>(); }
         }
 
         public IEnumerable<IPayloadItem> PayloadItems
         {
-            get
-            {
-                return _manifest.PayloadItems.Select(item => item as IPayloadItem);
-            }
+            get { return _manifest.PayloadItems.Select(item => item as IPayloadItem); }
         }
 
         #endregion
@@ -135,8 +131,8 @@ namespace ObscurCore
         #region Constructors (including static methods that return a PackageReader)
 
         /// <summary>
-        /// Constructor for static-origin inits (reads). 
-        /// Immediately reads package manifest header and manifest.
+        ///     Constructor for static-origin inits (reads).
+        ///     Immediately reads package manifest header and manifest.
         /// </summary>
         internal PackageReader(Stream stream, IKeyProvider keyProvider)
         {
@@ -148,19 +144,21 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Read a package from a file.
+        ///     Read a package from a file.
         /// </summary>
         /// <returns>Package ready for reading.</returns>
         /// <exception cref="ArgumentException">File does not exist at the path specified.</exception>
         public static PackageReader FromFile(string filePath, IKeyProvider keyProvider)
         {
             var file = new FileInfo(filePath);
-            if (file.Exists == false) throw new ArgumentException();
+            if (file.Exists == false) {
+                throw new ArgumentException();
+            }
             return FromStream(file.OpenRead(), keyProvider);
         }
 
         /// <summary>
-        /// Read a package from a stream.
+        ///     Read a package from a stream.
         /// </summary>
         /// <returns>Package ready for reading.</returns>
         public static PackageReader FromStream(Stream stream, IKeyProvider keyProvider)
@@ -173,30 +171,38 @@ namespace ObscurCore
         #region Methods
 
         /// <summary>
-        /// Performs key confirmation and derivation on each payload item.
+        ///     Performs key confirmation and derivation on each payload item.
         /// </summary>
         /// <param name="payloadKeysSymmetric">Potential symmetric keys for payload items.</param>
         /// <exception cref="AggregateException">
-        /// Consisting of ItemKeyMissingException, indicating items missing cryptographic keys.
+        ///     Consisting of ItemKeyMissingException, indicating items missing cryptographic keys.
         /// </exception>
         private void ConfirmItemPreKeys(IEnumerable<byte[]> payloadKeysSymmetric = null)
         {
-            var keys = payloadKeysSymmetric != null ? payloadKeysSymmetric.ToList() : new List<byte[]>();
+            List<byte[]> keys = payloadKeysSymmetric != null ? payloadKeysSymmetric.ToList() : new List<byte[]>();
             var errorList = new List<PayloadItem>();
-            foreach (var item in _manifest.PayloadItems.Where(item => item.CipherKey.IsNullOrZeroLength() ||
-                item.AuthenticationKey.IsNullOrZeroLength())) {
+
+            IQueryExpr<IEnumerable<PayloadItem>> itemsToConfirm = _manifest.PayloadItems.AsQueryExpr()
+                                                                           .Where(
+                                                                               item =>
+                                                                                   item.CipherKey.IsNullOrZeroLength() ||
+                                                                                   item.AuthenticationKey
+                                                                                       .IsNullOrZeroLength());
+            Parallel.ForEach(itemsToConfirm.Run(), item => {
                 if (item.KeyConfirmation == null || item.KeyDerivation == null) {
                     errorList.Add(item);
                 }
                 // We will derive the key from one supplied as a potential
-                var preIKey = ConfirmationUtility.ConfirmSymmetricKey(item.KeyConfirmation, item.KeyConfirmationVerifiedOutput, keys);
+                byte[] preIKey = ConfirmationUtility.ConfirmSymmetricKey(item.KeyConfirmation,
+                    item.KeyConfirmationVerifiedOutput, keys);
                 if (preIKey.IsNullOrZeroLength()) {
                     errorList.Add(item);
                 }
                 if (errorList.Count == 0 && _itemPreKeys.ContainsKey(item.Identifier) == false) {
                     _itemPreKeys.Add(item.Identifier, preIKey);
                 }
-            }
+            });
+
             if (errorList.Count > 0) {
                 throw new AggregateException(errorList.Select(item => new ItemKeyMissingException(item)));
             }
@@ -205,7 +211,7 @@ namespace ObscurCore
         #endregion
 
         /// <summary>
-        /// Reads a package manifest header (only) from a stream.
+        ///     Reads a package manifest header (only) from a stream.
         /// </summary>
         /// <param name="sourceStream">Stream to read the header from.</param>
         /// <param name="cryptoScheme">Manifest cryptography scheme parsed from the header.</param>
@@ -214,32 +220,39 @@ namespace ObscurCore
         /// <exception cref="DataLengthException">End of stream encountered unexpectedly (contents truncated).</exception>
         /// <exception cref="InvalidDataException">Package data structure is out of specification or otherwise malformed.</exception>
         /// <exception cref="NotSupportedException">Version format specified is unknown to the local version.</exception>
-        private static ManifestHeader ReadManifestHeader(Stream sourceStream, out ManifestCryptographyScheme cryptoScheme, 
+        private static ManifestHeader ReadManifestHeader(Stream sourceStream,
+            out ManifestCryptographyScheme cryptoScheme,
             out IManifestCryptographySchemeConfiguration cryptoConfig)
         {
-            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifestHeader", "[* PACKAGE START* ] Header offset (absolute)",
+            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifestHeader",
+                "[* PACKAGE START* ] Header offset (absolute)",
                 sourceStream.Position));
 
-            var referenceHeaderTag = Athena.Packaging.GetHeaderTag();
+            byte[] referenceHeaderTag = Athena.Packaging.GetHeaderTag();
             var readHeaderTag = new byte[referenceHeaderTag.Length];
-            var headerTagBytesRead = sourceStream.Read(readHeaderTag, 0, readHeaderTag.Length);
-            if (readHeaderTag.SequenceEqual(referenceHeaderTag) == false) {
+            int headerTagBytesRead = sourceStream.Read(readHeaderTag, 0, readHeaderTag.Length);
+            if (readHeaderTag.SequenceEqualShortCircuiting(referenceHeaderTag) == false) {
                 if (headerTagBytesRead != referenceHeaderTag.Length) {
                     throw new DataLengthException("Insufficient data to read package header tag.");
                 }
-                throw new InvalidDataException("Package is malformed. Expected header tag is either absent or malformed.");
+                throw new InvalidDataException(
+                    "Package is malformed. Expected header tag is either absent or malformed.");
             }
 
-            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifestHeader", "Manifest header offset (absolute)",
+            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifestHeader",
+                "Manifest header offset (absolute)",
                 sourceStream.Position));
 
             var manifestHeader = StratCom.DeserialiseDataTransferObject<ManifestHeader>(sourceStream);
 
             if (manifestHeader.FormatVersion <= 0) {
                 throw new InvalidDataException("Package format descriptor is 0 or less (must be 1 or more).");
-            } else if (manifestHeader.FormatVersion > Athena.Packaging.HeaderVersion) {
-                throw new NotSupportedException(String.Format("Package version {0} as specified by the manifest header is unsupported/unknown.\n" +
-                    "The local version of ObscurCore supports up to version {1}.", manifestHeader.FormatVersion, Athena.Packaging.HeaderVersion));
+            }
+            if (manifestHeader.FormatVersion > Athena.Packaging.HeaderVersion) {
+                throw new NotSupportedException(
+                    String.Format("Package version {0} as specified by the manifest header is unsupported/unknown.\n" +
+                                  "The local version of ObscurCore supports up to version {1}.",
+                        manifestHeader.FormatVersion, Athena.Packaging.HeaderVersion));
                 // In later versions, can redirect to diff. behaviour (and DTO objects) for diff. versions.
             }
 
@@ -247,11 +260,11 @@ namespace ObscurCore
             switch (manifestHeader.CryptographySchemeName.ToEnum<ManifestCryptographyScheme>()) {
                 case ManifestCryptographyScheme.SymmetricOnly:
                     cryptoConfig = StratCom.DeserialiseDataTransferObject<SymmetricManifestCryptographyConfiguration>
-                                   (manifestHeader.CryptographySchemeConfiguration);
+                        (manifestHeader.CryptographySchemeConfiguration);
                     break;
                 case ManifestCryptographyScheme.Um1Hybrid:
                     cryptoConfig = StratCom.DeserialiseDataTransferObject<Um1HybridManifestCryptographyConfiguration>
-                                   (manifestHeader.CryptographySchemeConfiguration);
+                        (manifestHeader.CryptographySchemeConfiguration);
                     break;
                 default:
                     throw new NotSupportedException(String.Format(
@@ -263,12 +276,12 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Read manifest from package.
+        ///     Read manifest from package.
         /// </summary>
         /// <remarks>
-        /// Call method, supplying (all of) only the keys associated with the sender and the context. 
-        /// This maximises the chance that 1) the package will be successfully decrypted if multiple 
-        /// keys are in use by both parties, and 2) minimises the time spent validating potential key pairs.
+        ///     Call method, supplying (all of) only the keys associated with the sender and the context.
+        ///     This maximises the chance that 1) the package will be successfully decrypted if multiple
+        ///     keys are in use by both parties, and 2) minimises the time spent validating potential key pairs.
         /// </remarks>
         /// <param name="keyProvider">Provider to get possible keys for the manifest from.</param>
         /// <param name="manifestScheme">Cryptography scheme used in the manifest.</param>
@@ -276,10 +289,10 @@ namespace ObscurCore
         /// <exception cref="ArgumentException">Key provider absent or could not supply any keys.</exception>
         /// <exception cref="NotSupportedException">Manifest cryptography scheme unsupported/unknown or missing.</exception>
         /// <exception cref="KeyConfirmationException">
-        /// Key confirmation failed to determine a key, or failed unexpectedly. InnerException may have details.
+        ///     Key confirmation failed to determine a key, or failed unexpectedly. InnerException may have details.
         /// </exception>
         /// <exception cref="InvalidDataException">
-        /// Deserialisation of manifest failed unexpectedly (manifest malformed, or incorrect key).
+        ///     Deserialisation of manifest failed unexpectedly (manifest malformed, or incorrect key).
         /// </exception>
         /// <exception cref="CiphertextAuthenticationException">Manifest not authenticated.</exception>
         private Manifest ReadManifest(IKeyProvider keyProvider, ManifestCryptographyScheme manifestScheme)
@@ -295,7 +308,7 @@ namespace ObscurCore
                     if (_manifestCryptoConfig.KeyConfirmation != null) {
                         try {
                             preMKey = ConfirmationUtility.ConfirmSymmetricKey(
-                                ((SymmetricManifestCryptographyConfiguration)_manifestCryptoConfig).KeyConfirmation,
+                                ((SymmetricManifestCryptographyConfiguration) _manifestCryptoConfig).KeyConfirmation,
                                 _manifestCryptoConfig.KeyConfirmationVerifiedOutput, keyProvider.SymmetricKeys);
                         } catch (Exception e) {
                             throw new KeyConfirmationException("Key confirmation failed in an unexpected way.", e);
@@ -303,21 +316,25 @@ namespace ObscurCore
                     } else {
                         if (keyProvider.SymmetricKeys.Count() > 1) {
                             // Possibly allow to proceed anyway and just look for a serialisation failure? (not implemented)
-                            throw new ArgumentException("Multiple symmetric keys are available, but confirmation is unavailable.",
-                                "keyProvider", new ConfigurationInvalidException("Package manifest includes no key confirmation data."));
+                            throw new ArgumentException(
+                                "Multiple symmetric keys are available, but confirmation is unavailable.",
+                                "keyProvider",
+                                new ConfigurationInvalidException("Package manifest includes no key confirmation data."));
                         }
                         preMKey = keyProvider.SymmetricKeys.First();
                     }
                     break;
                 case ManifestCryptographyScheme.Um1Hybrid:
                     // Identify matching public-private key pairs based on curve provider and curve name
-                    var um1EphemeralKey = ((Um1HybridManifestCryptographyConfiguration)_manifestCryptoConfig).EphemeralKey;
+                    EcKeyConfiguration um1EphemeralKey =
+                        ((Um1HybridManifestCryptographyConfiguration) _manifestCryptoConfig).EphemeralKey;
 
                     if (_manifestCryptoConfig.KeyConfirmation != null) {
                         try {
                             // Project the keypairs to only private keys
-                            var um1ReceiverKeys = keyProvider.EcKeypairs.Select(keypair => keypair.GetPrivateKey());
-                            preMKey = ConfirmationUtility.ConfirmUM1HybridKey(_manifestCryptoConfig.KeyConfirmation,
+                            IEnumerable<EcKeyConfiguration> um1ReceiverKeys =
+                                keyProvider.EcKeypairs.Select(keypair => keypair.GetPrivateKey());
+                            preMKey = ConfirmationUtility.ConfirmUm1HybridKey(_manifestCryptoConfig.KeyConfirmation,
                                 _manifestCryptoConfig.KeyConfirmationVerifiedOutput,
                                 um1EphemeralKey, keyProvider.ForeignEcKeys, um1ReceiverKeys);
                         } catch (Exception e) {
@@ -326,11 +343,12 @@ namespace ObscurCore
                     } else {
                         // No key confirmation capability available
                         if (keyProvider.ForeignEcKeys.Count() > 1 || keyProvider.EcKeypairs.Count() > 1) {
-                            throw new KeyConfirmationException("Multiple EC keys have been provided where the package provides no key confirmation capability.");
+                            throw new KeyConfirmationException(
+                                "Multiple EC keys have been provided where the package provides no key confirmation capability.");
                         }
 
-                        var localKey = keyProvider.EcKeypairs.First().GetPrivateKey();
-                        var foreignKey = keyProvider.ForeignEcKeys.First();
+                        EcKeyConfiguration localKey = keyProvider.EcKeypairs.First().GetPrivateKey();
+                        EcKeyConfiguration foreignKey = keyProvider.ForeignEcKeys.First();
                         try {
                             preMKey = Um1Exchange.Respond(foreignKey, localKey, um1EphemeralKey);
                         } catch (Exception e) {
@@ -339,12 +357,14 @@ namespace ObscurCore
                     }
                     break;
                 default:
-                    throw new NotSupportedException(String.Format("Manifest cryptography scheme \"{0}\" is unsupported/unknown.", manifestScheme));
+                    throw new NotSupportedException(
+                        String.Format("Manifest cryptography scheme \"{0}\" is unsupported/unknown.", manifestScheme));
             }
 
             if (preMKey == null || preMKey.Length == 0) {
                 throw new KeyConfirmationException(String.Format(
-                    "None of the keys provided to decrypt the manifest (cryptographic scheme: {0}) were confirmed as being able to do so.", manifestScheme));
+                    "None of the keys provided to decrypt the manifest (cryptographic scheme: {0}) were confirmed as being able to do so.",
+                    manifestScheme));
             }
             Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest pre-key",
                 preMKey.ToHexString()));
@@ -356,7 +376,8 @@ namespace ObscurCore
                     _manifestCryptoConfig.Authentication.KeySizeBits.Value / 8, _manifestCryptoConfig.KeyDerivation,
                     out workingManifestCipherKey, out workingManifestMacKey);
             } catch (Exception e) {
-                throw new CryptoException("Unexpected error in manifest key derivation.", e); // make a specialised exception to communicate the failure type
+                throw new CryptoException("Unexpected error in manifest key derivation.", e);
+                // make a specialised exception to communicate the failure type
             }
 
             // Clear the manifest pre-key
@@ -364,20 +385,21 @@ namespace ObscurCore
 
             Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest working key",
                 workingManifestCipherKey.ToHexString()));
-            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest length prefix offset (absolute)",
+            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest",
+                "Manifest length prefix offset (absolute)",
                 _readingStream.Position));
 
             // Read manifest length prefix
             Manifest manifest;
 
-            var manifestLengthLe = new byte[sizeof(UInt32)]; // in little-endian form
-            var manifestLengthBytesRead = _readingStream.Read(manifestLengthLe, 0, sizeof(UInt32));
+            var manifestLengthLe = new byte[sizeof (UInt32)]; // in little-endian form
+            int manifestLengthBytesRead = _readingStream.Read(manifestLengthLe, 0, sizeof (UInt32));
             if (manifestLengthBytesRead != sizeof (UInt32)) {
                 throw new DataLengthException("Manifest length prefix could not be read. Insufficient data.");
             }
-            manifestLengthLe.XorInPlaceInternal(0, workingManifestMacKey, 0, sizeof(UInt32)); // deobfuscate length
+            manifestLengthLe.XorInPlaceInternal(0, workingManifestMacKey, 0, sizeof (UInt32)); // deobfuscate length
             UInt32 mlUInt = manifestLengthLe.LittleEndianToUInt32();
-            int manifestLength = (int)mlUInt;
+            var manifestLength = (int) mlUInt;
 
             Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest length",
                 manifestLength));
@@ -385,13 +407,14 @@ namespace ObscurCore
                 _readingStream.Position));
 
             /* Read manifest */
-            using (var decryptedManifestStream = new MemoryStream((int)(manifestLength * 0.1))) {
-                byte[] manifestMac = null;
+            using (var decryptedManifestStream = new MemoryStream((int) (manifestLength * 0.1))) {
+                byte[] manifestMac;
                 try {
-                    using (var authenticator = new MacStream(_readingStream, false, _manifestCryptoConfig.Authentication,
-                        out manifestMac, workingManifestMacKey, closeOnDispose: false)) {
+                    using (
+                        var authenticator = new MacStream(_readingStream, false, _manifestCryptoConfig.Authentication,
+                            out manifestMac, workingManifestMacKey, false)) {
                         using (var cs = new CipherStream(authenticator, false, _manifestCryptoConfig.SymmetricCipher,
-                            workingManifestCipherKey, closeOnDispose: false)) {
+                            workingManifestCipherKey, false)) {
                             cs.ReadExactlyTo(decryptedManifestStream, manifestLength, true);
                         }
                         authenticator.Update(manifestLengthLe, 0, manifestLengthLe.Length);
@@ -400,11 +423,13 @@ namespace ObscurCore
                         switch (manifestScheme) {
                             case ManifestCryptographyScheme.SymmetricOnly:
                                 manifestCryptoDtoForAuth =
-                                    ((SymmetricManifestCryptographyConfiguration)_manifestCryptoConfig).CreateAuthenticatibleClone().SerialiseDto();
+                                    ((SymmetricManifestCryptographyConfiguration) _manifestCryptoConfig)
+                                        .CreateAuthenticatibleClone().SerialiseDto();
                                 break;
                             case ManifestCryptographyScheme.Um1Hybrid:
                                 manifestCryptoDtoForAuth =
-                                    ((Um1HybridManifestCryptographyConfiguration)_manifestCryptoConfig).CreateAuthenticatibleClone().SerialiseDto();
+                                    ((Um1HybridManifestCryptographyConfiguration) _manifestCryptoConfig)
+                                        .CreateAuthenticatibleClone().SerialiseDto();
                                 break;
                             default:
                                 throw new NotSupportedException();
@@ -421,7 +446,8 @@ namespace ObscurCore
                 }
                 decryptedManifestStream.Seek(0, SeekOrigin.Begin);
                 try {
-                    manifest = (Manifest)StratCom.Serialiser.Deserialize(decryptedManifestStream, null, typeof(Manifest));
+                    manifest =
+                        (Manifest) StratCom.Serialiser.Deserialize(decryptedManifestStream, null, typeof (Manifest));
                 } catch (Exception e) {
                     throw new InvalidDataException("Manifest failed to deserialise.", e);
                 }
@@ -437,7 +463,7 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Read a package into a directory. Just like extracting an archive.
+        ///     Read a package into a directory. Just like extracting an archive.
         /// </summary>
         /// <param name="path">Path to write items to.</param>
         /// <param name="overwrite"></param>
@@ -452,21 +478,23 @@ namespace ObscurCore
                 directory.Create();
             }
 
-            foreach (var item in _manifest.PayloadItems) {
-                if (item.Type != PayloadItemType.KeyAction && item.RelativePath.Contains(Athena.Packaging.PathRelativeUp)) {
+            foreach (PayloadItem item in _manifest.PayloadItems) {
+                if (item.Type != PayloadItemType.KeyAction &&
+                    item.RelativePath.Contains(Athena.Packaging.PathRelativeUp)) {
                     throw new ConfigurationInvalidException("A payload item specifies a relative path outside that of the package root. "
-                    + " This is a potentially dangerous condition.");
+                                                            + " This is a potentially dangerous condition.");
                 }
 
                 // First we correct the directory symbol to match local OS
-                var relativePath = item.RelativePath.Replace(Athena.Packaging.PathDirectorySeperator, Path.DirectorySeparatorChar);
-                var absolutePath = Path.Combine(path, relativePath);
+                string relativePath = item.RelativePath.Replace(Athena.Packaging.PathDirectorySeperator,
+                    Path.DirectorySeparatorChar);
+                string absolutePath = Path.Combine(path, relativePath);
                 switch (item.Type) {
                     case PayloadItemType.Utf8:
                     case PayloadItemType.Utf32:
                         if (Path.HasExtension(absolutePath) == false) {
                             absolutePath += ".txt";
-                        } 
+                        }
                         break;
                     case PayloadItemType.KeyAction:
                         throw new NotSupportedException("Key actions not implemented.");
@@ -481,7 +509,7 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Read payload from package.
+        ///     Read payload from package.
         /// </summary>
         /// <param name="payloadKeys">Potential keys for payload items (optional).</param>
         /// <exception cref="ConfigurationInvalidException">Payload layout scheme malformed/missing.</exception>
@@ -506,10 +534,12 @@ namespace ObscurCore
             PayloadMux mux;
             try {
                 var payloadScheme = _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>();
-                mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer(payloadScheme, false, _readingStream, _manifest.PayloadItems,
+                mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer(payloadScheme, false, _readingStream,
+                    _manifest.PayloadItems,
                     _itemPreKeys, _manifest.PayloadConfiguration);
             } catch (EnumerationParsingException e) {
-                throw new ConfigurationInvalidException("Payload layout scheme specified is unsupported/unknown or missing.", e);
+                throw new ConfigurationInvalidException(
+                    "Payload layout scheme specified is unsupported/unknown or missing.", e);
             } catch (Exception e) {
                 throw new Exception("Error in creation of payload demultiplexer.", e);
             }
@@ -526,20 +556,21 @@ namespace ObscurCore
                 _readingStream.Position));
 
             // Read the trailer
-            var referenceTrailerTag = Athena.Packaging.GetTrailerTag();
+            byte[] referenceTrailerTag = Athena.Packaging.GetTrailerTag();
             var trailerTag = new byte[referenceTrailerTag.Length];
-            var trailerBytesRead = _readingStream.Read(trailerTag, 0, trailerTag.Length);
-            if (trailerTag.SequenceEqual(referenceTrailerTag) == false) {
+            int trailerBytesRead = _readingStream.Read(trailerTag, 0, trailerTag.Length);
+            if (trailerTag.SequenceEqualShortCircuiting(referenceTrailerTag) == false) {
                 const string pragmatist =
                     "It would appear, however, that the package has unpacked successfully despite this.";
                 if (trailerBytesRead != referenceTrailerTag.Length) {
                     throw new DataLengthException("Insufficient data to read package trailer tag. " + pragmatist);
                 }
                 throw new InvalidDataException("Package is malformed. Trailer tag is either absent or malformed."
-                    + pragmatist);
+                                               + pragmatist);
             }
 
-            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPayload", "[* PACKAGE END *] Offset (absolute)",
+            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPayload",
+                "[* PACKAGE END *] Offset (absolute)",
                 _readingStream.Position));
         }
     }

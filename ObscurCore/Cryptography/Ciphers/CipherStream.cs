@@ -15,7 +15,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Block.Padding;
 using ObscurCore.Cryptography.Ciphers.Stream;
@@ -25,64 +24,70 @@ using RingByteBuffer;
 namespace ObscurCore.Cryptography.Ciphers
 {
     /// <summary>
-    /// Decorating stream implementing encryption/decryption operations by a symmetric cipher.
+    ///     Decorating stream implementing encryption/decryption operations by a symmetric cipher.
     /// </summary>
     public sealed class CipherStream : DecoratingStream
     {
-        private const string UnknownFinaliseError = "An unknown type of error occured while transforming the final block of ciphertext.";
+        private const string UnknownFinaliseError =
+            "An unknown type of error occured while transforming the final block of ciphertext.";
+
         //		private const string UnexpectedLengthError = "The data in the ciphertext is not the expected length.";
         private const string WritingError = "Could not write transformed block bytes to output stream.";
 
         private const string NotWritingError = "Stream is configured for encryption, and so may only be written to.";
         private const string NotReadingError = "Stream is configured for decryption, and so may only be read from.";
 
-        /// <summary>
-        /// What mode is active - encryption or decryption?
-        /// </summary>
-        public bool Encrypting
-        {
-            get { return base.Writing; }
-        }
-
         private readonly ICipherWrapper _cipher;
 
         private readonly byte[] _operationBuffer; // primary buffer
-        private int _operationBufferOffset;
         private readonly int _operationSize;
 
-        private readonly byte[] _tempBuffer;
         private readonly RingBuffer _outBuffer;
+        private readonly byte[] _tempBuffer;
+        private int _operationBufferOffset;
 
-        /// <summary>Initialises the stream and its associated cipher for operation automatically from provided configuration object.</summary>
+        /// <summary>
+        ///     Initialises the stream and its associated cipher for operation automatically from provided configuration
+        ///     object.
+        /// </summary>
         /// <param name="binding">Stream to be written/read to/from.</param>
         /// <param name="encrypting">Specifies whether the stream is for writing (encrypting) or reading (decryption).</param>
         /// <param name="config">Configuration object describing how to set up the internal cipher and associated services.</param>
         /// <param name="key">Derived cryptographic key for the internal cipher to operate with. Overrides key in configuration.</param>
         /// <param name="closeOnDispose">Set to <c>true</c> to also close the base stream when closing, or vice-versa.</param>
-        public CipherStream(System.IO.Stream binding, bool encrypting, CipherConfiguration config, byte[] key, bool closeOnDispose)
+        public CipherStream(System.IO.Stream binding, bool encrypting, CipherConfiguration config, byte[] key,
+            bool closeOnDispose)
             : base(binding, encrypting, closeOnDispose)
         {
-            if (binding == null)
+            if (binding == null) {
                 throw new ArgumentNullException("binding");
-            if (config == null)
+            }
+            if (config == null) {
                 throw new ArgumentNullException("config");
-            if (key.IsNullOrZeroLength())
+            }
+            if (key.IsNullOrZeroLength()) {
                 throw new ArgumentException("No key provided.", "key");
+            }
 
             switch (config.Type) {
                 case CipherType.None:
-                    throw new ConfigurationInvalidException("Cipher type is never set to None in a valid cipher configuration.");
+                    throw new ConfigurationInvalidException(
+                        "Cipher type is never set to None in a valid cipher configuration.");
                 case CipherType.Block:
                     var blockConfigWrapper = new BlockCipherConfigurationWrapper(config);
-                    if (key.Length != blockConfigWrapper.KeySizeBytes)
-                        throw new ArgumentException("Key is not of the length declared in the cipher configuration.", "key");
+                    if (key.Length != blockConfigWrapper.KeySizeBytes) {
+                        throw new ArgumentException("Key is not of the length declared in the cipher configuration.",
+                            "key");
+                    }
 
-                    var blockCipher = CipherFactory.CreateBlockCipher(blockConfigWrapper.BlockCipher, blockConfigWrapper.BlockSizeBits);
+                    IBlockCipher blockCipher = CipherFactory.CreateBlockCipher(blockConfigWrapper.BlockCipher,
+                        blockConfigWrapper.BlockSizeBits);
                     // Overlay the cipher with the mode of operation
                     try {
                         blockCipher = CipherFactory.OverlayBlockCipherWithMode(blockCipher, blockConfigWrapper.Mode);
                     } catch (Exception e) {
-                        throw new ConfigurationInvalidException("Configuration of block cipher mode of operation is invalid.", e.InnerException);
+                        throw new ConfigurationInvalidException(
+                            "Configuration of block cipher mode of operation is invalid.", e.InnerException);
                     }
                     IBlockCipherPadding padding = null;
                     BlockCipherPadding paddingEnum = blockConfigWrapper.Padding;
@@ -95,17 +100,20 @@ namespace ObscurCore.Cryptography.Ciphers
                     break;
                 case CipherType.Stream:
                     var streamConfigWrapper = new StreamCipherConfigurationWrapper(config);
-                    if (key.Length != streamConfigWrapper.KeySizeBytes)
-                        throw new ArgumentException("Key is not of the length declared in the cipher configuration.", "key");
+                    if (key.Length != streamConfigWrapper.KeySizeBytes) {
+                        throw new ArgumentException("Key is not of the length declared in the cipher configuration.",
+                            "key");
+                    }
 
                     IStreamCipher streamCipher;
                     try {
                         streamCipher = CipherFactory.CreateStreamCipher(streamConfigWrapper.StreamCipher);
                         streamCipher.Init(encrypting, key, streamConfigWrapper.Nonce);
                     } catch (Exception e) {
-                        throw new ConfigurationInvalidException("Configuration of stream cipher is invalid.", e.InnerException);
+                        throw new ConfigurationInvalidException("Configuration of stream cipher is invalid.",
+                            e.InnerException);
                     }
-                    _cipher = new StreamCipherWrapper(encrypting, streamCipher, strideIncreaseFactor: 2);
+                    _cipher = new StreamCipherWrapper(encrypting, streamCipher, 2);
                     break;
                 default:
                     throw new ArgumentException("Not a valid cipher configuration.");
@@ -117,7 +125,15 @@ namespace ObscurCore.Cryptography.Ciphers
             _tempBuffer = new byte[_operationSize * 2];
             _outBuffer = new RingBuffer(_cipher.OperationSize << (encrypting ? 8 : 2));
             // Shift left 8 upscales : 8 (64 bits) to 2048 [2kB], 16 (128) to 4096 [4kB], 32 (256) to 8192 [8kB]
-            base.BufferSizeRequirement = _operationSize;
+            BufferSizeRequirement = _operationSize;
+        }
+
+        /// <summary>
+        ///     What mode is active - encryption or decryption?
+        /// </summary>
+        public bool Encrypting
+        {
+            get { return Writing; }
         }
 
         public override bool CanRead
@@ -141,7 +157,7 @@ namespace ObscurCore.Cryptography.Ciphers
         }
 
         /// <summary>
-        /// Writes specified quantity of bytes exactly (after decoration transform)
+        ///     Writes specified quantity of bytes exactly (after decoration transform)
         /// </summary>
         /// <param name="source">Source.</param>
         /// <param name="length">Length.</param>
@@ -149,8 +165,9 @@ namespace ObscurCore.Cryptography.Ciphers
         public override long WriteExactlyFrom(System.IO.Stream source, long length)
         {
             CheckIfCanDecorate();
-            if (Writing == false)
+            if (Writing == false) {
                 throw new InvalidOperationException(NotWritingError);
+            }
             if (source == null) {
                 throw new ArgumentNullException("source");
             }
@@ -197,7 +214,7 @@ namespace ObscurCore.Cryptography.Ciphers
             }
 
             // Write out the processed data to the stream StreamBinding
-            iterOut = (int)(length - totalOut);
+            iterOut = (int) (length - totalOut);
             if (iterOut > 0) {
                 _outBuffer.TakeTo(Binding, iterOut);
                 totalOut += iterOut;
@@ -213,16 +230,18 @@ namespace ObscurCore.Cryptography.Ciphers
         public override void Write(byte[] buffer, int offset, int count)
         {
             CheckIfCanDecorate();
-            if (!Writing)
+            if (!Writing) {
                 throw new InvalidOperationException(NotWritingError);
+            }
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
-            } else if (buffer.Length < offset + count) {
+            }
+            if (buffer.Length < offset + count) {
                 throw new DataLengthException();
             }
 
             int totalIn = 0, totalOut = 0;
-            int iterOut = 0;
+            var iterOut = 0;
 
             // Process any leftovers
             int gapLength = _operationSize - _operationBufferOffset;
@@ -236,13 +255,14 @@ namespace ObscurCore.Cryptography.Ciphers
                 _outBuffer.Put(_tempBuffer, 0, iterOut);
             }
 
-            if (count < 0)
+            if (count < 0) {
                 return;
+            }
 
             int remainder;
             int operations = Math.DivRem(count, _operationSize, out remainder);
 
-            for (var i = 0; i < operations; i++) {
+            for (int i = 0; i < operations; i++) {
                 iterOut = _cipher.ProcessBytes(buffer, offset, _tempBuffer, 0);
                 totalIn += _operationSize;
                 offset += _operationSize;
@@ -274,38 +294,43 @@ namespace ObscurCore.Cryptography.Ciphers
         }
 
         /// <summary>
-        /// Writes a byte. Not guaranteed or likely to be written out immediately. 
-        /// If writing precision is required, do not use this wherever possible.
+        ///     Writes a byte. Not guaranteed or likely to be written out immediately.
+        ///     If writing precision is required, do not use this wherever possible.
         /// </summary>
         /// <param name="b">Byte to write.</param>
         public override void WriteByte(byte b)
         {
             CheckIfCanDecorate();
-            if (Writing == false)
+            if (Writing == false) {
                 throw new InvalidOperationException(NotWritingError);
+            }
 
             if (_operationBufferOffset < _operationSize) {
                 _operationBuffer[_operationBufferOffset++] = b;
             } else {
-                var iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+                int iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
                 _outBuffer.Put(_tempBuffer, 0, iterOut);
                 _operationBufferOffset = 0;
             }
 
-            if (_outBuffer.Length > 0)
+            if (_outBuffer.Length > 0) {
                 StreamBinding.WriteByte(_outBuffer.Take());
+            }
         }
 
         // Reading
 
         public override int ReadByte()
         {
-            if (Disposed)
+            if (Disposed) {
                 throw new ObjectDisposedException("Stream has been disposed.");
-            if (Finished && _outBuffer.Length == 0)
+            }
+            if (Finished && _outBuffer.Length == 0) {
                 return -1;
-            if (Writing)
+            }
+            if (Writing) {
                 throw new InvalidOperationException(NotReadingError);
+            }
 
             if (_outBuffer.Length == 0) {
                 int toRead = _operationSize - _operationBufferOffset;
@@ -332,9 +357,9 @@ namespace ObscurCore.Cryptography.Ciphers
         }
 
         /// <summary>
-        /// Read and decrypt bytes from the stream StreamBinding into the supplied array. 
-        /// Not guaranteed to read 'count' bytes if ReadByte() has been used. 
-        /// Guaranteed to return 'count' bytes until end of stream.
+        ///     Read and decrypt bytes from the stream StreamBinding into the supplied array.
+        ///     Not guaranteed to read 'count' bytes if ReadByte() has been used.
+        ///     Guaranteed to return 'count' bytes until end of stream.
         /// </summary>
         /// <returns>Quantity of bytes read into supplied buffer array.</returns>
         /// <param name="buffer">Buffer.</param>
@@ -346,20 +371,24 @@ namespace ObscurCore.Cryptography.Ciphers
         /// <exception cref="EndOfStreamException">Required quantity of bytes could not be read.</exception>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (Disposed)
+            if (Disposed) {
                 throw new ObjectDisposedException("Stream has been disposed.");
-            if (Finished && _outBuffer.Length == 0)
+            }
+            if (Finished && _outBuffer.Length == 0) {
                 return 0;
-            if (Writing)
+            }
+            if (Writing) {
                 throw new InvalidOperationException(NotReadingError);
+            }
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
-            } else if (buffer.Length < offset + count) {
+            }
+            if (buffer.Length < offset + count) {
                 throw new DataLengthException();
             }
 
             int totalIn = 0, totalOut = 0;
-            int iterIn, iterOut;
+            int iterOut;
 
             if (_outBuffer.Length > 0) {
                 iterOut = Math.Min(_outBuffer.Length, count);
@@ -371,29 +400,31 @@ namespace ObscurCore.Cryptography.Ciphers
 
             if (Finished == false) {
                 while (count > 0) {
-                    iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, _operationSize - _operationBufferOffset);
+                    int iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset,
+                        _operationSize - _operationBufferOffset);
                     if (iterIn > 0) {
                         // Normal processing (mid-stream)
                         _operationBufferOffset += iterIn;
                         totalIn += iterIn;
-                        if (_operationBufferOffset == _operationSize) {
-                            if (count >= _operationSize) {
-                                // Full operation
-                                iterOut = _cipher.ProcessBytes(_operationBuffer, 0, buffer, offset);
-                                totalOut += iterOut;
-                                offset += iterOut;
-                                count -= iterOut;
-                            } else {
-                                // Short operation
-                                iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
-                                int subOp = buffer.Length - offset;
-                                _tempBuffer.CopyBytes(0, buffer, offset, subOp);
-                                totalOut += subOp;
-                                _outBuffer.Put(_tempBuffer, count, iterOut - subOp);
-                                count = 0;
-                            }
-                            _operationBufferOffset = 0;
+                        if (_operationBufferOffset != _operationSize) {
+                            continue;
                         }
+                        if (count >= _operationSize) {
+                            // Full operation
+                            iterOut = _cipher.ProcessBytes(_operationBuffer, 0, buffer, offset);
+                            totalOut += iterOut;
+                            offset += iterOut;
+                            count -= iterOut;
+                        } else {
+                            // Short operation
+                            iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+                            int subOp = buffer.Length - offset;
+                            _tempBuffer.CopyBytes(0, buffer, offset, subOp);
+                            totalOut += subOp;
+                            _outBuffer.Put(_tempBuffer, count, iterOut - subOp);
+                            count = 0;
+                        }
+                        _operationBufferOffset = 0;
                     } else {
                         // End of stream - finish the decryption
                         // Copy the previous operation block in to provide overrun protection
@@ -493,14 +524,14 @@ namespace ObscurCore.Cryptography.Ciphers
 
 
         /// <summary>
-        /// Decrypt an exact amount of bytes from the stream StreamBinding and write them 
-        /// to a destination stream.
+        ///     Decrypt an exact amount of bytes from the stream StreamBinding and write them
+        ///     to a destination stream.
         /// </summary>
         /// <returns>The quantity of bytes written to the destination stream.</returns>
         /// <param name="destination">Stream to write decrypted data to.</param>
         /// <param name="length">Quantity of bytes to read.</param>
         /// <param name="finishing">
-        /// If set to <c>true</c>, final ciphertext position is located at end of requested length.
+        ///     If set to <c>true</c>, final ciphertext position is located at end of requested length.
         /// </param>
         /// <exception cref="InvalidOperationException">Stream is encrypting, not decrypting.</exception>
         /// <exception cref="ArgumentNullException">Destination stream is null.</exception>
@@ -509,11 +540,13 @@ namespace ObscurCore.Cryptography.Ciphers
         public override long ReadExactlyTo(System.IO.Stream destination, long length, bool finishing = false)
         {
             CheckIfCanDecorate();
-            if (Writing)
+            if (Writing) {
                 throw new InvalidOperationException(NotReadingError);
+            }
             if (destination == null) {
                 throw new ArgumentNullException("destination");
-            } else if (length < 0) {
+            }
+            if (length < 0) {
                 throw new ArgumentException("Length must be positive.", "length");
             }
 
@@ -547,8 +580,8 @@ namespace ObscurCore.Cryptography.Ciphers
             }
 
             long remainderLong;
-            int operations = (int)Math.DivRem(length, (long)_operationSize, out remainderLong);
-            int remainder = (int)remainderLong;
+            var operations = (int) Math.DivRem(length, _operationSize, out remainderLong);
+            var remainder = (int) remainderLong;
             // ^ Can be changed back to long if needed.
             // Otherwise, though, we'll try to avoid pointless and costly repeated casts.
 
@@ -576,7 +609,7 @@ namespace ObscurCore.Cryptography.Ciphers
                 // Mid-stream
                 if (remainder > 0) {
                     // Any remainder bytes are stored (not decrypted)
-                    iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, (int)remainder);
+                    iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, remainder);
                     totalIn += iterIn;
                     _operationBufferOffset += iterIn;
                     // End of stream detection
@@ -586,7 +619,7 @@ namespace ObscurCore.Cryptography.Ciphers
                 }
             } else {
                 // Finishing
-                int totalRemaining = (int)remainder + _operationBufferOffset;
+                int totalRemaining = remainder + _operationBufferOffset;
                 if (totalRemaining > _operationSize) {
                     int finalReadLength = _operationSize - _operationBufferOffset;
                     iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, finalReadLength);
@@ -603,7 +636,7 @@ namespace ObscurCore.Cryptography.Ciphers
                     totalOut += iterOut;
                     _operationBufferOffset = 0;
                 }
-                iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, (int)remainder);
+                iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, remainder);
                 if (iterIn < remainder) {
                     BytesIn += totalIn;
                     BytesOut += totalOut;
@@ -623,7 +656,7 @@ namespace ObscurCore.Cryptography.Ciphers
         }
 
         /// <summary>
-        /// Finishes the writing/encryption operation, processing the final block/stride.
+        ///     Finishes the writing/encryption operation, processing the final block/stride.
         /// </summary>
         /// <returns>Size of final block written.</returns>
         /// <exception cref="DataLengthException">Final bytes could not be written to the output.</exception>
@@ -638,12 +671,10 @@ namespace ObscurCore.Cryptography.Ciphers
             } catch (DataLengthException dlEx) {
                 if (String.Equals(dlEx.Message, "output buffer too short")) {
                     throw new DataLengthException(WritingError);
-                } else {
-                    throw new DataLengthException(UnknownFinaliseError, dlEx);
                 }
-            } catch (Exception ex) {
-                //throw new Exception(UnknownFinaliseError, ex);
-                throw;
+                throw new DataLengthException(UnknownFinaliseError, dlEx);
+            } catch (Exception e) {
+                throw new CryptoException("Unexpected error on cipher finalising operation while writing.", e);
             }
             // Write out the final block
             Binding.Write(_tempBuffer, 0, finalLength);
@@ -657,8 +688,8 @@ namespace ObscurCore.Cryptography.Ciphers
             outputOffset += finalByteQuantity;
             try {
                 finalByteQuantity += _cipher.ProcessFinal(input, inputOffset, length, output, outputOffset);
-            } catch (Exception ex) {
-                throw;
+            } catch (Exception e) {
+                throw new CryptoException("Unexpected error on cipher finalising operation while reading.", e);
             }
 
             base.Finish();
@@ -666,18 +697,20 @@ namespace ObscurCore.Cryptography.Ciphers
         }
 
         /// <summary>
-        /// Finish the encryption/decryption operation manually. 
-        /// Unnecessary for writing, as this is done automatically when closing/disposing the stream, 
-        /// with the output being writen to the StreamBinding. 
-        /// When reading, can be used if it is certain that all necessary data has been read. 
-        /// Output is available in this latter case from GetFinalBytes() .
+        ///     Finish the encryption/decryption operation manually.
+        ///     Unnecessary for writing, as this is done automatically when closing/disposing the stream,
+        ///     with the output being writen to the StreamBinding.
+        ///     When reading, can be used if it is certain that all necessary data has been read.
+        ///     Output is available in this latter case from GetFinalBytes() .
         /// </summary>
         protected override void Finish()
         {
-            if (Disposed)
+            if (Disposed) {
                 throw new ObjectDisposedException("Stream has been disposed.");
-            if (Finished)
+            }
+            if (Finished) {
                 return;
+            }
 
             if (Encrypting) {
                 FinishWriting();

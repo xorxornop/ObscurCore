@@ -13,61 +13,64 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
+using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.Support.Math;
-using ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve;
+using ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier;
 
 namespace ObscurCore.Cryptography.KeyAgreement
 {
-	public static class KeypairFactory
-	{
-		internal static ECMultiplier EcBasePointMultiplier = new FixedPointCombMultiplier ();
+    public static class KeypairFactory
+    {
+        internal static readonly ECMultiplier EcBasePointMultiplier = new FixedPointCombMultiplier();
 
-		public static EcKeypair GenerateEcKeypair (string curveName) {
-			EcKeypair keypair;
+        public static EcKeypair GenerateEcKeypair(string curveName)
+        {
+            EcKeypair keypair;
 
-			if (curveName.Equals ("Curve25519")) {
-				var privEntropy = new byte[32];
-				StratCom.EntropySupplier.NextBytes(privEntropy);
-				var privateKey = Curve25519.CreatePrivateKey(privEntropy);
-				var publicKey = Curve25519.CreatePublicKey(privateKey);
+            if (curveName.Equals("Curve25519")) {
+                var privEntropy = new byte[32];
+                StratCom.EntropySupplier.NextBytes(privEntropy);
+                byte[] privateKey = Curve25519.CreatePrivateKey(privEntropy);
+                byte[] publicKey = Curve25519.CreatePublicKey(privateKey);
 
-				keypair = new EcKeypair {
-					CurveProviderName = "DJB",
-					CurveName = DjbCurve.Curve25519.ToString (),
-					EncodedPublicKey = publicKey,
-					EncodedPrivateKey = privateKey
-				};
-			} else {
-				ECPoint Q;
-				BigInteger d;
-				GenerateEcKeypair (curveName, out Q, out d);
+                keypair = new EcKeypair {
+                    CurveProviderName = "DJB",
+                    CurveName = DjbCurve.Curve25519.ToString(),
+                    EncodedPublicKey = publicKey,
+                    EncodedPrivateKey = privateKey
+                };
+            } else {
+                ECPoint Q;
+                BigInteger d;
+                GenerateEcKeypair(curveName, out Q, out d);
 
-				keypair = new EcKeypair {
-					CurveProviderName = NamedEllipticCurves.GetProvider (curveName),
-					CurveName = curveName,
-					EncodedPublicKey = Q.GetEncoded (),
-					EncodedPrivateKey = d.ToByteArray ()
-				};
-			}
+                keypair = new EcKeypair {
+                    CurveProviderName = NamedEllipticCurves.GetProvider(curveName),
+                    CurveName = curveName,
+                    EncodedPublicKey = Q.GetEncoded(),
+                    EncodedPrivateKey = d.ToByteArray()
+                };
+            }
 
-			return keypair;
-		}
+            return keypair;
+        }
 
-		internal static void GenerateEcKeypair (string curveName, out ECPoint Q, out BigInteger d) {
-			var domain = NamedEllipticCurves.Curves [curveName].GetParameters ();
-			GenerateEcKeypair (domain, out Q, out d);
-		}
+        internal static void GenerateEcKeypair(string curveName, out ECPoint Q, out BigInteger d)
+        {
+            ECDomainParameters domain = NamedEllipticCurves.Curves[curveName].GetParameters();
+            GenerateEcKeypair(domain, out Q, out d);
+        }
 
-		internal static void GenerateEcKeypair (ECDomainParameters domain, out ECPoint Q, out BigInteger d) {
-			ECPoint g = domain.G;
-			BigInteger n = domain.N;
-		    var minWeight = n.BitLength >> 2;
+        internal static void GenerateEcKeypair(ECDomainParameters domain, out ECPoint Q, out BigInteger d)
+        {
+            ECPoint g = domain.G;
+            BigInteger n = domain.N;
+            int minWeight = n.BitLength >> 2;
 
-			do {
-			    do {
+            do {
+                do {
                     d = new BigInteger(n.BitLength, StratCom.EntropySupplier);
                     /*
                      * WNAF requirement in while condition:
@@ -76,10 +79,11 @@ namespace ObscurCore.Cryptography.KeyAgreement
                      * 
                      * See "The number field sieve for integers of low weight", Oliver Schirokauer.
                      */
-                } while ((d.CompareTo(BigInteger.Two) < 0 || d.CompareTo(n) >= 0) && WNafUtilities.GetNafWeight(d) < minWeight);
-			} while (d.SignValue == 0 || (d.CompareTo(n) >= 0));
+                } while ((d.CompareTo(BigInteger.Two) < 0 || d.CompareTo(n) >= 0) &&
+                         WNafUtilities.GetNafWeight(d) < minWeight);
+            } while (d.SignValue == 0 || (d.CompareTo(n) >= 0));
 
-			Q = EcBasePointMultiplier.Multiply(g, d);
-		}
-	}
+            Q = EcBasePointMultiplier.Multiply(g, d);
+        }
+    }
 }

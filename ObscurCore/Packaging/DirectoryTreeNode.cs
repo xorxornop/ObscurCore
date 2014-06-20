@@ -48,6 +48,7 @@ namespace ObscurCore.Packaging
         }
 
         private readonly List<TreeNode<T>> _children = new List<TreeNode<T>>();
+
         public IList<TreeNode<T>> Children
         {
             get { return _children; }
@@ -111,7 +112,7 @@ namespace ObscurCore.Packaging
                 var dirNode = node as DirectoryTreeNode<T>;
                 foreach (var childNode in dirNode.Children) {
                     childNode.Parent = this;
-                    this._children.Add(childNode);
+                    _children.Add(childNode);
                 }
             }
             _children.RemoveAt(index);
@@ -126,18 +127,22 @@ namespace ObscurCore.Packaging
         {
             IEnumerable<ContentTreeNode<T>> e;
             if (recursive) {
-                e = SelectSubtypeRecursive<TreeNode<T>, DirectoryTreeNode<T>, ContentTreeNode<T>>(this.Children, node => node.Children);
+                e = SelectSubtypeRecursive<TreeNode<T>, DirectoryTreeNode<T>, ContentTreeNode<T>>(_children,
+                    node => node.Children);
             } else {
                 e = Children.OfType<ContentTreeNode<T>>();
             }
             return e;
         }
 
-        public static IEnumerable<TSubtype> SelectSubtypeRecursive<TBase, TCollection, TSubtype>(IEnumerable<TBase> source,
-            Func<TCollection, IEnumerable<TBase>> selector) where TSubtype : class, TBase where TCollection : class, TBase
+        public static IEnumerable<TSubtype> SelectSubtypeRecursive<TBase, TCollection, TSubtype>(
+            IEnumerable<TBase> source,
+            Func<TCollection, IEnumerable<TBase>> selector) where TSubtype : class, TBase
+            where TCollection : class, TBase
         {
-            if (source == null)
+            if (source == null) {
                 yield break;
+            }
 
             var stack = new Stack<IEnumerator<TBase>>();
             stack.Push(source.GetEnumerator());

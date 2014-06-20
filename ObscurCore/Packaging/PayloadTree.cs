@@ -27,7 +27,7 @@ namespace ObscurCore.Packaging
     /// </summary>
     public class PayloadTree
     {
-        const char DefaultPathSeperator = '/';
+        private const char DefaultPathSeperator = '/';
         protected char PathSeperator;
         protected char[] PathSeperators;
         private static readonly char[] InvalidPathChars = Path.GetInvalidPathChars();
@@ -42,7 +42,10 @@ namespace ObscurCore.Packaging
         public PayloadTree(char seperator = DefaultPathSeperator, char? replaceSeperator = null)
         {
             PathSeperator = seperator;
-            PathSeperators = replaceSeperator == null ? new [] {PathSeperator} : new [] {PathSeperator, replaceSeperator.Value};
+            PathSeperators = replaceSeperator == null
+                ? new[] { PathSeperator }
+                : new[] { PathSeperator, replaceSeperator.Value };
+            RootNode = new DirectoryTreeNode<PayloadItem>();
         }
 
         /// <summary>
@@ -61,33 +64,33 @@ namespace ObscurCore.Packaging
             if (pathSegments.Length == 0) {
                 throw new ArgumentException("Path has no valid directory or item names.");
             }
-            DirectoryTreeNode<PayloadItem> dirNode = this.RootNode;
+            var dirNode = RootNode;
 
             for (var i = 0; i < pathSegments.Length; i++) {
                 var segment = pathSegments[i];
                 // Is this segment of the path already represented by a node?
                 var matchIndex = -1;
-                if (dirNode.HasChildren) 
+                if (dirNode.HasChildren) {
                     matchIndex = dirNode.FindChildNodeIndex(segment);
+                }
                 if (matchIndex == -1) {
                     // Nope, it isn't! Have to make it.
                     // Maybe check if the path is valid
-                    if (checkForInvalid && segment.Any(c => InvalidPathChars.Contains(c)) == false)
+                    if (checkForInvalid && segment.Any(c => InvalidPathChars.Contains(c)) == false) {
                         throw new ArgumentException("Path contains invalid characters.", "path");
+                    }
 
                     if (i == pathSegments.Length - 1) {
                         break;
-                    } else {
-                        dirNode = dirNode.AddChildDirectory(segment);
                     }
+                    dirNode = dirNode.AddChildDirectory(segment);
                 } else {
                     if (i == pathSegments.Length - 1) {
                         if (dirNode.Children[matchIndex] is DirectoryTreeNode<PayloadItem>) {
                             throw new InvalidOperationException(
                                 "Path terminator (content) is an existing directory name.");
-                        } else {
-                            throw new ArgumentException("Content of same name at this path already exists.", "path");
                         }
+                        throw new ArgumentException("Content of same name at this path already exists.", "path");
                     }
                     // Yes, already there, just change the reference.
                     dirNode = dirNode.Children[matchIndex] as DirectoryTreeNode<PayloadItem>;

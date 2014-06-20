@@ -13,7 +13,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
 using ObscurCore.DTO;
 
