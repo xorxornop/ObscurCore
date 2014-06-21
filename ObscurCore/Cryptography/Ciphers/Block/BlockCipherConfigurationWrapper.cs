@@ -104,18 +104,18 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         {
             get
             {
-                if (Configuration.IV.IsNullOrZeroLength()) {
+                if (Configuration.InitialisationVector.IsNullOrZeroLength()) {
                     throw new ConfigurationInvalidException(
                         "Block cipher cannot have an initalisation vector (IV) of null or zero length.");
                 }
-                if (Configuration.IV.Length != BlockSizeBytes) {
+                if (Configuration.InitialisationVector.Length != BlockSizeBytes) {
                     throw new ConfigurationInvalidException(
                         "Initialisation vector should not be a different length to the block size.");
                 }
 
-                return Configuration.IV.DeepCopy();
+                return Configuration.InitialisationVector.DeepCopy();
             }
-            set { RawConfiguration.IV = value; }
+            set { RawConfiguration.InitialisationVector = value; }
         }
 
         protected override void ThrowIfKeySizeIncompatible()

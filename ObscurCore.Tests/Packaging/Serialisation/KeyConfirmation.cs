@@ -8,7 +8,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
     {
         [Test]
         public void KeyConfirmationTest () {
-            var inputObj = new VerificationFunctionConfiguration() {
+            var inputObj = new AuthenticationFunctionConfiguration() {
                 FunctionName = "TestForNow",
                 FunctionConfiguration = new byte[] { 0x01, 0x02, 0x03 },
                 Salt = new byte[] { 0x03, 0x01, 0x04 },
@@ -17,7 +17,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             var stream = SerialiseToMemory(inputObj);
             stream.Seek(0, SeekOrigin.Begin);
-            var outputObj = DeserialiseFromMemory<VerificationFunctionConfiguration>(stream);
+            var outputObj = DeserialiseFromMemory<AuthenticationFunctionConfiguration>(stream);
 
             bool equal = inputObj.Equals(outputObj);
 

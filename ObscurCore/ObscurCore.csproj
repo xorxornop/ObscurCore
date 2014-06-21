@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Athena.cs" />
+    <Compile Include="Cryptography\SymmetricKey.cs" />
     <Compile Include="Packaging\ContentTreeNode.cs" />
     <Compile Include="Cryptography\Authentication\IDigest.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />

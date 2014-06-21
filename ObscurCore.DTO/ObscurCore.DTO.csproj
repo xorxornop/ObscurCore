@@ -63,6 +63,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EcKeyConfiguration.cs" />
+    <Compile Include="EcKeypair.cs" />
+    <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="ICipherConfiguration.cs" />
+    <Compile Include="IPayloadConfiguration.cs" />
+    <Compile Include="IPayloadItem.cs" />
+    <Compile Include="IPossessConfirmationCanary.cs" />
+    <Compile Include="IStreamBinding.cs" />
+    <Compile Include="IUm1HybridManifestCryptographyConfiguration.cs" />
+    <Compile Include="KeyContextAllowed.cs" />
+    <Compile Include="KeyUseAllowed.cs" />
+    <Compile Include="SymmetricKey.cs" />
     <Compile Include="VerificationFunctionType.cs" />
     <Compile Include="IDataTransferObject.cs" />
     <Compile Include="IManifestCryptographySchemeConfiguration.cs" />
@@ -80,7 +91,7 @@
     <Compile Include="CipherConfiguration.cs" />
     <Compile Include="CipherType.cs" />
     <Compile Include="SymmetricManifestCryptographyConfiguration.cs" />
-    <Compile Include="VerificationFunctionConfiguration.cs" />
+    <Compile Include="AuthenticationFunctionConfiguration.cs" />
     <Compile Include="JpakeRound1.cs" />
     <Compile Include="JpakeRound2.cs" />
     <Compile Include="JpakeRound3.cs" />

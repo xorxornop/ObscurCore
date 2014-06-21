@@ -28,8 +28,8 @@ namespace ObscurCore.Tests.Packaging
 					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B256, out authOutputSize)
                 };
 
-				payloadItem.CipherKey = new byte[payloadItem.SymmetricCipher.KeySizeBits / 8];
-				StratCom.EntropySupplier.NextBytes(payloadItem.CipherKey);
+				payloadItem.SymmetricCipherKey = new byte[payloadItem.SymmetricCipher.KeySizeBits / 8];
+				StratCom.EntropySupplier.NextBytes(payloadItem.SymmetricCipherKey);
 				payloadItem.AuthenticationKey = new byte[payloadItem.Authentication.KeySizeBits.Value / 8];
 				StratCom.EntropySupplier.NextBytes(payloadItem.AuthenticationKey);
 
@@ -56,8 +56,8 @@ namespace ObscurCore.Tests.Packaging
 					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B256, out authOutputSize)
                 };
 
-                payloadItem.CipherKey = new byte[payloadItem.SymmetricCipher.KeySizeBits / 8];
-                StratCom.EntropySupplier.NextBytes(payloadItem.CipherKey);
+                payloadItem.SymmetricCipherKey = new byte[payloadItem.SymmetricCipher.KeySizeBits / 8];
+                StratCom.EntropySupplier.NextBytes(payloadItem.SymmetricCipherKey);
 				payloadItem.AuthenticationKey = new byte[payloadItem.Authentication.KeySizeBits.Value / 8];
 				StratCom.EntropySupplier.NextBytes(payloadItem.AuthenticationKey);
 

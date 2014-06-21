@@ -1,4 +1,4 @@
-//
+﻿//
 //  Copyright 2014  Matthew Ducker
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +13,18 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System;
+
 namespace ObscurCore.DTO
 {
-	public interface IAuthenticatibleClonable<out T>
-	{
-		T CreateAuthenticatibleClone();
-	}
+    /// <summary>
+    ///     Contexts of use allowed for a key (operations).
+    /// </summary>
+    [Flags]
+    public enum KeyContextAllowed
+    {
+        None = 0x00,
+        ManifestHeader = 0x01,
+        PayloadItem = 0x02
+    }
 }

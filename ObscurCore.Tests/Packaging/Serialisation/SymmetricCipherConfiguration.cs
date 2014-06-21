@@ -14,7 +14,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
                 Type = CipherType.Block,
                 CipherName = BlockCipher.Aes.ToString(),
                 KeySizeBits = 128,
-                IV = new byte[] { 0x01, 0x02, 0x03 },
+                InitialisationVector = new byte[] { 0x01, 0x02, 0x03 },
                 ModeName = BlockCipherMode.Ctr.ToString(),
                 BlockSizeBits = 128,
                 PaddingName = BlockCipherPadding.None.ToString()
@@ -33,7 +33,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
                 Type = CipherType.Stream,
                 CipherName = StreamCipher.Salsa20.ToString(),
                 KeySizeBits = 256,
-                IV = new byte[] { 0x01, 0x02, 0x03 }
+                InitialisationVector = new byte[] { 0x01, 0x02, 0x03 }
             };
 
             var stream = SerialiseToMemory(inputObj);

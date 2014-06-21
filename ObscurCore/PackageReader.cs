@@ -90,7 +90,7 @@ namespace ObscurCore
         /// <summary>
         ///     Configuration of function used in verifying the authenticity/integrity of the manifest.
         /// </summary>
-        public IVerificationFunctionConfiguration ManifestAuthentication
+        public IAuthenticationFunctionConfiguration ManifestAuthentication
         {
             get { return _manifestCryptoConfig.Authentication; }
         }
@@ -108,7 +108,7 @@ namespace ObscurCore
         ///     Configuration of key confirmation used for confirming the cryptographic key
         ///     to be used as the basis for key derivation.
         /// </summary>
-        public IVerificationFunctionConfiguration ManifestKeyConfirmation
+        public IAuthenticationFunctionConfiguration ManifestKeyConfirmation
         {
             get { return _manifestCryptoConfig.KeyConfirmation; }
         }
@@ -185,7 +185,7 @@ namespace ObscurCore
             IQueryExpr<IEnumerable<PayloadItem>> itemsToConfirm = _manifest.PayloadItems.AsQueryExpr()
                                                                            .Where(
                                                                                item =>
-                                                                                   item.CipherKey.IsNullOrZeroLength() ||
+                                                                                   item.SymmetricCipherKey.IsNullOrZeroLength() ||
                                                                                    item.AuthenticationKey
                                                                                        .IsNullOrZeroLength());
             Parallel.ForEach(itemsToConfirm.Run(), item => {

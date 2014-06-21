@@ -14,71 +14,77 @@
 //    limitations under the License.
 
 using System;
-using System.IO;
-using System.Linq;
 using ProtoBuf;
 
 namespace ObscurCore.DTO
 {
-    // ***************************************************************************************************************************************************
-    // *             This object is not explicitly included in the Manifest supraobject, but may be included in byte-array-serialised form.              *
-    // *             They may however incorporate objects in the Manifest superstructure, such as a SymmetricCipherConfiguration or similar.             *
-    // ***************************************************************************************************************************************************
-
     [ProtoContract]
     public class EcKeyConfiguration : IDataTransferObject, IEquatable<EcKeyConfiguration>, IEcKeyConfiguration
     {
-		[ProtoMember(1, IsRequired = true)]
-		public bool PublicComponent { get; set; }
-
-		/// <summary>
-        /// Name of the curve provider. Used to look up relevant domain parameters to interpret the encoded key.
+        /// <summary>
+        ///     Any additional data required for the key
+        ///     (for example, special formatting, if any).
         /// </summary>
-		[ProtoMember(2, IsRequired = true)]
+        [ProtoMember(5, IsRequired = true)]
+        public byte[] AdditionalData { get; set; }
+
+        [ProtoMember(1, IsRequired = true)]
+        public bool PublicComponent { get; set; }
+
+        /// <summary>
+        ///     Name of the curve provider. Used to look up relevant domain parameters to interpret the encoded key.
+        /// </summary>
+        [ProtoMember(2, IsRequired = true)]
         public string CurveProviderName { get; set; }
 
         /// <summary>
-        /// Name of the elliptic curve in the provider's selection.
+        ///     Name of the elliptic curve in the provider's selection.
         /// </summary>
-		[ProtoMember(3, IsRequired = true)]
+        [ProtoMember(3, IsRequired = true)]
         public string CurveName { get; set; }
-		
+
         /// <summary>
-        /// Byte-array-encoded form of the key.
+        ///     Byte-array-encoded form of the key.
         /// </summary>
-		[ProtoMember(4, IsRequired = true)]
+        [ProtoMember(4, IsRequired = true)]
         public byte[] EncodedKey { get; set; }
 
-		/// <summary>
-		/// Any additional data required for the key 
-		/// (for example, special formatting, if any).
-		/// </summary>
-		[ProtoMember(5, IsRequired = true)]
-		public byte[] AdditionalData { get; set; }
-
-        public override bool Equals (object obj)
+        public bool Equals(EcKeyConfiguration other)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (ReferenceEquals(null, other)) {
+                return false;
+            }
+            if (ReferenceEquals(this, other)) {
+                return true;
+            }
+            return PublicComponent == other.PublicComponent &&
+                   String.Equals(CurveProviderName, other.CurveProviderName, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(CurveName, other.CurveName, StringComparison.OrdinalIgnoreCase) &&
+                   EncodedKey.SequenceEqualShortCircuiting(other.EncodedKey) &&
+                   AdditionalData.SequenceEqualShortCircuiting(other.AdditionalData);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) {
+                return false;
+            }
+            if (ReferenceEquals(this, obj)) {
+                return true;
+            }
+            if (obj.GetType() != GetType()) {
+                return false;
+            }
             return Equals((EcKeyConfiguration) obj);
         }
-		
-        public bool Equals(EcKeyConfiguration other) {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-			return 
-				PublicComponent == other.PublicComponent && 
-				String.Equals(CurveProviderName, other.CurveProviderName) && String.Equals(CurveName, other.CurveName) &&
-				EncodedKey.SequenceEqual(other.EncodedKey) && AdditionalData.SequenceEqual(other.AdditionalData);
-        }
-		
-        public override int GetHashCode () {
+
+        public override int GetHashCode()
+        {
             unchecked {
-				int hashCode = PublicComponent.GetHashCode(); // Must not be null!
-				hashCode = (hashCode * 397) ^ CurveProviderName.GetHashCode(); // Must not be null!
-                hashCode = (hashCode * 397) ^ CurveName.GetHashCode(); // Must not be null!
-                hashCode = (hashCode * 397) ^ EncodedKey.GetHashCode(); // Must not be null! 
+                int hashCode = PublicComponent.GetHashCode();
+                hashCode = (hashCode * 397) ^ CurveProviderName.ToLowerInvariant().GetHashCode();
+                hashCode = (hashCode * 397) ^ CurveName.ToLowerInvariant().GetHashCode();
+                hashCode = (hashCode * 397) ^ EncodedKey.GetHashCode();
                 return hashCode;
             }
         }
@@ -86,20 +92,20 @@ namespace ObscurCore.DTO
 
     public interface IEcKeyConfiguration
     {
-		bool PublicComponent { get; }
+        bool PublicComponent { get; }
 
-		/// <summary>
-        /// Name of the curve provider. Used to look up relevant domain parameters to interpret the encoded key.
+        /// <summary>
+        ///     Name of the curve provider. Used to look up relevant domain parameters to interpret the encoded key.
         /// </summary>
         string CurveProviderName { get; }
 
         /// <summary>
-        /// Name of the elliptic curve in the provider's selection.
+        ///     Name of the elliptic curve in the provider's selection.
         /// </summary>
         string CurveName { get; }
 
         /// <summary>
-        /// Byte-array-encoded form of the key.
+        ///     Byte-array-encoded form of the key.
         /// </summary>
         byte[] EncodedKey { get; }
     }

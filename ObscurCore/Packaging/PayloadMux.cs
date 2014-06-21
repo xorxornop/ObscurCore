@@ -73,8 +73,8 @@ namespace ObscurCore.Packaging
         protected void CreateEtMDecorator(PayloadItem item, out DecoratingStream decorator, out MacStream authenticator)
         {
             byte[] encryptionKey, authenticationKey;
-            if (item.CipherKey.IsNullOrZeroLength() == false && item.AuthenticationKey.IsNullOrZeroLength() == false) {
-                encryptionKey = item.CipherKey;
+            if (item.SymmetricCipherKey.IsNullOrZeroLength() == false && item.AuthenticationKey.IsNullOrZeroLength() == false) {
+                encryptionKey = item.SymmetricCipherKey;
                 authenticationKey = item.AuthenticationKey;
             } else if (PayloadItemPreKeys.ContainsKey(item.Identifier)) {
                 if (item.Authentication.KeySizeBits.HasValue == false) {

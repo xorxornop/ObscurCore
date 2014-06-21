@@ -1,5 +1,5 @@
-//
-//  Copyright 2013  Matthew Ducker
+﻿//
+//  Copyright 2014  Matthew Ducker
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -13,23 +13,34 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore.DTO
+using System;
+
+namespace ObscurCore.Cryptography
 {
-    public enum KeyActions
+    public class SymmetricKey : IConfirmationCanary
     {
-        Associate,
-        Dissociate,
+        /// <summary>
+        ///     Key for use in encryption or authentication schemes after key derivation.
+        /// </summary>
+        public byte[] Key { get; set; }
 
         /// <summary>
-        /// Reserved for use. For a scheme where key state can be 
-        /// verified with state at another session-state locality.
+        ///     Data used for generating key confirmations.
         /// </summary>
-        Validate,
+        public byte[] ConfirmationCanary { get; set; }
+    }
 
-        /// <summary>
-        /// Reserved for use. For a scheme where keys change state 
-        /// deterministically at multiple session-state localities.
-        /// </summary>
-        Advance
+    [Flags]
+    enum KeyUseAllowed
+    {
+        Encryption,
+        Authentication
+    }
+
+    [Flags]
+    enum KeyContextAllowed
+    {
+        Manifest,
+        PayloadItem
     }
 }

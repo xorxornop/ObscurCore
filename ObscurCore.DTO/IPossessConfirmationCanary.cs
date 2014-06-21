@@ -1,4 +1,4 @@
-//
+﻿//
 //  Copyright 2014  Matthew Ducker
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,15 @@
 
 namespace ObscurCore.DTO
 {
-	public interface IAuthenticatibleClonable<out T>
-	{
-		T CreateAuthenticatibleClone();
-	}
+    /// <summary>
+    ///     Interface to indicate inclusion of a key confirmation canary (for key containers). 
+    ///     Enables use of the key for creating key confirmations where allowed by that container.
+    /// </summary>
+    public interface IPossessConfirmationCanary
+    {
+        /// <summary>
+        ///     Data used for generating key confirmations.
+        /// </summary>
+        byte[] ConfirmationCanary { get; set; }
+    }
 }

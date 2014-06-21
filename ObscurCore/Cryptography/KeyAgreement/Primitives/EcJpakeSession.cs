@@ -29,106 +29,79 @@ using ObscurCore.DTO;
 namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 {
     /// <summary>
-    /// Implementation of Password Authenticated Key Exchange by Juggling (J-PAKE) 
-    /// password-authenticated key agreement protocol with elliptic curve math.
+    ///     Implementation of Password Authenticated Key Exchange by Juggling (J-PAKE)
+    ///     password-authenticated key agreement protocol with elliptic curve math.
     /// </summary>
     public class EcJpakeSession
     {
-        /// <summary>
-        /// The state of the protocol.
-        /// </summary>
-        protected internal State ProtocolState { get; private set; }
-
-        protected internal enum State : byte
-        {
-            Initialised = 0,
-            Round1Created = 10,
-            Round1Validated = 20,
-            Round2Created = 30,
-            Round2Validated = 40,
-            KeyCalculated = 50,
-            Round3Created = 60,
-            Round3Validated = 70
-        }
+        #region Fields
 
         /// <summary>
-        /// Unique identifier of this local instance's participant.
-        /// The two participants in the exchange must NOT share the same ID.
+        ///     Speciality EC base point multiplier.
         /// </summary>
-        public string ParticipantId { get; private set; }
+        protected static readonly ECMultiplier BasePointMultiplier = new FixedPointCombMultiplier();
 
-        /// <summary>
-        /// Unique identifier of the remote instance's participant (partner).
-        /// The two participants in the exchange must NOT share the same ID.
-        /// </summary>
-        public string PartnerParticipantId { get; private set; }
-
-        /// <summary>
-        /// Source of random bytes.
-        /// </summary>
-        public SecureRandom EntropySupply { get; private set; }
-
-        // Fields
-
-        /// <summary>
-        /// Speciality EC base point multiplier.
-        /// </summary>
-        protected readonly static ECMultiplier BasePointMultiplier = new FixedPointCombMultiplier();
-
-        /// <summary>
-        /// Provides hashing capability. 
-        /// Together with field size of elliptic curve, sets security level.
-        /// </summary>
-        protected readonly IDigest Digest;
-
-        /// <summary>
-        /// Domain parameters for elliptic curve system.
-        /// </summary>
-        protected readonly ECDomainParameters Domain;
-        protected readonly BigInteger Q;
-
-        // Constants
         protected static readonly byte[] MacKeyConstantBytes = Encoding.UTF8.GetBytes("JPAKE_KC");
         protected static readonly byte[] MacTagConstantBytes = Encoding.UTF8.GetBytes("KC_1_U");
 
         /// <summary>
-        /// Shared secret. 
-        /// This only contains the secret between construction and a call to CalculateKeyingMaterial().
+        ///     Provides hashing capability.
+        ///     Together with field size of elliptic curve, sets security level.
+        /// </summary>
+        protected readonly IDigest Digest;
+
+        /// <summary>
+        ///     Domain parameters for elliptic curve system.
+        /// </summary>
+        protected readonly ECDomainParameters Domain;
+
+        protected readonly BigInteger Q;
+        protected ECPoint B = null;
+
+        // Constants
+
+        protected ECPoint GX1 = null, GX2 = null, GX3 = null, GX4 = null;
+
+        protected BigInteger KeyingMaterial = null;
+        protected BigInteger MacTag = null;
+
+        /// <summary>
+        ///     Shared secret.
+        ///     This only contains the secret between construction and a call to CalculateKeyingMaterial().
         /// </summary>
         protected byte[] PasswordBytes;
 
         // Variables holding private state
         protected BigInteger x2 = null; // Private key - x1 is not stored, as it is only ephemeral
 
-        protected ECPoint GX1 = null, GX2 = null, GX3 = null, GX4 = null;
-        protected ECPoint B = null;
-
-        protected BigInteger KeyingMaterial = null;
-        protected BigInteger MacTag = null;
-
+        #endregion
 
         /// <summary>
-        /// Start or resume an existing J-PAKE key agreement session. 
-        /// If resuming, call RestoreState() method immediately after construction.
+        ///     Start or resume an existing J-PAKE key agreement session.
+        ///     If resuming, call RestoreState() method immediately after construction.
         /// </summary>
         /// <param name="participantId">Participant identifier.</param>
         /// <param name="password">Password believed to be known to both parties.</param>
         /// <param name="group">Elliptic curve group.</param>
         /// <param name="digest">Digest/hash function.</param>
         /// <param name="random">Random data generator/source.</param>
-        public EcJpakeSession(string participantId, string password, ECDomainParameters group, IDigest digest, SecureRandom random)
+        public EcJpakeSession(string participantId, string password, ECDomainParameters group, IDigest digest,
+            SecureRandom random)
         {
             if (String.IsNullOrEmpty(participantId)) {
                 throw new ArgumentException("Participant ID must not be null/empty.");
-            } else if (String.IsNullOrEmpty(password)) {
+            }
+            if (String.IsNullOrEmpty(password)) {
                 throw new ArgumentException("Password must not be null/empty.");
             }
 
             if (group == null) {
                 throw new ArgumentNullException("group");
-            } else if (digest == null) {
+            }
+            if (digest == null) {
                 throw new ArgumentNullException("digest");
-            } else if (random == null) {
+            }
+            if (random == null) {
                 throw new ArgumentNullException("random");
             }
 
@@ -136,21 +109,21 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             var curveAsFp = group.Curve as FpCurve;
             if (curveAsFp == null) {
                 if (curve is SecP192K1Curve) {
-                    Q = ((SecP192K1Curve)curve).Q;
+                    Q = ((SecP192K1Curve) curve).Q;
                 } else if (curve is SecP192R1Curve) {
-                    Q = ((SecP192R1Curve)curve).Q;
+                    Q = ((SecP192R1Curve) curve).Q;
                 } else if (curve is SecP224K1Curve) {
-                    Q = ((SecP224K1Curve)curve).Q;
+                    Q = ((SecP224K1Curve) curve).Q;
                 } else if (curve is SecP224R1Curve) {
-                    Q = ((SecP224R1Curve)curve).Q;
+                    Q = ((SecP224R1Curve) curve).Q;
                 } else if (curve is SecP256K1Curve) {
-                    Q = ((SecP256K1Curve)curve).Q;
+                    Q = ((SecP256K1Curve) curve).Q;
                 } else if (curve is SecP256R1Curve) {
-                    Q = ((SecP256R1Curve)curve).Q;
+                    Q = ((SecP256R1Curve) curve).Q;
                 } else if (curve is SecP384R1Curve) {
-                    Q = ((SecP384R1Curve)curve).Q;
+                    Q = ((SecP384R1Curve) curve).Q;
                 } else if (curve is SecP521R1Curve) {
-                    Q = ((SecP521R1Curve)curve).Q;
+                    Q = ((SecP521R1Curve) curve).Q;
                 } else {
                     throw new ArgumentException("Curve in EC domain parameters must be over F(p)", "group");
                 }
@@ -167,9 +140,35 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             ProtocolState = State.Initialised;
         }
 
+        #region Properties
+
         /// <summary>
-        /// Restores the state of an incomplete J-PAKE session, 
-        /// given private keys and DTO objects created/received from that session.
+        ///     The state of the protocol.
+        /// </summary>
+        protected internal State ProtocolState { get; private set; }
+
+        /// <summary>
+        ///     Unique identifier of this local instance's participant.
+        ///     The two participants in the exchange must NOT share the same ID.
+        /// </summary>
+        public string ParticipantId { get; private set; }
+
+        /// <summary>
+        ///     Unique identifier of the remote instance's participant (partner).
+        ///     The two participants in the exchange must NOT share the same ID.
+        /// </summary>
+        public string PartnerParticipantId { get; private set; }
+
+        /// <summary>
+        ///     Source of random bytes.
+        /// </summary>
+        public SecureRandom EntropySupply { get; private set; }
+
+        #endregion
+
+        /// <summary>
+        ///     Restores the state of an incomplete J-PAKE session,
+        ///     given private keys and DTO objects created/received from that session.
         /// </summary>
         /// <param name="x2">Private key.</param>
         /// <param name="round1Created">Round 1 created/sent.</param>
@@ -200,11 +199,15 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
                 GX3 = Domain.Curve.DecodePoint(round1Received.GX1);
                 GX4 = Domain.Curve.DecodePoint(round1Received.GX2);
                 ProtocolState = State.Round1Validated;
-            } else return;
+            } else {
+                return;
+            }
 
             if (round2Created != null) {
                 ProtocolState = State.Round2Created;
-            } else return;
+            } else {
+                return;
+            }
 
             if (round2Received != null) {
                 if (PartnerParticipantId.Equals(round2Received.ParticipantId, StringComparison.Ordinal) == false) {
@@ -212,7 +215,9 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
                 }
                 B = Domain.Curve.DecodePoint(round2Received.A);
                 ProtocolState = State.Round2Validated;
-            } else return;
+            } else {
+                return;
+            }
 
             if (round3Created != null) {
                 // Keying material has been calculated
@@ -226,18 +231,20 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         }
 
         /// <summary>
-        /// Provides the ability to suspend the session for later resumption by exporting the 
-        /// session participant's private key. This key must be stored securely! 
-        /// DTO state objects created/sent & received thus far must also be retained 
-        /// (these are not output by this method). 
+        ///     Provides the ability to suspend the session for later resumption by exporting the
+        ///     session participant's private key. This key must be stored securely!
+        ///     DTO state objects created/sent & received thus far must also be retained
+        ///     (these are not output by this method).
         /// </summary>
         public void SuspendSession(out byte[] x2Export)
         {
             x2Export = x2.ToByteArray();
         }
 
+        #region Round 1
+
         /// <summary>
-        /// Creates a round 1 (zero-knowledge proof) DTO to send to the partner participant.
+        ///     Creates a round 1 (zero-knowledge proof) DTO to send to the partner participant.
         /// </summary>
         public JpakeRound1 CreateRound1ToSend()
         {
@@ -245,7 +252,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
                 throw new InvalidOperationException("Round1 payload already created for " + ParticipantId);
             }
 
-            var x1 = BigInteger.CreateRandomInRange(BigInteger.One, Domain.N.Subtract(BigInteger.One), EntropySupply);
+            BigInteger x1 = BigInteger.CreateRandomInRange(BigInteger.One, Domain.N.Subtract(BigInteger.One),
+                EntropySupply);
             x2 = BigInteger.CreateRandomInRange(BigInteger.One, Domain.N.Subtract(BigInteger.One), EntropySupply);
             GX1 = BasePointMultiplier.Multiply(Domain.G, x1);
             GX2 = BasePointMultiplier.Multiply(Domain.G, x2);
@@ -270,14 +278,14 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         }
 
         /// <summary>
-        /// Validates the round 1 (zero-knowledge proof) DTO received from the partner participant.
+        ///     Validates the round 1 (zero-knowledge proof) DTO received from the partner participant.
         /// </summary>
         /// <param name="round1Received">Round 1 DTO received from partner participant.</param>
         public void ValidateRound1Received(JpakeRound1 round1Received)
         {
             if (ProtocolState >= State.Round1Validated) {
                 throw new InvalidOperationException("Validation already attempted for round 1 payload for "
-                    + ParticipantId);
+                                                    + ParticipantId);
             }
             if (String.IsNullOrEmpty(round1Received.ParticipantId)) {
                 throw new ArgumentException("Partner participant ID in round 1 DTO received is null or empty.");
@@ -288,12 +296,12 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             GX4 = Domain.Curve.DecodePoint(round1Received.GX2);
 
             ECPoint X3V = Domain.Curve.DecodePoint(round1Received.X1V);
-            BigInteger X3R = new BigInteger(round1Received.X1R);
+            var X3R = new BigInteger(round1Received.X1R);
             ECPoint X4V = Domain.Curve.DecodePoint(round1Received.X2V);
-            BigInteger X4R = new BigInteger(round1Received.X2R);
+            var X4R = new BigInteger(round1Received.X2R);
 
             if (ZeroKnowledgeProofValid(Domain.G, GX3, X3V, X3R,
-                    PartnerParticipantId) == false ||
+                PartnerParticipantId) == false ||
                 ZeroKnowledgeProofValid(Domain.G, GX4, X4V, X4R,
                     PartnerParticipantId) == false) {
                 throw new CryptoException("Verification of zero-knowledge proof in round 1 failed.");
@@ -302,22 +310,27 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             ProtocolState = State.Round1Validated;
         }
 
+        #endregion
+
+        #region Round 2
+
         /// <summary>
-        /// Creates a round 2 (zero-knowledge proof) DTO to send to the partner participant.
+        ///     Creates a round 2 (zero-knowledge proof) DTO to send to the partner participant.
         /// </summary>
         /// <exception cref="InvalidOperationException">
-        /// Prior round (1) has not been completed yet, or method may have been called more than once.
+        ///     Prior round (1) has not been completed yet, or method may have been called more than once.
         /// </exception>
         public JpakeRound2 CreateRound2ToSend()
         {
             if (ProtocolState >= State.Round2Created) {
                 throw new InvalidOperationException("Round 2 payload already created for " + ParticipantId);
-            } else if (ProtocolState < State.Round1Validated) {
+            }
+            if (ProtocolState < State.Round1Validated) {
                 throw new InvalidOperationException("Round 1 payload must be validated prior to creating Round 2 payload for "
-                    + ParticipantId);
+                                                    + ParticipantId);
             }
 
-            BigInteger s1 = new BigInteger(PasswordBytes);
+            var s1 = new BigInteger(PasswordBytes);
 
             ECPoint GA = GX1.Add(GX3).Add(GX4);
             BigInteger x2s1 = x2.Multiply(s1).Mod(Domain.N);
@@ -339,31 +352,34 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         }
 
         /// <summary>
-        /// Validates the round 2 (zero-knowledge proof) DTO received from the partner participant.
+        ///     Validates the round 2 (zero-knowledge proof) DTO received from the partner participant.
         /// </summary>
         /// <param name="round2Received">Round 2 DTO received form partner participant.</param>
         /// <exception cref="InvalidOperationException">
-        /// Prior round (1) has not been completed yet, or method may have been called more than once.
+        ///     Prior round (1) has not been completed yet, or method may have been called more than once.
         /// </exception>
         /// <exception cref="CryptoException">
-        /// Verification of zero-knowledge proof failed. Possible attempted impersonation / MiTM.
+        ///     Verification of zero-knowledge proof failed. Possible attempted impersonation / MiTM.
         /// </exception>
         public void ValidateRound2Received(JpakeRound2 round2Received)
         {
             if (ProtocolState >= State.Round2Validated) {
-                throw new InvalidOperationException("Validation already attempted for round 2 payload for " + ParticipantId);
-            } else if (ProtocolState < State.Round1Validated) {
+                throw new InvalidOperationException("Validation already attempted for round 2 payload for " +
+                                                    ParticipantId);
+            }
+            if (ProtocolState < State.Round1Validated) {
                 throw new InvalidOperationException("Round 1 payload must be validated prior to validating round 2 payload for "
-                    + ParticipantId);
+                                                    + ParticipantId);
             }
             if (String.IsNullOrEmpty(round2Received.ParticipantId)) {
                 throw new ArgumentException("Partner participant ID in round 2 received is null or empty.");
-            } else if (PartnerParticipantId.Equals(round2Received.ParticipantId, StringComparison.Ordinal) == false) {
+            }
+            if (PartnerParticipantId.Equals(round2Received.ParticipantId, StringComparison.Ordinal) == false) {
                 throw new CryptoException("Partner participant ID of round 2 DTO does not match value from round 1.");
             }
 
             ECPoint X4sV = Domain.Curve.DecodePoint(round2Received.X2sV);
-            BigInteger X4sR = new BigInteger(round2Received.X2sR);
+            var X4sR = new BigInteger(round2Received.X2sR);
 
             B = Domain.Curve.DecodePoint(round2Received.A);
             // Calculate GB : GX1 + GX3 + GX4 symmetrically
@@ -376,11 +392,15 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             ProtocolState = State.Round2Validated;
         }
 
+        #endregion
+
+        #region Round 3
+
         /// <summary>
-        /// Creates a round 3 (key confirmation) DTO to send to the partner participant.
+        ///     Creates a round 3 (key confirmation) DTO to send to the partner participant.
         /// </summary>
         /// <exception cref="InvalidOperationException">
-        /// Prior rounds (1 & 2) have not been completed yet, or method may have been called more than once.
+        ///     Prior rounds (1 & 2) have not been completed yet, or method may have been called more than once.
         /// </exception>
         public JpakeRound3 CreateRound3ToSend()
         {
@@ -403,35 +423,40 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         }
 
         /// <summary>
-        /// Validates the round 3 (key confirmation) DTO received from the partner participant.
+        ///     Validates the round 3 (key confirmation) DTO received from the partner participant.
         /// </summary>
         /// <param name="round3Received">Round 3 DTO received from partner participant.</param>
         /// <param name="keyingMaterial">Shared secret to be derived further before use as a key (e.g. by a KDF).</param>
         /// <exception cref="InvalidOperationException">
-        /// Key calculation and/or prior rounds (1 & 2) have not been completed yet, or
-        /// method may have been called more than once.
+        ///     Key calculation and/or prior rounds (1 & 2) have not been completed yet, or
+        ///     method may have been called more than once.
         /// </exception>
         /// <exception cref="CryptoException">
-        /// Key confirmation failed - partner participant derived a different key. The password used differs.
-        /// Possible attempted impersonation / MiTM.
+        ///     Key confirmation failed - partner participant derived a different key. The password used differs.
+        ///     Possible attempted impersonation / MiTM.
         /// </exception>
         public void ValidateRound3Received(JpakeRound3 round3Received, out byte[] keyingMaterial)
         {
             if (ProtocolState == State.Round3Validated) {
                 throw new InvalidOperationException("Validation already attempted for round 3 for " + ParticipantId);
-            } else if (ProtocolState < State.KeyCalculated) {
-                throw new InvalidOperationException("Keying material must be calculated validated prior to validating round 3 for " + ParticipantId);
+            }
+            if (ProtocolState < State.KeyCalculated) {
+                throw new InvalidOperationException(
+                    "Keying material must be calculated validated prior to validating round 3 for " + ParticipantId);
             }
 
             if (String.IsNullOrEmpty(round3Received.ParticipantId)) {
                 throw new ArgumentException("Partner participant ID in round 3 DTO received is null or empty.");
-            } else if (PartnerParticipantId.Equals(round3Received.ParticipantId, StringComparison.Ordinal) == false) {
+            }
+            if (PartnerParticipantId.Equals(round3Received.ParticipantId, StringComparison.Ordinal) == false) {
                 throw new CryptoException("Partner participant ID of round 3 does not match value from rounds 1 & 2.");
             }
 
-            BigInteger receivedTag = new BigInteger(round3Received.VerifiedOutput);
+            var receivedTag = new BigInteger(round3Received.VerifiedOutput);
 
-            if (KeyingMaterial == null) CalculateKeyingMaterialInternal();
+            if (KeyingMaterial == null) {
+                CalculateKeyingMaterialInternal();
+            }
 
             BigInteger expectedTag = CalculateMacTag(PartnerParticipantId, ParticipantId,
                 GX3, GX4, GX1, GX2, KeyingMaterial);
@@ -459,10 +484,12 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             ProtocolState = State.Round3Validated;
         }
 
+        #endregion
+
         /// <summary>
-        /// Calculates the derived shared secret - this can be used externally, skipping key confirmation (NOT RECOMMENDED).
-        /// A session key must be derived from this key material using a secure key derivation function (KDF).
-        /// The KDF used to derive the key is handled externally.
+        ///     Calculates the derived shared secret - this can be used externally, skipping key confirmation (NOT RECOMMENDED).
+        ///     A session key must be derived from this key material using a secure key derivation function (KDF).
+        ///     The KDF used to derive the key is handled externally.
         /// </summary>
         protected internal byte[] CalculateKeyingMaterial()
         {
@@ -470,24 +497,26 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         }
 
         /// <summary>
-        /// Calculates keying material derived from shared secrets and password.
+        ///     Calculates keying material derived from shared secrets and password.
         /// </summary>
         protected BigInteger CalculateKeyingMaterialInternal()
         {
             if (ProtocolState >= State.KeyCalculated) {
                 throw new InvalidOperationException("Key already calculated for " + ParticipantId);
-            } else if (ProtocolState < State.Round2Validated) {
-                throw new InvalidOperationException("Round 2 must be validated prior to creating key for " + ParticipantId);
+            }
+            if (ProtocolState < State.Round2Validated) {
+                throw new InvalidOperationException("Round 2 must be validated prior to creating key for " +
+                                                    ParticipantId);
             }
 
-            BigInteger s1 = new BigInteger(PasswordBytes);
+            var s1 = new BigInteger(PasswordBytes);
 
             // Clear secret
             PasswordBytes.SecureWipe();
             PasswordBytes = null;
 
             // Prepare BigInteger to be hashed
-            var GX4x2s1 = BasePointMultiplier.Multiply(GX4, x2.Multiply(s1).Mod(Domain.N));
+            ECPoint GX4x2s1 = BasePointMultiplier.Multiply(GX4, x2.Multiply(s1).Mod(Domain.N));
             ECPoint normalised = BasePointMultiplier.Multiply(B.Subtract(GX4x2s1), x2).Normalize();
 
             BigInteger preKey = normalised.AffineXCoord.ToBigInteger();
@@ -503,7 +532,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         }
 
         /// <summary>
-        /// Creates a zero knowledge proof.
+        ///     Creates a zero knowledge proof.
         /// </summary>
         protected void CreateZeroKnowledgeProof(ECPoint generator, BigInteger x, ECPoint X,
             string participantId, out ECPoint V, out BigInteger r)
@@ -519,10 +548,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         }
 
         /// <summary>
-        /// Verifies a zero knowledge proof.
+        ///     Verifies a zero knowledge proof.
         /// </summary>
         /// <returns><c>true</c>, if zero knowledge proof is valid/correct, <c>false</c> otherwise.</returns>
-        protected bool ZeroKnowledgeProofValid(ECPoint generator, ECPoint X, ECPoint V, BigInteger r, string participantId)
+        protected bool ZeroKnowledgeProofValid(ECPoint generator, ECPoint X, ECPoint V, BigInteger r,
+            string participantId)
         {
             // ZKP: { V=G*v, r }
 
@@ -532,8 +562,9 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             // http://cs.ucsb.edu/~koc/ccs130h/notes/ecdsa-cert.pdf
 
             // 1. X != infinity
-            if (X.IsInfinity)
+            if (X.IsInfinity) {
                 return false;
+            }
 
             BigInteger xCoord = X.AffineXCoord.ToBigInteger();
             BigInteger yCoord = X.AffineYCoord.ToBigInteger();
@@ -568,13 +599,12 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 
             if (V.Equals(Gr.Add(Xh))) {
                 return true;
-            } else {
-                return false;
             }
+            return false;
         }
 
         /// <summary>
-        /// Hashes a BigInteger into another BigInteger.
+        ///     Hashes a BigInteger into another BigInteger.
         /// </summary>
         protected BigInteger Hash(BigInteger k)
         {
@@ -582,69 +612,69 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 
             // Item is prefixed with its length as a little-endian 4-byte unsigned integer
             byte[] kBytes = k.ToByteArray();
-            byte[] lengthPrefix = new byte[4];
-            Pack.UInt32_To_LE((uint)kBytes.Length, lengthPrefix);
+            var lengthPrefix = new byte[4];
+            Pack.UInt32_To_LE((uint) kBytes.Length, lengthPrefix);
             Digest.BlockUpdate(lengthPrefix, 0, 4);
             Digest.BlockUpdate(kBytes, 0, kBytes.Length);
 
-            byte[] hash = new byte[Digest.DigestSize];
+            var hash = new byte[Digest.DigestSize];
             Digest.DoFinal(hash, 0);
 
             return new BigInteger(1, hash);
         }
 
         /// <summary>
-        /// Calculates the hash for a zero-knowledge proof.
+        ///     Calculates the hash for a zero-knowledge proof.
         /// </summary>
         protected BigInteger Hash(ECPoint generator, ECPoint V, ECPoint X, string participantId)
         {
             Digest.Reset();
 
             // Each item is prefixed with its length as a little-endian 4-byte unsigned integer
-            byte[] lengthPrefix = new byte[4];
+            var lengthPrefix = new byte[4];
 
             byte[] generatorBytes = generator.GetEncoded();
-            Pack.UInt32_To_LE((uint)generatorBytes.Length, lengthPrefix);
+            Pack.UInt32_To_LE((uint) generatorBytes.Length, lengthPrefix);
             Digest.BlockUpdate(lengthPrefix, 0, 4);
             Digest.BlockUpdate(generatorBytes, 0, generatorBytes.Length);
 
             byte[] VBytes = V.GetEncoded();
-            Pack.UInt32_To_LE((uint)VBytes.Length, lengthPrefix);
+            Pack.UInt32_To_LE((uint) VBytes.Length, lengthPrefix);
             Digest.BlockUpdate(lengthPrefix, 0, 4);
             Digest.BlockUpdate(VBytes, 0, VBytes.Length);
 
             byte[] XBytes = X.GetEncoded();
-            Pack.UInt32_To_LE((uint)XBytes.Length, lengthPrefix);
+            Pack.UInt32_To_LE((uint) XBytes.Length, lengthPrefix);
             Digest.BlockUpdate(lengthPrefix, 0, 4);
             Digest.BlockUpdate(XBytes, 0, XBytes.Length);
 
             byte[] idBytes = Encoding.UTF8.GetBytes(participantId);
-            Pack.UInt32_To_LE((uint)idBytes.Length, lengthPrefix);
+            Pack.UInt32_To_LE((uint) idBytes.Length, lengthPrefix);
             Digest.BlockUpdate(lengthPrefix, 0, 4);
             Digest.BlockUpdate(idBytes, 0, idBytes.Length);
 
-            byte[] hash = new byte[Digest.DigestSize];
+            var hash = new byte[Digest.DigestSize];
             Digest.DoFinal(hash, 0);
 
             return new BigInteger(hash);
         }
 
         /// <summary>
-        /// Calculates the MacTag for a key confirmation.
+        ///     Calculates the MacTag for a key confirmation.
         /// </summary>
         /// <remarks>
-        /// Calculates the MacTag (to be used for key confirmation), as defined by 
-        /// NIST SP 800-56A Revision 1, Section 8.2 Unilateral Key Confirmation for Key Agreement Schemes
-        /// (http://csrc.nist.gov/publications/nistpubs/800-56A/SP800-56A_Revision1_Mar08-2007.pdf)
-        /// <para>MacTag = HMAC(MacKey, MacLen, MacData)</para>
-        /// <para>MacKey = H(K || "JPAKE_KC")</para>
-        /// <para>MacData = "KC_1_U" || participantId || partnerParticipantId || gx1 || gx2 || gx3 || gx4</para>
-        /// <para>
-        /// Note that both participants use "KC_1_U" because the sender of the round 3 message is always 
-        /// the initiator for key confirmation. 
-        /// Participant identifiers and GX numbers are swapped symmetrically to calculate partner's value when 
-        /// performing verification in key confirmation.
-        /// </para>
+        ///     Calculates the MacTag (to be used for key confirmation), as defined by
+        ///     NIST SP 800-56A Revision 1, Section 8.2 Unilateral Key Confirmation for Key Agreement Schemes
+        ///     (http://csrc.nist.gov/publications/nistpubs/800-56A/SP800-56A_Revision1_Mar08-2007.pdf)
+        ///     <para>MacTag = HMAC(MacKey, MacLen, MacData)</para>
+        ///     <para>MacKey = H(K || "JPAKE_KC")</para>
+        ///     <para>MacData = "KC_1_U" || participantId || partnerParticipantId || gx1 || gx2 || gx3 || gx4</para>
+        ///     <para>
+        ///         Note that both participants use "KC_1_U" because the sender of the round 3 message is always
+        ///         the initiator for key confirmation.
+        ///         Participant identifiers and GX numbers are swapped symmetrically to calculate partner's value when
+        ///         performing verification in key confirmation.
+        ///     </para>
         /// </remarks>
         /// <returns>The MagTag.</returns>
         /// <param name="participantId">Participant identifier.</param>
@@ -666,7 +696,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             byte[] constantBytes = MacKeyConstantBytes;
             Digest.BlockUpdate(constantBytes, 0, constantBytes.Length);
 
-            byte[] macKey = new byte[Digest.DigestSize];
+            var macKey = new byte[Digest.DigestSize];
             Digest.DoFinal(macKey, 0);
 
             // Create and initialise HMAC primitive
@@ -698,9 +728,22 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             byte[] gx4Bytes = gx4.GetEncoded();
             hmac.BlockUpdate(gx4Bytes, 0, gx4Bytes.Length);
 
-            byte[] macTag = new byte[hmac.MacSize];
+            var macTag = new byte[hmac.MacSize];
             hmac.DoFinal(macTag, 0);
             return new BigInteger(macTag);
+        }
+
+        protected internal enum State : byte
+        {
+            Noninitialised = 0x00,
+            Initialised = 0x0,
+            Round1Created = 0x02,
+            Round1Validated = 0x04,
+            Round2Created = 0x08,
+            Round2Validated = 0x10,
+            KeyCalculated = 0x20,
+            Round3Created = 0x40,
+            Round3Validated = 0x80
         }
     }
 }

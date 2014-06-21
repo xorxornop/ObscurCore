@@ -169,7 +169,7 @@ namespace ObscurCore
         /// <summary>
         ///     Configuration of function used in verifying the authenticity & integrity of the manifest.
         /// </summary>
-        internal VerificationFunctionConfiguration ManifestAuthentication
+        internal AuthenticationFunctionConfiguration ManifestAuthentication
         {
             get { return _manifestHeaderCryptoConfig == null ? null : _manifestHeaderCryptoConfig.Authentication; }
             private set
@@ -217,7 +217,7 @@ namespace ObscurCore
         ///     Configuration of key confirmation used for confirming the cryptographic key
         ///     to be used as the basis for key derivation.
         /// </summary>
-        internal VerificationFunctionConfiguration ManifestKeyConfirmation
+        internal AuthenticationFunctionConfiguration ManifestKeyConfirmation
         {
             get { return _manifestHeaderCryptoConfig == null ? null : _manifestHeaderCryptoConfig.KeyConfirmation; }
             private set
@@ -291,7 +291,7 @@ namespace ObscurCore
                 ? CreateDefaultManifestCipherConfiguration()
                 : _manifestHeaderCryptoConfig.SymmetricCipher ?? CreateDefaultManifestCipherConfiguration();
 
-            VerificationFunctionConfiguration authenticationConfig = _manifestHeaderCryptoConfig == null
+            AuthenticationFunctionConfiguration authenticationConfig = _manifestHeaderCryptoConfig == null
                 ? CreateDefaultManifestAuthenticationConfiguration()
                 : _manifestHeaderCryptoConfig.Authentication ?? CreateDefaultManifestAuthenticationConfiguration();
 
@@ -301,7 +301,7 @@ namespace ObscurCore
                   CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8);
 
             byte[] keyConfirmationOutput;
-            VerificationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration(
+            AuthenticationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration(
                 _writingPreManifestKey, out keyConfirmationOutput);
 
             _manifestHeaderCryptoConfig = new SymmetricManifestCryptographyConfiguration {
@@ -342,7 +342,7 @@ namespace ObscurCore
                 ? CreateDefaultManifestCipherConfiguration()
                 : _manifestHeaderCryptoConfig.SymmetricCipher ?? CreateDefaultManifestCipherConfiguration();
 
-            VerificationFunctionConfiguration authenticationConfig = _manifestHeaderCryptoConfig == null
+            AuthenticationFunctionConfiguration authenticationConfig = _manifestHeaderCryptoConfig == null
                 ? CreateDefaultManifestAuthenticationConfiguration()
                 : _manifestHeaderCryptoConfig.Authentication ?? CreateDefaultManifestAuthenticationConfiguration();
 
@@ -352,7 +352,7 @@ namespace ObscurCore
                   CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8);
 
             byte[] keyConfirmationOutput;
-            VerificationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration(
+            AuthenticationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration(
                 _writingPreManifestKey, out keyConfirmationOutput);
 
             _manifestHeaderCryptoConfig = new Um1HybridManifestCryptographyConfiguration {
@@ -458,7 +458,7 @@ namespace ObscurCore
         /// </summary>
         /// <remarks>Default configuration uses the MAC primitive BLAKE2B-512.</remarks>
         /// <returns></returns>
-        private static VerificationFunctionConfiguration CreateDefaultManifestAuthenticationConfiguration()
+        private static AuthenticationFunctionConfiguration CreateDefaultManifestAuthenticationConfiguration()
         {
             int outputSize;
             return AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B512,
@@ -471,10 +471,10 @@ namespace ObscurCore
         /// <remarks>Default configuration uses HMAC-SHA3-512 (HMAC-Keccak-512).</remarks>
         /// <param name="key">Key to generate confirmation configuration for.</param>
         /// <param name="verifiedOutput">Output of verification function.</param>
-        private static VerificationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(byte[] key,
+        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(byte[] key,
             out byte[] verifiedOutput)
         {
-            VerificationFunctionConfiguration config =
+            AuthenticationFunctionConfiguration config =
                 ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak512);
             // Using HMAC (key can be any length)
             verifiedOutput = ConfirmationUtility.GenerateVerifiedOutput(config, key);
@@ -620,8 +620,8 @@ namespace ObscurCore
             };
 
             if (skipCrypto == false) {
-                newItem.CipherKey = new byte[newItem.SymmetricCipher.KeySizeBits / 8];
-                StratCom.EntropySupplier.NextBytes(newItem.CipherKey);
+                newItem.SymmetricCipherKey = new byte[newItem.SymmetricCipher.KeySizeBits / 8];
+                StratCom.EntropySupplier.NextBytes(newItem.SymmetricCipherKey);
                 newItem.AuthenticationKey = new byte[newItem.Authentication.KeySizeBits.Value / 8];
                 StratCom.EntropySupplier.NextBytes(newItem.AuthenticationKey);
             }
@@ -647,7 +647,7 @@ namespace ObscurCore
             string relativePath, byte[] preKey, bool lowEntropyKey = true)
         {
             byte[] keyConfirmationVerifiedOutput;
-            VerificationFunctionConfiguration keyConfirmatConf =
+            AuthenticationFunctionConfiguration keyConfirmatConf =
                 CreateDefaultPayloadItemKeyConfirmationConfiguration(preKey,
                     out keyConfirmationVerifiedOutput);
             KeyDerivationConfiguration kdfConf = CreateDefaultPayloadItemKeyDerivation(preKey.Length, lowEntropyKey);
@@ -682,7 +682,7 @@ namespace ObscurCore
         ///     Creates a default payload item authentication configuration.
         /// </summary>
         /// <remarks>Default configuration uses the hybrid MAC-cipher construction Poly1305-AES.</remarks>
-        private static VerificationFunctionConfiguration CreateDefaultPayloadItemAuthenticationConfiguration()
+        private static AuthenticationFunctionConfiguration CreateDefaultPayloadItemAuthenticationConfiguration()
         {
             return AuthenticationConfigurationFactory.CreateAuthenticationConfigurationPoly1305(BlockCipher.Aes);
         }
@@ -693,10 +693,10 @@ namespace ObscurCore
         /// <remarks>Default configuration uses HMAC-SHA3-256 (HMAC-Keccak-256).</remarks>
         /// <param name="key">Key to generate confirmation configuration for.</param>
         /// <param name="verifiedOutput">Output of verification function.</param>
-        private static VerificationFunctionConfiguration CreateDefaultPayloadItemKeyConfirmationConfiguration(
+        private static AuthenticationFunctionConfiguration CreateDefaultPayloadItemKeyConfirmationConfiguration(
             byte[] key, out byte[] verifiedOutput)
         {
-            VerificationFunctionConfiguration config =
+            AuthenticationFunctionConfiguration config =
                 ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak256);
             verifiedOutput = ConfirmationUtility.GenerateVerifiedOutput(config, key);
 
@@ -779,7 +779,7 @@ namespace ObscurCore
             IEnumerable<ItemKeyMissingException> keyMissingExceptions =
                 (from payloadItem in _manifest.PayloadItems.AsQueryExpr()
                  where _itemPreKeys.ContainsKey(payloadItem.Identifier) == false
-                       && (payloadItem.CipherKey.IsNullOrZeroLength()
+                       && (payloadItem.SymmetricCipherKey.IsNullOrZeroLength()
                            || payloadItem.AuthenticationKey.IsNullOrZeroLength())
                  select new ItemKeyMissingException(payloadItem)).Run();
 

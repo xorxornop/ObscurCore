@@ -34,10 +34,10 @@ namespace ObscurCore.Cryptography.Authentication
 		/// The MAC configuration generated may be used with a MacStream, 
 		/// e.g. package payload item authentication.
 		/// </remarks>
-		/// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
+		/// <returns>The authentication configuration as a AuthenticationFunctionConfiguration.</returns>
 		/// <param name="macFunctionEnum">MAC function.</param>
 		/// <param name="outputSize">Size of the output from the function in bytes.</param>
-		public static VerificationFunctionConfiguration CreateAuthenticationConfiguration(MacFunction macFunctionEnum, out int outputSize) {
+		public static AuthenticationFunctionConfiguration CreateAuthenticationConfiguration(MacFunction macFunctionEnum, out int outputSize) {
 			if (Athena.Cryptography.MacFunctions[macFunctionEnum].OutputSize.HasValue == false) {
 				// Either HMAC or CMAC/OMAC1 is being used.
 				switch (macFunctionEnum) {
@@ -57,7 +57,7 @@ namespace ObscurCore.Cryptography.Authentication
 				
 			outputSize = Athena.Cryptography.MacFunctions[macFunctionEnum].OutputSize.Value / 8;
 
-            return CreateAuthConf(macFunctionEnum.ToString(), outputSize * 8, outputSize, null, null);
+            return CreateAuthConf(macFunctionEnum.ToString(), outputSize * 8, outputSize * 8, null, null);
 		}
 
 	    /// <summary>
@@ -70,13 +70,13 @@ namespace ObscurCore.Cryptography.Authentication
 	    /// <param name="hashEnum">Hash function to use as basis of the HMAC construction.</param>
         /// <param name="outputSize">Size of the output from the function in bytes.</param>
 	    /// <param name="keySize"></param>
-	    /// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
-	    public static VerificationFunctionConfiguration CreateAuthenticationConfigurationHmac (HashFunction hashEnum, 
+	    /// <returns>The authentication configuration as a AuthenticationFunctionConfiguration.</returns>
+	    public static AuthenticationFunctionConfiguration CreateAuthenticationConfigurationHmac (HashFunction hashEnum, 
 			out int outputSize, int? keySize = null) 
 		{
 			outputSize = Athena.Cryptography.HashFunctions[hashEnum].OutputSize / 8;
 			byte[] functionConfig = Encoding.UTF8.GetBytes(hashEnum.ToString ());
-			return CreateAuthConf(MacFunction.Hmac.ToString(), keySize ?? outputSize, outputSize, functionConfig, null);
+			return CreateAuthConf(MacFunction.Hmac.ToString(), keySize ?? outputSize * 8, outputSize * 8, functionConfig, null);
 		}
 
 	    /// <summary>
@@ -88,13 +88,13 @@ namespace ObscurCore.Cryptography.Authentication
 	    /// </remarks>
 	    /// <param name="cipherEnum">Block cipher to use as basis of the CMAC construction.</param>
 	    /// <param name="outputSize">Output size of the CMAC in bytes.</param>
-	    /// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
-	    public static VerificationFunctionConfiguration CreateAuthenticationConfigurationCmac(BlockCipher cipherEnum, out int outputSize) {
+	    /// <returns>The authentication configuration as a AuthenticationFunctionConfiguration.</returns>
+	    public static AuthenticationFunctionConfiguration CreateAuthenticationConfigurationCmac(BlockCipher cipherEnum, out int outputSize) {
 			outputSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize.Value / 8;
 			int keySize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultKeySize;
 			byte[] functionConfig = Encoding.UTF8.GetBytes(cipherEnum.ToString());
 
-			return CreateAuthConf(MacFunction.Cmac.ToString(), keySize, outputSize, functionConfig, null);
+			return CreateAuthConf(MacFunction.Cmac.ToString(), keySize, outputSize * 8, functionConfig, null);
 		}
 
 	    /// <summary>
@@ -107,8 +107,8 @@ namespace ObscurCore.Cryptography.Authentication
 	    /// </remarks>
 	    /// <param name="cipherEnum">Block cipher to use as basis of the Poly1305 construction. Must be 128-bit block size.</param>
 	    /// <param name="nonce">Nonce to use. If null, it will be randomly generated.</param>
-	    /// <returns>The authentication configuration as a VerificationFunctionConfiguration.</returns>
-	    public static VerificationFunctionConfiguration CreateAuthenticationConfigurationPoly1305(BlockCipher cipherEnum, byte[] nonce = null) {
+	    /// <returns>The authentication configuration as a AuthenticationFunctionConfiguration.</returns>
+	    public static AuthenticationFunctionConfiguration CreateAuthenticationConfigurationPoly1305(BlockCipher cipherEnum, byte[] nonce = null) {
 			if (Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize != 128) {
 				throw new ArgumentException ("Incompatible cipher block size.");
 			}
@@ -123,8 +123,8 @@ namespace ObscurCore.Cryptography.Authentication
 			return CreateAuthConf(MacFunction.Poly1305.ToString(), 256, 128, functionConfig, nonce);
 		}
 
-		private static VerificationFunctionConfiguration CreateAuthConf(string functionName, int keySizeBits, int outputSize, byte[] functionConfig, byte[] nonce) {
-			var config = new VerificationFunctionConfiguration {
+		private static AuthenticationFunctionConfiguration CreateAuthConf(string functionName, int keySizeBits, int outputSizeBits, byte[] functionConfig, byte[] nonce) {
+			var config = new AuthenticationFunctionConfiguration {
 				FunctionType = VerificationFunctionType.Mac.ToString(),
 				FunctionName = functionName,
 				FunctionConfiguration = functionConfig,

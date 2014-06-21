@@ -1,4 +1,4 @@
-﻿//
+//
 //  Copyright 2013  Matthew Ducker
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +15,23 @@
 
 namespace ObscurCore.DTO
 {
-    /// <summary>
-    ///     Defines data that must be available in manifest cryptography scheme configurations.
-    /// </summary>
-    public interface IManifestCryptographySchemeConfiguration
+    public interface IUm1HybridManifestCryptographyConfiguration
     {
+        /// <summary>
+        ///     Configuration of the cipher used in encryption of the manifest.
+        /// </summary>
+        CipherConfiguration SymmetricCipher { get; }
+
+        /// <summary>
+        ///     Configuration for the authentication of the manifest and cipher configuration.
+        /// </summary>
+        AuthenticationFunctionConfiguration Authentication { get; }
+
+        /// <summary>
+        ///     Output of the authentication scheme given correct input data.
+        /// </summary>
+        byte[] AuthenticationVerifiedOutput { get; }
+
         /// <summary>
         ///     Configuration for the key confirmation scheme used to validate the existence and
         ///     validity of keying material at respondent's side without disclosing the key itself.
@@ -37,18 +49,8 @@ namespace ObscurCore.DTO
         KeyDerivationConfiguration KeyDerivation { get; }
 
         /// <summary>
-        ///     Configuration of the cipher used in encryption of the manifest.
+        ///     Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
         /// </summary>
-        CipherConfiguration SymmetricCipher { get; }
-
-        /// <summary>
-        ///     Configuration for the authentication of the manifest and cipher configuration.
-        /// </summary>
-        AuthenticationFunctionConfiguration Authentication { get; }
-
-        /// <summary>
-        ///     Output of the authentication scheme given correct input data.
-        /// </summary>
-        byte[] AuthenticationVerifiedOutput { get; }
+        EcKeyConfiguration EphemeralKey { get; set; }
     }
 }

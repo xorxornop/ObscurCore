@@ -47,7 +47,7 @@ namespace ObscurCore.Cryptography.Authentication
 			output = _output;
 		}
 
-		public HashStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, 
+		public HashStream(Stream binding, bool writing, IAuthenticationFunctionConfiguration config, 
 			bool closeOnDispose = true) : base(binding, writing, closeOnDispose) 
 		{
 			if(config.FunctionType.ToEnum<VerificationFunctionType>() != VerificationFunctionType.Mac) {

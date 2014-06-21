@@ -46,7 +46,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 				extraDataSplit[0].ToEnum<BlockCipherMode>(), extraDataSplit[1].ToEnum<BlockCipherPadding>(), 
 				testCase.Key.Length * 8);
 
-			config.IV = testCase.IV;
+			config.InitialisationVector = testCase.IV;
 			return config;
 		}
 

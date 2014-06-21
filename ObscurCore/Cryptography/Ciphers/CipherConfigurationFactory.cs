@@ -57,8 +57,8 @@ namespace ObscurCore.Cryptography.Ciphers
             config.PaddingName = padding.ToString();
             config.CipherName = cipher.ToString();
 
-            config.IV = new byte[config.BlockSizeBits / 8];
-            StratCom.EntropySupplier.NextBytes(config.IV);
+            config.InitialisationVector = new byte[config.BlockSizeBits / 8];
+            StratCom.EntropySupplier.NextBytes(config.InitialisationVector);
 
             return config;
         }
@@ -75,8 +75,8 @@ namespace ObscurCore.Cryptography.Ciphers
             config.CipherName = cipher.ToString();
 
 			if (Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize != -1) {
-				config.IV = new byte[Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize / 8];
-				StratCom.EntropySupplier.NextBytes(config.IV);
+				config.InitialisationVector = new byte[Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize / 8];
+				StratCom.EntropySupplier.NextBytes(config.InitialisationVector);
 			}
 
             return config;

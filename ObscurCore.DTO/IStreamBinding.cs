@@ -1,5 +1,5 @@
 //
-//  Copyright 2014  Matthew Ducker
+//  Copyright 2013  Matthew Ducker
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -13,10 +13,21 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System;
+using System.IO;
+
 namespace ObscurCore.DTO
 {
-	public interface IAuthenticatibleClonable<out T>
-	{
-		T CreateAuthenticatibleClone();
-	}
+    /// <summary>
+    ///     Stripped-down access interface for payload items and compatible objects.
+    /// </summary>
+    public interface IStreamBinding
+    {
+        Guid Identifier { get; }
+        Stream StreamBinding { get; }
+        bool StreamInitialised { get; }
+        bool StreamHasBinding { get; }
+        long InternalLength { get; set; }
+        long ExternalLength { get; set; }
+    }
 }

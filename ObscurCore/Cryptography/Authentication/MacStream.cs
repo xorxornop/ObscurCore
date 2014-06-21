@@ -68,7 +68,7 @@ namespace ObscurCore.Cryptography.Authentication
 		    output = _output;
 		}
 
-		public MacStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, byte[] key, 
+		public MacStream(Stream binding, bool writing, IAuthenticationFunctionConfiguration config, byte[] key, 
 			bool closeOnDispose = true) : base (binding, writing, closeOnDispose) 
 		{
 			if(config.FunctionType.ToEnum<VerificationFunctionType>() != VerificationFunctionType.Mac) {
@@ -80,7 +80,7 @@ namespace ObscurCore.Cryptography.Authentication
 			_output = new byte[_mac.MacSize];
 		}
 
-		public MacStream(Stream binding, bool writing, IVerificationFunctionConfiguration config, out byte[] output, byte[] key, 
+		public MacStream(Stream binding, bool writing, IAuthenticationFunctionConfiguration config, out byte[] output, byte[] key, 
 			bool closeOnDispose = true) : this (binding, writing, config, key, closeOnDispose)
 		{
 			output = _output;

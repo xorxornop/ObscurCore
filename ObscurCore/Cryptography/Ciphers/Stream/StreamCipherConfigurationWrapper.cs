@@ -56,18 +56,18 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
             {
                 SymmetricCipherDescription athenaInfo = Athena.Cryptography.StreamCiphers[StreamCipher];
 
-                if (athenaInfo.DefaultIvSize == -1 && Configuration.IV.IsNullOrZeroLength() == false) {
+                if (athenaInfo.DefaultIvSize == -1 && Configuration.InitialisationVector.IsNullOrZeroLength() == false) {
                     throw new ConfigurationInvalidException(
                         "Nonce (initialisation vector) should not be used with the " + StreamCipher + " cipher.");
                 }
-                if (athenaInfo.AllowableIvSizes.Contains(Configuration.IV.Length * 8) == false) {
+                if (athenaInfo.AllowableIvSizes.Contains(Configuration.InitialisationVector.Length * 8) == false) {
                     throw new ConfigurationInvalidException(
                         "Nonce (initialisation vector) should not be a different length to the block size.");
                 }
 
-                return Configuration.IV == null ? null : Configuration.IV.DeepCopy();
+                return Configuration.InitialisationVector == null ? null : Configuration.InitialisationVector.DeepCopy();
             }
-            set { Configuration.IV = value; }
+            set { Configuration.InitialisationVector = value; }
         }
 
         protected override void ThrowIfKeySizeIncompatible()

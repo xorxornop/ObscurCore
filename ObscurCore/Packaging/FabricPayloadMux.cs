@@ -13,6 +13,9 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+// Controls whether, when debugging, the length of an item's DTO object is reported when authenticating it.
+#define PRINT_DTO_LENGTH
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -188,7 +191,12 @@ namespace ObscurCore.Packaging
             }
 
             // Final stages of Encrypt-then-MAC authentication scheme
-            byte[] itemDtoAuthBytes = item.CreateAuthenticatibleClone().SerialiseDto();
+            var itemDto = item.CreateAuthenticatibleClone();
+            byte[] itemDtoAuthBytes = itemDto.SerialiseDto();
+#if PRINT_DTO_LENGTH
+            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "FinishItem", "Payload item DTO length",
+                itemDtoAuthBytes.Length));
+#endif
             authenticator.Update(itemDtoAuthBytes, 0, itemDtoAuthBytes.Length);
             authenticator.Close();
 
