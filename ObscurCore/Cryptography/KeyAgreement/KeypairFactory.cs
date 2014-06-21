@@ -18,6 +18,7 @@ using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve.Multiplier;
+using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.KeyAgreement
 {
