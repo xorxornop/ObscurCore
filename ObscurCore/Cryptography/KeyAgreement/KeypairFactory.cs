@@ -30,7 +30,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
         {
             EcKeypair keypair;
 
-            if (curveName.Equals("Curve25519")) {
+            if (curveName.Equals(DjbCurve.Curve25519.ToString())) {
                 var privEntropy = new byte[32];
                 StratCom.EntropySupplier.NextBytes(privEntropy);
                 byte[] privateKey = Curve25519.CreatePrivateKey(privEntropy);

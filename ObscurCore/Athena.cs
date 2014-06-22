@@ -551,7 +551,8 @@ namespace ObscurCore
             public const int HeaderVersion = 1;
 
             public const char PathDirectorySeperator = '/';
-            public static string PathRelativeUp = ".." + PathDirectorySeperator;
+            public static string PathRelativeUpRaw = "..";
+            public static string PathRelativeUp = PathRelativeUpRaw + PathDirectorySeperator;
 
             public static byte[] GetHeaderTag()
             {

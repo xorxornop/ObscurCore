@@ -52,12 +52,11 @@ namespace ObscurCore.DTO
         [ProtoMember(1, IsRequired = true)]
         public int FormatVersion { get; set; }
 
-        // /// <summary>
-        // /// Configuration of the compression scheme 
-        // /// used to reduce the size of the Manifest.
-        // /// </summary>
-        //[ProtoMember(2, IsRequired = false)]
-        //public CompressionConfiguration Compression { get; set; }
+        /// <summary>
+        ///     Whether to use fast LZ4 compression to reduce the size of the manifest.
+        /// </summary>
+        [ProtoMember(2, IsRequired = true)]
+        public bool UseCompression { get; set; }
 
         /// <summary>
         ///     Name of the cryptographic scheme used to secure the Manifest.

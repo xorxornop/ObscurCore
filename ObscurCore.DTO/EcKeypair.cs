@@ -18,6 +18,9 @@ using ProtoBuf;
 
 namespace ObscurCore.DTO
 {
+    /// <summary>
+    ///     Represents an elliptic curve keypair.
+    /// </summary>
     [ProtoContract]
     public class EcKeypair : IPossessConfirmationCanary
     {

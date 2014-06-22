@@ -17,8 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using LZ4;
 using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
@@ -838,13 +840,17 @@ namespace ObscurCore
             using (var manifestTemp = new MemoryStream()) {
                 byte[] manifestMac;
                 using (
-                    var authenticator = new MacStream(manifestTemp, true, _manifestHeaderCryptoConfig.Authentication,
-                        out manifestMac, workingManifestMacKey, false)) {
-                    using (var cs = new CipherStream(authenticator, true, _manifestHeaderCryptoConfig.SymmetricCipher,
-                        workingManifestCipherKey, false)) {
-                        _manifest.SerialiseDto(cs, prefixLength: false);
+                var authenticator = new MacStream(manifestTemp, true, _manifestHeaderCryptoConfig.Authentication,
+                    out manifestMac, workingManifestMacKey, false)) {
+                    using (var encryptor = new CipherStream(authenticator, true, _manifestHeaderCryptoConfig.SymmetricCipher,
+                        workingManifestCipherKey, false)) 
+                    {
+                        // TODO: Change me. Always uses compression at the moment
+                        using (var compressor = new LZ4Stream(encryptor, CompressionMode.Compress)) {
+                            _manifest.SerialiseDto(compressor);
+                        }
                     }
-                    authenticator.Update(((UInt32) authenticator.BytesOut).ToLittleEndian(), 0, sizeof (UInt32));
+                    authenticator.Update(((UInt32)authenticator.BytesOut).ToLittleEndian(), 0, sizeof(UInt32));
 
                     byte[] manifestCryptoDtoForAuth;
                     switch (ManifestCryptoScheme) {
@@ -867,7 +873,8 @@ namespace ObscurCore
                 // Combine manifest header information (in seperate pieces until now) into a completed DTO
                 var mh = new ManifestHeader {
                     FormatVersion = _formatVersion,
-                    CryptographySchemeName = _manifestHeaderCryptoScheme.ToString()
+                    CryptographySchemeName = _manifestHeaderCryptoScheme.ToString(),
+                    UseCompression = true
                 };
                 switch (ManifestCryptoScheme) {
                     case ManifestCryptographyScheme.SymmetricOnly:
@@ -889,10 +896,10 @@ namespace ObscurCore
                     outputStream.Position));
                 mh.SerialiseDto(outputStream, true);
 
-                // Prepare to write manifest length prefix
                 Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write",
                     "Manifest length prefix offset (absolute)",
                     outputStream.Position));
+                // Generate length prefix as 32b little-endian unsigned integer
                 byte[] manifestLengthHeaderLe = ((UInt32) manifestTemp.Length).ToLittleEndian();
                 Debug.Assert(manifestLengthHeaderLe.Length == sizeof (UInt32));
                 // Obfuscate the manifest length header by XORing it with the derived manifest MAC (authentication) key

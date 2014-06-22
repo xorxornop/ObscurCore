@@ -217,6 +217,21 @@ namespace ObscurCore
             return hc;
         }
 
+        public static bool SequenceEqualShortCircuiting(this byte[] a, byte[] b)
+        {
+            int i = a.Length;
+            if (i != b.Length) {
+                return false;
+            }
+            while (i != 0) {
+                --i;
+                if (a[i] != b[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         public static bool SequenceEqualShortCircuiting<T>(this T[] a, T[] b) where T : struct
         {
             int i = a.Length;

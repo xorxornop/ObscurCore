@@ -17,8 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using LZ4;
 using Nessos.LinqOptimizer.Base;
 using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography;
@@ -407,7 +409,7 @@ namespace ObscurCore
                 _readingStream.Position));
 
             /* Read manifest */
-            using (var decryptedManifestStream = new MemoryStream((int) (manifestLength * 0.1))) {
+            using (var decryptedManifestStream = new MemoryStream(manifestLength)) {
                 byte[] manifestMac;
                 try {
                     using (
@@ -445,9 +447,18 @@ namespace ObscurCore
                     throw new CiphertextAuthenticationException("Manifest not authenticated.");
                 }
                 decryptedManifestStream.Seek(0, SeekOrigin.Begin);
+
+                Stream serialisedManifestStream;
+                if (_manifestHeader.UseCompression) {
+                    // Expose serialised manifest through decompressing decorator
+                    serialisedManifestStream = new LZ4Stream(decryptedManifestStream, CompressionMode.Decompress);
+                } else {
+                    serialisedManifestStream = decryptedManifestStream;
+                }
+
                 try {
                     manifest =
-                        (Manifest) StratCom.Serialiser.Deserialize(decryptedManifestStream, null, typeof (Manifest));
+                        (Manifest)StratCom.Serialiser.Deserialize(serialisedManifestStream, null, typeof(Manifest));
                 } catch (Exception e) {
                     throw new InvalidDataException("Manifest failed to deserialise.", e);
                 }
@@ -473,14 +484,28 @@ namespace ObscurCore
         /// <exception cref="IOException">File already exists and overwrite is not allowed.</exception>
         public void ReadToDirectory(string path, bool overwrite, IEnumerable<byte[]> payloadKeys = null)
         {
-            var directory = new DirectoryInfo(path);
-            if (directory.Exists == false) {
-                directory.Create();
+            if (path == null) {
+                throw new ArgumentNullException("path");
+            }
+            try {
+                Directory.CreateDirectory(path);
+            } catch (IOException) {
+                throw new ArgumentException(
+                    "Could not create package output directory: Supplied path is a file, not a directory.",
+                    "path");
+            } catch (ArgumentException) {
+                throw new ArgumentException(
+                    "Could not create package output directory: Path contains invalid characters.",
+                    "path");
+            } catch (NotSupportedException e) {
+                throw new ArgumentException(
+                    "Could not create package output directory: Path contains invalid character.",
+                    "path", e);
             }
 
-            foreach (PayloadItem item in _manifest.PayloadItems) {
+            foreach (var item in _manifest.PayloadItems) {
                 if (item.Type != PayloadItemType.KeyAction &&
-                    item.RelativePath.Contains(Athena.Packaging.PathRelativeUp)) {
+                    item.RelativePath.Contains(Athena.Packaging.PathRelativeUpRaw)) {
                     throw new ConfigurationInvalidException("A payload item specifies a relative path outside that of the package root. "
                                                             + " This is a potentially dangerous condition.");
                 }
@@ -503,7 +528,20 @@ namespace ObscurCore
                     throw new IOException("File already exists: " + absolutePath);
                 }
 
-                item.SetStreamBinding(() => new FileStream(absolutePath, FileMode.Create));
+                PayloadItem itemClosureVar = item;
+                item.SetStreamBinding(() => {
+                    try {
+                        var directory = Path.GetDirectoryName(absolutePath);
+                        Directory.CreateDirectory(directory);
+                        FileStream stream = File.Create(absolutePath);
+                        stream.SetLength(itemClosureVar.ExternalLength);
+                        return stream;
+                    } catch (ArgumentException e) {
+                        throw new ConfigurationInvalidException("Could not create payload item output stream: path contains invalid characters.", e);
+                    } catch (NotSupportedException e) {
+                        throw new ConfigurationInvalidException("Could not create payload item output stream: path is invalid.", e);
+                    }
+                });
             }
             ReadPayload(payloadKeys);
         }

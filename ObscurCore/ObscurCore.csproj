@@ -60,6 +60,9 @@
     <Reference Include="LinqOptimizer.CSharp">
       <HintPath>..\packages\LinqOptimizer.CSharp.0.6.3\lib\LinqOptimizer.CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="LZ4">
+      <HintPath>lib\LZ4\LZ4.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="ObscurCore.DTOSerialiser">
