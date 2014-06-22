@@ -5,6 +5,18 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 {
     internal abstract class Mod
     {
+        public static int Inverse32(int d)
+        {
+            // int x = d + (((d + 1) & 4) << 1);   // d.x == 1 mod 2**4
+            int x = d;                          // d.x == 1 mod 2**3
+            x *= 2 - d * x;                     // d.x == 1 mod 2**6
+            x *= 2 - d * x;                     // d.x == 1 mod 2**12
+            x *= 2 - d * x;                     // d.x == 1 mod 2**24
+            x *= 2 - d * x;                     // d.x == 1 mod 2**48
+            // assert d * x == 1;
+            return  x;
+        }
+
         public static void Invert (uint[] p, uint[] x, uint[] z) {
             int len = p.Length;
             if (Nat.IsZero(len, x))
@@ -39,18 +51,18 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
                 }
 
                 if (Nat.Gte(len, u, v)) {
-                    Nat.Sub(len, u, v, u);
+                    Nat.SubFrom(uvLen, v, u);
                     Debug.Assert((u[0] & 1) == 0);
-                    ac += Nat.Sub(len, a, b, a) - bc;
+                    ac += Nat.SubFrom(len, b, a) - bc;
                     InversionStep(p, u, uvLen, a, ref ac);
                     if (Nat.IsOne(len, u)) {
                         InversionResult(p, ac, a, z);
                         return;
                     }
                 } else {
-                    Nat.Sub(len, v, u, v);
+                    Nat.SubFrom(uvLen, u, v);
                     Debug.Assert((v[0] & 1) == 0);
-                    bc += Nat.Sub(len, b, a, b) - ac;
+                    bc += Nat.SubFrom(len, a, b) - ac;
                     InversionStep(p, v, uvLen, b, ref bc);
                     if (Nat.IsOne(len, v)) {
                         InversionResult(p, bc, b, z);
@@ -81,6 +93,16 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             while (Nat.Gte(len, s, p));
 
             return s;
+        }
+
+        public static void Add(uint[] p, uint[] x, uint[] y, uint[] z)
+        {
+            int len = p.Length;
+            uint c = Nat.Add(len, x, y, z);
+            if (c != 0)
+            {
+                Nat.SubFrom(len, p, z);
+            }
         }
 
         public static void Subtract (uint[] p, uint[] x, uint[] y, uint[] z) {
@@ -118,9 +140,9 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             for (int i = 0; i < count; ++i) {
                 if ((x[0] & 1) != 0) {
                     if (xc < 0) {
-                        xc += (int)Nat.Add(len, x, p, x);
+                        xc += (int)Nat.AddTo(len, p, x);
                     } else {
-                        xc += Nat.Sub(len, x, p, x);
+                        xc += Nat.SubFrom(len, p, x);
                     }
                 }
 
