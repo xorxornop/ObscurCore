@@ -63,7 +63,7 @@ extracting a package is just as easy:
     var reader = PackageReader.FromFile(packagePath, keyProvider);
     reader.ReadToDirectory(outputPath, overwrite:true);
 
-(Explanatory: keyProvider is a class you make how you like that, that conforms to a IKeyProvider interface. It stores the cryptographic keys your application/use-case operates with.)
+(Note: keyProvider is a class you make how you like that, that conforms to a IKeyProvider interface. It stores the cryptographic keys your application/use-case operates with.)
 
 Pretty easy?
 
@@ -126,8 +126,15 @@ In future: packages will include the capability to communicate new keys (of any 
 
 ### Encryption ###
 
-	var config = CipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher.Aes,
+Creating configuration:
+
+	var blockConfig = CipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher.Aes,
 		BlockCipherMode.Ctr, BlockCipherPadding.None);
+
+	var streamConfig = CipherConfigurationFactory.CreateStreamCipherConfiguration(StreamCipher.Salsa20);
+
+Creating stream:
+
 	using (var cs = new CipherStream(destStream, encrypting:true, config, keyBytes, closeOnDispose:false) ) {
 		sourceStream.CopyTo(cs);
 	}
@@ -162,15 +169,19 @@ And these stream ciphers:
 
 ### Hashing and MAC ###
 
+Creating streams:
+
 	byte[] hash = null;
 	using (var hs = new HashStream(destStream, writing:true, HashFunction.Blake2B256, out hash, closeOnDispose:true) ) {
 		sourceStream.CopyTo(cs);
 	}
 
 	byte[] mac = null;
-	using (var ms = new MacStream(destStream, writing:true, MacFunction.Keccak256, out mac, keyBytes, saltBytes:null, config:null, closeOnDispose:true) ) {
+	using (var ms = new MacStream(destStream, writing:true, MacFunction.Keccak256, out mac, key, saltBytes: null, config:null, closeOnDispose:true) ) {
 		sourceStream.CopyTo(ms);
 	}
+
+(Note: 'config' parameter is only required for HMAC, CMAC, and Poly1305 (what hash, cipher, or cipher to use, respectively - passed in as UTF8 bytes of name of required primitive)
 
 Here's all the hash/digest functions supported (_HashFunction_ enumeration) :
 
@@ -195,7 +206,41 @@ Poly1305 can use any symmetric block cipher (see above in Encryption section) wi
 CMAC can use any symmetric block cipher (see above in Encryption section) with a block size of 64 or 128 bits. 
 
 
+
 ## Primitives ##
+
+When playing around with the primitives, there is a class called **Athena** in the root ObscurCore namespace that contains validation information for all the primitives. You can use it to make sure settings are valid. 
+
+
+### Encryption ###
+
+Ciphers:
+
+	IBlockCipher blockCipher = CipherFactory.CreateBlockCipher(BlockCipher.Aes);
+	IStreamCipher blockCipher = CipherFactory.CreateStreamCipher(StreamCipher.Salsa20);
+
+Block cipher modes of operation and padding:
+
+	blockCipher = CipherFactory.OverlayBlockCipherWithMode(blockCipher, BlockCipherMode.Cbc);
+	IBlockCipherPadding padding = CipherFactory.CreatePadding(BlockCipherPadding.Pkcs7);
+
+Block ciphers only - putting the pieces together:
+
+	var cipher = new BlockCipherWrapper(encrypting: true, blockCipher, padding);
+
+
+### Authentication ###
+
+Hashes:
+
+	IDigest hashPrimitive = AuthenticatorFactory.CreateHashPrimitive(HashFunction.Blake2B256);
+
+MACs:
+
+	IMac macPrimitive = AuthenticatorFactory.CreateMacPrimitive(MacFunction.Keccak256, key);
+
+(Note: There are also special methods for instantiating HMAC, CMAC, and Poly1305 MACs.)
+
 
 ### Key derivation ###
 
@@ -205,16 +250,17 @@ CMAC can use any symmetric block cipher (see above in Encryption section) with a
 		Parallelism = 2
 	};
 	var configBytes = config.SerialiseDto();
-	byte[] derivedKey = Source.DeriveKeyWithKDF(KeyDerivationFunction.Scrypt, keyBytes, saltBytes, outputSizeBits:256, configBytes);
+	byte[] derivedKey = KeyDerivationUtility.DeriveKeyWithKdf(KeyDerivationFunction.Scrypt, key, salt, outputSize:32, config);
+
+(Note: 'outputSize' parameter is in bytes, so 32 == 256 bits)
+
+... Yes, a factory for the configurations needs to be made. Not completed yet.)
 
 
 ### Key agreements ###
 
 Please note that currently, perfect-forward-secrecy ECDH algorithms (such as 3-pass Full Unified Model; UM3) are not implemented. Sorry!
-
 There are, however, implemented UM1-type agreements, which provide unilateral forward secrecy - which is much better than nothing.
-
-J-PAKE password-authenticated key agreement is also available, using elliptic curves instead of finite fields (aka. RSA/DSA), making for very secure and fast agreements.
 
 Elliptic curves provided are from the Brainpool Consortium, SEC2 (secp and sect curves; also called NIST curves), and Daniel J. Bernstein. These are the most popular choices.
 
@@ -222,16 +268,32 @@ Creating keys:
 
 	var keypair = KeypairFactory.GenerateEcKeypair(DjbCurve.Curve25519.ToString());
 
-And calculating shared secret:
+Calculating shared secret:
+
+ECDH:
+
+	byte[] secret = KeyAgreementFactory.CalculateEcdhSecret(keypair.ExportPublicKey(), privateKey.ExportPrivateKey());
+
+UM1:
 
     EcKeyConfiguration ephemeral;
     byte[] initiatorSS = Um1Exchange.Initiate(senderKeypair.ExportPublicKey(), senderKeypair.GetPrivateKey(), out ephemeral);
 	byte[] responderSS = Um1Exchange.Respond(receiverKeypair.ExportPublicKey(), receiverKeypair.GetPrivateKey(), ephemeral);
 
 
+There is also J-PAKE password-based key agreement implemented, but with elliptic curve cryptography rather than the usual finite fields (e.g. like RSA) cryptography, making it a LOT faster, and other benefits.
+
+Creating a session:
+
+	var hashPrimitive = AuthenticatorFactory.CreateHashPrimitive(HashFunction.Keccak256);
+	var curveData = NamedEllipticCurves.GetEcCurveData(Sec2EllipticCurve.Secp256r1.ToString());
+	var session = new EcJpakeSession(participantId, password, curveData.GetParameters(), digest: hashPrimitive, StratCom.EntropyProvider);
+
+(read documentation for more...)
+
 ### Signatures ###
 
-No concrete implementation is yet in place. ECDSA is being added - the preferred example of this is Ed25519.
+No concrete implementation is yet in place - sorry! ECDSA is being added - the preferred example of this is Ed25519.
 DSA proper (using RSA) will most likely not be added due to concerns with security and efficiency.
 Watch this space.
 
