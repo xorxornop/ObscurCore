@@ -217,15 +217,13 @@ When playing around with the primitives, there is a class called **Athena** in t
 Ciphers:
 
 	IBlockCipher blockCipher = CipherFactory.CreateBlockCipher(BlockCipher.Aes);
-	IStreamCipher blockCipher = CipherFactory.CreateStreamCipher(StreamCipher.Salsa20);
+	IStreamCipher streamCipher = CipherFactory.CreateStreamCipher(StreamCipher.Salsa20);
 
-Block cipher modes of operation and padding:
+
+Block ciphers only - modes of operation and padding, then putting the pieces together:
 
 	blockCipher = CipherFactory.OverlayBlockCipherWithMode(blockCipher, BlockCipherMode.Cbc);
 	IBlockCipherPadding padding = CipherFactory.CreatePadding(BlockCipherPadding.Pkcs7);
-
-Block ciphers only - putting the pieces together:
-
 	var cipher = new BlockCipherWrapper(encrypting: true, blockCipher, padding);
 
 
