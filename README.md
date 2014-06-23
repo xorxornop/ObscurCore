@@ -1,10 +1,8 @@
-ObscurCore
-==========
+# ObscurCore #
 
 A general purpose, customisable, and extensible encryption and data packaging library.
 
-Thanks
-------
+## Thanks ##
 
 To the Legion of the [Bouncy Castle](http://www.bouncycastle.org/).
 
@@ -17,37 +15,34 @@ Also a big thanks to **Marc Gravell** for his excellent [protobuf-net](https://c
 And finally, to [LZ4 for .NET](https://lz4net.codeplex.com/). It is used, optionally, for compression of package manifests, where it has excellent speed.
 
 
-Why use this?
--------------
+## Why use this? ##
 
-ObscurCore is designed to make cryptography accessible *and* customisable, supporting advanced schemes.
+ObscurCore is designed to make cryptography accessible _and_ effective, supporting advanced schemes.
 The packaging system included is a pertinent example of this, fusing together many primitives to create a strong cryptosystem without the developer requiring deep knowledge of the design of such systems. It hopefully also eliminates or at least greatly cuts down on duplication of effort, since many developers end up building similar systems ad-hoc.
 
 If the features offered are insufficient for some particular circumstance, it offers a strong foundation for further extension; most components are abstracted in a way to support this.
 
+*****
 
-How do I use it?
-----------------
-
-First up, a disclaimer:
+Before we get into the good stuff, a disclaimer:
 
 **This library as it is currently should not be considered production ready and is a work in progress. It is currently in Beta.**
 
 *****
 
-Now that that's out of the way, here's how you can use it for doing some stuff!
+Now that that's out of the way:
 
 
-ObscurCore Packaging System
----------------------------
+## ObscurCore Packaging System ##
 
 **Please note that this part of the API is subject to change on its way to a stable release. I'll try to minimise this, but the fact remains. Now it has reached v0.9, it should change very little.**
+
 *****
 
 This feature is an automated system that acts somewhat like an very paranoid archive/packaging format.
 It allows you to bundle together collections of data, text, and cryptographic keys. You need not care about the details if you don't want to (conservative defaults are used), but if want to, you can heavily customise.
 
-*Note: If you don't want to use the packager, but are instead interested in the general-purpose crypto, skip this entire section.*
+_Note: If you don't want to use the packager, but are instead interested in the general-purpose crypto, skip this entire section._
 
 
 ### What does it look like to use? ###
@@ -59,13 +54,14 @@ It allows you to bundle together collections of data, text, and cryptographic ke
     }
 
 you can also add an entire directory (optionally including subdirectories) at once:
+
     package.AddDirectory(path)
     package.AddDirectory(string path, search : SearchOption.AllDirectories) // including subdirectories
 
 
 Pretty easy?
 
-You *can* stop reading here, if you have no interest in the technical parts. You really don't need to know, but it might be easier with some knowledge of the technicalities.
+You _can_ stop reading here, if you have no interest in the technical parts. You don't _really_ need to know, but it might be easier with some knowledge of the technical details.
 
 
 ### How does it work? ###
@@ -77,7 +73,7 @@ If deniability is not needed, one could use this feature by distributing a packa
 The manifest is encrypted with a choice of schemes: 
 
 +	Symmetric cipher (participants must share secret key securely somehow)
-+	UM1-hybrid (ephemeral-static-static elliptic curve Diffie-Hellman, so-called *Unified Model 1-pass*)
++	UM1-hybrid (ephemeral-static-static elliptic curve Diffie-Hellman, so-called _Unified Model 1-pass_)
 
 The latter doesn't use a secret key which has to be somehow communicated to the other party, instead you just exchange 'public keys', so named because you don't need to keep them secret.
 
@@ -88,7 +84,7 @@ The collection of items in the package is termed the "payload". There is a choic
 
 +	Simple
 +	Frameshift
-+	Fabric [disabled in build until intermittent issues fixed - sorry]
++	Fabric _[disabled in build until intermittent issues fixed - sorry!]_
 
 Simple just concatenates them together in varied (or sequential) order.
 Frameshift does the same but inserts variable (or fixed) lengths of bytes before and after each item.
@@ -99,12 +95,13 @@ Where variable ordering/lengths are used, these are assigned by the use of a cry
 All data is authenticated with a MAC in the **Encrypt-then-MAC (EtM)** scheme, which provides strong verification and minimum information leakage. Upon detection of any alteration, all operations are aborted.
 
 
-In the code example above/before, the packager performs the following actions automatically...
-*	Creates the symmetric-encryption package, the manifest being configured to use XSalsa20 encryption, Keccak-256 (SHA-3-256) key confirmation, Keccak-512 (SHA-3-512) authentication, and Scrypt key derivation
-* 	The package is set up with frameshifting payload layout (default) and a Salsa20-based CSPRNG
-*	Adds a file to a package with HC-128 encryption (random key & IV, default) and Poly1305-AES EtM authentication (random key and nonce, default). Key confirmation and derivation is not used due to the keys being random and stored in the manifest, in this instance. If keys are to be supplied by recipient, then the defaults are Keccak-256 key confirmation and scrypt key derivation.
-*	Derives a package/manifest key (from the supplied one) with Scrypt KDF
-*	Writes it out to the output stream
+In the code example above/before, the packager performs the following actions automatically:
+
++	Creates the symmetric-encryption package, the manifest being configured to use XSalsa20 encryption, Keccak-256 (SHA-3-256) key confirmation, Keccak-512 (SHA-3-512) authentication, and Scrypt key derivation
++ 	The package is set up with frameshifting payload layout (default) and a Salsa20-based CSPRNG
++	Adds a file to a package with HC-128 encryption (random key & IV, default) and Poly1305-AES EtM authentication (random key and nonce, default). Key confirmation and derivation is not used due to the keys being random and stored in the manifest, in this instance. If keys are to be supplied by recipient, then the defaults are Keccak-256 key confirmation and scrypt key derivation.
++	Derives a package/manifest key (from the supplied one) with Scrypt KDF
++	Writes it out to the output stream
 
 
 All schemes offer key confirmation capability with a choice between MAC or KDF method.
@@ -117,12 +114,11 @@ In future: packages will include the capability to communicate new keys (of any 
 
 
 
-Functionality exposed through streams
--------------------------------------
+## Functionality exposed through streams ##
 
-**Please note the parameter closeOnDispose. If you test these methods using a MemoryStream, and the parameter set to true (by default or explicitly), the stream will be closed, and your data will be missing.**
+**Note:** the parameter closeOnDispose controls closing behaviour for bound streams. If you test these methods using a MemoryStream, and this parameter is set to true (by default or explicitly), the stream will be closed, and your data will consequently be missing, and you will be sad and/or confused.
 
-### Encryption/decryption ###
+### Encryption ###
 
 	var config = CipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher.Aes,
 		BlockCipherMode.Ctr, BlockCipherPadding.None);
@@ -135,7 +131,7 @@ These block ciphers are supported:
 +	AES
 +	Blowfish
 +	Camellia
-+	CAST-5 and 6 *[disabled; optionally included]*
++	CAST-5 and 6 _[disabled; optionally included by compiler ifdef]_
 +	IDEA
 +	NOEKEON
 +	RC-6
@@ -143,7 +139,7 @@ These block ciphers are supported:
 +	Twofish
 +	Threefish
 
-... in CTR, CBC mode (variety of paddings provided), CFB, and OFB.
+Block ciphers can be run in CTR, CBC mode (variety of paddings provided), CFB, and OFB.
 Paddings available for CBC mode: ISO 10126-2, ISO/IEC 7816-4, PKCS7, TBC, and ANSI X.923.
 
 And these stream ciphers:
@@ -152,7 +148,7 @@ And these stream ciphers:
 +	HC-128
 +	HC-256
 +	Rabbit
-+	RC-4 *[disabled; optionally included]*
++	RC-4 _[disabled; optionally included by compiler ifdef]_
 +	SOSEMANUK
 +	Salsa20
 +	XSalsa20
@@ -170,31 +166,30 @@ And these stream ciphers:
 		sourceStream.CopyTo(ms);
 	}
 
-Here's all the hash/digest functions supported (*HashFunction* enumeration) :
+Here's all the hash/digest functions supported (_HashFunction_ enumeration) :
 
 +	BLAKE-2B-256 / 384 / 512
-+	Keccak-224 / 256 / 384 / 512 (SHA-3-224 / 256 / 384 / 512)
 +	RIPEMD-160
++	Keccak-224 / 256 / 384 / 512 (SHA-3-224 / 256 / 384 / 512)
 +	SHA-1
 +	SHA-2-256 / 512
 +	Tiger
 
-And here's all the MAC functions (*MacFunction* enumeration) :
+And here's all the MAC functions (_MacFunction_ enumeration) :
 
 +	BLAKE-2B-256 / 384 / 512
 +	Keccak-224 / 256 / 384 / 512 (SHA-3-224 / 256 / 384 / 512)
 +	Poly1305
 +	Skein
-+	*CMAC*
-+	*HMAC*
++	_CMAC_
++	_HMAC_
 
 HMAC can use any hash/digest function.
 Poly1305 can use any symmetric block cipher (see above in Encryption section) with a block size of 128 bits.
 CMAC can use any symmetric block cipher (see above in Encryption section) with a block size of 64 or 128 bits. 
 
 
-Primitives
-----------
+## Primitives ##
 
 ### Key derivation ###
 
@@ -217,7 +212,6 @@ J-PAKE password-authenticated key agreement is also available, using elliptic cu
 
 Elliptic curves provided are from the Brainpool Consortium, SEC2 (secp and sect curves; also called NIST curves), and Daniel J. Bernstein. These are the most popular choices.
 
-
 Creating keys:
 
 	var keypair = KeypairFactory.GenerateEcKeypair(DjbCurve.Curve25519.ToString());
@@ -235,9 +229,9 @@ No concrete implementation is yet in place. ECDSA is being added - the preferred
 DSA proper (using RSA) will most likely not be added due to concerns with security and efficiency.
 Watch this space.
 
+*****
 
-Some words on Streams
----------------------
+## Some words on Streams ##
 
 CipherStream **encrypts only when being written to**, and **decrypts only when being read from**. The other core stream types (for example, the HashStream) do not enforce directionality like this.
 
@@ -248,10 +242,10 @@ Please note that ObscurCore's main stream classes **close on dispose by default*
 This means the stream they were bound to on construction will be closed with it, when the wrapping ObscurCore stream is closed/disposed.
 Don't make the mistake of thinking stuff isn't working when binding on a MemoryStream, and wondering why the data is missing afterward.
 
-The main stream classes have a parameter, *closeOnDispose*, that controls this. Set it to **false** if you *don't* want them to close. They're set to *true* by default to try and ensure that if they're bound to a FileStream, the OS hooks get disposed of properly.
+The main stream classes have a parameter, _closeOnDispose_, that controls this. Set it to **false** if you _don't_ want them to close. They're set to **true** by default to try and ensure that if they're bound to a FileStream, the OS hooks get disposed of properly.
 
 It's good practice to use the **using** block, because it calls Stream.Dispose() once you're done writing/reading. It's most important when writing, as block ciphers have different behaviour when writing the last block of data, so disposing the stream lets it know when to do this. If you don't, **you'll probably be missing the final block** (which might be *all* of your data if you only wrote a little, and are using a block cipher!) in the output. **This is a common mistake.**
-If *using* isn't what you favour, then just call .Dispose() or .Close() when you're all done with the stream.
+If _using_ isn't what you favour, then just call _.Dispose()_ or _.Close()_ when you're all done with the stream.
 
 
 Recommendations
