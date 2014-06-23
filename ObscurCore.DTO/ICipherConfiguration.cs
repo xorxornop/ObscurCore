@@ -46,7 +46,7 @@ namespace ObscurCore.DTO
         /// <summary>
         ///     Size of each block of data in bits.
         /// </summary>
-        int BlockSizeBits { get; }
+        int? BlockSizeBits { get; }
 
         /// <summary>
         ///     Scheme utillised to 'pad' blocks to full size where required.

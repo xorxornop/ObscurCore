@@ -551,17 +551,17 @@ namespace ObscurCore
             public const int HeaderVersion = 1;
 
             public const char PathDirectorySeperator = '/';
-            public static string PathRelativeUpRaw = "..";
-            public static string PathRelativeUp = PathRelativeUpRaw + PathDirectorySeperator;
+            public static readonly string PathRelativeUpRaw = "..";
+            public static readonly string PathRelativeUp = PathRelativeUpRaw + PathDirectorySeperator;
 
             public static byte[] GetHeaderTag()
             {
-                return Encoding.UTF8.GetBytes("OCpkg-OHAI");
+                return Encoding.UTF8.GetBytes("OCpkgV1>");
             }
 
             public static byte[] GetTrailerTag()
             {
-                return Encoding.UTF8.GetBytes("KBAI-OCpkg");
+                return Encoding.UTF8.GetBytes("<|OCpkg|");
             }
         }
     }

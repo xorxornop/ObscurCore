@@ -61,6 +61,24 @@ namespace ObscurCore.DTO
             };
         }
 
+        public PayloadItem CloneSafely()
+        {
+            return new PayloadItem {
+                Type = Type,
+                RelativePath = String.Copy(this.RelativePath),
+                ExternalLength = ExternalLength,
+                InternalLength = InternalLength,
+                SymmetricCipher = this.SymmetricCipher.CloneSafely(),
+                SymmetricCipherKey = null,
+                Authentication = Authentication.CloneSafely(),
+                AuthenticationKey = null,
+                AuthenticationVerifiedOutput = null,
+                KeyConfirmation = KeyConfirmation.CloneSafely(),
+                KeyConfirmationVerifiedOutput = null,
+                KeyDerivation = KeyDerivation.CloneSafely()
+            };
+        }
+
         public bool Equals(PayloadItem other)
         {
             if (ReferenceEquals(null, other)) {

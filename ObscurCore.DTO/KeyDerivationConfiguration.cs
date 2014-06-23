@@ -22,8 +22,8 @@ namespace ObscurCore.DTO
     ///     Key Derivation scheme configuration for deriving valid, secure working key material.
     /// </summary>
     [ProtoContract]
-    public class KeyDerivationConfiguration : IDataTransferObject, IEquatable<KeyDerivationConfiguration>,
-        IKeyDerivationConfiguration
+    public class KeyDerivationConfiguration : IKeyDerivationConfiguration, IDataTransferObject, 
+        ICloneableSafely<KeyDerivationConfiguration>, IEquatable<KeyDerivationConfiguration>
     {
         /// <summary>
         ///     Indicates whether the current object is equal to another object of the same type.
@@ -66,6 +66,15 @@ namespace ObscurCore.DTO
         [ProtoMember(3, IsRequired = true)]
         public byte[] Salt { get; set; }
 
+        public KeyDerivationConfiguration CloneSafely()
+        {
+            return new KeyDerivationConfiguration {
+                FunctionName = String.Copy(this.FunctionName),
+                FunctionConfiguration = this.FunctionConfiguration.DeepCopy(),
+                Salt = null
+            };
+        }
+
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) {
@@ -96,24 +105,5 @@ namespace ObscurCore.DTO
                 return hashCode;
             }
         }
-    }
-
-    public interface IKeyDerivationConfiguration
-    {
-        /// <summary>
-        ///     Key Derivation Function (KDF) being used to derive valid, secure working key material.
-        /// </summary>
-        string FunctionName { get; }
-
-        /// <summary>
-        ///     Configuration for the key derivation function.
-        /// </summary>
-        /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        byte[] FunctionConfiguration { get; }
-
-        /// <summary>
-        ///     Data used by KDF to extend and/or strengthen base key material.
-        /// </summary>
-        byte[] Salt { get; }
     }
 }

@@ -41,6 +41,7 @@
         <Command type="AfterBuild" name="Precompile" command="mono precompile.exe ../bin/${ProjectConfigName}/${TargetName} -o:../bin/${ProjectConfigName}/${ProjectName}Serialiser.dll -t:${ProjectName}Serialiser" workingdir="${ProjectDir}/precompiler" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
+    <DocumentationFile>bin\Release\ObscurCore.DTO.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
@@ -65,7 +66,10 @@
     <Compile Include="EcKeyConfiguration.cs" />
     <Compile Include="EcKeypair.cs" />
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="IAuthenticationFunctionConfiguration.cs" />
     <Compile Include="ICipherConfiguration.cs" />
+    <Compile Include="ICloneableSafely.cs" />
+    <Compile Include="IKeyDerivationConfiguration.cs" />
     <Compile Include="IPayloadConfiguration.cs" />
     <Compile Include="IPayloadItem.cs" />
     <Compile Include="IPossessConfirmationCanary.cs" />
@@ -95,8 +99,8 @@
     <Compile Include="JpakeRound1.cs" />
     <Compile Include="JpakeRound2.cs" />
     <Compile Include="JpakeRound3.cs" />
-    <Compile Include="AxolotlState.cs" />
-    <Compile Include="AxolotlExchange.cs" />
+    <None Include="AxolotlState.cs" />
+    <None Include="AxolotlExchange.cs" />
     <Compile Include="ScryptConfiguration.cs" />
     <Compile Include="Pbkdf2Configuration.cs" />
     <Compile Include="IAuthenticatibleClonable.cs" />

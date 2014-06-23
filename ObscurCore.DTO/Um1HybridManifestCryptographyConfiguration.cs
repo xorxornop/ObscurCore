@@ -25,6 +25,7 @@ namespace ObscurCore.DTO
     public class Um1HybridManifestCryptographyConfiguration : IUm1HybridManifestCryptographyConfiguration,
         IManifestCryptographySchemeConfiguration, IDataTransferObject,
         IAuthenticatibleClonable<Um1HybridManifestCryptographyConfiguration>,
+        ICloneableSafely<Um1HybridManifestCryptographyConfiguration>, 
         IEquatable<Um1HybridManifestCryptographyConfiguration>
     {
         public Um1HybridManifestCryptographyConfiguration CreateAuthenticatibleClone()
@@ -102,6 +103,19 @@ namespace ObscurCore.DTO
         /// </summary>
         [ProtoMember(7, IsRequired = true)]
         public EcKeyConfiguration EphemeralKey { get; set; }
+
+        public Um1HybridManifestCryptographyConfiguration CloneSafely()
+        {
+            return new Um1HybridManifestCryptographyConfiguration {
+                SymmetricCipher = this.SymmetricCipher.CloneSafely(),
+                Authentication = this.Authentication.CloneSafely(),
+                AuthenticationVerifiedOutput = null,
+                KeyConfirmation = this.KeyConfirmation.CloneSafely(),
+                KeyConfirmationVerifiedOutput = null,
+                KeyDerivation = this.KeyDerivation.CloneSafely(),
+                EphemeralKey = null
+            };
+        }
 
         public override bool Equals(object obj)
         {

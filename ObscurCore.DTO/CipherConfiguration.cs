@@ -23,7 +23,7 @@ namespace ObscurCore.DTO
     /// </summary>
     [ProtoContract]
     public class CipherConfiguration : ICipherConfiguration,
-        IDataTransferObject, IEquatable<CipherConfiguration>
+        IDataTransferObject, IEquatable<CipherConfiguration>, ICloneableSafely<CipherConfiguration>
     {
         #region Data relevant to all symmetric ciphers
 
@@ -91,7 +91,7 @@ namespace ObscurCore.DTO
         ///     Size of each block of data in bits.
         /// </summary>
         [ProtoMember(6)]
-        public int BlockSizeBits { get; set; }
+        public int? BlockSizeBits { get; set; }
 
         /// <summary>
         ///     Scheme utillised to 'pad' blocks to full size where required (block ciphers in some modes).
@@ -130,7 +130,7 @@ namespace ObscurCore.DTO
                 hashCode = (hashCode * 397) ^ KeySizeBits;
                 hashCode = (hashCode * 397) ^ (InitialisationVector != null ? InitialisationVector.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (ModeName != null ? ModeName.ToLowerInvariant().GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ BlockSizeBits;
+                hashCode = (hashCode * 397) ^ (BlockSizeBits != null ? BlockSizeBits.Value : 0);
                 hashCode = (hashCode * 397) ^ (PaddingName != null ? PaddingName.ToLowerInvariant().GetHashCode() : 0);
                 return hashCode;
             }
@@ -143,6 +143,25 @@ namespace ObscurCore.DTO
         {
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}",
                 Type, CipherName, KeySizeBits);
+        }
+
+        /// <summary>
+        ///     Performs deep-copy of configuration. 
+        ///     Note: does NOT copy initialisation vector. 
+        ///     IV should be new for each cipher configuration.
+        /// </summary>
+        /// <returns></returns>
+        public CipherConfiguration CloneSafely()
+        {
+            return new CipherConfiguration {
+                Type = this.Type,
+                CipherName = String.Copy(this.CipherName),
+                KeySizeBits = this.KeySizeBits,
+                InitialisationVector = null,
+                ModeName = (this.ModeName != null ? String.Copy(this.ModeName) : null),
+                BlockSizeBits = this.BlockSizeBits,
+                PaddingName = (this.PaddingName != null ? String.Copy(this.PaddingName) : null)
+            };
         }
     }
 }

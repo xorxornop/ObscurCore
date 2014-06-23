@@ -25,8 +25,8 @@ namespace ObscurCore.DTO
     ///     Used for key confirmation and data integrity checks, etc.
     /// </summary>
     [ProtoContract]
-    public class AuthenticationFunctionConfiguration : IAuthenticationFunctionConfiguration, IDataTransferObject,
-        IEquatable<AuthenticationFunctionConfiguration>
+    public class AuthenticationFunctionConfiguration : IAuthenticationFunctionConfiguration, IDataTransferObject, 
+        ICloneableSafely<AuthenticationFunctionConfiguration>, IEquatable<AuthenticationFunctionConfiguration>
     {
         /// <summary>
         ///     Category/type of the function primitive, e.g. Digest, MAC, or KDF.
@@ -127,39 +127,18 @@ namespace ObscurCore.DTO
                 return hashCode;
             }
         }
-    }
 
-    public interface IAuthenticationFunctionConfiguration
-    {
-        /// <summary>
-        ///     Type of the function primitive, e.g. Digest, MAC, or KDF.
-        /// </summary>
-        string FunctionType { get; }
-
-        /// <summary>
-        ///     Name of the function used to verify some data (e.g. a key, a payload item, etc.).
-        ///     This may be a key derivation function, MAC function, hash function, etc.
-        /// </summary>
-        string FunctionName { get; }
-
-        /// <summary>
-        ///     Configuration for the verification function, where applicable.
-        /// </summary>
-        /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        byte[] FunctionConfiguration { get; }
-
-        int? KeySizeBits { get; }
-
-        byte[] Nonce { get; }
-
-        /// <summary>
-        ///     Salt for the verification function, where applicable.
-        /// </summary>
-        byte[] Salt { get; }
-
-        /// <summary>
-        ///     Additional data for the verification function, where applicable.
-        /// </summary>
-        byte[] AdditionalData { get; set; }
+        public AuthenticationFunctionConfiguration CloneSafely()
+        {
+            return new AuthenticationFunctionConfiguration {
+                FunctionType = this.FunctionType,
+                FunctionName = String.Copy(this.FunctionName),
+                FunctionConfiguration = this.FunctionConfiguration.DeepCopy(),
+                KeySizeBits = this.KeySizeBits,
+                Nonce = null,
+                Salt = null,
+                AdditionalData = null
+            };
+        }
     }
 }

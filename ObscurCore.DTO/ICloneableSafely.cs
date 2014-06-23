@@ -15,8 +15,8 @@
 
 namespace ObscurCore.DTO
 {
-	public interface IAuthenticatibleClonable<T>
-	{
-		T CreateAuthenticatibleClone();
-	}
+    public interface ICloneableSafely<T>
+    {
+        T CloneSafely();
+    }
 }

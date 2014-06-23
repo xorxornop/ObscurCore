@@ -76,11 +76,14 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         {
             get
             {
+                if (Configuration.BlockSizeBits.HasValue == false) {
+                    throw new ConfigurationInvalidException("Block cipher cannot have a block size of null.");
+                }
                 if (Configuration.BlockSizeBits == 0) {
                     throw new ConfigurationInvalidException("Block cipher cannot have a block size of 0 (zero).");
                 }
                 ThrowIfBlockSizeIncompatible();
-                return RawConfiguration.BlockSizeBits;
+                return RawConfiguration.BlockSizeBits.Value;
             }
             set { RawConfiguration.BlockSizeBits = value; }
         }
@@ -120,18 +123,19 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 
         protected override void ThrowIfKeySizeIncompatible()
         {
-            if (Athena.Cryptography.BlockCiphers[BlockCipher].AllowableKeySizes.Contains(Configuration.KeySizeBits) ==
-                false) {
+            if (Athena.Cryptography.BlockCiphers[BlockCipher]
+                .AllowableKeySizes.Contains(Configuration.KeySizeBits) == false) 
+            {
                 throw new KeySizeException(BlockCipher, Configuration.KeySizeBits);
             }
         }
 
         protected void ThrowIfBlockSizeIncompatible()
         {
-            if (
-                Athena.Cryptography.BlockCiphers[BlockCipher].AllowableBlockSizes.Contains(Configuration.BlockSizeBits) ==
-                false) {
-                throw new BlockSizeException(BlockCipher, Configuration.BlockSizeBits);
+            if (Athena.Cryptography.BlockCiphers[BlockCipher]
+                .AllowableBlockSizes.Contains(Configuration.BlockSizeBits.Value) == false) 
+            {
+                throw new BlockSizeException(BlockCipher, Configuration.BlockSizeBits.Value);
             }
         }
 

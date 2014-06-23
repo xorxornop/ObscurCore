@@ -57,7 +57,7 @@ namespace ObscurCore.Cryptography.Ciphers
             config.PaddingName = padding.ToString();
             config.CipherName = cipher.ToString();
 
-            config.InitialisationVector = new byte[config.BlockSizeBits / 8];
+            config.InitialisationVector = new byte[config.BlockSizeBits.Value / 8];
             StratCom.EntropySupplier.NextBytes(config.InitialisationVector);
 
             return config;

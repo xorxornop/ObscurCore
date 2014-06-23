@@ -458,26 +458,26 @@ namespace ObscurCore
         /// <summary>
         ///     Creates a default manifest authentication configuration.
         /// </summary>
-        /// <remarks>Default configuration uses the MAC primitive BLAKE2B-512.</remarks>
+        /// <remarks>Default configuration uses the MAC primitive SHA-3-512 (Keccak-512).</remarks>
         /// <returns></returns>
         private static AuthenticationFunctionConfiguration CreateDefaultManifestAuthenticationConfiguration()
         {
             int outputSize;
-            return AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B512,
+            return AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Keccak512,
                 out outputSize);
         }
 
         /// <summary>
         ///     Creates a default manifest key confirmation configuration.
         /// </summary>
-        /// <remarks>Default configuration uses HMAC-SHA3-512 (HMAC-Keccak-512).</remarks>
+        /// <remarks>Default configuration uses HMAC-SHA3-256 (HMAC-Keccak-256).</remarks>
         /// <param name="key">Key to generate confirmation configuration for.</param>
         /// <param name="verifiedOutput">Output of verification function.</param>
         private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(byte[] key,
             out byte[] verifiedOutput)
         {
             AuthenticationFunctionConfiguration config =
-                ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak512);
+                ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak256);
             // Using HMAC (key can be any length)
             verifiedOutput = ConfirmationUtility.GenerateVerifiedOutput(config, key);
 
@@ -553,7 +553,7 @@ namespace ObscurCore
         /// <param name="path">Path of the directory to search for and add files from.</param>
         /// <param name="search">Search for files in subdirectories (default) or not.</param>
         /// <exception cref="ArgumentException">Path supplied is not a directory.</exception>
-        public void AddDirectory(string path, SearchOption search = SearchOption.AllDirectories)
+        public void AddDirectory(string path, SearchOption search = SearchOption.TopDirectoryOnly)
         {
             var dir = new DirectoryInfo(path);
 

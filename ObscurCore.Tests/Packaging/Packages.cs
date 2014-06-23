@@ -154,7 +154,7 @@ namespace ObscurCore.Tests.Packaging
             using (var ms = new MemoryStream(expLen)) {
                 var sw = Stopwatch.StartNew();
                 var packageWriter = new PackageWriter(senderKeyEnumerated, receiverKeyEnumerated, scheme);
-                packageWriter.AddDirectory(dir.FullName);
+                packageWriter.AddDirectory(dir.FullName, SearchOption.AllDirectories);
                 packageWriter.Write(ms, false);
                 sw.Stop();
                 enc = sw.Elapsed;

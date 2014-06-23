@@ -24,7 +24,7 @@ namespace ObscurCore.DTO
     [ProtoContract]
     public class SymmetricManifestCryptographyConfiguration : IManifestCryptographySchemeConfiguration,
         IDataTransferObject, IAuthenticatibleClonable<SymmetricManifestCryptographyConfiguration>,
-        IEquatable<SymmetricManifestCryptographyConfiguration>
+        ICloneableSafely<SymmetricManifestCryptographyConfiguration>, IEquatable<SymmetricManifestCryptographyConfiguration>
     {
         public SymmetricManifestCryptographyConfiguration CreateAuthenticatibleClone()
         {
@@ -93,6 +93,18 @@ namespace ObscurCore.DTO
         /// </summary>
         [ProtoMember(6, IsRequired = true)]
         public KeyDerivationConfiguration KeyDerivation { get; set; }
+
+        public SymmetricManifestCryptographyConfiguration CloneSafely()
+        {
+            return new SymmetricManifestCryptographyConfiguration {
+                SymmetricCipher = this.SymmetricCipher.CloneSafely(),
+                Authentication = this.Authentication.CloneSafely(),
+                AuthenticationVerifiedOutput = null,
+                KeyConfirmation = this.KeyConfirmation.CloneSafely(),
+                KeyConfirmationVerifiedOutput = null,
+                KeyDerivation = this.KeyDerivation.CloneSafely()
+            };
+        }
 
         public override bool Equals(object obj)
         {
