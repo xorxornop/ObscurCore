@@ -1,7 +1,7 @@
 ObscurCore
 ==========
 
-A general purpose, easy to use, highly customisable and extensible encryption and data packaging library.
+A general purpose, customisable, and extensible encryption and data packaging library.
 
 Thanks
 ------
@@ -13,6 +13,8 @@ To the Legion of the [Bouncy Castle](http://www.bouncycastle.org/).
 This work is built heavily on top of theirs, and likely would not have been possible without it. So - thank you very much for your hard work!
 
 Also a big thanks to **Marc Gravell** for his excellent [protobuf-net](https://code.google.com/p/protobuf-net/) and its associated serialisation assembly precompiler. It is used extensively throughout (especially for the packaging features) and provides great flexibility and performance.
+
+And finally, to [LZ4 for .NET](https://lz4net.codeplex.com/). It is used, optionally, for compression of package manifests, where it has excellent speed.
 
 
 Why use this?
@@ -39,18 +41,45 @@ Now that that's out of the way, here's how you can use it for doing some stuff!
 ObscurCore Packaging System
 ---------------------------
 
-**Please note that this part of the API is new and is subject to change on its way to a stable release. I'll try to minimise this, but the fact remains.**
+**Please note that this part of the API is subject to change on its way to a stable release. I'll try to minimise this, but the fact remains. Now it has reached v0.9, it should change very little.**
+*****
 
-This feature is an automated system that acts somewhat like an very paranoid archive format.
-It allows you to bundle together collections of messages, data, and key agreements/actions.
+This feature is an automated system that acts somewhat like an very paranoid archive/packaging format.
+It allows you to bundle together collections of data, text, and cryptographic keys. You need not care about the details if you don't want to (conservative defaults are used), but if want to, you can heavily customise.
 
-The index of the archive is encrypted too, as with the actual contents. Each item has its own unique encryption configuration, so you can have plausible deniability by using different keys on different items, and/or including decoy/fake items if needed.
+*Note: If you don't want to use the packager, but are instead interested in the general-purpose crypto, skip this entire section.*
+
+
+### What does it look like to use? ###
+
+    using (var output = new MemoryStream()) {
+    	var package = new Package(key);
+    	package.AddFile(filePath);
+    	package.Write(output);
+    }
+
+you can also add an entire directory (optionally including subdirectories) at once:
+    package.AddDirectory(path)
+    package.AddDirectory(string path, search : SearchOption.AllDirectories) // including subdirectories
+
+
+Pretty easy?
+
+You *can* stop reading here, if you have no interest in the technical parts. You really don't need to know, but it might be easier with some knowledge of the technicalities.
+
+
+### How does it work? ###
+
+At basics, a package consists of a Manifest and Payload. The manifest (a sort of description of contents, an index) is encrypted, as with the actual contents.
+The payload consists of items, and each item has its own unique encryption configuration, so you can have plausible deniability by using different keys on different items, and/or including decoy/fake items if needed.
 If deniability is not needed, one could use this feature by distributing a package to multiple recipients, with the different items encrypted with recipient-specific keys, so each sees only that which they are able to decrypt.
 
-The index of the archive (where all the information about the items in the archive is kept), termed a *manifest* in ObscurCore nonclemature, is encrypted with a choice of schemes: 
+The manifest is encrypted with a choice of schemes: 
 
 +	Symmetric cipher (participants must share secret key securely somehow)
-+	UM1-hybrid (ephemeral-static-static elliptic curve Diffie-Hellman)
++	UM1-hybrid (ephemeral-static-static elliptic curve Diffie-Hellman, so-called *Unified Model 1-pass*)
+
+The latter doesn't use a secret key which has to be somehow communicated to the other party, instead you just exchange 'public keys', so named because you don't need to keep them secret.
 
 The hybrid scheme derives a key from the public key cryptosystem, derives it further with a KDF, and uses this as the key for a symmetric cipher.
 The symmetric-only scheme derives the supplied shared key further with a KDF, and uses this as the key for a symmetric cipher.
@@ -65,32 +94,27 @@ Simple just concatenates them together in varied (or sequential) order.
 Frameshift does the same but inserts variable (or fixed) lengths of bytes before and after each item.
 Fabric multiplexes variable (or fixed) length stripes of each item, mixing them all up, much like the Rubberhose file system.
 
-Where variable ordering/lengths are used, these are assigned by the use of a CSPRNG, so the recipient can decrypt - if it was actually random, this would be impossible.
+Where variable ordering/lengths are used, these are assigned by the use of a cryptographically-secure pseudorandom number generator.
 
-All items and their configurations, along with the manifest and its configuration, are authenticated with a MAC in the **Encrypt-then-MAC (EtM)** scheme, which provides strong verification and minimum information leakage. Upon detection of any alteration, all operations are aborted.
+All data is authenticated with a MAC in the **Encrypt-then-MAC (EtM)** scheme, which provides strong verification and minimum information leakage. Upon detection of any alteration, all operations are aborted.
 
 
-Here's an example using the packager:
-
-    using (var output = new MemoryStream()) {
-    	var package = new Package(key);
-    	package.AddFile(filePath);
-    	package.Write(output);
-    }
-
-The above...
-*	Creates the symmetric-encryption package, the manifest being configured to use XSalsa20 encryption, Keccak256 key confirmation, Keccak256 authentication, and scrypt key derivation
+In the code example above/before, the packager performs the following actions automatically...
+*	Creates the symmetric-encryption package, the manifest being configured to use XSalsa20 encryption, Keccak-256 (SHA-3-256) key confirmation, Keccak-512 (SHA-3-512) authentication, and Scrypt key derivation
 * 	The package is set up with frameshifting payload layout (default) and a Salsa20-based CSPRNG
-*	Adds a file to a package with HC-128 encryption (random key & IV, default) and Poly1305-AES EtM authentication (random key and nonce, default). Key confirmation and derivation is not used due to the keys being random and stored in the manifest. If keys are to be supplied by recipient, then the defaults are Keccak256 key confirmation and scrypt key derivation.
-*	Derives a package/manifest key (from the supplied one) with scrypt KDF
+*	Adds a file to a package with HC-128 encryption (random key & IV, default) and Poly1305-AES EtM authentication (random key and nonce, default). Key confirmation and derivation is not used due to the keys being random and stored in the manifest, in this instance. If keys are to be supplied by recipient, then the defaults are Keccak-256 key confirmation and scrypt key derivation.
+*	Derives a package/manifest key (from the supplied one) with Scrypt KDF
 *	Writes it out to the output stream
 
 
-All schemes offer key confirmation capability with a choice of algorithms (e.g. MAC, KDF, etc.)
+All schemes offer key confirmation capability with a choice between MAC or KDF method.
 
 If a package is recieived from a sender for which you hold multiple keys on file for (whatever kind they may be), all them will be verified with the key confirmation data (if present, which it is by default - generated automatically) to determine the correct one to proceed with.
 
-Packages include the capability to communicate new keys (of any kind), or request invalidation of keys for subsequent communications. For example, you could send a symmetric key for manifests, so as to reduce overhead incurred by public key schemes.
+
+In future: packages will include the capability to communicate new keys (of any kind), or request invalidation of keys for subsequent communications. For example, you could send a symmetric key for manifests, so as to reduce overhead incurred by public key schemes.
+
+
 
 
 Functionality exposed through streams
@@ -100,9 +124,9 @@ Functionality exposed through streams
 
 ### Encryption/decryption ###
 
-	var config = SymmetricCipherConfigurationFactory.CreateBlockCipherConfiguration(SymmetricBlockCipher.Aes,
+	var config = CipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher.Aes,
 		BlockCipherMode.Ctr, BlockCipherPadding.None);
-	using (var cs = new SymmetricCryptoStream(destStream, encrypting:true, config, keyBytes, closeOnDispose:false) ) {
+	using (var cs = new CipherStream(destStream, encrypting:true, config, keyBytes, closeOnDispose:false) ) {
 		sourceStream.CopyTo(cs);
 	}
 
@@ -189,13 +213,12 @@ These are in serious need of a convenience method. It's on the list.
 ### Key agreements ###
 
 Please note that currently, perfect-forward-secrecy ECDH algorithms (such as 3-pass Full Unified Model; UM3) are not implemented. Sorry!
-Work has started on implementing the *Axolotl Ratchet* for another manifest cryptography scheme.
 
 There are, however, implemented UM1-type agreements, which provide unilateral forward secrecy - which is much better than nothing.
 
 J-PAKE password-authenticated key agreement is also available, using ECC instead of DSA, making for very secure and fast agreements.
 
-Elliptic curves provided are from the Brainpool Consortium and SEC2 (secp and sect curves; also called NIST curves). These are the most popular choices.
+Elliptic curves provided are from the Brainpool Consortium, SEC2 (secp and sect curves; also called NIST curves), and Daniel J. Bernstein. These are the most popular choices.
 
 
 Creating keys:
@@ -205,14 +228,13 @@ Creating keys:
 And calculating shared secret:
 
     EcKeyConfiguration ephemeral;
-    byte[] initiatorSS = UM1Exchange.Initiate(senderKeypair.ExportPublicKey(), senderKeypair.GetPrivateKey(), out ephemeral);
-	byte[] responderSS = UM1Exchange.Respond(receiverKeypair.ExportPublicKey(), receiverKeypair.GetPrivateKey(), ephemeral);
+    byte[] initiatorSS = Um1Exchange.Initiate(senderKeypair.ExportPublicKey(), senderKeypair.GetPrivateKey(), out ephemeral);
+	byte[] responderSS = Um1Exchange.Respond(receiverKeypair.ExportPublicKey(), receiverKeypair.GetPrivateKey(), ephemeral);
 
 
 ### Signatures ###
 
-No concrete implementation is yet in place. ECDSA is being added. 
-The preferred example of this is Ed25519.
+No concrete implementation is yet in place. ECDSA is being added - the preferred example of this is Ed25519.
 DSA proper (using RSA) will most likely not be added due to concerns with security and efficiency.
 Watch this space.
 
@@ -220,12 +242,13 @@ Watch this space.
 Some words on Streams
 ---------------------
 
-SymmetricCryptoStream **encrypts only when being written to**, and **decrypts only when being read from**. The other core stream types (for example, the HashStream) do not enforce directionality like this.
+CipherStream **encrypts only when being written to**, and **decrypts only when being read from**. The other core stream types (for example, the HashStream) do not enforce directionality like this.
 
 ObscurCore uses stream decorators for I/O, so anything that is derived from the abstract Stream class of the .NET BCL can be plugged into the constructor of an ObscurCore *SymmetricCryptoStream/HashStream/MacStream*. This means in practice pretty much anything, since pretty much anything can be serialised to a byte array.
 
+Please note that ObscurCore's main stream classes **close on dispose by default**. The reason for this is to ensure the stream that it's bound to gets closed. Most (all?) of the .NET BCL streams are the same, the difference here is that you get a choice, because you may only want to finish the cipher operation but retain the underlying bound stream(s).
 
-Please note that ObscurCore's main stream classes **close on dispose by default**. This means the stream they were bound to on construction will be closed with it, when the wrapping ObscurCore stream is closed/disposed.
+This means the stream they were bound to on construction will be closed with it, when the wrapping ObscurCore stream is closed/disposed.
 Don't make the mistake of thinking stuff isn't working when binding on a MemoryStream, and wondering why the data is missing afterward.
 
 The main stream classes have a parameter, *closeOnDispose*, that controls this. Set it to **false** if you *don't* want them to close. They're set to *true* by default to try and ensure that if they're bound to a FileStream, the OS hooks get disposed of properly.
@@ -239,43 +262,26 @@ Recommendations
 
 The author's recommendations, among block ciphers:
  
-+	AES/CTR
-+	Twofish/CTR
-+	Serpent/CTR
++	AES in CTR mode
++	Twofish in CTR mode
++	Serpent in CTR mode
 
 and in stream ciphers:
 
-+	HC-128
-+	SOSEMANUK
 +	XSalsa20
++	HC-128
 
 In hash and MAC functions:
 
++	Keccak/SHA-3
 +	BLAKE2B
 +	Poly1305-AES
-+	Keccak/SHA-3
 
 In KDFs:
 
 +	Scrypt
 
-Advanced
---------
 
-Want to play around with the cryptographic primitives instead? This is not recommended, but you can.
-Have a look around the **Source** object. It provides easy instantiation and configuration of the most useful classes.
-
-Some features of ObscurCore are only accessible this way currently, but that's soon to change. If you don't want to deal with low-level features, you shouldn't have to. That's the point of automation.
-
-What's next?
-------------
-
-Mostly, the work to come is tidying up the API. Style of use will ideally become more consistent, and less contact with intermediate objects will be required.
-
-The next major planned feature is automatic nonce management. 
-The idea is that you simply pass in a collection that conforms to a particular interface (whether this is just a reference to a simple in-memory database that's repopulated from disk on startup, or a *real* database), ObscurCore checks this DB whenever you reference a key, and makes sure it doesn't use the same nonce again when it's using a cryptographic scheme for which this is essential to maintain its security assurances.
-
-Any suggestions or code checkins are appreciated!
 
 Where can I get more information?
 ---------------------------------
