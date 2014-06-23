@@ -135,8 +135,7 @@ These block ciphers are supported:
 +	AES
 +	Blowfish
 +	Camellia
-+	CAST-5
-+	CAST-6
++	CAST-5 and 6 *[disabled; optionally included]*
 +	IDEA
 +	NOEKEON
 +	RC-6
@@ -149,14 +148,14 @@ Paddings available for CBC mode: ISO 10126-2, ISO/IEC 7816-4, PKCS7, TBC, and AN
 
 And these stream ciphers:
 
++	ChaCha
 +	HC-128
 +	HC-256
 +	Rabbit
 +	RC-4 *[disabled; optionally included]*
-+	Salsa20
-+	ChaCha
-+	XSalsa20
 +	SOSEMANUK
++	Salsa20
++	XSalsa20
 
 
 ### Hashing and MAC ###
@@ -167,7 +166,7 @@ And these stream ciphers:
 	}
 
 	byte[] mac = null;
-	using (var ms = new MacStream(destStream, writing:true, MacFunction.BlakeB256, out mac, keyBytes, saltBytes:null, config:null, closeOnDispose:true) ) {
+	using (var ms = new MacStream(destStream, writing:true, MacFunction.Keccak256, out mac, keyBytes, saltBytes:null, config:null, closeOnDispose:true) ) {
 		sourceStream.CopyTo(ms);
 	}
 
@@ -184,14 +183,14 @@ And here's all the MAC functions (*MacFunction* enumeration) :
 
 +	BLAKE-2B-256 / 384 / 512
 +	Keccak-224 / 256 / 384 / 512 (SHA-3-224 / 256 / 384 / 512)
-+	Skein
 +	Poly1305
++	Skein
 +	*CMAC*
 +	*HMAC*
 
-CMAC can use any symmetric block cipher (see above in Encryption section) with a block size of 64 or 128 bits. 
-Poly1305 can use any symmetric block cipher (see above in Encryption section) with a block size of 128 bits.
 HMAC can use any hash/digest function.
+Poly1305 can use any symmetric block cipher (see above in Encryption section) with a block size of 128 bits.
+CMAC can use any symmetric block cipher (see above in Encryption section) with a block size of 64 or 128 bits. 
 
 
 Primitives
@@ -207,8 +206,6 @@ Primitives
 	var configBytes = config.SerialiseDto();
 	byte[] derivedKey = Source.DeriveKeyWithKDF(KeyDerivationFunction.Scrypt, keyBytes, saltBytes, outputSizeBits:256, configBytes);
 
-These are in serious need of a convenience method. It's on the list.
-
 
 ### Key agreements ###
 
@@ -216,7 +213,7 @@ Please note that currently, perfect-forward-secrecy ECDH algorithms (such as 3-p
 
 There are, however, implemented UM1-type agreements, which provide unilateral forward secrecy - which is much better than nothing.
 
-J-PAKE password-authenticated key agreement is also available, using ECC instead of DSA, making for very secure and fast agreements.
+J-PAKE password-authenticated key agreement is also available, using elliptic curves instead of finite fields (aka. RSA/DSA), making for very secure and fast agreements.
 
 Elliptic curves provided are from the Brainpool Consortium, SEC2 (secp and sect curves; also called NIST curves), and Daniel J. Bernstein. These are the most popular choices.
 
