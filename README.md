@@ -48,7 +48,7 @@ _Note: If you don't want to use the packager, but are instead interested in the 
 ### What does it look like to use? ###
 
     using (var output = new MemoryStream()) {
-    	var package = new Package(key);
+    	var package = new PackageWriter(key);
     	package.AddFile(filePath);
     	package.Write(output);
     }
@@ -58,6 +58,12 @@ you can also add an entire directory (optionally including subdirectories) at on
     package.AddDirectory(path)
     package.AddDirectory(string path, search : SearchOption.AllDirectories) // including subdirectories
 
+extracting a package is just as easy:
+
+    var reader = PackageReader.FromFile(packagePath, keyProvider);
+    reader.ReadToDirectory(outputPath, overwrite:true);
+
+(Explanatory: keyProvider is a class you make how you like that, that conforms to a IKeyProvider interface. It stores the cryptographic keys your application/use-case operates with.)
 
 Pretty easy?
 
