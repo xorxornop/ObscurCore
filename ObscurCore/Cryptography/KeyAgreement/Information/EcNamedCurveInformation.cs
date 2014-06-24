@@ -25,40 +25,42 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 {
     public abstract class EcNamedCurveInformation
     {
-        public CurveField Field { get; protected internal set; }
-
-        /// <summary>
-        /// Name of the elliptic curve.
-        /// </summary>
-        public string Name { get; protected internal set; }
-
-        /// <summary>
-        /// Name to show a user or for a detailed specification.
-        /// </summary>
-        public string DisplayName { get; protected internal set; }
-
-        public int BitLength { get; protected internal set; }
-
-        public abstract ECDomainParameters GetParameters ();
-
-        protected static BigInteger FromHex (string hex) {
-            return new BigInteger(1, Hex.Decode(hex));
-        }
-
         public enum CurveField
         {
             Fp,
             TpbF2m,
             PpbF2m
         }
+
+        public CurveField Field { get; protected internal set; }
+
+        /// <summary>
+        ///     Name of the elliptic curve.
+        /// </summary>
+        public string Name { get; protected internal set; }
+
+        /// <summary>
+        ///     Name to show a user or for a detailed specification.
+        /// </summary>
+        public string DisplayName { get; protected internal set; }
+
+        public int BitLength { get; protected internal set; }
+
+        public abstract ECDomainParameters GetParameters();
+
+        protected static BigInteger FromHex(string hex)
+        {
+            return new BigInteger(1, Hex.Decode(hex));
+        }
     }
 
     /// <summary>
-    /// Information for a named elliptic curve over Fp.
+    ///     Information for a named elliptic curve over Fp.
     /// </summary>
     public class FpEcNamedCurveInformation : EcNamedCurveInformation
     {
-        public FpEcNamedCurveInformation () {
+        public FpEcNamedCurveInformation()
+        {
             Field = CurveField.Fp;
         }
 
@@ -67,23 +69,24 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
         public string B { get; protected internal set; }
 
         /// <summary>
-        /// Base point
+        ///     Base point
         /// </summary>
         public string G { get; protected internal set; }
 
         /// <summary>
-        /// Order
+        ///     Order
         /// </summary>
         public string N { get; protected internal set; }
 
         /// <summary>
-        /// Cofactor
+        ///     Cofactor
         /// </summary>
         public string H { get; protected internal set; }
 
         public string Seed { get; internal set; }
 
-        public override ECDomainParameters GetParameters () {
+        public override ECDomainParameters GetParameters()
+        {
             var n = new BigInteger(N, 16);
             var h = new BigInteger(H, 16);
             var curve = new FpCurve(new BigInteger(Q, 16), new BigInteger(A, 16), new BigInteger(B, 16), n, h);
@@ -93,8 +96,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
     }
 
     /// <summary>
-    /// Information for a named elliptic curve over Fp 
-    /// that uses a custom implementation for computations.
+    ///     Information for a named elliptic curve over Fp
+    ///     that uses a custom implementation for computations.
     /// </summary>
     public class CustomFpEcNamedCurveInformation : EcNamedCurveInformation
     {
@@ -102,18 +105,19 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
         protected readonly GlvTypeBParameters GlvParameters;
 
         /// <summary>
-        /// Create a new instance of the custom-implementation Fp curve information class, 
-        /// CustomFpEcNamedCurveInformation.
+        ///     Create a new instance of the custom-implementation Fp curve information class,
+        ///     CustomFpEcNamedCurveInformation.
         /// </summary>
         /// <param name="curve">Custom curve function.</param>
         /// <param name="glvParams">GLV endomorphism parameters, if any.</param>
-        public CustomFpEcNamedCurveInformation (Func<ECCurve> curve, GlvTypeBParameters glvParams = null) {
+        public CustomFpEcNamedCurveInformation(Func<ECCurve> curve, GlvTypeBParameters glvParams = null)
+        {
             Field = CurveField.Fp;
             GlvParameters = glvParams;
 
             if (GlvParameters != null) {
                 CurveFunc = () => {
-                    var c = curve();
+                    ECCurve c = curve();
                     c.Configure().SetEndomorphism(new GlvTypeBEndomorphism(c, GlvParameters)).Create();
                     return c;
                 };
@@ -123,22 +127,24 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
         }
 
         /// <summary>
-        /// Base point
+        ///     Base point
         /// </summary>
         public string G { get; protected internal set; }
 
         public string Seed { get; protected internal set; }
 
-        public override ECDomainParameters GetParameters () {
-            var curve = CurveFunc();
+        public override ECDomainParameters GetParameters()
+        {
+            ECCurve curve = CurveFunc();
             return new ECDomainParameters(curve, curve.DecodePoint(G.HexToBinary()), curve.Order, curve.Cofactor,
                 String.IsNullOrEmpty(Seed) ? null : Seed.HexToBinary());
         }
 
-        public static GlvTypeBParameters CreateEndomorphismParameters(string beta, string lambda, string[] v1, string[] v2, string g1, string g2, int bits)
+        public static GlvTypeBParameters CreateEndomorphismParameters(string beta, string lambda, string[] v1,
+            string[] v2, string g1, string g2, int bits)
         {
-            var v1_ = v1.AsQueryExpr().Select(s => new BigInteger(s, 16)).ToArray().Run();
-            var v2_ = v2.AsQueryExpr().Select(s => new BigInteger(s, 16)).ToArray().Run();
+            BigInteger[] v1_ = v1.AsQueryExpr().Select(s => new BigInteger(s, 16)).ToArray().Run();
+            BigInteger[] v2_ = v2.AsQueryExpr().Select(s => new BigInteger(s, 16)).ToArray().Run();
 
             return new GlvTypeBParameters(
                 new BigInteger(beta, 16),
@@ -152,11 +158,12 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
     }
 
     /// <summary>
-    /// Information for a named elliptic curve over F2m with a trinomial polynomial basis (TPB).
+    ///     Information for a named elliptic curve over F2m with a trinomial polynomial basis (TPB).
     /// </summary>
     public class TpbF2mEcNamedCurveInformation : EcNamedCurveInformation
     {
-        public TpbF2mEcNamedCurveInformation () {
+        public TpbF2mEcNamedCurveInformation()
+        {
             Field = CurveField.TpbF2m;
         }
 
@@ -172,7 +179,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 
         public string Seed { get; protected internal set; }
 
-        public override ECDomainParameters GetParameters () {
+        public override ECDomainParameters GetParameters()
+        {
             var n = new BigInteger(N, 16);
             var h = new BigInteger(H, 16);
             var curve = new F2mCurve(M, K, new BigInteger(A, 16), new BigInteger(B, 16), n, h);
@@ -182,11 +190,12 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
     }
 
     /// <summary>
-    /// Information for a named elliptic curve over F2m with a pentanomial polynomial basis (PPB).
+    ///     Information for a named elliptic curve over F2m with a pentanomial polynomial basis (PPB).
     /// </summary>
     public class PpbF2mEcNamedCurveInformation : EcNamedCurveInformation
     {
-        public PpbF2mEcNamedCurveInformation () {
+        public PpbF2mEcNamedCurveInformation()
+        {
             Field = CurveField.PpbF2m;
         }
 
@@ -204,7 +213,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 
         public string Seed { get; protected internal set; }
 
-        public override ECDomainParameters GetParameters () {
+        public override ECDomainParameters GetParameters()
+        {
             var n = new BigInteger(N, 16);
             var h = new BigInteger(H, 16);
             var curve = new F2mCurve(M, K1, K2, K3, new BigInteger(A, 16), new BigInteger(B, 16), n, h);
@@ -213,4 +223,3 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
         }
     }
 }
-

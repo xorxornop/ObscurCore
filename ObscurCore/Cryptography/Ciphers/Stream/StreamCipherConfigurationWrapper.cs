@@ -20,9 +20,24 @@ using ObscurCore.Information;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream
 {
+    /// <summary>
+    ///     Wraps a <see cref="CipherConfiguration" /> describing a stream cipher configuration,
+    ///     and provides validation for its values.
+    /// </summary>
     public class StreamCipherConfigurationWrapper : CipherConfigurationWrapper
     {
-        public StreamCipherConfigurationWrapper(CipherConfiguration config) : base(config) {}
+        public StreamCipherConfigurationWrapper(CipherConfiguration config) : base(config)
+        {
+            if (config == null) {
+                throw new ArgumentNullException("config");
+            }
+            if (config.Type != CipherType.Block) {
+                throw new ConfigurationInvalidException("Cipher configuration specifies Type = None.");
+            }
+            if (config.Type != CipherType.Stream) {
+                throw new ArgumentException("Configuration is not for a stream cipher.");
+            }
+        }
 
         /// <summary>
         ///     Stream cipher to be used e.g. Salsa20, HC-128, etc.
@@ -46,7 +61,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         ///     Number-used-once for the cipher.
         /// </summary>
         /// <remarks>
-        ///     Nonces are sometimes called an initialisation vector, although nonce is more accurate for stream ciphers.
+        ///     Nonces are sometimes called an initialisation vector, 
+        ///     although nonce is nearly always the correct term for stream ciphers.
         ///     They should not be reused when used with a given key (as their name suggests),
         ///     as it frequently results in total loss of security properties.
         /// </remarks>
@@ -58,7 +74,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
 
                 if (athenaInfo.DefaultIvSize == -1 && Configuration.InitialisationVector.IsNullOrZeroLength() == false) {
                     throw new ConfigurationInvalidException(
-                        "Nonce (initialisation vector) should not be used with the " + StreamCipher + " cipher.");
+                        "NCipherKeySizeExceptiontion vector) should not be used with the " + StreamCipher + " cipher.");
                 }
                 if (athenaInfo.AllowableIvSizes.Contains(Configuration.InitialisationVector.Length * 8) == false) {
                     throw new ConfigurationInvalidException(

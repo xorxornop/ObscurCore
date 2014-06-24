@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-
-using ObscurCore.Cryptography.Ciphers;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {

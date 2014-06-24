@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using ObscurCore.Cryptography.Ciphers.Block;
 
-namespace ObscurCore.Cryptography
+namespace ObscurCore.Cryptography.Ciphers
 {
     [Serializable]
     public class BlockSizeException : Exception

@@ -25,7 +25,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
     public static class KeyAgreementFactory
     {
         /// <summary>
-        ///     Performs a Elliptic Curve Diffie-Hellman key agreement
+        ///     Performs a Elliptic Curve Diffie-Hellman (ECDH) key agreement operation (scalar multiplication).
         /// </summary>
         /// <returns>The ECDH shared secret.</returns>
         /// <param name="publicKey">Public key.</param>
@@ -40,7 +40,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
         }
 
         /// <summary>
-        ///     Performs a Elliptic Curve Diffie-Hellman key agreement with cofactor multiplication.
+        ///     Performs a Elliptic Curve Diffie-Hellman key agreement (scalar multiplication), with cofactor multiplication (ECDHC).
         /// </summary>
         /// <returns>The ECDHC shared secret.</returns>
         /// <param name="publicKey">Public key.</param>
@@ -73,7 +73,6 @@ namespace ObscurCore.Cryptography.KeyAgreement
         /// <summary>
         ///     Calculates the shared secret in a Diffie-Hellman scheme with cofactor multiplication.
         /// </summary>
-        /// <param name="domain">Domain parameters for the public and private keys provided.</param>
         /// <param name="Q">Public component of an EC keypair.</param>
         /// <param name="d">Private component of an EC keypair.</param>
         public static BigInteger CalculateEcdhcSecret(ECPublicKeyParameters Q, ECPrivateKeyParameters d)

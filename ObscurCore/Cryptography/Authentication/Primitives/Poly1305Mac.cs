@@ -34,7 +34,6 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 	/// href="https://github.com/floodyberry/poly1305-donna">poly1305-donna-unrolled</a> C implementation
 	/// by Andrew M (@floodyberry).
 	/// </remarks>
-	/// <seealso cref="Org.BouncyCastle.Crypto.Generators.Poly1305KeyGenerator"/>
 	public class Poly1305Mac
 		: IMac
 	{
@@ -56,7 +55,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		// Accumulating state
 
 		/*		* Current block of buffered input */
-		private byte[] currentBlock = new byte[BLOCK_SIZE];
+		private readonly byte[] currentBlock = new byte[BLOCK_SIZE];
 
 		/*		* Current offset in input buffer */
 		private int currentBlockOffset = 0;
@@ -127,8 +126,6 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			SetKey (clampedKey, nonce);
 			Reset ();
 		}
-
-
 
 		private void SetKey(byte[] key, byte[] nonce) {
 			// Extract r portion of key
@@ -279,6 +276,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			h0 = h1 = h2 = h3 = h4 = 0;
 			currentBlockOffset = 0;
 			Array.Clear (currentBlock, 0, currentBlock.Length);
+            currentBlock.SecureWipe();
 		}
 
 		private void ProcessBlock(byte[] block, int offset, bool padded) {

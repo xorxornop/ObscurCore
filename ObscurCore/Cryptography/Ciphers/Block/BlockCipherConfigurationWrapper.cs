@@ -20,9 +20,24 @@ using ObscurCore.Information;
 
 namespace ObscurCore.Cryptography.Ciphers.Block
 {
+    /// <summary>
+    ///     Wraps a <see cref="CipherConfiguration" /> describing a block cipher configuration,
+    ///     and provides validation for its values.
+    /// </summary>
     public class BlockCipherConfigurationWrapper : CipherConfigurationWrapper
     {
-        public BlockCipherConfigurationWrapper(CipherConfiguration config) : base(config) {}
+        public BlockCipherConfigurationWrapper(CipherConfiguration config) : base(config)
+        {
+            if (config == null) {
+                throw new ArgumentNullException("config");
+            }
+            if (config.Type != CipherType.Block) {
+                throw new ConfigurationInvalidException("Cipher configuration specifies Type = None.");
+            }
+            if (config.Type != CipherType.Block) {
+                throw new ArgumentException("Configuration is not for a block cipher.");
+            }
+        }
 
         /// <summary>
         ///     Block cipher to be used, e.g. AES, Twofish, etc.
@@ -65,7 +80,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
                     false &&
                     paddingEnum == BlockCipherPadding.None) {
                     throw new ConfigurationInvalidException("Block cipher mode requires padding.");
-                        // TODO: make new custom exception
+                    // TODO: make new custom exception
                 }
                 return paddingEnum;
             }
@@ -95,15 +110,15 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         }
 
         /// <summary>
-        ///     Initialisation vector (also called a nonce in this context, which is a specialised subset).
+        ///     Initialisation vector (IV) - sets initial state of cipher. 
+        ///     Sometimes called a nonce, which is a specialised subset of these, applicable to some modes of operation.
         /// </summary>
         /// <remarks>
         ///     Typically used by the mode of operation, rather than the cipher itself.
-        ///     An IV ensures that if identical data and key is used twice, the resulting ciphertext is different (if a different
-        ///     IV is used).
+        ///     An IV ensures that if identical data and key is used twice, but the IV differs, the resulting ciphertext is different.
         ///     It is not a value usually required to be kept secret, although it can contribute additional security if it is.
         /// </remarks>
-        public byte[] IV
+        public byte[] InitialisationVector
         {
             get
             {
@@ -111,7 +126,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
                     throw new ConfigurationInvalidException(
                         "Block cipher cannot have an initalisation vector (IV) of null or zero length.");
                 }
-                if (Configuration.InitialisationVector.Length != BlockSizeBytes) {
+                if (ConfigCipherKeySizeExceptionsationVector.Length != BlockSizeBytes) {
                     throw new ConfigurationInvalidException(
                         "Initialisation vector should not be a different length to the block size.");
                 }
@@ -124,8 +139,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         protected override void ThrowIfKeySizeIncompatible()
         {
             if (Athena.Cryptography.BlockCiphers[BlockCipher]
-                .AllowableKeySizes.Contains(Configuration.KeySizeBits) == false) 
-            {
+                .AllowableKeySizes.Contains(Configuration.KeySizeBits) == false) {
                 throw new KeySizeException(BlockCipher, Configuration.KeySizeBits);
             }
         }
@@ -133,8 +147,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         protected void ThrowIfBlockSizeIncompatible()
         {
             if (Athena.Cryptography.BlockCiphers[BlockCipher]
-                .AllowableBlockSizes.Contains(Configuration.BlockSizeBits.Value) == false) 
-            {
+                .AllowableBlockSizes.Contains(Configuration.BlockSizeBits.Value) == false) {
                 throw new BlockSizeException(BlockCipher, Configuration.BlockSizeBits.Value);
             }
         }
@@ -154,7 +167,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
                 return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                                      "Block size, bits: {3}\nMode: {4}\nPadding: {5}\n" +
                                      "IV: {6}",
-                    CipherType.Block, cipher, KeySizeBits, BlockSizeBits, mode, padding, IV.ToHexString());
+                    CipherType.Block, cipher, KeySizeBits, BlockSizeBits, mode, padding, InitialisationVector.ToHexString());
             }
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                                  "Block size, bits: {3}\nMode: {4}\nPadding: {5}",

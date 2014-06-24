@@ -24,6 +24,9 @@ using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
 
 namespace ObscurCore.Cryptography.Ciphers
 {
+    /// <summary>
+    ///     Factory for cipher primitives.
+    /// </summary>
     public static class CipherFactory
     {
         private static readonly IDictionary<BlockCipher, Func<int, IBlockCipher>> EngineInstantiatorsBlock;
@@ -89,7 +92,7 @@ namespace ObscurCore.Cryptography.Ciphers
         /// <summary>
         ///     Instantiates and returns an implementation of the requested symmetric block cipher.
         /// </summary>
-        /// <returns>An IBlockCipher cipher object implementing the relevant cipher algorithm.</returns>
+        /// <returns>A <see cref="IBlockCipher"/> cipher object implementing the relevant cipher algorithm.</returns>
         public static IBlockCipher CreateBlockCipher(BlockCipher cipherEnum, int? blockSize = null)
         {
             if (cipherEnum == BlockCipher.None) {
@@ -102,6 +105,10 @@ namespace ObscurCore.Cryptography.Ciphers
             return EngineInstantiatorsBlock[cipherEnum](blockSize.Value);
         }
 
+        /// <summary>
+        ///     Instantiates and returns an implementation of the requested symmetric block cipher.
+        /// </summary>
+        /// <returns>A <see cref="IBlockCipher"/> cipher object implementing the relevant cipher algorithm.</returns>
         public static IBlockCipher CreateBlockCipher(string cipherName, int? blockSize = null)
         {
             return CreateBlockCipher(cipherName.ToEnum<BlockCipher>(), blockSize);
@@ -113,7 +120,7 @@ namespace ObscurCore.Cryptography.Ciphers
         /// <param name="cipher">The block cipher to implement this mode of operation on top of.</param>
         /// <param name="modeEnum">The mode of operation to implement.</param>
         /// <returns>
-        ///     IBlockCipher object implementing the relevant mode of operation,
+        ///     A <see cref="IBlockCipher"/> object implementing the relevant mode of operation,
         ///     overlaying the supplied symmetric block cipher.
         /// </returns>
         public static IBlockCipher OverlayBlockCipherWithMode(IBlockCipher cipher, BlockCipherMode modeEnum)
@@ -136,10 +143,10 @@ namespace ObscurCore.Cryptography.Ciphers
 
         /// <summary>
         ///     Instantiates and returns an implementation of the requested padding mode.
-        ///     Must be combined with a block cipher for operation.
+        ///     Must be combined with a block cipher for operation. <seealso cref="BlockCipherWrapper"/>
         /// </summary>
         /// <returns>
-        ///     An IBlockCipherPadding cipher object implementing the relevant padding scheme.
+        ///     A <see cref="IBlockCipherPadding"/> object implementing the relevant padding scheme.
         /// </returns>
         public static IBlockCipherPadding CreatePadding(BlockCipherPadding paddingEnum)
         {
@@ -158,10 +165,9 @@ namespace ObscurCore.Cryptography.Ciphers
         // Stream ciphers
 
         /// <summary>
-        ///     Instantiates and returns a symmetric stream cipher of the algorithm type that the instance this method was called
-        ///     from describes.
+        ///     Instantiates and returns an implementation of the requested symmetric stream cipher.
         /// </summary>
-        /// <returns>An IStreamCipher cipher object implementing the relevant cipher algorithm.</returns>
+        /// <returns>A <see cref="IStreamCipher"/> cipher object implementing the relevant cipher algorithm.</returns>
         public static IStreamCipher CreateStreamCipher(StreamCipher cipherEnum)
         {
             if (cipherEnum == StreamCipher.None) {

@@ -14,8 +14,6 @@
 //    limitations under the License.
 
 using System;
-using ObscurCore.Cryptography.Authentication.Primitives.BLAKE2B;
-using ObscurCore.Cryptography.Ciphers;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
@@ -67,7 +65,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
                 Array.Copy(tag, tagBytes, tag.Length);
 			}
 
-			var config = new Blake2BConfig () {
+			var config = new Blake2BCore.Blake2BConfig () {
 				Key = keyBytes,
 				Salt = saltBytes,
 				Personalization = tagBytes,

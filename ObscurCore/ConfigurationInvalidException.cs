@@ -18,23 +18,27 @@ using System.Runtime.Serialization;
 
 namespace ObscurCore
 {
-	[Serializable]
-	public class ConfigurationInvalidException : Exception
-	{
-		private const string AttentionString =
-			"Configuration is invalid/malformed.";
+    /// <summary>
+    ///     Represents an error that occurs because a configuration object in general is invalid, or a value thereof.
+    ///     Used only for ObscurCore objects.
+    /// </summary>
+    [Serializable]
+    public class ConfigurationInvalidException : Exception
+    {
+        private const string AttentionString =
+            "Configuration is invalid/malformed.";
 
-		public ConfigurationInvalidException() : base(AttentionString) {}
-		public ConfigurationInvalidException(string message) : base(message) {}
+        public ConfigurationInvalidException() : base(AttentionString) {}
+        public ConfigurationInvalidException(string message) : base(message) {}
 
-		public ConfigurationInvalidException (string message, Exception inner) 
-			: base(message, inner) { }
+        public ConfigurationInvalidException(string message, Exception inner)
+            : base(message, inner) {}
 
-		public ConfigurationInvalidException (Exception innerException) 
-			: base(AttentionString, innerException) { }
+        public ConfigurationInvalidException(Exception innerException)
+            : base(AttentionString, innerException) {}
 
-		protected ConfigurationInvalidException(
-			SerializationInfo info,
-			StreamingContext context) : base(info, context) {}
-	}
+        protected ConfigurationInvalidException(
+            SerializationInfo info,
+            StreamingContext context) : base(info, context) {}
+    }
 }

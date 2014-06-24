@@ -4,7 +4,8 @@ using ObscurCore.Cryptography.Ciphers.Block.Padding;
 namespace ObscurCore.Cryptography.Ciphers.Block
 {
     /// <summary>
-    ///     Provides a wrapper for I/O operations with block ciphers, including padding support.
+    ///     Provides a wrapper for I/O operations with block ciphers, 
+    ///     including modes of operation and padding support.
     /// </summary>
     /// <remarks>
     ///     No buffering support is included for performance and precise control.
@@ -58,14 +59,6 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             }
         }
 
-
-        /// <summary>
-        ///     Process a single block of plaintext/ciphertext into the opposite form.
-        /// </summary>
-        /// <param name="input">Array to take input bytes from.</param>
-        /// <param name="inputOffset">Position at which to read from.</param>
-        /// <param name="output">Array to put output bytes in.</param>
-        /// <param name="outputOffset">Position at which to write to.</param>
         public int ProcessBytes(byte[] input, int inputOffset, byte[] output, int outputOffset)
         {
             if (input.Length < inputOffset + _blockSize) {
@@ -77,10 +70,6 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             return _cipher.ProcessBlock(input, inputOffset, output, outputOffset);
         }
 
-        /// <summary>
-        ///     Process final block of plaintext/ciphertext.
-        /// </summary>
-        /// <returns>Number of bytes output as final output from finalising operation.</returns>
         public int ProcessFinal(byte[] input, int inputOffset, int length, byte[] output, int outputOffset)
         {
             var workingBlock = new byte[_blockSize];
@@ -120,7 +109,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
                     }
                     try {
                         // Determine the number of padding bytes
-                        int paddingByteCount = _padding.PadCount(workingBlock);
+                        var paddingByteCount = _padding.PadCount(workingBlock);
                         workingBlock.CopyBytes(0, output, outputOffset, _blockSize - paddingByteCount);
                         length -= paddingByteCount;
                     }

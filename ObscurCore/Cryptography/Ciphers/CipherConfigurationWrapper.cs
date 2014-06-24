@@ -18,35 +18,41 @@ using ObscurCore.DTO;
 namespace ObscurCore.Cryptography.Ciphers
 {
     /// <summary>
-    /// Provides access to underlying DTO object while validating input/output.
+    ///     Basis for wrappers that wrap a <see cref="CipherConfiguration" />, describing a cipher configuration,
+    ///     and providing validation for its values.
     /// </summary>
     public abstract class CipherConfigurationWrapper
     {
         protected readonly CipherConfiguration Configuration;
 
-        protected CipherConfigurationWrapper(CipherConfiguration config) {
+        protected CipherConfigurationWrapper(CipherConfiguration config)
+        {
             Configuration = config;
         }
 
-        public CipherConfiguration RawConfiguration 
+        /// <summary>
+        ///     Provides access to the raw <see cref="CipherConfiguration" /> data transfer object.
+        /// </summary>
+        public CipherConfiguration RawConfiguration
         {
             get { return Configuration; }
         }
 
         /// <summary>
-        /// Size of the key in bits.
+        ///     Size of the key in bits.
         /// </summary>
         /// <exception cref="ConfigurationInvalidException">
-        /// Key size is zero.
+        ///     Key size is zero.
         /// </exception>
-        /// <exception cref="KeySizeException">
-        /// Key size is inconsistent with that specified by KeySizeBits, or incompatible with cipher.
+        /// <exception cref="CipherKeySizeException">
+        ///     Key size is inconsistent with that specified by KeySizeBits, or incompatible with cipher.
         /// </exception>
-        public int KeySizeBits 
+        public int KeySizeBits
         {
-            get {
+            get
+            {
                 if (Configuration.KeySizeBits == 0) {
-					throw new ConfigurationInvalidException("Cipher cannot have a key size of 0 (zero).");
+                    throw new ConfigurationInvalidException("Cipher cannot have a key size of 0 (zero).");
                 }
                 ThrowIfKeySizeIncompatible();
                 return Configuration.KeySizeBits;
@@ -55,25 +61,25 @@ namespace ObscurCore.Cryptography.Ciphers
         }
 
         /// <summary>
-        /// Size of the key in bytes.
+        ///     Size of the key in bytes.
         /// </summary>
         /// <exception cref="ConfigurationInvalidException">
-        /// Key size is zero.
+        ///     Key size is zero.
         /// </exception>
-        /// <exception cref="KeySizeException">
-        /// Key size is inconsistent with that specified by KeySizeBits, or incompatible with cipher.
+        /// <exception cref="CipherKeySizeException">
+        ///     Key size is inconsistent with that specified by KeySizeBits, or incompatible with cipher.
         /// </exception>
         public int KeySizeBytes
         {
             get { return KeySizeBits / 8; }
-			set { Configuration.KeySizeBits = value * 8; }
+            set { Configuration.KeySizeBits = value * 8; }
         }
 
         /// <summary>
-        /// Check if key size is compatible with the cipher.
+        ///     Check if key size is compatible with the cipher.
         /// </summary>
-        /// <exception cref="KeySizeException">
-        /// Key is incompatible with cipher.
+        /// <exception cref="CipherKeySizeException">
+        ///     Key is incompatible with cipher.
         /// </exception>
         protected abstract void ThrowIfKeySizeIncompatible();
 

@@ -16,59 +16,66 @@
 namespace ObscurCore.Cryptography.Authentication
 {
     /// <summary>
-    /// MAC functions supported for use in a MACStream. Used to verify data integrity and authenticity.
+    ///     Message Authentication Code (MAC) functions able to be used in a <see cref="MacStream" />
+    ///     or as a <see cref="IMac" />.
     /// </summary>
     public enum MacFunction
     {
         /// <summary>
-        /// 64-bit platform & software optimised, fast. Supports additional salt and tag inputs. 
-        /// Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
+        ///     64-bit platform & software optimised, fast. Supports additional salt and tag inputs.
+        ///     Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
         /// </summary>
         Blake2B256,
+
         /// <summary>
-        /// 64-bit platform & software optimised, fast. Supports additional salt and tag inputs. 
-        /// Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
+        ///     64-bit platform & software optimised, fast. Supports additional salt and tag inputs.
+        ///     Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
         /// </summary>
         Blake2B384,
+
         /// <summary>
-        /// 64-bit platform & software optimised, fast. Supports additional salt and tag inputs. 
-        /// Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
+        ///     64-bit platform & software optimised, fast. Supports additional salt and tag inputs.
+        ///     Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
         /// </summary>
         Blake2B512,
+
         /// <summary>
-        /// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction. 
-        /// Supports additional salt parameter.
+        ///     Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
+        ///     Supports additional salt parameter.
         /// </summary>
         Keccak224,
+
         /// <summary>
-        /// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction. 
-        /// Supports additional salt parameter.
+        ///     Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
+        ///     Supports additional salt parameter.
         /// </summary>
         Keccak256,
+
         /// <summary>
-        /// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction. 
-        /// Supports additional salt parameter.
+        ///     Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
+        ///     Supports additional salt parameter.
         /// </summary>
         Keccak384,
+
         /// <summary>
-        /// Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction. 
-        /// Supports additional salt parameter.
+        ///     Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
+        ///     Supports additional salt parameter.
         /// </summary>
         Keccak512,
 
-		Poly1305,
+        Poly1305,
 
 //		SipHash,
 
         /// <summary>
-        /// Also called OMAC1. 
-        /// As the name suggests, uses a (configurable) symmetric block cipher as the core of the primitive.
+        ///     Also called OMAC1.
+        ///     As the name suggests, uses a (configurable) symmetric block cipher as the core of the primitive.
         /// </summary>
         Cmac,
 
         /// <summary>
-        /// Hash-based MAC. 
-        /// As the name suggests, uses a (configurable) hash function as the core of the primitive.
+        ///     Hash-based MAC.
+        ///     As the name suggests, uses a (configurable) hash function as the core of the primitive.
         /// </summary>
         Hmac
     }

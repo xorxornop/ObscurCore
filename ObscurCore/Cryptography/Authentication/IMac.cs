@@ -13,63 +13,61 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System;
+
 namespace ObscurCore.Cryptography.Authentication
 {
 	/// <summary>
-	/// Interface that a Message Authentication Code (MAC) function conforms to.
+	///     Interface that a Message Authentication Code (MAC) function conforms to.
 	/// </summary>
     public interface IMac
     {
+        /// <summary>
+        ///     Set the initial state of the MAC. Required before other use.
+        /// </summary>
+        /// <param name="key"></param>
 		void Init (byte[] key);
 
-        /**
-         * Return the name of the algorithm the MAC implements.
-         *
-         * @return the name of the algorithm the MAC implements.
-         */
+        /// <summary>
+        ///     The name of the algorithm that the MAC implements.
+        /// </summary>
         string AlgorithmName { get; }
 
-		/**
-		 * Return the block size for this MAC (in bytes).
-		 *
-		 * @return the block size for this MAC in bytes.
-		 */
+        /// <summary>
+        ///     Size of output in bytes that the MAC emits upon finalisation.
+        /// </summary>
         int MacSize { get; }
 
-        /**
-         * add a single byte to the mac for processing.
-         *
-         * @param in the byte to be processed.
-         * @exception InvalidOperationException if the MAC is not initialised.
-         */
+        /// <summary>
+        ///     Update the internal state of the MAC with a single byte.
+        /// </summary>
+        /// <param name="input">Byte to input.</param>
+        /// <exception cref="InvalidOperationException">The MAC is not initialised.</exception>
         void Update(byte input);
 
-		/**
-         * @param in the array containing the input.
-         * @param inOff the index in the array the data begins at.
-         * @param len the length of the input starting at inOff.
-         * @exception InvalidOperationException if the MAC is not initialised.
-         * @exception DataLengthException if there isn't enough data in in.
-         */
+		/// <summary>
+		///     Update the internal state of the MAC with a chunk of bytes.
+		/// </summary>
+        /// <param name="input">The array containing the input.</param>
+        /// <param name="inOff">The offset in <paramref name="input"/> that the input begins at.</param>
+        /// <param name="len">The length of the input starting at <paramref name="inOff"/>.</param>
+        /// <exception cref="InvalidOperationException">The MAC is not initialised.</exception>
         void BlockUpdate(byte[] input, int inOff, int len);
 
-		/**
-         * Compute the final stage of the MAC writing the output to the out
-         * parameter.
-         * <p>
-         * doFinal leaves the MAC in the same state it was after the last init.
-         * </p>
-         * @param out the array the MAC is to be output to.
-         * @param outOff the offset into the out buffer the output is to start at.
-         * @exception DataLengthException if there isn't enough space in out.
-         * @exception InvalidOperationException if the MAC is not initialised.
-         */
+        /// <summary>
+        ///     Compute and output the final state, and reset the internal state of the MAC.
+        /// </summary>
+        /// <param name="output">Array that the MAC is to be output to.</param>
+        /// <param name="outOff">
+        ///     The offset into <paramref name="output"/> that the output is to start at.
+        /// </param>
+        /// <exception cref="InvalidOperationException">The MAC is not initialised.</exception>
+        /// <returns>Size of the output in bytes.</returns>
         int DoFinal(byte[] output, int outOff);
 
-		/**
-         * Reset the MAC. At the end of resetting the MAC should be in the
-         * in the same state it was after the last init (if there was one).
-         */
+        /// <summary>
+        ///     Reset the MAC back to the same state it was after the last init (if there was one).
+        /// </summary>
         void Reset();
     }
 }

@@ -22,24 +22,29 @@ using ObscurCore.Information;
 
 namespace ObscurCore.Cryptography.Ciphers
 {
+    /// <summary>
+    ///     Factory for <see cref="CipherConfiguration" /> data transfer objects,
+    ///     used for configuring the operation of ciphers in a <see cref="CipherStream" />.
+    /// </summary>
     public static class CipherConfigurationFactory
     {
         public static CipherConfiguration CreateBlockCipherConfiguration(BlockCipher cipher,
-        	BlockCipherMode mode, BlockCipherPadding padding, int? keySize = null, int? blockSize = null)
+            BlockCipherMode mode, BlockCipherPadding padding, int? keySize = null, int? blockSize = null)
         {
             var config = new CipherConfiguration { Type = CipherType.Block };
 
             // Set the key size
-            var keySizeNonNull = keySize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultKeySize;
+            int keySizeNonNull = keySize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultKeySize;
             if (keySize == null || Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
                 config.KeySizeBits = keySizeNonNull;
             } else {
-                throw new KeySizeException(cipher, keySizeNonNull);
+                throw new CipherKeySizeException(cipher, keySizeNonNull);
             }
 
             // Set the block size
-            var blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize.Value;
-            if (blockSize == null || Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
+            int blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize.Value;
+            if (blockSize == null ||
+                Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
                 config.BlockSizeBits = blockSizeNonNull;
             } else {
                 throw new BlockSizeException(cipher, blockSizeNonNull);
@@ -47,10 +52,9 @@ namespace ObscurCore.Cryptography.Ciphers
 
             // Set the mode
             if (Athena.Cryptography.BlockCipherModes[mode].PaddingRequirement == PaddingRequirement.Always &&
-                padding == BlockCipherPadding.None)
-            {
+                padding == BlockCipherPadding.None) {
                 throw new ArgumentException(mode +
-                    " mode must be used with padding or errors will occur when plaintext length is not equal to or a multiple of the block size.");
+                                            " mode must be used with padding or errors will occur when plaintext length is not equal to or a multiple of the block size.");
             }
 
             config.ModeName = mode.ToString();
@@ -63,21 +67,22 @@ namespace ObscurCore.Cryptography.Ciphers
             return config;
         }
 
-        public static CipherConfiguration CreateStreamCipherConfiguration(StreamCipher cipher, int? keySize = null) {
-            var config = new CipherConfiguration {Type = CipherType.Stream};
+        public static CipherConfiguration CreateStreamCipherConfiguration(StreamCipher cipher, int? keySize = null)
+        {
+            var config = new CipherConfiguration { Type = CipherType.Stream };
 
-            var keySizeNonNull = keySize ?? Athena.Cryptography.StreamCiphers[cipher].DefaultKeySize;
+            int keySizeNonNull = keySize ?? Athena.Cryptography.StreamCiphers[cipher].DefaultKeySize;
             if (keySize == null || Athena.Cryptography.StreamCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
                 config.KeySizeBits = keySizeNonNull;
             } else {
-                throw new KeySizeException(cipher, keySizeNonNull);
+                throw new CipherKeySizeException(cipher, keySizeNonNull);
             }
             config.CipherName = cipher.ToString();
 
-			if (Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize != -1) {
-				config.InitialisationVector = new byte[Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize / 8];
-				StratCom.EntropySupplier.NextBytes(config.InitialisationVector);
-			}
+            if (Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize != -1) {
+                config.InitialisationVector = new byte[Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize / 8];
+                StratCom.EntropySupplier.NextBytes(config.InitialisationVector);
+            }
 
             return config;
         }

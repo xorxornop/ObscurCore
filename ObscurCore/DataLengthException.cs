@@ -18,22 +18,24 @@ using System.Runtime.Serialization;
 
 namespace ObscurCore
 {
-	/// <summary>
-	/// Exception thrown when a data buffer is either too short or too long.
-	/// </summary>
-	[Serializable]
-	public class DataLengthException : Exception
-	{
-		private const string ExceptionMessage = "Data is incorrect length.";
+    /// <summary>
+    ///     Exception thrown when a data source, destination, or buffer 
+    ///     is either too short or too long.
+    /// </summary>
+    [Serializable]
+    public class DataLengthException : Exception
+    {
+        private const string ExceptionMessage = "Data is incorrect length.";
 
-		public DataLengthException() : base(ExceptionMessage) {}
-		public DataLengthException(string message) : base(message) {}
-		public DataLengthException(string message, Exception inner) : base(message, inner) {}
+        public DataLengthException() : base(ExceptionMessage) {}
+        public DataLengthException(string message) : base(message) {}
+        public DataLengthException(string message, Exception inner) : base(message, inner) {}
 
-		public DataLengthException(string message, string parameter) : base(message + "\nParameter '" + parameter + "' is at fault.") {}
+        public DataLengthException(string message, string parameter)
+            : base(message + "\nParameter '" + parameter + "' is at fault.") {}
 
-		protected DataLengthException(
-			SerializationInfo info,
-			StreamingContext context) : base(info, context) {}
-	}
+        protected DataLengthException(
+            SerializationInfo info,
+            StreamingContext context) : base(info, context) {}
+    }
 }

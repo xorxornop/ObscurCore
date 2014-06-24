@@ -95,7 +95,7 @@ namespace ObscurCore.Cryptography.Ciphers
                         padding = CipherFactory.CreatePadding(paddingEnum);
                         padding.Init(StratCom.EntropySupplier);
                     }
-                    blockCipher.Init(encrypting, key, blockConfigWrapper.IV);
+                    blockCipher.Init(encrypting, key, blockConfigWrapper.InitialisationVector);
                     _cipher = new BlockCipherWrapper(encrypting, blockCipher, padding);
                     break;
                 case CipherType.Stream:

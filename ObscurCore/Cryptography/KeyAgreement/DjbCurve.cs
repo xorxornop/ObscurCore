@@ -15,12 +15,11 @@
 
 namespace ObscurCore.Cryptography.KeyAgreement
 {
-	/// <summary>
-	/// Named elliptic curves from Daniel. J. Bernstein (cryptographer)
-	/// </summary>
-	public enum DjbCurve
-	{
-		Curve25519
-	}
+    /// <summary>
+    ///     Named elliptic curves from Daniel. J. Bernstein (cryptographer)
+    /// </summary>
+    public enum DjbCurve
+    {
+        Curve25519
+    }
 }
-

@@ -2,16 +2,16 @@ using System;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream
 {
-    /// <summary>The interface stream ciphers conform to.</summary>
+    /// <summary>The interface that stream ciphers conform to.</summary>
     public interface IStreamCipher
     {
         /// <summary>The name of the algorithm this cipher implements.</summary>
         string AlgorithmName { get; }
 
         /// <summary>
-        ///     The size of operation the cipher implements internally, e.g. keystream buffer.
+        ///     The size of operation in bytes the cipher implements internally, e.g. keystream buffer.
         /// </summary>
-        /// <value>The size of the internal operation.</value>
+        /// <value>The size of the internal operation in bytes.</value>
         int StateSize { get; }
 
         /// <summary>
@@ -36,16 +36,16 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         byte ReturnByte(byte input);
 
         /// <summary>
-        ///     Process bytes from <c>input</c> and put the result into <c>output</c>.
+        ///     Encrypt/decrypt bytes from <c>input</c> and put the result into <c>output</c>.
         /// </summary>
         /// <param name="input">The input byte array.</param>
         /// <param name="inOff">
-        ///     The offset into <paramref>input</paramref> where the data to be processed starts.
+        ///     The offset in <paramref name="input"/> at which the input data begins.
         /// </param>
         /// <param name="length">The number of bytes to be processed.</param>
-        /// <param name="output">The output buffer the processed bytes go into.</param>
+        /// <param name="output">The output byte array.</param>
         /// <param name="outOff">
-        ///     The offset into <paramref>output</paramref> the processed data starts at.
+        ///     The offset in <paramref name="output"/> at which to write the output data to.
         /// </param>
         /// <exception cref="DataLengthException">
         ///     If input or output buffers are of insufficient length to read/write input/output.

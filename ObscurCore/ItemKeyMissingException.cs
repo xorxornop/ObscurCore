@@ -9,6 +9,10 @@ namespace ObscurCore
     /// </summary>
     public class ItemKeyMissingException : Exception
     {
+        public ItemKeyMissingException() {}
+		public ItemKeyMissingException(string message) : base(message) {}
+        public ItemKeyMissingException(string message, Exception inner) : base(message, inner) { }
+
         public ItemKeyMissingException (PayloadItem item) : base 
             (String.Format("A cryptographic key for item GUID {0} and relative path \"{1}\" could not be found.", 
                 item.Identifier.ToString(), item.RelativePath))

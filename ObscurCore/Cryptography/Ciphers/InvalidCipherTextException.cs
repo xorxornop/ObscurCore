@@ -2,36 +2,21 @@ using System;
 
 namespace ObscurCore.Cryptography.Ciphers
 {
-    /**
-     * this exception is thrown whenever we find something we don't expect in a
-     * message.
-     */
+    /// <summary>
+    ///     Exception to be thrown on the event of invalid or unexpected ciphertext.
+    /// </summary>
     public class InvalidCipherTextException
-		: CryptoException
+        : CryptoException
     {
-		/**
-		* base constructor.
-		*/
-        public InvalidCipherTextException()
-        {
-        }
+        public InvalidCipherTextException() {}
 
-		/**
-         * create a InvalidCipherTextException with the given message.
-         *
-         * @param message the message to be carried with the exception.
-         */
         public InvalidCipherTextException(
             string message)
-			: base(message)
-        {
-        }
+            : base(message) {}
 
-		public InvalidCipherTextException(
-            string		message,
-            Exception	exception)
-			: base(message, exception)
-        {
-        }
+        public InvalidCipherTextException(
+            string message,
+            Exception exception)
+            : base(message, exception) {}
     }
 }

@@ -11,6 +11,8 @@ namespace ObscurCore
         private const string NoStreamBindingMessage = "Item has no stream binding.";
 
         public ItemStreamBindingAbsentException() {}
+		public ItemStreamBindingAbsentException(string message) : base(message) {}
+        public ItemStreamBindingAbsentException(string message, Exception inner) : base(message, inner) { }
         public ItemStreamBindingAbsentException(IPayloadItem item) : base(NoStreamBindingMessage) {
             PayloadItem = item;
         }

@@ -55,9 +55,6 @@
     <Reference Include="LinqOptimizer.Base">
       <HintPath>..\packages\LinqOptimizer.CSharp.0.6.3\lib\LinqOptimizer.Base.dll</HintPath>
     </Reference>
-    <Reference Include="LinqOptimizer.Core">
-      <HintPath>..\packages\LinqOptimizer.CSharp.0.6.3\lib\LinqOptimizer.Core.dll</HintPath>
-    </Reference>
     <Reference Include="LinqOptimizer.CSharp">
       <HintPath>..\packages\LinqOptimizer.CSharp.0.6.3\lib\LinqOptimizer.CSharp.dll</HintPath>
     </Reference>
@@ -83,11 +80,7 @@
     <Compile Include="Cryptography\Authentication\IMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Blake2BDigest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Blake2BMac.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BConfig.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BCore.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BCoreInline.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2BTreeConfig.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\BLAKE2B\Blake2IvBuilder.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\Blake2BCore.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\CMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\GeneralDigest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\HMac.cs" />
@@ -98,7 +91,7 @@
     <Compile Include="Cryptography\Authentication\Primitives\Sha256Digest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Sha512Digest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\TigerDigest.cs" />
-    <Compile Include="Cryptography\BlockSizeException.cs" />
+    <Compile Include="Cryptography\Ciphers\BlockSizeException.cs" />
     <Compile Include="Cryptography\Ciphers\Block\BlockCipherWrapper.cs" />
     <Compile Include="Cryptography\Ciphers\ICipherWrapper.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Modes\CbcBlockCipher.cs" />
@@ -148,7 +141,7 @@
     <Compile Include="Cryptography\KeyConfirmation\ConfirmationUtility.cs" />
     <Compile Include="Cryptography\KeyDerivation\KeyDerivationFunction.cs" />
     <Compile Include="Cryptography\KeyDerivation\IKdfFunction.cs" />
-    <Compile Include="Cryptography\KeySizeException.cs" />
+    <Compile Include="Cryptography\Ciphers\CipherKeySizeException.cs" />
     <Compile Include="Cryptography\Authentication\MacFunction.cs" />
     <Compile Include="Cryptography\MaxBytesExceededException.cs" />
     <Compile Include="Cryptography\PaddingDataException.cs" />
@@ -233,7 +226,7 @@
     <Compile Include="Cryptography\CryptographyExtensions.cs" />
     <Compile Include="Cryptography\Authentication\AuthenticationConfigurationFactory.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigest.cs" />
-    <None Include="Cryptography\MacSizeException.cs" />
+    <None Include="Cryptography\Authentication\MacSizeException.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Utility.cs" />
     <Compile Include="Packaging\PayloadMux.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Pbkdf2.cs" />
@@ -382,7 +375,7 @@
     <Compile Include="Information\IPrimitiveInformation.cs" />
     <Compile Include="Cryptography\KeyAgreement\NamedEllipticCurves.cs" />
     <Compile Include="Cryptography\KeyAgreement\DjbCurve.cs" />
-    <Compile Include="Cryptography\Ciphers\CipherKeyFactory.cs" />
+    <None Include="Cryptography\Ciphers\CipherKeyFactory.cs" />
     <Compile Include="PackageWriter.cs" />
     <Compile Include="PackageReader.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\EcJpakeSession.cs" />

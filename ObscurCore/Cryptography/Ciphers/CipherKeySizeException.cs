@@ -5,36 +5,36 @@ using System.Runtime.Serialization;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Stream;
 
-namespace ObscurCore.Cryptography
+namespace ObscurCore.Cryptography.Ciphers
 {
     [Serializable]
-    public class KeySizeException : Exception
+    public class CipherKeySizeException : Exception
     {
-        public KeySizeException() {
+        public CipherKeySizeException() {
             RequestedSize = null;
             Cipher = null;
             AllowedSizes = null;
         }
-        public KeySizeException(string message) : base(message) {
+        public CipherKeySizeException(string message) : base(message) {
             RequestedSize = null;
             Cipher = null;
             AllowedSizes = null;
         }
-        public KeySizeException(string message, Exception inner) : base(message, inner) {
+        public CipherKeySizeException(string message, Exception inner) : base(message, inner) {
             RequestedSize = null;
             Cipher = null;
             AllowedSizes = null;
         }
 
-        protected KeySizeException(SerializationInfo info, StreamingContext context) : base(info, context) {}
+        protected CipherKeySizeException(SerializationInfo info, StreamingContext context) : base(info, context) {}
 
-        public KeySizeException(BlockCipher cipherEnum, int requestedSizeBits)
+        public CipherKeySizeException(BlockCipher cipherEnum, int requestedSizeBits)
             : this(cipherEnum.ToString(), requestedSizeBits, Athena.Cryptography.BlockCiphers[cipherEnum].AllowableKeySizes.ToList()) {}
 
-        public KeySizeException(StreamCipher cipherEnum, int requestedSizeBits)
+        public CipherKeySizeException(StreamCipher cipherEnum, int requestedSizeBits)
             : this(cipherEnum.ToString(), requestedSizeBits, Athena.Cryptography.StreamCiphers[cipherEnum].AllowableKeySizes.ToList()) {}
 
-        protected KeySizeException(string cipherName, int requestedSizeBits, IReadOnlyList<int> allowedSizes)
+        protected CipherKeySizeException(string cipherName, int requestedSizeBits, IReadOnlyList<int> allowedSizes)
             : base(String.Format("The size {0} is not supported for use with the {1} cipher.", requestedSizeBits, 
                 cipherName))
         {

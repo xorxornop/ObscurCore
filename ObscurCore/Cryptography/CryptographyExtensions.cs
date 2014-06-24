@@ -296,7 +296,7 @@ namespace ObscurCore.Cryptography
                 throw new ArgumentOutOfRangeException("count", "Count must be positive.");
             }
             if (offset + count > data.Length) {
-                throw new DataLengthException();
+                throw new ArgumentException("offset + count > data.Length");
             }
 
             InternalWipe(data, offset, count);

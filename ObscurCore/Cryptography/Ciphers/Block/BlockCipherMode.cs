@@ -16,29 +16,30 @@
 namespace ObscurCore.Cryptography.Ciphers.Block
 {
     /// <summary>
-    /// Symmetric block cipher modes able to be used in an ObscurCore CryptoStream.
+    ///     Symmetric block cipher modes able to be used in a <see cref="CipherStream" />
+    ///     and/or <see cref="BlockCipherWrapper" />.
     /// </summary>
     public enum BlockCipherMode
     {
         None,
 
         /// <summary>
-        /// Ciphertext Block Chaining. Must be used with padding scheme.
+        ///     Ciphertext Block Chaining. Must be used with padding scheme.
         /// </summary>
         Cbc,
 
         /// <summary>
-        /// Counter (aka Segmented Integer Counter, SIC). Can write partial blocks.
+        ///     Counter (aka Segmented Integer Counter, SIC). Can write partial blocks.
         /// </summary>
         Ctr,
 
         /// <summary>
-        /// Cipher Feedback. Can write partial blocks.
+        ///     Cipher Feedback. Can write partial blocks.
         /// </summary>
         Cfb,
 
         /// <summary>
-        /// Output Feedback. Can write partial blocks.
+        ///     Output Feedback. Can write partial blocks.
         /// </summary>
         Ofb
     }

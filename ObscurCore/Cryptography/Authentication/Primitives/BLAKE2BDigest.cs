@@ -14,19 +14,18 @@
 //    limitations under the License.
 
 using System;
-using ObscurCore.Cryptography.Authentication.Primitives.BLAKE2B;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
 	public class Blake2BDigest : IDigest
 	{
-		protected Blake2BCore _core = new Blake2BCore();
+		private readonly Blake2BCore _core = new Blake2BCore();
 		protected int outputSize;
 
 		private ulong[] rawConfig;
 		private byte[] key;
 
-		private static readonly Blake2BConfig DefaultConfig = new Blake2BConfig();
+		private static readonly Blake2BCore.Blake2BConfig DefaultConfig = new Blake2BCore.Blake2BConfig();
 
 		public Blake2BDigest (int size, bool bits) : this(size, bits, true)
 		{
@@ -37,7 +36,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			outputSize = size;
 			if (!init) return;
 
-			var config = new Blake2BConfig () {
+			var config = new Blake2BCore.Blake2BConfig () {
 				Key = null,
 				Salt = null,
 				Personalization = null,
@@ -47,8 +46,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			InitCore (config);
 		}
 
-		protected void InitCore (Blake2BConfig config) {
-			rawConfig = Blake2IvBuilder.ConfigB(config ?? DefaultConfig, null);
+		protected void InitCore (Blake2BCore.Blake2BConfig config) {
+            rawConfig = Blake2BCore.ConfigB(config ?? DefaultConfig);
 			if (config.Key != null && config.Key.Length != 0) {
 				key = new byte[128];
 				Array.Copy(config.Key, key, config.Key.Length);

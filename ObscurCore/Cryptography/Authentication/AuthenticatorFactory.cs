@@ -22,6 +22,9 @@ using ObscurCore.Cryptography.Ciphers.Block;
 
 namespace ObscurCore.Cryptography.Authentication
 {
+    /// <summary>
+    ///     Factory for authentication functions (digest, MAC).
+    /// </summary>
     public static class AuthenticatorFactory
     {
         private static readonly IDictionary<HashFunction, Func<IDigest>> DigestInstantiators;
@@ -65,7 +68,7 @@ namespace ObscurCore.Cryptography.Authentication
         /// </summary>
         /// <param name="hashEnum">Hash/digest function to instantiate.</param>
         /// <returns>
-        ///     An digest object deriving from IDigest.
+        ///     An digest primitive as a <see cref="IDigest"/>.
         /// </returns>
         public static IDigest CreateHashPrimitive(HashFunction hashEnum)
         {
@@ -90,7 +93,7 @@ namespace ObscurCore.Cryptography.Authentication
         /// </param>
         /// <param name="nonce">Nonce for the function, where applicable (rare, very specific) - null if N/A.</param>
         /// <returns>
-        ///     An MAC object deriving from IMac.
+        ///     An MAC object deriving from <see cref="IMac"/>.
         /// </returns>
         public static IMac CreateMacPrimitive(MacFunction macEnum, byte[] key, byte[] salt = null,
             byte[] config = null, byte[] nonce = null)
@@ -136,7 +139,7 @@ namespace ObscurCore.Cryptography.Authentication
 
         /// <summary>
         ///     Creates a CMAC primitive using a symmetric block cipher primitive configured with default block size.
-        ///     Default block sizes (and so, output sizes) can be found by querying Athena.
+        ///     Default block sizes (and so, output sizes) can be found by querying <see cref="Athena"/>.
         /// </summary>
         /// <param name="cipherEnum">
         ///     Cipher primitive to use as the basis for the CMAC construction. Block size must be 64 or 128
@@ -144,7 +147,7 @@ namespace ObscurCore.Cryptography.Authentication
         /// </param>
         /// <param name="key">Cryptographic key to use in the MAC operation.</param>
         /// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
-        /// <returns>Pre-initialised CMAC primitive.</returns>
+        /// <returns>Pre-initialised CMAC primitive as a <see cref="IMac"/>.</returns>
         public static IMac CreateCmacPrimitive(BlockCipher cipherEnum, byte[] key, byte[] salt = null)
         {
             int? defaultBlockSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
@@ -167,7 +170,7 @@ namespace ObscurCore.Cryptography.Authentication
         /// <param name="hashEnum">Hash/digest primitive to use as the basis for the HMAC construction.</param>
         /// <param name="key">Cryptographic key to use in the MAC operation.</param>
         /// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
-        /// <returns>Pre-initialised HMAC primitive.</returns>
+        /// <returns>Pre-initialised HMAC primitive as a <see cref="IMac"/>.</returns>
         public static IMac CreateHmacPrimitive(HashFunction hashEnum, byte[] key, byte[] salt = null)
         {
             var macObj = new HMac(DigestInstantiators[hashEnum]());
@@ -187,7 +190,7 @@ namespace ObscurCore.Cryptography.Authentication
         /// <param name="key">Cryptographic key to use in the MAC operation.</param>
         /// <param name="nonce">Initialisation vector/nonce. Required.</param>
         /// <param name="salt">Cryptographic salt to use in the MAC operation, if any.</param>
-        /// <returns>Pre-initialised Poly1305 MAC primitive.</returns>
+        /// <returns>Pre-initialised Poly1305 MAC primitive as a <see cref="IMac"/>.</returns>
         public static IMac CreatePoly1305Primitive(BlockCipher cipherEnum, byte[] key, byte[] nonce, byte[] salt = null)
         {
             if (Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize != 128) {
