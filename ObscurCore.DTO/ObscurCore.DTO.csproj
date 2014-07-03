@@ -11,8 +11,6 @@
     <AssemblyName>ObscurCore.DTO</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <ProductVersion>12.0.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <UseMSBuildEngine>False</UseMSBuildEngine>
     <ReleaseVersion>0.8</ReleaseVersion>
   </PropertyGroup>
@@ -38,7 +36,8 @@
     <WarningLevel>4</WarningLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="AfterBuild" name="Precompile" command="mono precompile.exe ../bin/${ProjectConfigName}/${TargetName} -o:../bin/${ProjectConfigName}/${ProjectName}Serialiser.dll -t:${ProjectName}Serialiser" workingdir="${ProjectDir}/precompiler" externalConsole="True" />
+        <Command type="Custom" name="PrecompileOnWindows" command="precompile.exe ..\..\..\bin\${ProjectConfigName}\${TargetName} -o:..\bin\${ProjectConfigName}/${ProjectName}Serialiser.dll -t:${ProjectName}Serialiser" workingdir="${ProjectDir}\lib\protobuf-net\precompiler" externalConsole="True" />
+        <Command type="Custom" name="PrecompileOnNix" command="mono precompile.exe ../../../bin/${ProjectConfigName}/${TargetName} -o:../bin/${ProjectConfigName}/${ProjectName}Serialiser.dll -t:${ProjectName}Serialiser" workingdir="${ProjectDir}/lib/protobuf-net/precompiler" />
       </CustomCommands>
     </CustomCommands>
     <DocumentationFile>bin\Release\ObscurCore.DTO.XML</DocumentationFile>
@@ -57,7 +56,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="protobuf-net">
-      <HintPath>lib\protobuf-net\net30\protobuf-net.dll</HintPath>
+      <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -108,7 +107,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(ProjectDir)precompiler\precompile.exe" "$(TargetPath)" -o:"$(TargetDir)$(TargetName)Serialiser.dll" -t:$(ProjectName)Serialiser
+    <PostBuildEvent>"$(ProjectDir)lib\protobuf-net\precompiler\precompile.exe" "$(TargetPath)" -o:"$(TargetDir)$(TargetName).DtoSerialiser.dll" -t:$(ProjectName).DtoSerialiser
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

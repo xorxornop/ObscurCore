@@ -17,10 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using LZ4;
+using LZ4.Portable;
 using Nessos.LinqOptimizer.Base;
 using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography;
@@ -230,7 +229,7 @@ namespace ObscurCore
                 "[* PACKAGE START* ] Header offset (absolute)",
                 sourceStream.Position));
 
-            byte[] referenceHeaderTag = Athena.Packaging.GetHeaderTag();
+            byte[] referenceHeaderTag = Athena.Packaging.GetPackageHeaderTag();
             var readHeaderTag = new byte[referenceHeaderTag.Length];
             int headerTagBytesRead = sourceStream.Read(readHeaderTag, 0, readHeaderTag.Length);
             if (readHeaderTag.SequenceEqualShortCircuiting(referenceHeaderTag) == false) {
@@ -250,11 +249,11 @@ namespace ObscurCore
             if (manifestHeader.FormatVersion <= 0) {
                 throw new InvalidDataException("Package format descriptor is 0 or less (must be 1 or more).");
             }
-            if (manifestHeader.FormatVersion > Athena.Packaging.HeaderVersion) {
+            if (manifestHeader.FormatVersion > Athena.Packaging.PackageFormatVersion) {
                 throw new NotSupportedException(
                     String.Format("Package version {0} as specified by the manifest header is unsupported/unknown.\n" +
                                   "The local version of ObscurCore supports up to version {1}.",
-                        manifestHeader.FormatVersion, Athena.Packaging.HeaderVersion));
+                        manifestHeader.FormatVersion, Athena.Packaging.PackageFormatVersion));
                 // In later versions, can redirect to diff. behaviour (and DTO objects) for diff. versions.
             }
 
@@ -505,7 +504,7 @@ namespace ObscurCore
 
             foreach (var item in _manifest.PayloadItems) {
                 if (item.Type != PayloadItemType.KeyAction &&
-                    item.RelativePath.Contains(Athena.Packaging.PathRelativeUpRaw)) {
+                    item.RelativePath.Contains(Athena.Packaging.PathRelativeUp)) {
                     throw new ConfigurationInvalidException("A payload item specifies a relative path outside that of the package root. "
                                                             + " This is a potentially dangerous condition.");
                 }
@@ -515,8 +514,7 @@ namespace ObscurCore
                     Path.DirectorySeparatorChar);
                 string absolutePath = Path.Combine(path, relativePath);
                 switch (item.Type) {
-                    case PayloadItemType.Utf8:
-                    case PayloadItemType.Utf32:
+                    case PayloadItemType.Message:
                         if (Path.HasExtension(absolutePath) == false) {
                             absolutePath += ".txt";
                         }
@@ -594,7 +592,7 @@ namespace ObscurCore
                 _readingStream.Position));
 
             // Read the trailer
-            byte[] referenceTrailerTag = Athena.Packaging.GetTrailerTag();
+            byte[] referenceTrailerTag = Athena.Packaging.GetPackageTrailerTag();
             var trailerTag = new byte[referenceTrailerTag.Length];
             int trailerBytesRead = _readingStream.Read(trailerTag, 0, trailerTag.Length);
             if (trailerTag.SequenceEqualShortCircuiting(referenceTrailerTag) == false) {

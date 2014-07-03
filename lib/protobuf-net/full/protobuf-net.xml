@@ -177,6 +177,14 @@
             may be re-used (and thus re-assigned) unexpectedly.
             </summary>
         </member>
+        <member name="T:ProtoBuf.ProtoConverterAttribute">
+            <summary>
+            Indicates that a static member should be considered the same as though
+            were an implicit / explicit conversion operator; in particular, this
+            is useful for conversions that operator syntax does not allow, such as
+            to/from interface types.
+            </summary>
+        </member>
         <member name="T:ProtoBuf.DataFormat">
             <summary>
             Sub-format to use when serializing/deserializing data
@@ -530,17 +538,17 @@
             Get the name of the type being represented
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.MetaType.AddSubType(System.Int32,IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.MetaType.AddSubType(System.Int32,System.Type)">
             <summary>
             Adds a known sub-type to the inheritance model
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.MetaType.AddSubType(System.Int32,IKVM.Reflection.Type,ProtoBuf.DataFormat)">
+        <member name="M:ProtoBuf.Meta.MetaType.AddSubType(System.Int32,System.Type,ProtoBuf.DataFormat)">
             <summary>
             Adds a known sub-type to the inheritance model
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.MetaType.SetCallbacks(IKVM.Reflection.MethodInfo,IKVM.Reflection.MethodInfo,IKVM.Reflection.MethodInfo,IKVM.Reflection.MethodInfo)">
+        <member name="M:ProtoBuf.Meta.MetaType.SetCallbacks(System.Reflection.MethodInfo,System.Reflection.MethodInfo,System.Reflection.MethodInfo,System.Reflection.MethodInfo)">
             <summary>
             Assigns the callbacks to use during serialiation/deserialization.
             </summary>
@@ -560,7 +568,7 @@
             <param name="afterDeserialize">The name of the method (or null) called when deserialization is complete.</param>
             <returns>The set of callbacks.</returns>
         </member>
-        <member name="M:ProtoBuf.Meta.MetaType.SetFactory(IKVM.Reflection.MethodInfo)">
+        <member name="M:ProtoBuf.Meta.MetaType.SetFactory(System.Reflection.MethodInfo)">
             <summary>
             Designate a factory-method to use to create instances of this type
             </summary>
@@ -591,7 +599,7 @@
             Adds a member (by name) to the MetaType
             </summary>     
         </member>
-        <member name="M:ProtoBuf.Meta.MetaType.SetSurrogate(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.MetaType.SetSurrogate(System.Type)">
             <summary>
             Performs serialization of this type via a surrogate; all
             other serialization options are ignored and handled
@@ -608,12 +616,12 @@
             Adds a member (by name) to the MetaType
             </summary>        
         </member>
-        <member name="M:ProtoBuf.Meta.MetaType.Add(System.Int32,System.String,IKVM.Reflection.Type,IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.MetaType.Add(System.Int32,System.String,System.Type,System.Type)">
             <summary>
             Adds a member (by name) to the MetaType, including an itemType and defaultType for representing lists
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.MetaType.AddField(System.Int32,System.String,IKVM.Reflection.Type,IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.MetaType.AddField(System.Int32,System.String,System.Type,System.Type)">
             <summary>
             Adds a member (by name) to the MetaType, including an itemType and defaultType for representing lists, returning the ValueMember rather than the fluent API.
             This is otherwise identical to Add.
@@ -696,7 +704,7 @@
             Returns the ValueMember that matchs a given field number, or null if not found
             </summary>
         </member>
-        <member name="P:ProtoBuf.Meta.MetaType.Item(IKVM.Reflection.MemberInfo)">
+        <member name="P:ProtoBuf.Meta.MetaType.Item(System.Reflection.MemberInfo)">
             <summary>
             Returns the ValueMember that matchs a given member (property/field), or null if not found
             </summary>
@@ -733,6 +741,17 @@
             Resolve a System.Type to the compiler-specific type
             </summary>
         </member>
+        <member name="M:ProtoBuf.Meta.TypeModel.TrySerializeAuxiliaryType(ProtoBuf.ProtoWriter,System.Type,ProtoBuf.DataFormat,System.Int32,System.Object,System.Boolean)">
+            <summary>
+            This is the more "complete" version of Serialize, which handles single instances of mapped types.
+            The value is written as a complete field, including field-header and (for sub-objects) a
+            length-prefix
+            In addition to that, this provides support for:
+             - basic values; individual int / string / Guid / etc
+             - IEnumerable sequences of any type handled by TrySerializeAuxiliaryType
+             
+            </summary>
+        </member>
         <member name="M:ProtoBuf.Meta.TypeModel.Serialize(System.IO.Stream,System.Object)">
             <summary>
             Writes a protocol-buffer representation of the given instance to the supplied stream.
@@ -755,7 +774,7 @@
             <param name="value">The existing instance to be serialized (cannot be null).</param>
             <param name="dest">The destination writer to write to.</param>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream,System.Object,IKVM.Reflection.Type,ProtoBuf.PrefixStyle,System.Int32)">
+        <member name="M:ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream,System.Object,System.Type,ProtoBuf.PrefixStyle,System.Int32)">
             <summary>
             Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
             data - useful with network IO.
@@ -769,7 +788,7 @@
             either the original instance was null, or the stream defines a known sub-type of the
             original instance.</returns>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream,System.Object,IKVM.Reflection.Type,ProtoBuf.PrefixStyle,System.Int32,ProtoBuf.Serializer.TypeResolver)">
+        <member name="M:ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream,System.Object,System.Type,ProtoBuf.PrefixStyle,System.Int32,ProtoBuf.Serializer.TypeResolver)">
             <summary>
             Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
             data - useful with network IO.
@@ -784,7 +803,7 @@
             either the original instance was null, or the stream defines a known sub-type of the
             original instance.</returns>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream,System.Object,IKVM.Reflection.Type,ProtoBuf.PrefixStyle,System.Int32,ProtoBuf.Serializer.TypeResolver,System.Int32@)">
+        <member name="M:ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream,System.Object,System.Type,ProtoBuf.PrefixStyle,System.Int32,ProtoBuf.Serializer.TypeResolver,System.Int32@)">
             <summary>
             Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
             data - useful with network IO.
@@ -800,7 +819,7 @@
             either the original instance was null, or the stream defines a known sub-type of the
             original instance.</returns>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.DeserializeItems(System.IO.Stream,IKVM.Reflection.Type,ProtoBuf.PrefixStyle,System.Int32,ProtoBuf.Serializer.TypeResolver)">
+        <member name="M:ProtoBuf.Meta.TypeModel.DeserializeItems(System.IO.Stream,System.Type,ProtoBuf.PrefixStyle,System.Int32,ProtoBuf.Serializer.TypeResolver)">
             <summary>
             Reads a sequence of consecutive length-prefixed items from a stream, using
             either base-128 or fixed-length prefixes. Base-128 prefixes with a tag
@@ -818,7 +837,7 @@
             <param name="type">The type of object to deserialize (can be null if "resolver" is specified).</param>
             <returns>The sequence of deserialized objects.</returns>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.DeserializeItems(System.IO.Stream,IKVM.Reflection.Type,ProtoBuf.PrefixStyle,System.Int32,ProtoBuf.Serializer.TypeResolver,ProtoBuf.SerializationContext)">
+        <member name="M:ProtoBuf.Meta.TypeModel.DeserializeItems(System.IO.Stream,System.Type,ProtoBuf.PrefixStyle,System.Int32,ProtoBuf.Serializer.TypeResolver,ProtoBuf.SerializationContext)">
             <summary>
             Reads a sequence of consecutive length-prefixed items from a stream, using
             either base-128 or fixed-length prefixes. Base-128 prefixes with a tag
@@ -872,7 +891,7 @@
             <returns>The sequence of deserialized objects.</returns>
             <param name="context">Additional information about this serialization operation.</param>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.SerializeWithLengthPrefix(System.IO.Stream,System.Object,IKVM.Reflection.Type,ProtoBuf.PrefixStyle,System.Int32)">
+        <member name="M:ProtoBuf.Meta.TypeModel.SerializeWithLengthPrefix(System.IO.Stream,System.Object,System.Type,ProtoBuf.PrefixStyle,System.Int32)">
             <summary>
             Writes a protocol-buffer representation of the given instance to the supplied stream,
             with a length-prefix. This is useful for socket programming,
@@ -885,7 +904,7 @@
             <param name="dest">The destination stream to write to.</param>
             <param name="fieldNumber">The tag used as a prefix to each record (only used with base-128 style prefixes).</param>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.SerializeWithLengthPrefix(System.IO.Stream,System.Object,IKVM.Reflection.Type,ProtoBuf.PrefixStyle,System.Int32,ProtoBuf.SerializationContext)">
+        <member name="M:ProtoBuf.Meta.TypeModel.SerializeWithLengthPrefix(System.IO.Stream,System.Object,System.Type,ProtoBuf.PrefixStyle,System.Int32,ProtoBuf.SerializationContext)">
             <summary>
             Writes a protocol-buffer representation of the given instance to the supplied stream,
             with a length-prefix. This is useful for socket programming,
@@ -958,6 +977,17 @@
             either the original instance was null, or the stream defines a known sub-type of the
             original instance.</returns>
         </member>
+        <member name="M:ProtoBuf.Meta.TypeModel.TryDeserializeAuxiliaryType(ProtoBuf.ProtoReader,ProtoBuf.DataFormat,System.Int32,System.Type,System.Object@,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            This is the more "complete" version of Deserialize, which handles single instances of mapped types.
+            The value is read as a complete field, including field-header and (for sub-objects) a
+            length-prefix..kmc  
+            
+            In addition to that, this provides support for:
+             - basic values; individual int / string / Guid / etc
+             - IList sets of any type handled by TryDeserializeAuxiliaryType
+            </summary>
+        </member>
         <member name="M:ProtoBuf.Meta.TypeModel.Create">
             <summary>
             Creates a new runtime model, to which the caller
@@ -966,23 +996,23 @@
             optimal performance.
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.ResolveProxies(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.TypeModel.ResolveProxies(System.Type)">
             <summary>
             Applies common proxy scenarios, resolving the actual type to consider
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.IsDefined(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.TypeModel.IsDefined(System.Type)">
             <summary>
             Indicates whether the supplied type is explicitly modelled by the model
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.GetKey(IKVM.Reflection.Type@)">
+        <member name="M:ProtoBuf.Meta.TypeModel.GetKey(System.Type@)">
             <summary>
             Provides the key that represents a given type in the current model.
             The type is also normalized for proxies at the same time.
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.GetKeyImpl(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.TypeModel.GetKeyImpl(System.Type)">
             <summary>
             Provides the key that represents a given type in the current model.
             </summary>
@@ -1011,24 +1041,24 @@
             Create a deep clone of the supplied instance; any sub-items are also cloned.
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(IKVM.Reflection.Type,IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(System.Type,System.Type)">
             <summary>
             Indicates that while an inheritance tree exists, the exact type encountered was not
             specified in that hierarchy and cannot be processed.
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.ThrowUnexpectedType(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.TypeModel.ThrowUnexpectedType(System.Type)">
             <summary>
             Indicates that the given type was not expected, and cannot be processed.
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.ThrowCannotCreateInstance(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.TypeModel.ThrowCannotCreateInstance(System.Type)">
             <summary>
             Indicates that the given type cannot be constructed; it may still be possible to 
             deserialize into existing instances.
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.CanSerializeContractType(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.TypeModel.CanSerializeContractType(System.Type)">
             <summary>
             Returns true if the type supplied is either a recognised contract type,
             or a *list* of a recognised contract type. 
@@ -1037,26 +1067,26 @@
             will, if forced, try to serialize such</remarks>
             <returns>True if this type is recognised as a serializable entity, else false</returns>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.CanSerialize(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.TypeModel.CanSerialize(System.Type)">
             <summary>
             Returns true if the type supplied is a basic type with inbuilt handling,
             a recognised contract type, or a *list* of a basic / contract type. 
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.CanSerializeBasicType(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.TypeModel.CanSerializeBasicType(System.Type)">
             <summary>
             Returns true if the type supplied is a basic type with inbuilt handling,
             or a *list* of a basic type with inbuilt handling
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.GetSchema(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.TypeModel.GetSchema(System.Type)">
             <summary>
             Suggest a .proto definition for the given type
             </summary>
             <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
             <returns>The .proto definition as a string</returns>
         </member>
-        <member name="M:ProtoBuf.Meta.TypeModel.CreateFormatter(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.TypeModel.CreateFormatter(System.Type)">
             <summary>
             Creates a new IFormatter that uses protocol-buffer [de]serialization.
             </summary>
@@ -1100,35 +1130,14 @@
             processed by this model.
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.RuntimeTypeModel.GetSchema(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.RuntimeTypeModel.GetSchema(System.Type)">
             <summary>
             Suggest a .proto definition for the given type
             </summary>
             <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
             <returns>The .proto definition as a string</returns>
         </member>
-        <member name="M:ProtoBuf.Meta.RuntimeTypeModel.Load(System.String)">
-            <summary>
-            Load an assembly into the model's universe
-            </summary>
-        </member>
-        <member name="M:ProtoBuf.Meta.RuntimeTypeModel.Add(System.String,System.Boolean)">
-            <summary>
-            Adds support for an additional type in this model, optionally
-            appplying inbuilt patterns. If the type is already known to the
-            model, the existing type is returned **without** applying
-            any additional behaviour.
-            </summary>
-        </member>
         <member name="M:ProtoBuf.Meta.RuntimeTypeModel.Add(System.Type,System.Boolean)">
-            <summary>
-            Adds support for an additional type in this model, optionally
-            appplying inbuilt patterns. If the type is already known to the
-            model, the existing type is returned **without** applying
-            any additional behaviour.
-            </summary>
-        </member>
-        <member name="M:ProtoBuf.Meta.RuntimeTypeModel.Add(IKVM.Reflection.Type,System.Boolean)">
             <summary>
             Adds support for an additional type in this model, optionally
             appplying inbuilt patterns. If the type is already known to the
@@ -1158,7 +1167,7 @@
             Prevents further changes to this model
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.RuntimeTypeModel.GetKeyImpl(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Meta.RuntimeTypeModel.GetKeyImpl(System.Type)">
             <summary>
             Provides the key that represents a given type in the current model.
             </summary>
@@ -1197,16 +1206,6 @@
             <remarks>A full compilation is restricted to accessing public types / members</remarks>
             <returns>An instance of the newly created compiled type-model</returns>
         </member>
-        <member name="M:ProtoBuf.Meta.RuntimeTypeModel.Cascade">
-            <summary>
-            Inspect the model, and resolve all related types
-            </summary>
-        </member>
-        <member name="M:ProtoBuf.Meta.RuntimeTypeModel.MapType(System.Type,System.Boolean)">
-            <summary>
-            Translate a System.Type into the universe's type representation
-            </summary>
-        </member>
         <member name="M:ProtoBuf.Meta.RuntimeTypeModel.Compile(System.String,System.String)">
             <summary>
             Fully compiles the current model into a static-compiled serialization dll
@@ -1225,7 +1224,7 @@
             <remarks>A full compilation is restricted to accessing public types / members</remarks>
             <returns>An instance of the newly created compiled type-model</returns>
         </member>
-        <member name="M:ProtoBuf.Meta.RuntimeTypeModel.SetDefaultFactory(IKVM.Reflection.MethodInfo)">
+        <member name="M:ProtoBuf.Meta.RuntimeTypeModel.SetDefaultFactory(System.Reflection.MethodInfo)">
             <summary>
             Designate a factory-method to use to create instances of any type; note that this only affect types seen by the serializer *after* setting the factory.
             </summary>
@@ -1269,18 +1268,7 @@
             The default model, used to support ProtoBuf.Serializer
             </summary>
         </member>
-        <member name="P:ProtoBuf.Meta.RuntimeTypeModel.Universe">
-            <summary>
-            Gets the IKVM Universe that relates to this model
-            </summary>
-        </member>
         <member name="P:ProtoBuf.Meta.RuntimeTypeModel.Item(System.Type)">
-            <summary>
-            Obtains the MetaType associated with a given Type for the current model,
-            allowing additional configuration.
-            </summary>
-        </member>
-        <member name="P:ProtoBuf.Meta.RuntimeTypeModel.Item(IKVM.Reflection.Type)">
             <summary>
             Obtains the MetaType associated with a given Type for the current model,
             allowing additional configuration.
@@ -1354,21 +1342,6 @@
         <member name="P:ProtoBuf.Meta.RuntimeTypeModel.CompilerOptions.Accessibility">
             <summary>
             The acecssibility of the generated serializer
-            </summary>
-        </member>
-        <member name="P:ProtoBuf.Meta.RuntimeTypeModel.CompilerOptions.KeyContainer">
-            <summary>
-            The name of the container that holds the key pair.
-            </summary>
-        </member>
-        <member name="P:ProtoBuf.Meta.RuntimeTypeModel.CompilerOptions.KeyFile">
-            <summary>
-            The path to a file that hold the key pair.
-            </summary>
-        </member>
-        <member name="P:ProtoBuf.Meta.RuntimeTypeModel.CompilerOptions.PublicKey">
-            <summary>
-            The public  key to sign the file with.
             </summary>
         </member>
         <member name="T:ProtoBuf.Meta.RuntimeTypeModel.Accessibility">
@@ -1452,17 +1425,17 @@
             Represents a member (property/field) that is mapped to a protobuf field
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.ValueMember.#ctor(ProtoBuf.Meta.RuntimeTypeModel,IKVM.Reflection.Type,System.Int32,IKVM.Reflection.MemberInfo,IKVM.Reflection.Type,IKVM.Reflection.Type,IKVM.Reflection.Type,ProtoBuf.DataFormat,System.Object)">
+        <member name="M:ProtoBuf.Meta.ValueMember.#ctor(ProtoBuf.Meta.RuntimeTypeModel,System.Type,System.Int32,System.Reflection.MemberInfo,System.Type,System.Type,System.Type,ProtoBuf.DataFormat,System.Object)">
             <summary>
             Creates a new ValueMember instance
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.ValueMember.#ctor(ProtoBuf.Meta.RuntimeTypeModel,System.Int32,IKVM.Reflection.Type,IKVM.Reflection.Type,IKVM.Reflection.Type,ProtoBuf.DataFormat)">
+        <member name="M:ProtoBuf.Meta.ValueMember.#ctor(ProtoBuf.Meta.RuntimeTypeModel,System.Int32,System.Type,System.Type,System.Type,ProtoBuf.DataFormat)">
             <summary>
             Creates a new ValueMember instance
             </summary>
         </member>
-        <member name="M:ProtoBuf.Meta.ValueMember.SetSpecified(IKVM.Reflection.MethodInfo,IKVM.Reflection.MethodInfo)">
+        <member name="M:ProtoBuf.Meta.ValueMember.SetSpecified(System.Reflection.MethodInfo,System.Reflection.MethodInfo)">
             <summary>
             Specifies methods for working with optional data members.
             </summary>
@@ -2663,7 +2636,7 @@
             either the original instance was null, or the stream defines a known sub-type of the
             original instance.</returns>
         </member>
-        <member name="M:ProtoBuf.Serializer.NonGeneric.CanSerialize(IKVM.Reflection.Type)">
+        <member name="M:ProtoBuf.Serializer.NonGeneric.CanSerialize(System.Type)">
             <summary>
             Indicates whether the supplied type is explicitly modelled by the model
             </summary>
@@ -2682,6 +2655,21 @@
             <summary>
             Maps a field-number to a type
             </summary>
+        </member>
+        <member name="M:ProtoBuf.Serializers.IProtoSerializer.Write(System.Object,ProtoBuf.ProtoWriter)">
+            <summary>
+            Perform the steps necessary to serialize this data.
+            </summary>
+            <param name="value">The value to be serialized.</param>
+            <param name="dest">The writer entity that is accumulating the output data.</param>
+        </member>
+        <member name="M:ProtoBuf.Serializers.IProtoSerializer.Read(System.Object,ProtoBuf.ProtoReader)">
+            <summary>
+            Perform the steps necessary to deserialize this data.
+            </summary>
+            <param name="value">The current value, if appropriate.</param>
+            <param name="source">The reader providing the input data.</param>
+            <returns>The updated / replacement value.</returns>
         </member>
         <member name="M:ProtoBuf.Serializers.IProtoSerializer.EmitWrite(ProtoBuf.Compiler.CompilerContext,ProtoBuf.Compiler.Local)">
             <summary>Emit the IL necessary to perform the given actions
@@ -2719,6 +2707,127 @@
             <summary>
             Now all Read operations return a value (although most do); if false no
             value should be expected.
+            </summary>
+        </member>
+        <member name="T:ProtoBuf.ServiceModel.ProtoBehaviorAttribute">
+            <summary>
+            Uses protocol buffer serialization on the specified operation; note that this
+            must be enabled on both the client and server.
+            </summary>
+        </member>
+        <member name="T:ProtoBuf.ServiceModel.ProtoBehaviorExtension">
+            <summary>
+            Configuration element to swap out DatatContractSerilaizer with the XmlProtoSerializer for a given endpoint.
+            </summary>
+            <seealso cref="T:ProtoBuf.ServiceModel.ProtoEndpointBehavior"/>
+        </member>
+        <member name="M:ProtoBuf.ServiceModel.ProtoBehaviorExtension.#ctor">
+            <summary>
+            Creates a new ProtoBehaviorExtension instance.
+            </summary>
+        </member>
+        <member name="M:ProtoBuf.ServiceModel.ProtoBehaviorExtension.CreateBehavior">
+            <summary>
+            Creates a behavior extension based on the current configuration settings.
+            </summary>
+            <returns>The behavior extension.</returns>
+        </member>
+        <member name="P:ProtoBuf.ServiceModel.ProtoBehaviorExtension.BehaviorType">
+            <summary>
+            Gets the type of behavior.
+            </summary>     
+        </member>
+        <member name="T:ProtoBuf.ServiceModel.ProtoEndpointBehavior">
+            <summary>
+            Behavior to swap out DatatContractSerilaizer with the XmlProtoSerializer for a given endpoint.
+             <example>
+            Add the following to the server and client app.config in the system.serviceModel section:
+             <behaviors>
+               <endpointBehaviors>
+                 <behavior name="ProtoBufBehaviorConfig">
+                   <ProtoBufSerialization/>
+                 </behavior>
+               </endpointBehaviors>
+             </behaviors>
+             <extensions>
+               <behaviorExtensions>
+                 <add name="ProtoBufSerialization" type="ProtoBuf.ServiceModel.ProtoBehaviorExtension, protobuf-net, Version=1.0.0.255, Culture=neutral, PublicKeyToken=257b51d87d2e4d67"/>
+               </behaviorExtensions>
+             </extensions>
+            
+            Configure your endpoints to have a behaviorConfiguration as follows:
+            
+             <service name="TK.Framework.Samples.ServiceModel.Contract.SampleService">
+               <endpoint address="http://myhost:9003/SampleService" binding="basicHttpBinding" behaviorConfiguration="ProtoBufBehaviorConfig"
+                bindingConfiguration="basicHttpBindingConfig" name="basicHttpProtoBuf" contract="ISampleServiceContract" />
+             </service>
+             <client>
+                 <endpoint address="http://myhost:9003/SampleService" binding="basicHttpBinding"
+                     bindingConfiguration="basicHttpBindingConfig" contract="ISampleServiceContract"
+                     name="BasicHttpProtoBufEndpoint" behaviorConfiguration="ProtoBufBehaviorConfig"/>
+              </client>
+            </example>
+            </summary>
+        </member>
+        <member name="T:ProtoBuf.ServiceModel.ProtoOperationBehavior">
+            <summary>
+            Describes a WCF operation behaviour that can perform protobuf serialization
+            </summary>
+        </member>
+        <member name="M:ProtoBuf.ServiceModel.ProtoOperationBehavior.#ctor(System.ServiceModel.Description.OperationDescription)">
+            <summary>
+            Create a new ProtoOperationBehavior instance
+            </summary>
+        </member>
+        <member name="M:ProtoBuf.ServiceModel.ProtoOperationBehavior.CreateSerializer(System.Type,System.Xml.XmlDictionaryString,System.Xml.XmlDictionaryString,System.Collections.Generic.IList{System.Type})">
+            <summary>
+            Creates a protobuf serializer if possible (falling back to the default WCF serializer)
+            </summary>
+        </member>
+        <member name="P:ProtoBuf.ServiceModel.ProtoOperationBehavior.Model">
+            <summary>
+            The type-model that should be used with this behaviour
+            </summary>
+        </member>
+        <member name="T:ProtoBuf.ServiceModel.XmlProtoSerializer">
+            <summary>
+            An xml object serializer that can embed protobuf data in a base-64 hunk (looking like a byte[])
+            </summary>
+        </member>
+        <member name="M:ProtoBuf.ServiceModel.XmlProtoSerializer.TryCreate(ProtoBuf.Meta.TypeModel,System.Type)">
+            <summary>
+            Attempt to create a new serializer for the given model and type
+            </summary>
+            <returns>A new serializer instance if the type is recognised by the model; null otherwise</returns>
+        </member>
+        <member name="M:ProtoBuf.ServiceModel.XmlProtoSerializer.#ctor(ProtoBuf.Meta.TypeModel,System.Type)">
+            <summary>
+            Creates a new serializer for the given model and type
+            </summary>
+        </member>
+        <member name="M:ProtoBuf.ServiceModel.XmlProtoSerializer.WriteEndObject(System.Xml.XmlDictionaryWriter)">
+            <summary>
+            Ends an object in the output
+            </summary>
+        </member>
+        <member name="M:ProtoBuf.ServiceModel.XmlProtoSerializer.WriteStartObject(System.Xml.XmlDictionaryWriter,System.Object)">
+            <summary>
+            Begins an object in the output
+            </summary>
+        </member>
+        <member name="M:ProtoBuf.ServiceModel.XmlProtoSerializer.WriteObjectContent(System.Xml.XmlDictionaryWriter,System.Object)">
+            <summary>
+            Writes the body of an object in the output
+            </summary>
+        </member>
+        <member name="M:ProtoBuf.ServiceModel.XmlProtoSerializer.IsStartObject(System.Xml.XmlDictionaryReader)">
+            <summary>
+            Indicates whether this is the start of an object we are prepared to handle
+            </summary>
+        </member>
+        <member name="M:ProtoBuf.ServiceModel.XmlProtoSerializer.ReadObject(System.Xml.XmlDictionaryReader,System.Boolean)">
+            <summary>
+            Reads the body of an object
             </summary>
         </member>
         <member name="T:ProtoBuf.SubItemToken">

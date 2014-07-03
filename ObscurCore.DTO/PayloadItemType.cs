@@ -5,9 +5,18 @@ namespace ObscurCore.DTO
     /// </summary>
 	public enum PayloadItemType : byte
     {
-        Binary = 0,
-		Utf8 = 100,
-		Utf32 = 110,
-		KeyAction = 200
+        /// <summary>
+        /// Binary data conforming with the ObscurCore filesystem schema.
+        /// </summary>
+        File,
+        /// <summary>
+        /// Text data capable of conforming with the ObscurCore filesystem schema (treated as a text-type <see cref="File"/>).
+        /// </summary>
+        Message,
+        /// <summary>
+        /// Value within some key-value system, that should not be treated as either <see cref="File"/> or <see cref="Message"/>.
+        /// </summary>
+        Value,
+		KeyAction
     }
 }

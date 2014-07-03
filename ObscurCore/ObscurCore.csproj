@@ -58,17 +58,20 @@
     <Reference Include="LinqOptimizer.CSharp">
       <HintPath>..\packages\LinqOptimizer.CSharp.0.6.3\lib\LinqOptimizer.CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="LZ4">
-      <HintPath>lib\LZ4\LZ4.dll</HintPath>
+    <Reference Include="LZ4PCL">
+      <HintPath>..\..\LZ4PCL\bin\ReleaseUnsafe\LZ4PCL.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="ObscurCore.DTOSerialiser">
-      <HintPath>..\ObscurCore.DTO\bin\Release\ObscurCore.DTOSerialiser.dll</HintPath>
+    <Reference Include="ObscurCore.DTO.DtoSerialiser">
+      <HintPath>..\ObscurCore.DTO\bin\Release\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
-      <HintPath>..\ObscurCore.DTO\lib\protobuf-net\net30\protobuf-net.dll</HintPath>
+      <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>
     </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>..\packages\Microsoft.Bcl.Immutable.1.1.22-beta\lib\portable-net45+win8+wpa81\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
     <Reference Include="RingByteBuffer">
       <HintPath>lib\RingByteBuffer\RingByteBuffer.dll</HintPath>
     </Reference>

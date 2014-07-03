@@ -736,7 +736,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         protected internal enum State : byte
         {
             Noninitialised = 0x00,
-            Initialised = 0x0,
+            Initialised = 0x01,
             Round1Created = 0x02,
             Round1Validated = 0x04,
             Round2Created = 0x08,

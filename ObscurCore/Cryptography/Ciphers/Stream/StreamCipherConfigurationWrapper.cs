@@ -31,7 +31,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
             if (config == null) {
                 throw new ArgumentNullException("config");
             }
-            if (config.Type != CipherType.Block) {
+            if (config.Type == CipherType.None) {
                 throw new ConfigurationInvalidException("Cipher configuration specifies Type = None.");
             }
             if (config.Type != CipherType.Stream) {
@@ -90,7 +90,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         {
             if (Athena.Cryptography.StreamCiphers[StreamCipher].AllowableKeySizes.Contains(Configuration.KeySizeBits) ==
                 false) {
-                throw new KeySizeException(StreamCipher, Configuration.KeySizeBits);
+                throw new CipherKeySizeException(StreamCipher, Configuration.KeySizeBits);
             }
         }
 

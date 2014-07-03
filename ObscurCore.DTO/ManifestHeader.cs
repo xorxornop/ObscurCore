@@ -36,7 +36,7 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(this, other)) {
                 return true;
             }
-            return FormatVersion == other.FormatVersion && /*Compression.Equals(other.Compression) &&*/
+            return FormatVersion == other.FormatVersion && UseCompression == other.UseCompression &&
                    String.Equals(CryptographySchemeName, other.CryptographySchemeName,
                        StringComparison.OrdinalIgnoreCase) &&
                    (CryptographySchemeConfiguration == null
@@ -96,6 +96,7 @@ namespace ObscurCore.DTO
         {
             unchecked {
                 int hashCode = FormatVersion.GetHashCode();
+                hashCode = (hashCode * 397) ^ UseCompression.GetHashCode();
                 hashCode = (hashCode * 397) ^ CryptographySchemeName.ToLowerInvariant().GetHashCode();
                 hashCode = (hashCode * 397) ^ (CryptographySchemeConfiguration != null ? CryptographySchemeConfiguration.GetHashCode() : 0);
                 return hashCode;
@@ -109,17 +110,22 @@ namespace ObscurCore.DTO
         ///     Format version of the following Manifest object.
         ///     Used to denote breaking changes that may cause incompatibility.
         /// </summary>
-        int FormatVersion { get; set; }
+        int FormatVersion { get; }
+
+        /// <summary>
+        ///     Whether to use fast LZ4 compression to reduce the size of the manifest.
+        /// </summary>
+        bool UseCompression { get; set; }
 
         /// <summary>
         ///     Name of the cryptographic scheme used to secure the Manifest.
         /// </summary>
-        string CryptographySchemeName { get; set; }
+        string CryptographySchemeName { get; }
 
         /// <summary>
         ///     Configuration of the cryptographic scheme used to secure the Manifest.
         /// </summary>
         /// <remarks>Format of the configuration is that of the consuming type.</remarks>
-        byte[] CryptographySchemeConfiguration { get; set; }
+        byte[] CryptographySchemeConfiguration { get; }
     }
 }

@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using System.Threading;
 using ObscurCore.Cryptography.Entropy;
+using ObscurCore.DTO;
 using ProtoBuf;
 
 namespace ObscurCore
@@ -30,7 +31,7 @@ namespace ObscurCore
         private const int InitialSeedSize = 64; // bytes
 		public static readonly SecureRandom EntropySupplier = SecureRandom.GetInstance("SHA256PRNG");
 
-        internal static readonly DTOSerialiser Serialiser = new DTOSerialiser();
+        internal static readonly DtoSerialiser Serialiser = new DtoSerialiser();
 
         static StratCom() {
             EntropySupplier.SetSeed(SecureRandom.GetSeed(InitialSeedSize));

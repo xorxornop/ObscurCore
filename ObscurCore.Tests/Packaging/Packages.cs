@@ -43,7 +43,7 @@ namespace ObscurCore.Tests.Packaging
             TimeSpan enc, dec;
             using (var ms = new MemoryStream(expLen)) {
                 var sw = Stopwatch.StartNew();
-                var package = new PackageWriter(preKey, false, scheme); // low entropy = false
+                var package = new PackageWriter(preKey, lowEntropy: false, layoutScheme: scheme); // low entropy = false
                 foreach (var file in IOTestBase.LargeBinaryFileList) {
                     package.AddFile(file.FullName);
                 }
@@ -65,7 +65,9 @@ namespace ObscurCore.Tests.Packaging
                 dec = sw.Elapsed;
             }
 
-            Assert.Pass("Packaging: {0} ms.\nDepackaging: {1} ms.", enc.Milliseconds, dec.Milliseconds);
+            var megabytes = (double)totalLen / 1024 / 1024;
+            Assert.Pass("{0} ms / {1:N2} MB/s -> {2} ms / {3:N2} MB/s.", enc.Milliseconds, (1 / ((double)enc.Milliseconds / 1000)) * megabytes,
+                dec.Milliseconds, (1 / ((double)dec.Milliseconds / 1000)) * megabytes);
         }
 
         // EC-UM1
@@ -135,7 +137,9 @@ namespace ObscurCore.Tests.Packaging
                 dec = sw.Elapsed;
             }
 
-            Assert.Pass("Packaging: {0} ms.\nDepackaging: {1} ms.\nUsed curve: {2}", enc.Milliseconds, dec.Milliseconds, senderKeyEnumerated.CurveName);
+            var megabytes = (double)totalLen / 1024 / 1024;
+            Assert.Pass("{0} ms / {1:N2} MB/s -> {2} ms / {3:N2} MB/s. Used curve {4}", enc.Milliseconds, (1 / ((double)enc.Milliseconds / 1000)) * megabytes,
+                dec.Milliseconds, (1 / ((double)dec.Milliseconds / 1000)) * megabytes, senderKeyEnumerated.CurveName);
         }
         private static void UM1PackageTest(string testName, DirectoryInfo dir, PayloadLayoutScheme scheme)
         {
@@ -173,7 +177,9 @@ namespace ObscurCore.Tests.Packaging
                 dec = sw.Elapsed;
             }
 
-            Assert.Pass("Packaging: {0} ms.\nDepackaging: {1} ms.\nUsed curve: {2}", enc.Milliseconds, dec.Milliseconds, senderKeyEnumerated.CurveName);
+            var megabytes = (double)totalLen / 1024 / 1024;
+            Assert.Pass("{0} ms / {1:N2} MB/s -> {2} ms / {3:N2} MB/s. Used curve {4}", enc.Milliseconds, (1 / ((double)enc.Milliseconds / 1000)) * megabytes,
+                dec.Milliseconds, (1 / ((double)dec.Milliseconds / 1000)) * megabytes, senderKeyEnumerated.CurveName);
         }
     }
 }

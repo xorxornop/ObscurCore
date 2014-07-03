@@ -18,6 +18,10 @@ using ProtoBuf;
 
 namespace ObscurCore.DTO
 {
+    /// <summary>
+    /// Round 1 in an elliptic curve J-PAKE protocol key agreement. 
+    /// Constitutes a zero-knowledge proof.
+    /// </summary>
     [ProtoContract]
     public class JpakeRound1 : IDataTransferObject, IEquatable<JpakeRound1>
     {

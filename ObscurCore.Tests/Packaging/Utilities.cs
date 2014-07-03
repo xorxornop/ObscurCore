@@ -23,7 +23,7 @@ namespace ObscurCore.Tests.Packaging
 				var payloadItem = new PayloadItem {
                     RelativePath = t.Name,
                     ExternalLength = t.Length,
-                    Type = PayloadItemType.Binary,
+                    Type = PayloadItemType.File,
 					SymmetricCipher = CipherConfigurationFactory.CreateStreamCipherConfiguration(StreamCipher.Sosemanuk),
 					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B256, out authOutputSize)
                 };
@@ -50,7 +50,7 @@ namespace ObscurCore.Tests.Packaging
 				var payloadItem = new PayloadItem {
                     RelativePath = t.Name,
                     ExternalLength = t.Length,
-                    Type = PayloadItemType.Binary,
+                    Type = PayloadItemType.File,
                     SymmetricCipher = CipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher.Serpent, 
 						BlockCipherMode.Ctr, BlockCipherPadding.None),
 					Authentication = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Blake2B256, out authOutputSize)

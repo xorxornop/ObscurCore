@@ -346,7 +346,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
                     if (wi != 0) {
                         int n = System.Math.Abs(wi);
                         WNafPreCompInfo info = infos[j];
-                        ECPoint[] table = (wi < 0 == negs[j]) ? info.PreCompNeg : info.PreComp;
+                        ECPoint[] table = (wi < 0 == negs[j]) ? info.PreComp : info.PreCompNeg;
                         r = r.Add(table[n >> 1]);
                     }
                 }

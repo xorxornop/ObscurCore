@@ -62,6 +62,18 @@ namespace ObscurCore
             return StratCom.SerialiseDataTransferObject(obj, prefixLength).ToArray();
         }
 
+        /// <summary>
+        ///     Serialises the data transfer object to a <see cref="System.IO.MemoryStream"/>.
+        /// </summary>
+        /// <returns>The serialised DTO in a <see cref="System.IO.MemoryStream"/>.</returns>
+        /// <param name="obj">Object to serialise.</param>
+        /// <param name="prefixLength">If set to <c>true</c> prefix length of object to output; otherwise, <c>false</c>.</param>
+        /// <typeparam name="T">Type of the data transfer object.</typeparam>
+        public static MemoryStream SerialiseDtoToMemory<T>(this T obj, bool prefixLength = false) where T : IDataTransferObject
+        {
+            return StratCom.SerialiseDataTransferObject(obj, prefixLength);
+        }
+
         public static void SerialiseDto<T>(this T obj, Stream output, bool prefixLength = false)
             where T : IDataTransferObject
         {

@@ -1,16 +1,17 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using ObscurCore.DTO;
 
 namespace ObscurCore.Tests.Packaging.Serialisation
 {
 	public abstract class SerialisationTestBase
 	{
-		protected DTOSerialiser serialiser;
+		protected DtoSerialiser serialiser;
 		
 		[TestFixtureSetUp]
 		public void InitFixture () {
-			serialiser = new DTOSerialiser ();
+            serialiser = new DtoSerialiser();
 			AuxTestFixtureInit ();
 		}
 		

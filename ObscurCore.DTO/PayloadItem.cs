@@ -157,36 +157,45 @@ namespace ObscurCore.DTO
         public long InternalLength { get; set; }
 
         /// <summary>
+        /// The name of the format that the content is stored as.
+        /// </summary>
+        [ProtoMember(5, IsRequired = true)]
+        public string FormatName { get; set; }
+
+        [ProtoMember(6, IsRequired = true)]
+        public byte[] FormatData { get; set; }
+
+        /// <summary>
         ///     SymmetricCipher configuration for this payload item.
         /// </summary>
-        [ProtoMember(6, IsRequired = true)]
+        [ProtoMember(7, IsRequired = true)]
         public CipherConfiguration SymmetricCipher { get; set; }
 
         /// <summary>
         ///     Ephemeral cryptographic key for encryption of the payload item.
         ///     Required if <see cref="PayloadItem.KeyDerivation" /> is not present.
         /// </summary>
-        [ProtoMember(7, IsRequired = false)]
+        [ProtoMember(8, IsRequired = false)]
         public byte[] SymmetricCipherKey { get; set; }
 
         /// <summary>
         ///     Authentication configuration for the payload item.
         ///     Must be of a MAC type.
         /// </summary>
-        [ProtoMember(8, IsRequired = true)]
+        [ProtoMember(9, IsRequired = true)]
         public AuthenticationFunctionConfiguration Authentication { get; set; }
 
         /// <summary>
         ///     Cryptographic key for authentication of the payload item.
         ///     Required if <see cref="PayloadItem.KeyDerivation" /> is not present.
         /// </summary>
-        [ProtoMember(9, IsRequired = false)]
+        [ProtoMember(10, IsRequired = false)]
         public byte[] AuthenticationKey { get; set; }
 
         /// <summary>
         ///     Output of the authentication scheme given correct input data.
         /// </summary>
-        [ProtoMember(10, IsRequired = true)]
+        [ProtoMember(11, IsRequired = true)]
         public byte[] AuthenticationVerifiedOutput { get; set; }
 
         /// <summary>
@@ -196,13 +205,13 @@ namespace ObscurCore.DTO
         ///     Required if <see cref="PayloadItem.SymmetricCipherKey" /> and <see cref="PayloadItem.AuthenticationKey" /> are not
         ///     present.
         /// </summary>
-        [ProtoMember(11, IsRequired = false)]
+        [ProtoMember(12, IsRequired = false)]
         public AuthenticationFunctionConfiguration KeyConfirmation { get; set; }
 
         /// <summary>
         ///     Output of the key confirmation scheme given the correct key.
         /// </summary>
-        [ProtoMember(12, IsRequired = false)]
+        [ProtoMember(13, IsRequired = false)]
         public byte[] KeyConfirmationVerifiedOutput { get; set; }
 
         /// <summary>
@@ -211,7 +220,7 @@ namespace ObscurCore.DTO
         ///     Required if <see cref="PayloadItem.SymmetricCipherKey" /> and <see cref="PayloadItem.AuthenticationKey" /> are not
         ///     present.
         /// </summary>
-        [ProtoMember(13, IsRequired = false)]
+        [ProtoMember(14, IsRequired = false)]
         public KeyDerivationConfiguration KeyDerivation { get; set; }
 
         /// <summary>

@@ -31,7 +31,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             if (config == null) {
                 throw new ArgumentNullException("config");
             }
-            if (config.Type != CipherType.Block) {
+            if (config.Type == CipherType.None) {
                 throw new ConfigurationInvalidException("Cipher configuration specifies Type = None.");
             }
             if (config.Type != CipherType.Block) {
@@ -126,7 +126,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
                     throw new ConfigurationInvalidException(
                         "Block cipher cannot have an initalisation vector (IV) of null or zero length.");
                 }
-                if (ConfigCipherKeySizeExceptionsationVector.Length != BlockSizeBytes) {
+                if (Configuration.InitialisationVector.Length != BlockSizeBytes) {
                     throw new ConfigurationInvalidException(
                         "Initialisation vector should not be a different length to the block size.");
                 }
@@ -140,7 +140,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         {
             if (Athena.Cryptography.BlockCiphers[BlockCipher]
                 .AllowableKeySizes.Contains(Configuration.KeySizeBits) == false) {
-                throw new KeySizeException(BlockCipher, Configuration.KeySizeBits);
+                    throw new CipherKeySizeException(BlockCipher, Configuration.KeySizeBits);
             }
         }
 
@@ -153,9 +153,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         }
 
         /// <summary>
-        ///     Outputs a summary of the configuration, optionally including the IV.
+        ///     Outputs a summary of the configuration (optionally, including the IV).
         /// </summary>
-        /// <param name="includeValues">Whether to include values of relevant byte arrays as hex strings.</param>
+        /// <param name="includeValues">Whether to include the IV in a hexadecimal representation.</param>
         public override string ToString(bool includeValues)
         {
             string cipher = Athena.Cryptography.BlockCiphers[BlockCipher].DisplayName;

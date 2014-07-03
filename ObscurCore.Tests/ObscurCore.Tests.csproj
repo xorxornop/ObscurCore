@@ -44,13 +44,13 @@
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="ObscurCore.DTOSerialiser">
-      <HintPath>..\ObscurCore.DTO\bin\Release\ObscurCore.DTOSerialiser.dll</HintPath>
+    <Reference Include="ObscurCore.DTO.DtoSerialiser">
+      <HintPath>..\ObscurCore.DTO\bin\Release\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
-      <HintPath>..\ObscurCore.DTO\lib\protobuf-net\net30\protobuf-net.dll</HintPath>
+      <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>
     </Reference>
+    <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cryptography\Digests\DigestTests.cs" />
