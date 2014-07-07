@@ -58,8 +58,9 @@
     <Reference Include="LinqOptimizer.CSharp">
       <HintPath>..\packages\LinqOptimizer.CSharp.0.6.3\lib\LinqOptimizer.CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="LZ4PCL">
-      <HintPath>..\..\LZ4PCL\bin\ReleaseUnsafe\LZ4PCL.dll</HintPath>
+    <Reference Include="LZ4PCL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>lib\LZ4PCL\LZ4PCL.dll</HintPath>
     </Reference>
     <Reference Include="ObscurCore.DTO.DtoSerialiser">
       <HintPath>..\ObscurCore.DTO\bin\Release\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
