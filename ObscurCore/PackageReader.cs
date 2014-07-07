@@ -19,7 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using LZ4.Portable;
+using LZ4PCL;
 using Nessos.LinqOptimizer.Base;
 using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography;

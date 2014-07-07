@@ -38,9 +38,9 @@ namespace ObscurCore.Cryptography.KeyAgreement
                                 "12511CFE811D0F4E6BC688B4D",
                                 "71169BE7330B3038EDB025F1"
                             },
-                            "1C45A6F9CCC2CC0E3B6C097C7",
-                            "2CFECD0037B1712B73AE19575",
-                            194)) {
+                            "71169BE7330B3038EDB025F1D0F9",
+                            "B3FB3400DEC5C4ADCEB8655D4C94",
+                            208)) {
                                 Name = Sec2EllipticCurve.Secp192k1.ToString(),
                                 DisplayName = "secp192k1",
                                 BitLength = 192,
@@ -71,9 +71,9 @@ namespace ObscurCore.Cryptography.KeyAgreement
                                 "1243AE1B4D71613BC9F780A03690E",
                                 "6B8CF07D4CA75C88957D9D670591"
                             },
-                            "35C6783EA653AE444ABECEB382C82",
-                            "5C56F89BC5375B9A04FD364E31BDD",
-                            227)) {
+                            "6B8CF07D4CA75C88957D9D67059037A4",
+                            "B8ADF1378A6EB73409FA6C9C637BA7F5",
+                            240)) {
                                 Name = Sec2EllipticCurve.Secp224k1.ToString(),
                                 DisplayName = "secp224k1",
                                 BitLength = 224,
@@ -104,9 +104,9 @@ namespace ObscurCore.Cryptography.KeyAgreement
                                 "114CA50F7A8E2F3F657C1108D9D44CFD8",
                                 "3086D221A7D46BCDE86C90E49284EB15"
                             },
-                            "C21B48869F51AF37A1B243924A13AC55",
-                            "3910DFB58043A20A1BD51FEA42AFF9311",
-                            258)) {
+                            "3086D221A7D46BCDE86C90E49284EB153DAB",
+                            "E4437ED6010E88286F547FA90ABFE4C42212",
+                            272)) {
                                 Name = Sec2EllipticCurve.Secp256k1.ToString(),
                                 DisplayName = "secp256k1",
                                 BitLength = 256,
