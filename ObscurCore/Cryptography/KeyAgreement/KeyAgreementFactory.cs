@@ -93,7 +93,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
         {
             ECPublicKeyParameters publicKey;
             try {
-                ECDomainParameters domain = NamedEllipticCurves.GetEcCurveData(ecKey.CurveName).GetParameters();
+                ECDomainParameters domain = EllipticCurveInformationStore.GetEcCurveData(ecKey.CurveName).GetParameters();
                 ECPoint point = domain.Curve.DecodePoint(ecKey.EncodedKey);
                 publicKey = new ECPublicKeyParameters("ECDHC", point, domain);
             } catch (NotSupportedException) {
@@ -109,7 +109,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
         {
             ECPrivateKeyParameters privateKey;
             try {
-                ECDomainParameters domain = NamedEllipticCurves.GetEcCurveData(ecKey.CurveName).GetParameters();
+                ECDomainParameters domain = EllipticCurveInformationStore.GetEcCurveData(ecKey.CurveName).GetParameters();
                 privateKey = new ECPrivateKeyParameters("ECDHC", new BigInteger(ecKey.EncodedKey), domain);
             } catch (NotSupportedException) {
                 throw new NotSupportedException(

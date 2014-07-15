@@ -82,20 +82,12 @@ namespace ObscurCore.Tests
 			fs = LargeBinaryFileList [0].OpenRead ();
 			fs.CopyTo(LargeBinaryFile);
             fs.Close();
-
-			var rng = new Random();
-			var data = new byte[2048];
-			while (RandomStream.Length < RandomStreamLength) {
-				rng.NextBytes(data);
-				RandomStream.Write(data, 0, data.Length);
-			}
 		}
 
         [SetUp]
         public void InitTest () {
 			SmallTextFile.Seek (0, SeekOrigin.Begin);
 			LargeBinaryFile.Seek (0, SeekOrigin.Begin);
-			RandomStream.Seek (0, SeekOrigin.Begin);
             AuxPerTestInit();
         }
 

@@ -68,17 +68,30 @@
     <Reference Include="protobuf-net">
       <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>
     </Reference>
+    <Reference Include="RingByteBuffer, Version=1.2.5135.4782, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>lib\RingByteBuffer\RingByteBuffer.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable">
       <HintPath>..\packages\Microsoft.Bcl.Immutable.1.1.22-beta\lib\portable-net45+win8+wpa81\System.Collections.Immutable.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
-    <Reference Include="RingByteBuffer">
-      <HintPath>lib\RingByteBuffer\RingByteBuffer.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Athena.cs" />
+    <Compile Include="Cryptography\Authentication\AuthenticationInformationStore.cs" />
+    <Compile Include="Cryptography\Ciphers\CipherInformationStore.cs" />
+    <Compile Include="Cryptography\Ciphers\Information\BlockCipherInformation.cs" />
+    <Compile Include="Cryptography\Ciphers\Information\StreamCipherInformation.cs" />
+    <Compile Include="Cryptography\Entropy\CsprngInformationStore.cs" />
+    <Compile Include="Cryptography\Entropy\CsRng.cs" />
+    <Compile Include="Cryptography\Entropy\Primitives\ReversedRandomWindowRng.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Information\CustomFpEcNamedCurveInformation.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Information\EllipticCurveInformation.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Information\FpEcNamedCurveInformation.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Information\TpbF2mEcNamedCurveInformation.cs" />
+    <Compile Include="Cryptography\KeyDerivation\KdfInformationStore.cs" />
     <Compile Include="Packaging\ContentTreeNode.cs" />
     <Compile Include="Cryptography\Authentication\IDigest.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />
@@ -115,10 +128,8 @@
     <Compile Include="Cryptography\Ciphers\Block\Primitives\IdeaEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\NoekeonEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\Rc6Engine.cs" />
-    <Compile Include="Cryptography\Entropy\Primitives\StreamCipherGenerator.cs" />
     <Compile Include="Cryptography\CiphertextAuthenticationException.cs" />
     <Compile Include="Cryptography\CryptoException.cs" />
-    <Compile Include="Cryptography\Entropy\Primitives\RabbitGenerator.cs" />
     <Compile Include="Cryptography\IncompleteBlockException.cs" />
     <Compile Include="Cryptography\KeyConfirmation\ConfirmationConfigurationFactory.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\DJB\Curve25519.cs" />
@@ -149,17 +160,17 @@
     <Compile Include="Cryptography\Authentication\MacFunction.cs" />
     <Compile Include="Cryptography\MaxBytesExceededException.cs" />
     <Compile Include="Cryptography\PaddingDataException.cs" />
-    <Compile Include="Information\CsprngDescription.cs" />
+    <Compile Include="Cryptography\Entropy\Information\CsprngDescription.cs" />
     <Compile Include="DebugUtility.cs" />
-    <Compile Include="Information\HashFunctionDescription.cs" />
-    <Compile Include="Information\KdfDescription.cs" />
-    <Compile Include="Information\MacFunctionDescription.cs" />
+    <Compile Include="Cryptography\Authentication\Information\HashFunctionInformation.cs" />
+    <Compile Include="Cryptography\KeyDerivation\Information\KdfInformation.cs" />
+    <Compile Include="Cryptography\Authentication\Information\MacFunctionInformation.cs" />
     <Compile Include="ItemStreamBindingAbsentException.cs" />
     <Compile Include="Packaging\FabricStripeMode.cs" />
     <Compile Include="Packaging\FrameshiftPaddingMode.cs" />
-    <Compile Include="Information\SymmetricCipherDescription.cs" />
-    <Compile Include="Information\SymmetricCipherModeDescription.cs" />
-    <Compile Include="Information\SymmetricCipherPaddingDescription.cs" />
+    <Compile Include="Cryptography\Ciphers\Information\CipherInformation.cs" />
+    <Compile Include="Cryptography\Ciphers\Information\BlockCipherModeInformation.cs" />
+    <Compile Include="Cryptography\Ciphers\Information\BlockCipherPaddingInformation.cs" />
     <None Include="Cryptography\Ciphers\Block\Primitives\RijndaelEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\SerpentEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\TwofishEngine.cs" />
@@ -171,30 +182,29 @@
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Rc4Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Salsa20Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\SosemanukEngine.cs" />
-    <Compile Include="Cryptography\Entropy\DigestRandomGenerator.cs" />
-    <Compile Include="Cryptography\Entropy\IRandomGenerator.cs" />
-    <Compile Include="Cryptography\Entropy\Primitives\ReversedWindowGenerator.cs" />
-    <Compile Include="Cryptography\Entropy\Primitives\ThreadedSeedGenerator.cs" />
-    <Compile Include="Cryptography\Entropy\SecureRandom.cs" />
-    <Compile Include="Cryptography\Entropy\StreamCsprng.cs" />
+    <Compile Include="Cryptography\Entropy\Primitives\DigestCsRng.cs" />
+    <Compile Include="Cryptography\Entropy\Primitives\ReversedWindowRng.cs" />
+    <Compile Include="Support\Random\Rng.cs" />
+    <Compile Include="Support\Random\ThreadedSeedRng.cs" />
+    <Compile Include="Cryptography\Entropy\Primitives\StreamCsprng.cs" />
     <Compile Include="Cryptography\KeyAgreement\BrainpoolEllipticCurve.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\UM1Exchange.cs" />
-    <None Include="Cryptography\Entropy\Primitives\MersenneTwister.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Helper.cs" />
     <Compile Include="DecoratingStream.cs" />
     <Compile Include="EventArgs.cs" />
+    <Compile Include="Support\Random\XorShift1204Star.cs" />
     <Compile Include="Packaging\PayloadLayoutConfigurationFactory.cs" />
     <Compile Include="Packaging\PayloadLayoutScheme.cs" />
     <Compile Include="Packaging\FabricPayloadMux.cs" />
     <Compile Include="Packaging\FrameshiftPayloadMux.cs" />
     <Compile Include="Packaging\PayloadTree.cs" />
+    <Compile Include="Support\Random\PseudorandomNumberGenerator.cs" />
     <Compile Include="Packaging\SimplePayloadMux.cs" />
-    <Compile Include="Information\PaddingRequirement.cs" />
+    <Compile Include="Cryptography\Ciphers\Information\PaddingRequirement.cs" />
     <Compile Include="Packaging\TreeNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StratCom.cs" />
-    <Compile Include="Cryptography\Entropy\Primitives\Salsa20Generator.cs" />
-    <Compile Include="Cryptography\Entropy\Csprng.cs" />
+    <Compile Include="Cryptography\Entropy\CsPrng.cs" />
     <Compile Include="Cryptography\Support\AsymmetricCipherKeyPair.cs" />
     <Compile Include="Cryptography\Support\AsymmetricKeyParameter.cs" />
     <Compile Include="Cryptography\Support\ECDomainParameters.cs" />
@@ -225,8 +235,7 @@
     <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519HansWolff.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Poly1305Mac.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\StreamCipherWrapper.cs" />
-    <Compile Include="Information\NoncePolicy.cs" />
-    <Compile Include="Cryptography\Entropy\Primitives\SosemanukGenerator.cs" />
+    <Compile Include="Cryptography\Ciphers\Information\NoncePolicy.cs" />
     <Compile Include="Cryptography\CryptographyExtensions.cs" />
     <Compile Include="Cryptography\Authentication\AuthenticationConfigurationFactory.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigest.cs" />
@@ -246,6 +255,9 @@
     <Compile Include="Support\BufferedDecoder.cs" />
     <Compile Include="Support\BufferedEncoder.cs" />
     <Compile Include="Support\ITranslator.cs" />
+    <Compile Include="Support\Random\Prng.cs" />
+    <Compile Include="Support\Random\XorShift128PlusPrng.cs" />
+    <Compile Include="Support\Random\XorShiftPrng.cs" />
     <Compile Include="Support\UrlBase64.cs" />
     <Compile Include="Support\UrlBase64Encoder.cs" />
     <Compile Include="Support\Base64.cs" />
@@ -375,9 +387,9 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP521R1Field.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP521R1FieldElement.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP521R1Point.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Information\EcNamedCurveInformation.cs" />
-    <Compile Include="Information\IPrimitiveInformation.cs" />
-    <Compile Include="Cryptography\KeyAgreement\NamedEllipticCurves.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Information\PpbF2mEcNamedCurveInformation.cs" />
+    <Compile Include="IPrimitiveInformation.cs" />
+    <Compile Include="Cryptography\KeyAgreement\EllipticCurveInformationStore.cs" />
     <Compile Include="Cryptography\KeyAgreement\DjbCurve.cs" />
     <None Include="Cryptography\Ciphers\CipherKeyFactory.cs" />
     <Compile Include="PackageWriter.cs" />
@@ -392,7 +404,7 @@
     <Compile Include="Cryptography\Authentication\AuthenticatorFactory.cs" />
     <Compile Include="Cryptography\Ciphers\CipherFactory.cs" />
     <Compile Include="Cryptography\KeyDerivation\KeyDerivationUtility.cs" />
-    <Compile Include="Cryptography\Entropy\CsprngFactory.cs" />
+    <Compile Include="Cryptography\Entropy\CsPrngFactory.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\Nat224.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224R1Curve.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224R1Field.cs" />
@@ -426,7 +438,9 @@
       <Name>ObscurCore.DTO</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Information\" />
+  </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
       <Properties>

@@ -161,6 +161,32 @@ namespace ObscurCore
             return Hex.Decode(hexSrc);
         }
 
+        /// <summary>
+        ///     Converts a byte array into a Base64-encoded string.
+        /// </summary>
+        public static string ToBase64String(this byte[] bytes, bool urlCompatible)
+        {
+            return urlCompatible ? Encoding.ASCII.GetString(UrlBase64.Encode(bytes)) : Base64.ToBase64String(bytes);
+        }
+
+        /// <summary>
+        ///     Converts a hex-encoded string to a byte array.
+        /// </summary>
+        /// <param name="b64Src">Base64-encoded data</param>
+        /// <param name="urlEncoded"></param>
+        public static byte[] Base64ToBinary(this string b64Src, bool urlEncoded)
+        {
+            if (b64Src == null) {
+                return null;
+            }
+
+            return urlEncoded ? UrlBase64.Decode(b64Src) : Base64.Decode(b64Src);
+        }
+
+
+
+
+
         public static int GetHashCodeExt(this byte[] data)
         {
             return data.GetHashCodeExt(0, data.Length);
@@ -286,7 +312,7 @@ namespace ObscurCore
                 }
             }
 #else
-            if (src.Length > DeepCopyUnsafeLimit) {
+            if (length > DeepCopyUnsafeLimit) {
                 Buffer.BlockCopy(src, srcOffset, dst, dstOffset, length);
             } else {
                 Array.Copy(src, srcOffset, dst, dstOffset, length);

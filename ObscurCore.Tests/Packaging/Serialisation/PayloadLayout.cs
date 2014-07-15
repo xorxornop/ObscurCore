@@ -31,7 +31,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Maximum = FrameshiftPayloadMux.DefaultFixedPaddingLength
 			        }.SerialiseDto(),
                 PrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
+				PrngConfiguration = CsPrngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto<StreamCipherCsprngConfiguration>()
             };
 
@@ -53,7 +53,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 			            Maximum = FrameshiftPayloadMux.MaximumPaddingLength
 			        }.SerialiseDto(),
                 PrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
+				PrngConfiguration = CsPrngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto<StreamCipherCsprngConfiguration>()
             };
 

@@ -13,18 +13,19 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore.Information
+namespace ObscurCore.Cryptography.Ciphers.Information
 {
-    public sealed class KdfDescription
+    public sealed class StreamCipherInformation : CipherInformation
     {
         /// <summary>
-        /// Name of the KDF scheme (must be a member of KDFDirectory).
+        /// Array of allowable sizes (in bits) for the cipher nonce.
         /// </summary>
-        public string Name { get; internal set; }
+        public int[] AllowableNonceSizes { get; internal set; }
 
         /// <summary>
-        /// Name to show a user or for a detailed specification.
+        /// If no nonce size is supplied when configuring the cipher, 
+        /// this is the size that should be used.
         /// </summary>
-        public string DisplayName { get; internal set; }
+        public int DefaultNonceSize { get; internal set; }
     }
 }

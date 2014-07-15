@@ -13,7 +13,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Padding
          *
          * @param param parameters, if any required.
          */
-        void Init(SecureRandom random);
+        void Init(CsRng random);
             //throws ArgumentException;
 
         /**

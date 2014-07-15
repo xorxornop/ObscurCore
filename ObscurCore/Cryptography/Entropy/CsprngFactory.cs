@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
 using ObscurCore.Cryptography.Entropy.Primitives;
 using ObscurCore.DTO;
 
@@ -23,21 +24,21 @@ namespace ObscurCore.Cryptography.Entropy
 	/// <summary>
 	/// Instantiator for CSPRNGs.
 	/// </summary>
-	public static class CsprngFactory
+	public static class CsPrngFactory
 	{
-		private readonly static IDictionary<CsPseudorandomNumberGenerator, Func<byte[], Csprng>> PrngInstantiators =
-			new Dictionary<CsPseudorandomNumberGenerator, Func<byte[], Csprng>>();
+		private readonly static IDictionary<CsPseudorandomNumberGenerator, Func<byte[], CsPrng>> PrngInstantiators =
+			new Dictionary<CsPseudorandomNumberGenerator, Func<byte[], CsPrng>>();
 
 		/// <summary>
 		/// Instantiates and returns a CSPRNG function.
 		/// </summary>
 		/// <param name="csprngEnum">Underlying function to use.</param>
 		/// <param name="config">Serialised configuration of the CSPRNG.</param>
-		public static Csprng CreateCsprng (CsPseudorandomNumberGenerator csprngEnum, byte[] config) {
+		public static CsPrng CreateCsprng (CsPseudorandomNumberGenerator csprngEnum, byte[] config) {
 			return PrngInstantiators[csprngEnum](config);
 		}
 
-		public static Csprng CreateCsprng (string csprngName, byte[] config) {
+		public static CsPrng CreateCsprng (string csprngName, byte[] config) {
 			return CreateCsprng(csprngName.ToEnum<CsPseudorandomNumberGenerator>(), config);
 		}
 
@@ -47,11 +48,11 @@ namespace ObscurCore.Cryptography.Entropy
 			return StreamCsprng.CreateRandomConfiguration(cipherEnum);
 		}
 
-		static CsprngFactory ()
+		static CsPrngFactory ()
 		{
-			PrngInstantiators.Add(CsPseudorandomNumberGenerator.Salsa20, config => new Salsa20Generator(config));
-			PrngInstantiators.Add(CsPseudorandomNumberGenerator.Sosemanuk, config => new SosemanukGenerator(config));
-            PrngInstantiators.Add(CsPseudorandomNumberGenerator.Rabbit, config => new RabbitGenerator(config));
+            PrngInstantiators.Add(CsPseudorandomNumberGenerator.Salsa20, config => new StreamCsprng(new Salsa20Engine(), config));
+			PrngInstantiators.Add(CsPseudorandomNumberGenerator.Sosemanuk, config => new StreamCsprng(new SosemanukEngine(), config));
+            PrngInstantiators.Add(CsPseudorandomNumberGenerator.Rabbit, config => new StreamCsprng(new RabbitEngine(), config));
 		}
 	}
 }

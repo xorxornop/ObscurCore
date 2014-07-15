@@ -17,10 +17,10 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
-using ObscurCore.Cryptography;
+using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Entropy.Primitives;
-using ObscurCore.DTO;
+using ObscurCore.Support.Random;
 
 namespace ObscurCore.Tests.Cryptography.Entropy
 {
@@ -31,7 +31,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         [Test]
         public void SOSEMANUK_Int32 () {
-			var generator = new SosemanukGenerator(CsprngFactory.CreateStreamCipherCsprngConfiguration(
+            var generator = new StreamCsprng(new SosemanukEngine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk));
             TimeSpan time;
             double average;
@@ -48,7 +48,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         [Test]
         public void SOSEMANUK_UInt32 () {
-			var generator = new SosemanukGenerator(CsprngFactory.CreateStreamCipherCsprngConfiguration(
+            var generator = new StreamCsprng(new SosemanukEngine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk));
             TimeSpan time;
             double average;
@@ -65,7 +65,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         [Test]
         public void Salsa20_Int32 () {
-			var generator = new Salsa20Generator(CsprngFactory.CreateStreamCipherCsprngConfiguration(
+			var generator = new StreamCsprng(new Salsa20Engine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Salsa20));
             TimeSpan time;
             double average;
@@ -82,7 +82,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         [Test]
         public void Salsa20_UInt32 () {
-			var generator = new Salsa20Generator(CsprngFactory.CreateStreamCipherCsprngConfiguration(
+            var generator = new StreamCsprng(new Salsa20Engine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Salsa20));
             TimeSpan time;
             double average;
@@ -97,12 +97,49 @@ namespace ObscurCore.Tests.Cryptography.Entropy
             DisplayResult(average, UInt32.MaxValue, time, "UInt32");
         }
 
+        [Test]
+        public void Rabbit_Int32()
+        {
+            var generator = new StreamCsprng(new RabbitEngine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
+                    CsPseudorandomNumberGenerator.Rabbit));
+            TimeSpan time;
+            double average;
+
+            RunTestInt32(generator, ((csprng, output) =>
+            {
+                for (var i = 0; i < output.Length; i++) {
+                    output[i] = csprng.Next();
+                }
+            }), out average, out time);
+
+            DisplayResult(average, Int32.MaxValue, time, "Int32");
+        }
+
+        [Test]
+        public void Rabbit_UInt32()
+        {
+            var generator = new StreamCsprng(new RabbitEngine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
+                    CsPseudorandomNumberGenerator.Rabbit));
+            TimeSpan time;
+            double average;
+
+            RunTestUInt32(generator, ((csprng, output) =>
+            {
+                for (var i = 0; i < output.Length; i++) {
+                    output[i] = csprng.NextUInt32();
+                }
+            }), out average, out time);
+
+            DisplayResult(average, UInt32.MaxValue, time, "UInt32");
+        }
+
         private static void DisplayResult(double average, long range, TimeSpan timeSpan, string type) {
             Assert.Pass("<> {0:P4} @ {1:N2} {2}/sec.", Math.Abs(1 - ((decimal)(range / 2.0) / (decimal)average)), 
                 ((double)Iterations / timeSpan.Milliseconds) * 1000, type);
         }
 
-        private void RunTestInt32(Csprng csprng, Action<Csprng, Int32[]> core, out double average, out TimeSpan timeSpan) {
+        private void RunTestInt32(CsPrng csprng, Action<CsPrng, Int32[]> core, out double average, out TimeSpan timeSpan)
+        {
             var output = new Int32[Iterations];
             var sw = new Stopwatch();
 
@@ -114,7 +151,8 @@ namespace ObscurCore.Tests.Cryptography.Entropy
             average = output.Average();
         }
 
-        private void RunTestUInt32(Csprng csprng, Action<Csprng, UInt32[]> core, out double average, out TimeSpan timeSpan) {
+        private void RunTestUInt32(CsPrng csprng, Action<CsPrng, UInt32[]> core, out double average, out TimeSpan timeSpan)
+        {
             var output = new UInt32[Iterations];
             var sw = new Stopwatch();
 

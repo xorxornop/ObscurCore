@@ -9,11 +9,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Padding
     */
     public class Iso10126D2Padding: IBlockCipherPadding
     {
-        private SecureRandom random;
-
+        private CsRng _random;
 		
-        public void Init(SecureRandom random) {
-            this.random = (random != null) ? random : new SecureRandom();
+        public void Init(CsRng random)
+        {
+            this._random = random ?? StratCom.EntropySupplier;
         }
 
         /**
@@ -38,7 +38,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Padding
 
             while (inOff < (input.Length - 1))
             {
-                input[inOff] = (byte)random.NextInt();
+                input[inOff] = (byte)_random.Next();
                 inOff++;
             }
 

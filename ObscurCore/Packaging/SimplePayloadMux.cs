@@ -24,6 +24,7 @@ using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
+using ObscurCore.Support.Random;
 
 namespace ObscurCore.Packaging
 {
@@ -34,7 +35,7 @@ namespace ObscurCore.Packaging
     {
         protected const int BufferSize = 4096;
         protected readonly byte[] Buffer = new byte[BufferSize];
-        protected readonly Csprng SelectionSource;
+        protected readonly Prng SelectionSource;
 
         /// <summary>
         ///     Initializes a new instance of a payload multiplexer.
@@ -55,8 +56,16 @@ namespace ObscurCore.Packaging
                 throw new ArgumentNullException("config");
             }
 
-            SelectionSource = CsprngFactory.CreateCsprng(config.PrngName.ToEnum<CsPseudorandomNumberGenerator>(),
-                config.PrngConfiguration);
+            if (config.PrngName.IsMemberInEnum<CsPseudorandomNumberGenerator>()) {
+                SelectionSource = CsPrngFactory.CreateCsprng(config.PrngName.ToEnum<CsPseudorandomNumberGenerator>(),
+                    config.PrngConfiguration);
+            } else if (config.PrngName.IsMemberInEnum<PseudorandomNumberGenerator>()) {
+                throw new NotSupportedException();
+                //SelectionSource = new XorShift128PlusPrng(seed);
+            } else {
+                throw new ConfigurationInvalidException();
+            }
+
             NextSource();
         }
 

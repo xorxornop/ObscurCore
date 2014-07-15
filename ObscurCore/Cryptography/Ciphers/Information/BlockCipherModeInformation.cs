@@ -13,33 +13,35 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore.Information
+using ObscurCore.Cryptography.Ciphers.Block;
+
+namespace ObscurCore.Cryptography.Ciphers.Information
 {
-    public sealed class SymmetricCipherModeDescription
+    public sealed class BlockCipherModeInformation : IPrimitiveInformation
     {
         /// <summary>
-        /// Name of the cryptographic cipher mode (must be a member of BlockCipherModes or AEADBlockCipherModes).
+        ///     Name of the cryptographic cipher mode (must be a member of <see cref="BlockCipherMode"/>).
         /// </summary>
         public string Name { get; internal set; }
 
         /// <summary>
-        /// Name to show a user or for a detailed specification.
+        ///     Name to show a user or for a detailed specification.
         /// </summary>
         public string DisplayName { get; internal set; }
 
         /// <summary>
-        /// Array of allowable sizes (in bits) for the block size of the cipher. Set to -1 if unrestricted.
+        ///     Array of allowable sizes (in bits) for the block size of the cipher. Set to -1 if unrestricted.
         /// </summary>
         public int[] AllowableBlockSizes { get; internal set; }
 
         /// <summary>
-        /// Whether this mode requires padding.
+        ///     Whether this mode requires padding.
         /// </summary>
         public PaddingRequirement PaddingRequirement { get; internal set; }
 
         /// <summary>
-        /// Whether the nonce/IV can be re-used in a later encryption operation, where data 
-        /// will travel over the same channel, or otherwise might be subjected to analysis.
+        ///     Whether the nonce/IV can be re-used in a later encryption operation, where data
+        ///     will travel over the same channel, or otherwise might be subjected to analysis.
         /// </summary>
         public NoncePolicy NonceReusePolicy { get; internal set; }
     }

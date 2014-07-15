@@ -13,10 +13,10 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Padding
 		/**
 		 * Initialise the padder.
 		 *
-		 * @param random - a SecureRandom if available.
+		 * @param random - a CsRng if available.
 		 */
 		public void Init(
-			SecureRandom random)
+			CsRng random)
 		{
 			// nothing to do.
 		}

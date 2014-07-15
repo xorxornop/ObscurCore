@@ -1,4 +1,6 @@
-﻿namespace ObscurCore.Cryptography.Entropy
+﻿using System;
+
+namespace ObscurCore.Cryptography.Entropy
 {
     /// <summary>
     /// Interface that CSPRNGs conform to.

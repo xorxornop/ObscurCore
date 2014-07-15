@@ -191,7 +191,7 @@ namespace ObscurCore.Tests.Cryptography
 			var msInputPlaintext = LargeBinaryFile;
 			var key = overrideKey ?? CreateRandomByteArray (config.KeySizeBits);
 
-            var msCiphertext = new MemoryStream();
+            var msCiphertext = new MemoryStream((int)(msInputPlaintext.Length * 1.1));
 			var sw = new Stopwatch();
 
 			// TEST STARTS HERE
@@ -203,7 +203,7 @@ namespace ObscurCore.Tests.Cryptography
 			sw.Stop();
 			var encryptionElapsed = sw.Elapsed;
 
-			var msOutputPlaintext = new MemoryStream();
+            var msOutputPlaintext = new MemoryStream((int)msInputPlaintext.Length);
 			msCiphertext.Seek(0, SeekOrigin.Begin);
 
 			sw.Reset();

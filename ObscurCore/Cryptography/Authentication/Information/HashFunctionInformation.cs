@@ -13,21 +13,23 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore.Information
+namespace ObscurCore.Cryptography.Authentication.Information
 {
-    /// <summary>
-    /// Requirements for padding in a block cipher mode of operation.
-    /// </summary>
-    public enum PaddingRequirement
+    public sealed class HashFunctionInformation : IPrimitiveInformation
     {
-        None = 0,
         /// <summary>
-        /// Padding scheme must be used if plaintext length is less than 1 block length.
+        ///     Size of the hash/digest produced in bits.
         /// </summary>
-        IfUnderOneBlock,
+        public int OutputSize { get; internal set; }
+
         /// <summary>
-        /// Self-explanatory.
+        ///     Name of the hash function (must be a member of <see cref="HashFunction"/>).
         /// </summary>
-        Always
+        public string Name { get; internal set; }
+
+        /// <summary>
+        ///     Name to show a user or for a detailed specification.
+        /// </summary>
+        public string DisplayName { get; internal set; }
     }
 }

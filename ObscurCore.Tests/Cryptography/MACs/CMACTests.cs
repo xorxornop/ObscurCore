@@ -10,7 +10,7 @@ using ObscurCore.Cryptography.Ciphers.Block;
 
 namespace ObscurCore.Tests.Cryptography.MACs
 {
-    class CMACTests : MACTestBase
+    class CMACTests : MacTestBase
     {
         const MacFunction function = MacFunction.Cmac;
 
@@ -20,17 +20,17 @@ namespace ObscurCore.Tests.Cryptography.MACs
 
         [Test]
         public void CMAC_AES () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(BlockCipher.Aes.ToString()));
+            RunMacTest(function, Encoding.UTF8.GetBytes(BlockCipher.Aes.ToString()));
         }
 
         [Test]
         public void CMAC_Blowfish () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(BlockCipher.Blowfish.ToString()));
+            RunMacTest(function, Encoding.UTF8.GetBytes(BlockCipher.Blowfish.ToString()));
         }
 
         [Test]
         public void CMAC_Camellia () {
-            RunMACTest(function, Encoding.UTF8.GetBytes(BlockCipher.Camellia.ToString()), null, CreateRandomBytes(256));
+            RunMacTest(function, Encoding.UTF8.GetBytes(BlockCipher.Camellia.ToString()), null, CreateRandomBytes(256));
         }
 #if INCLUDE_CAST5AND6
         [Test]
@@ -45,27 +45,27 @@ namespace ObscurCore.Tests.Cryptography.MACs
 #endif
         [Test]
         public void CMAC_IDEA () {
-			RunMACTest(function, Encoding.UTF8.GetBytes(BlockCipher.Idea.ToString()));
+			RunMacTest(function, Encoding.UTF8.GetBytes(BlockCipher.Idea.ToString()));
         }
 
         [Test]
         public void CMAC_NOEKEON () {
-			RunMACTest(function, Encoding.UTF8.GetBytes(BlockCipher.Noekeon.ToString()));
+			RunMacTest(function, Encoding.UTF8.GetBytes(BlockCipher.Noekeon.ToString()));
         }
 
         [Test]
         public void CMAC_RC6 () {
-			RunMACTest(function, Encoding.UTF8.GetBytes(BlockCipher.Rc6.ToString()), null, CreateRandomBytes(256));
+			RunMacTest(function, Encoding.UTF8.GetBytes(BlockCipher.Rc6.ToString()), null, CreateRandomBytes(256));
         }
 
         [Test]
         public void CMAC_Serpent () {
-			RunMACTest(function, Encoding.UTF8.GetBytes(BlockCipher.Serpent.ToString()), null, CreateRandomBytes(256));
+			RunMacTest(function, Encoding.UTF8.GetBytes(BlockCipher.Serpent.ToString()), null, CreateRandomBytes(256));
         }
 
         [Test]
         public void CMAC_Twofish () {
-			RunMACTest(function, Encoding.UTF8.GetBytes(BlockCipher.Twofish.ToString()), null, CreateRandomBytes(256));
+			RunMacTest(function, Encoding.UTF8.GetBytes(BlockCipher.Twofish.ToString()), null, CreateRandomBytes(256));
         }
     }
 }

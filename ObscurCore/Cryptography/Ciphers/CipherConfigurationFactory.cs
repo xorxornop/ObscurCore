@@ -16,9 +16,9 @@
 using System;
 using System.Linq;
 using ObscurCore.Cryptography.Ciphers.Block;
+using ObscurCore.Cryptography.Ciphers.Information;
 using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.DTO;
-using ObscurCore.Information;
 
 namespace ObscurCore.Cryptography.Ciphers
 {
@@ -42,7 +42,7 @@ namespace ObscurCore.Cryptography.Ciphers
             }
 
             // Set the block size
-            int blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize.Value;
+            int blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize;
             if (blockSize == null ||
                 Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
                 config.BlockSizeBits = blockSizeNonNull;
@@ -79,8 +79,8 @@ namespace ObscurCore.Cryptography.Ciphers
             }
             config.CipherName = cipher.ToString();
 
-            if (Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize != -1) {
-                config.InitialisationVector = new byte[Athena.Cryptography.StreamCiphers[cipher].DefaultIvSize / 8];
+            if (Athena.Cryptography.StreamCiphers[cipher].DefaultNonceSize != -1) {
+                config.InitialisationVector = new byte[Athena.Cryptography.StreamCiphers[cipher].DefaultNonceSize / 8];
                 StratCom.EntropySupplier.NextBytes(config.InitialisationVector);
             }
 

@@ -15,6 +15,7 @@
 
 using System;
 using System.Text;
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.DTO;
 
@@ -99,7 +100,7 @@ namespace ObscurCore.Cryptography.Authentication
 	    /// <param name="outputSize">Output size of the CMAC in bytes.</param>
         /// <returns>The authentication configuration as a <see cref="AuthenticationFunctionConfiguration" />.</returns>
 	    public static AuthenticationFunctionConfiguration CreateAuthenticationConfigurationCmac(BlockCipher cipherEnum, out int outputSize) {
-			outputSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize.Value / 8;
+			outputSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize / 8;
 			int keySize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultKeySize;
 			byte[] functionConfig = Encoding.UTF8.GetBytes(cipherEnum.ToString());
 

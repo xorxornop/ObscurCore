@@ -4,21 +4,21 @@ using ObscurCore.Cryptography.Entropy;
 namespace ObscurCore.Cryptography.Ciphers.Block.Padding
 {
     /**
-    * A padder that adds X9.23 padding to a block - if a SecureRandom is
+    * A padder that adds X9.23 padding to a block - if a CsRng is
     * passed in random padding is assumed, otherwise padding with zeros is used.
     */
     public class X923Padding
 		: IBlockCipherPadding
     {
-        private SecureRandom random;
+        private CsRng random;
 
 		/**
         * Initialise the padder.
         *
-        * @param random a SecureRandom if one is available.
+        * @param random a CsRng if one is available.
         */
         public void Init(
-			SecureRandom random)
+			CsRng random)
         {
             this.random = random;
         }
@@ -51,7 +51,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Padding
                 }
                 else
                 {
-                    input[inOff] = (byte)random.NextInt();
+                    input[inOff] = (byte)random.Next();
                 }
                 inOff++;
             }

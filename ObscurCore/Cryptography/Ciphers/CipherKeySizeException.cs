@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Stream;
 
@@ -25,8 +24,6 @@ namespace ObscurCore.Cryptography.Ciphers
             Cipher = null;
             AllowedSizes = null;
         }
-
-        protected CipherKeySizeException(SerializationInfo info, StreamingContext context) : base(info, context) {}
 
         public CipherKeySizeException(BlockCipher cipherEnum, int requestedSizeBits)
             : this(cipherEnum.ToString(), requestedSizeBits, Athena.Cryptography.BlockCiphers[cipherEnum].AllowableKeySizes.ToList()) {}

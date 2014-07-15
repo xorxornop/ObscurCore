@@ -1,3 +1,4 @@
+//
 //  Copyright 2013  Matthew Ducker
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +13,18 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
-using ObscurCore.DTO;
-
-namespace ObscurCore.Cryptography.Entropy.Primitives
+namespace ObscurCore.Cryptography.Ciphers.Information
 {
     /// <summary>
-    /// Generates deterministic cryptographically secure pseudorandom number sequence 
-    /// using internal Salsa20 stream cipher.
+    /// Requirements for padding in a block cipher mode of operation.
     /// </summary>
-    public sealed class Salsa20Generator : StreamCsprng
+    public enum PaddingRequirement
     {
-		public Salsa20Generator(StreamCipherCsprngConfiguration config) : base(new Salsa20Engine(), config) {
-			Cipher.Init(true, Config.Key, Config.Nonce);
-        }
-
-        public Salsa20Generator(byte[] config) : base(new Salsa20Engine(), config) {
-			Cipher.Init(true, Config.Key, Config.Nonce);
-        }
+        None = 0,
+        /// <summary>
+        /// Padding scheme must be used if plaintext length is less than 1 block length.
+        /// </summary>
+        IfUnderOneBlock,
+        Always
     }
 }

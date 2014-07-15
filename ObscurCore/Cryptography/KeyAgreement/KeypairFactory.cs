@@ -48,7 +48,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
                 GenerateEcKeypair(curveName, out Q, out d);
 
                 keypair = new EcKeypair {
-                    CurveProviderName = NamedEllipticCurves.GetProvider(curveName),
+                    CurveProviderName = EllipticCurveInformationStore.GetProvider(curveName),
                     CurveName = curveName,
                     EncodedPublicKey = Q.GetEncoded(),
                     EncodedPrivateKey = d.ToByteArray()
@@ -60,7 +60,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
 
         internal static void GenerateEcKeypair(string curveName, out ECPoint Q, out BigInteger d)
         {
-            ECDomainParameters domain = NamedEllipticCurves.Curves[curveName].GetParameters();
+            ECDomainParameters domain = Athena.Cryptography.Curves[curveName].GetParameters();
             GenerateEcKeypair(domain, out Q, out d);
         }
 

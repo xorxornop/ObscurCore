@@ -22,9 +22,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Padding
         }
 
 		/// <summary> Initialise the padder.</summary>
-        /// <param name="random">- a SecureRandom if available.
+        /// <param name="random">- a CsRng if available.
         /// </param>
-        public virtual void Init(SecureRandom random)
+        public virtual void Init(CsRng random)
         {
             // nothing to do.
         }

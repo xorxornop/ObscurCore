@@ -15,8 +15,8 @@
 
 using System;
 using System.Linq;
+using ObscurCore.Cryptography.Ciphers.Information;
 using ObscurCore.DTO;
-using ObscurCore.Information;
 
 namespace ObscurCore.Cryptography.Ciphers.Block
 {

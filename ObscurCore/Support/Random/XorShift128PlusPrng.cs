@@ -1,4 +1,4 @@
-﻿//
+//
 //  Copyright 2014  Matthew Ducker
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,22 +13,27 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using ObscurCore.Cryptography.Ciphers;
-using ObscurCore.Cryptography.Ciphers.Stream;
-using ObscurCore.DTO;
-
-namespace ObscurCore.Cryptography.Entropy.Primitives
+namespace ObscurCore.Support.Random
 {
-    /// <summary>
-    /// Generates deterministic cryptographically secure pseudorandom number sequence 
-    /// using internal Rabbit stream cipher.
-    /// </summary>
-    public sealed class StreamCipherGenerator : StreamCsprng
+    public class XorShift128PlusPrng : XorShiftPrng
     {
-        public StreamCipherGenerator(StreamCipherCsprngConfiguration config)
-            : base(CipherFactory.CreateStreamCipher(config.CipherName.ToEnum<StreamCipher>()), config)
+        private const int ArrayStateSize = 2;
+
+        public XorShift128PlusPrng(ulong[] seed = null)
+            : base(ArrayStateSize, seed) {}
+
+        public XorShift128PlusPrng(byte[] seed)
+            : base(ArrayStateSize, seed) {}
+
+        protected override ulong Generate()
         {
-            Cipher.Init(true, Config.Key, Config.Nonce);
+            ulong s1 = S[0];
+            ulong s0 = S[1];
+            S[0] = s0;
+            s1 ^= s1 << 23; // a
+            S[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26));
+            ulong ul = S[1] + s0; // b, c
+            return ul;
         }
     }
 }

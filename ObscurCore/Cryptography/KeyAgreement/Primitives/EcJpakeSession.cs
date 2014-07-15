@@ -86,7 +86,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <param name="digest">Digest/hash function.</param>
         /// <param name="random">Random data generator/source.</param>
         public EcJpakeSession(string participantId, string password, ECDomainParameters group, IDigest digest,
-            SecureRandom random)
+            CsRng random)
         {
             if (String.IsNullOrEmpty(participantId)) {
                 throw new ArgumentException("Participant ID must not be null/empty.");
@@ -162,7 +162,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <summary>
         ///     Source of random bytes.
         /// </summary>
-        public SecureRandom EntropySupply { get; private set; }
+        public CsRng EntropySupply { get; private set; }
 
         #endregion
 

@@ -13,7 +13,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using System;
 using NUnit.Framework;
 
 using ObscurCore.Cryptography.KeyAgreement;
@@ -72,7 +71,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         }
 
         [Test]
-        public void Secp384r1_Keccak224()
+        public void Secp224r1_Keccak224()
         {
             TestEcJPake(Sec2EllipticCurve.Secp224r1.ToString(), HashFunction.Keccak224);
         }
@@ -149,7 +148,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 
 		private static void TestEcJPake(string curveName, HashFunction hashFunction) {
 			const string password = "green eggs and ham";
-			var ecParams = NamedEllipticCurves.GetEcCurveData (curveName).GetParameters();
+			var ecParams = EllipticCurveInformationStore.GetEcCurveData (curveName).GetParameters();
 			var digest = AuthenticatorFactory.CreateHashPrimitive (hashFunction);
 
 			var alice = new EcJpakeSession ("ObscurCore_P0", password, ecParams, digest, StratCom.EntropySupplier);

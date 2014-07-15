@@ -13,12 +13,12 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore.Information
+namespace ObscurCore.Cryptography.Ciphers.Information
 {
-    public sealed class SymmetricCipherDescription
+    public class CipherInformation : IPrimitiveInformation
     {
         /// <summary>
-        /// Name of the cryptographic cipher transform (must be a member of SymmetricBlockCiphers or SymmetricStreamCiphers).
+        /// Name of the cryptographic cipher transform.
         /// </summary>
         public string Name { get; internal set; }
 
@@ -26,26 +26,6 @@ namespace ObscurCore.Information
         /// Name to show a user or for a detailed specification.
         /// </summary>
         public string DisplayName { get; internal set; }
-
-        /// <summary>
-        /// Array of allowable sizes (in bits) for the block size of the cipher, where applicable. Set to -1 if stream cipher.
-        /// </summary>
-        public int[] AllowableBlockSizes { get; internal set; }
-
-        /// <summary>
-        /// If no block size size is supplied when configuring the cipher, this is the size that should be used, where applicable. Set to -1 if stream cipher.
-        /// </summary>
-        public int? DefaultBlockSize { get; internal set; }
-
-        /// <summary>
-        /// Array of allowable sizes (in bits) for the cipher initialisation vector (IV).
-        /// </summary>
-        public int[] AllowableIvSizes { get; internal set; }
-
-        /// <summary>
-        /// If no IV size is supplied when configuring the cipher, this is the size that should be used.
-        /// </summary>
-        public int DefaultIvSize { get; internal set; }
 
         /// <summary>
         /// Array of allowable sizes (in bits) for the cryptographic key.

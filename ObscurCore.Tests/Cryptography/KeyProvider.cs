@@ -50,7 +50,7 @@ namespace ObscurCore.Tests.Cryptography
                 StratCom.EntropySupplier.NextBytes(newKey);
                 symKeys.Add(newKey);
 
-				var curveName = NamedEllipticCurves.Curves.Keys.ElementAt (StratCom.EntropySupplier.Next (NamedEllipticCurves.Curves.Count));
+				var curveName = Athena.Cryptography.Curves.Keys.ElementAt(StratCom.EntropySupplier.Next(Athena.Cryptography.Curves.Count));
 				ecKeypairs.Add(KeypairFactory.GenerateEcKeypair(curveName));
             }
 

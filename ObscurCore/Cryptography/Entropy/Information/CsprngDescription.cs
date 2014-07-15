@@ -13,22 +13,18 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore.Information
+namespace ObscurCore.Cryptography.Entropy.Information
 {
-    public sealed class MacFunctionDescription
+    public sealed class CsprngDescription
     {
         /// <summary>
-        /// Name of the MAC function.
+        ///     Name of the CSPRNG scheme (must be a member of <see cref="CsPseudorandomNumberGenerator"/>).
         /// </summary>
         public string Name { get; internal set; }
-        /// <summary>
-        /// Name to show a user or for a detailed specification.
-        /// </summary>
-        public string DisplayName { get; internal set; }
 
         /// <summary>
-        /// Size of the MAC produced in bits. Null if output size depends on configuration.
+        ///     Name to show a user or for a detailed specification.
         /// </summary>
-        public int? OutputSize { get; internal set; }
+        public string DisplayName { get; internal set; }
     }
 }

@@ -13,7 +13,7 @@ namespace ObscurCore.Cryptography.Signing.Primitives
 	public class ECDsaSigner
 	{
 		private ECKeyParameters key;
-		private SecureRandom random;
+		private CsRng random;
 
 		public string AlgorithmName
 		{
@@ -35,7 +35,7 @@ namespace ObscurCore.Cryptography.Signing.Primitives
 //				}
 //				else
 //				{
-//					this.random = new SecureRandom();
+//					this.random = new CsRng();
 //				}
 //
 //				if (!(parameters is ECPrivateKeyParameters))

@@ -13,22 +13,18 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore.Information
+namespace ObscurCore.Cryptography.KeyDerivation.Information
 {
-    public sealed class HashFunctionDescription
-    {	
+    public sealed class KdfInformation : IPrimitiveInformation
+    {
         /// <summary>
-        /// Name of the hash function (must be a member of HashFunctionDirectory).
+        ///     Name of the KDF scheme (must be a member of <see cref="KeyDerivationFunction"/>).
         /// </summary>
         public string Name { get; internal set; }
-        /// <summary>
-        /// Name to show a user or for a detailed specification.
-        /// </summary>
-        public string DisplayName { get; internal set; }
 
         /// <summary>
-        /// Size of the hash/digest produced in bits.
+        ///     Name to show a user or for a detailed specification.
         /// </summary>
-        public int OutputSize { get; internal set; }
+        public string DisplayName { get; internal set; }
     }
 }

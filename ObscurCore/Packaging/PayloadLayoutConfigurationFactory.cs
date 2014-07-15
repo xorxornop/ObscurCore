@@ -15,6 +15,7 @@
 
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
+using ObscurCore.Support.Random;
 
 namespace ObscurCore.Packaging
 {	
@@ -29,11 +30,11 @@ namespace ObscurCore.Packaging
 		{
 		    const CsPseudorandomNumberGenerator defaultCsprng = CsPseudorandomNumberGenerator.Rabbit; // Fast initialisation!
 
-			var config = new PayloadConfiguration {
+            var config = new PayloadConfiguration {
                 SchemeName = schemeEnum.ToString(),
                 PrngName = defaultCsprng.ToString(),
-				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(defaultCsprng).SerialiseDto()
-			};
+                PrngConfiguration = CsPrngFactory.CreateStreamCipherCsprngConfiguration(defaultCsprng).SerialiseDto()
+            };
 			
 			switch (schemeEnum) {
 			case PayloadLayoutScheme.Simple:
@@ -70,7 +71,7 @@ namespace ObscurCore.Packaging
 			            Maximum = fixedSize,
 			        }.SerialiseDto(),
 				PrngName = csprngEnum.ToString(),
-				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
+				PrngConfiguration = CsPrngFactory.CreateStreamCipherCsprngConfiguration(
                     csprngEnum).SerialiseDto()
 			};
 		    return config;
@@ -86,7 +87,7 @@ namespace ObscurCore.Packaging
 			            Maximum = (maxPadding == null ? FrameshiftPayloadMux.MaximumPaddingLength : maxPadding.Value)
 			        }.SerialiseDto(),
 				PrngName = csprngEnum.ToString(),
-				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
+				PrngConfiguration = CsPrngFactory.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
 			};
             return config;
 	    }

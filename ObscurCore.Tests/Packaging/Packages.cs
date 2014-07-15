@@ -38,7 +38,7 @@ namespace ObscurCore.Tests.Packaging
             Array.Copy(preKeyEnumerated, preKey, preKey.Length);
 
             int totalLen = IOTestBase.LargeBinaryFileList.Aggregate(0, (i, info) => (int)info.Length);
-            int expLen = (int)(totalLen * 0.1);
+            int expLen = (int)(totalLen * 1.1);
 
             TimeSpan enc, dec;
             using (var ms = new MemoryStream(expLen)) {
@@ -110,7 +110,7 @@ namespace ObscurCore.Tests.Packaging
                 keypair => keypair.CurveName.Equals(senderKeyEnumerated.CurveName));
 
             int totalLen = data.Aggregate(0, (i, info) => (int)info.Length);
-            int expLen = (int)(totalLen * 0.1);
+            int expLen = (int)(totalLen * 1.1);
 
             TimeSpan enc, dec;
             using (var ms = new MemoryStream(expLen)) {
@@ -152,7 +152,7 @@ namespace ObscurCore.Tests.Packaging
 
             int totalLen = dir.EnumerateFiles("*", SearchOption.AllDirectories)
                 .Aggregate(0, (i, info) => (int)info.Length);
-            int expLen = (int)(totalLen * 0.1);
+            int expLen = (int)(totalLen * 1.1);
 
             TimeSpan enc, dec;
             using (var ms = new MemoryStream(expLen)) {

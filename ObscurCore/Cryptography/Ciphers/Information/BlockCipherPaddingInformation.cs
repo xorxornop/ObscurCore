@@ -13,12 +13,14 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore.Information
+using ObscurCore.Cryptography.Ciphers.Block;
+
+namespace ObscurCore.Cryptography.Ciphers.Information
 {
-    public sealed class SymmetricCipherPaddingDescription
+    public sealed class BlockCipherPaddingInformation : IPrimitiveInformation
     {
         /// <summary>
-        /// Name of the block cipher padding scheme (must be a member of BlockCipherPaddingTypes).
+        /// Name of the block cipher padding scheme (must be a member of <see cref="BlockCipherPadding"/>).
         /// </summary>
         public string Name { get; internal set; }
 

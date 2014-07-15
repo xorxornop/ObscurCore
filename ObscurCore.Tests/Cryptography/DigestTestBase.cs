@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
-using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 
 namespace ObscurCore.Tests.Cryptography
@@ -9,10 +8,10 @@ namespace ObscurCore.Tests.Cryptography
     public abstract class DigestTestBase : IOTestBase
     {
         protected void RunDigestTest (HashFunction function) {
-            byte[] outputHash = null;
+            byte[] outputHash;
             var sw = new Stopwatch();
-            using (var outputMS = new MemoryStream()) {
-                using (var macS = new HashStream(outputMS, true, function, out outputHash, false)) {
+            using (var output = new MemoryStream((int)LargeBinaryFile.Length)) {
+                using (var macS = new HashStream(output, true, function, out outputHash, false)) {
                     sw.Start();
                     LargeBinaryFile.CopyTo(macS);
                     sw.Stop();

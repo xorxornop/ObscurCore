@@ -795,7 +795,9 @@ namespace ObscurCore
                 // Default to writing to memory
                 int totalLen =
                     _manifest.PayloadItems.AsQueryExpr().Aggregate(0, (i, item) => (int) item.ExternalLength).Run();
-                var expLen = (int) (totalLen * 0.1);
+                var expLen = (int) (totalLen * 1.1);
+                Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write",
+                    "Preallocated memory for payload (total -> allocated)", totalLen + " -> " + expLen));
                 tempOutputStream = new MemoryStream(expLen);
             }
 

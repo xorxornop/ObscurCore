@@ -8,7 +8,7 @@ namespace ObscurCore.Cryptography.Support
      */
     public class KeyGenerationParameters
     {
-        private SecureRandom	random;
+        private CsRng	random;
         private int				strength;
 
         /**
@@ -19,7 +19,7 @@ namespace ObscurCore.Cryptography.Support
          * @param strength the size, in bits, of the keys we want to produce.
          */
         public KeyGenerationParameters(
-            SecureRandom	random,
+            CsRng	random,
             int				strength)
         {
 			if (random == null)
@@ -37,7 +37,7 @@ namespace ObscurCore.Cryptography.Support
          *
          * @return the generators random source.
          */
-        public SecureRandom Random
+        public CsRng Random
         {
             get { return random; }
         }

@@ -15,8 +15,8 @@
 
 using System;
 using System.Linq;
+using ObscurCore.Cryptography.Ciphers.Information;
 using ObscurCore.DTO;
-using ObscurCore.Information;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream
 {
@@ -70,13 +70,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         {
             get
             {
-                SymmetricCipherDescription athenaInfo = Athena.Cryptography.StreamCiphers[StreamCipher];
+                StreamCipherInformation athenaInfo = Athena.Cryptography.StreamCiphers[StreamCipher];
 
-                if (athenaInfo.DefaultIvSize == -1 && Configuration.InitialisationVector.IsNullOrZeroLength() == false) {
+                if (athenaInfo.DefaultNonceSize == -1 && Configuration.InitialisationVector.IsNullOrZeroLength() == false) {
                     throw new ConfigurationInvalidException(
                         "NCipherKeySizeExceptiontion vector) should not be used with the " + StreamCipher + " cipher.");
                 }
-                if (athenaInfo.AllowableIvSizes.Contains(Configuration.InitialisationVector.Length * 8) == false) {
+                if (athenaInfo.AllowableNonceSizes.Contains(Configuration.InitialisationVector.Length * 8) == false) {
                     throw new ConfigurationInvalidException(
                         "Nonce (initialisation vector) should not be a different length to the block size.");
                 }

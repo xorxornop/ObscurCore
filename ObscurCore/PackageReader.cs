@@ -391,8 +391,6 @@ namespace ObscurCore
                 _readingStream.Position));
 
             // Read manifest length prefix
-            Manifest manifest;
-
             var manifestLengthLe = new byte[sizeof (UInt32)]; // in little-endian form
             int manifestLengthBytesRead = _readingStream.Read(manifestLengthLe, 0, sizeof (UInt32));
             if (manifestLengthBytesRead != sizeof (UInt32)) {
@@ -408,6 +406,7 @@ namespace ObscurCore
                 _readingStream.Position));
 
             /* Read manifest */
+            Manifest manifest;
             using (var decryptedManifestStream = new MemoryStream(manifestLength)) {
                 byte[] manifestMac;
                 try {

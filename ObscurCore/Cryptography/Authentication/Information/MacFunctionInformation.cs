@@ -13,16 +13,22 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-namespace ObscurCore.Information
+namespace ObscurCore.Cryptography.Authentication.Information
 {
-    public sealed class CsprngDescription
-    {	
+    public sealed class MacFunctionInformation : IPrimitiveInformation
+    {
         /// <summary>
-        /// Name of the CSPRNG scheme (must be a member of CSPRNumberGenerators).
+        ///     Size of the MAC produced in bits. Null if output size depends on configuration.
+        /// </summary>
+        public int? OutputSize { get; internal set; }
+
+        /// <summary>
+        ///     Name of the MAC function (must be a member of <see cref="MacFunction" />).
         /// </summary>
         public string Name { get; internal set; }
+
         /// <summary>
-        /// Name to show a user or for a detailed specification.
+        ///     Name to show a user or for a detailed specification.
         /// </summary>
         public string DisplayName { get; internal set; }
     }

@@ -85,7 +85,7 @@ namespace ObscurCore.Cryptography.Support
 		}
 
 //		internal ECKeyGenerationParameters CreateKeyGenerationParameters(
-//			SecureRandom random)
+//			CsRng random)
 //		{
 //			if (publicKeyParamSet != null)
 //			{
