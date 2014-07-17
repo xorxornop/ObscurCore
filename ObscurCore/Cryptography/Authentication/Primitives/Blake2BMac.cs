@@ -24,7 +24,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="ObscurCore.Cryptography.MACs.Blake2BMac"/> class.
+		/// Initializes a new instance of the <see cref="Blake2BMac"/> class.
 		/// </summary>
 		/// <param name="size">Size of the MAC to produce.</param>
 		/// <param name="bits">Whether <paramref name="size"/> is interpreted as bits or bytes. If true, bits.</param>

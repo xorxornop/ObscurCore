@@ -26,7 +26,7 @@
     <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>BasicCorrectnessRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>SecurityRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -50,6 +50,14 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <DocumentationFile>bin\ReleaseWithUnsafe\ObscurCore.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="LinqOptimizer.Base">
@@ -80,6 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Athena.cs" />
+    <Compile Include="BitPackingExtensions.cs" />
     <Compile Include="Cryptography\Authentication\AuthenticationInformationStore.cs" />
     <Compile Include="Cryptography\Ciphers\CipherInformationStore.cs" />
     <Compile Include="Cryptography\Ciphers\Information\BlockCipherInformation.cs" />
@@ -92,6 +101,7 @@
     <Compile Include="Cryptography\KeyAgreement\Information\FpEcNamedCurveInformation.cs" />
     <Compile Include="Cryptography\KeyAgreement\Information\TpbF2mEcNamedCurveInformation.cs" />
     <Compile Include="Cryptography\KeyDerivation\KdfInformationStore.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Packaging\ContentTreeNode.cs" />
     <Compile Include="Cryptography\Authentication\IDigest.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />
@@ -184,6 +194,7 @@
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\SosemanukEngine.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\DigestCsRng.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\ReversedWindowRng.cs" />
+    <Compile Include="SerialisationExtensions.cs" />
     <Compile Include="Support\Random\Rng.cs" />
     <Compile Include="Support\Random\ThreadedSeedRng.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\StreamCsprng.cs" />

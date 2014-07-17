@@ -15,7 +15,7 @@
 
 namespace ObscurCore.Support.Random
 {
-    public class XorShift1204StarPrng : XorShiftPrng
+    public sealed class XorShift1204StarPrng : XorShiftPrng
     {
         private const int ArrayStateSize = 16;
         private int _p;

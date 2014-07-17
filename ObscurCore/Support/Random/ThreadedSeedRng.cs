@@ -27,6 +27,7 @@ namespace ObscurCore.Support.Random
             _fast = fast;
         }
 
+        /// <inheritdoc />
         public override void NextBytes(byte[] buffer, int offset, int count)
         {
             new SeedGenerator().GenerateSeed(buffer, 0, count, _fast);

@@ -1,62 +1,59 @@
+using System;
+using System.Runtime.CompilerServices;
+
 namespace ObscurCore.Cryptography.Support
 {
 	internal sealed class Pack
 	{
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt16_To_BE(ushort n, byte[] bs)
 		{
-			bs[0] = (byte)(n >> 8);
-			bs[1] = (byte)(n);
+		    n.ToBigEndian(bs);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt16_To_BE(ushort n, byte[] bs, int off)
 		{
-			bs[off] = (byte)(n >> 8);
-			bs[off + 1] = (byte)(n);
+            n.ToBigEndian(bs, off);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ushort BE_To_UInt16(byte[] bs)
 		{
-			uint n = (uint)bs[0] << 8
-			         | (uint)bs[1];
-			return (ushort)n;
+		    return bs.BigEndianToUInt16();
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ushort BE_To_UInt16(byte[] bs, int off)
 		{
-			uint n = (uint)bs[off] << 8
-			         | (uint)bs[off + 1];
-			return (ushort)n;
+            return bs.BigEndianToUInt16(off);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static byte[] UInt32_To_BE(uint n)
 		{
-			byte[] bs = new byte[4];
-			UInt32_To_BE(n, bs, 0);
-			return bs;
+            return n.ToBigEndian();
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt32_To_BE(uint n, byte[] bs)
 		{
-			bs[0] = (byte)(n >> 24);
-			bs[1] = (byte)(n >> 16);
-			bs[2] = (byte)(n >> 8);
-			bs[3] = (byte)(n);
+            n.ToBigEndian(bs);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt32_To_BE(uint n, byte[] bs, int off)
 		{
-			bs[off] = (byte)(n >> 24);
-			bs[off + 1] = (byte)(n >> 16);
-			bs[off + 2] = (byte)(n >> 8);
-			bs[off + 3] = (byte)(n);
+            n.ToBigEndian(bs, off);
 		}
 
 		internal static byte[] UInt32_To_BE(uint[] ns)
 		{
-			byte[] bs = new byte[4 * ns.Length];
+			byte[] bs = new byte[sizeof(UInt32) * ns.Length];
 			UInt32_To_BE(ns, bs, 0);
 			return bs;
 		}
+
 
 		internal static void UInt32_To_BE(uint[] ns, byte[] bs, int off)
 		{
@@ -67,20 +64,16 @@ namespace ObscurCore.Cryptography.Support
 			}
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static uint BE_To_UInt32(byte[] bs)
 		{
-			return (uint)bs[0] << 24
-				| (uint)bs[1] << 16
-				| (uint)bs[2] << 8
-				| (uint)bs[3];
+		    return bs.BigEndianToUInt32();
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static uint BE_To_UInt32(byte[] bs, int off)
 		{
-			return (uint)bs[off] << 24
-				| (uint)bs[off + 1] << 16
-				| (uint)bs[off + 2] << 8
-				| (uint)bs[off + 3];
+            return bs.BigEndianToUInt32(off);
 		}
 
 		internal static void BE_To_UInt32(byte[] bs, int off, uint[] ns)
@@ -88,111 +81,85 @@ namespace ObscurCore.Cryptography.Support
 			for (int i = 0; i < ns.Length; ++i)
 			{
 				ns[i] = BE_To_UInt32(bs, off);
-				off += 4;
+                off += sizeof(UInt32);
 			}
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static byte[] UInt64_To_BE(ulong n)
 		{
-			byte[] bs = new byte[8];
-			UInt64_To_BE(n, bs, 0);
-			return bs;
+		    return n.ToBigEndian();
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt64_To_BE(ulong n, byte[] bs)
 		{
-			UInt32_To_BE((uint)(n >> 32), bs);
-			UInt32_To_BE((uint)(n), bs, 4);
+            n.ToBigEndian(bs);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt64_To_BE(ulong n, byte[] bs, int off)
 		{
-			UInt32_To_BE((uint)(n >> 32), bs, off);
-			UInt32_To_BE((uint)(n), bs, off + 4);
+		    n.ToBigEndian(bs, off);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ulong BE_To_UInt64(byte[] bs)
 		{
-			uint hi = BE_To_UInt32(bs);
-			uint lo = BE_To_UInt32(bs, 4);
-			return ((ulong)hi << 32) | (ulong)lo;
+		    return bs.BigEndianToUInt64();
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ulong BE_To_UInt64(byte[] bs, int off)
 		{
-			uint hi = BE_To_UInt32(bs, off);
-			uint lo = BE_To_UInt32(bs, off + 4);
-			return ((ulong)hi << 32) | (ulong)lo;
+            return bs.BigEndianToUInt64(off);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt16_To_LE(ushort n, byte[] bs)
 		{
-			bs[0] = (byte)(n);
-			bs[1] = (byte)(n >> 8);
+		    n.ToLittleEndian(bs);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt16_To_LE(ushort n, byte[] bs, int off)
 		{
-			bs[off] = (byte)(n);
-			bs[off + 1] = (byte)(n >> 8);
+            n.ToLittleEndian(bs, off);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ushort LE_To_UInt16(byte[] bs)
 		{
-			uint n = (uint)bs[0]
-			         | (uint)bs[1] << 8;
-			return (ushort)n;
+            return bs.BigEndianToUInt16();
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ushort LE_To_UInt16(byte[] bs, int off)
 		{
-			uint n = (uint)bs[off]
-			         | (uint)bs[off + 1] << 8;
-			return (ushort)n;
+            return bs.BigEndianToUInt16(off);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static byte[] UInt32_To_LE(uint n)
 		{
-			byte[] bs = new byte[4];
-			UInt32_To_LE(n, bs, 0);
-			return bs;
+		    return n.ToLittleEndian();
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt32_To_LE(uint n, byte[] bs)
 		{
-            #if INCLUDE_UNSAFE
-            unsafe {
-                fixed (byte* p = bs) {
-                    *((uint*)p) = n;
-                }
-            }
-            #else
-			bs[0] = (byte)(n);
-			bs[1] = (byte)(n >> 8);
-			bs[2] = (byte)(n >> 16);
-			bs[3] = (byte)(n >> 24);
-            #endif
+		    n.ToLittleEndian(bs);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt32_To_LE(uint n, byte[] bs, int off)
 		{
-            #if INCLUDE_UNSAFE
-		    unsafe {
-		        fixed (byte* p = bs) {
-                    *((uint*)(p + off)) = n;
-		        }
-		    }
-            #else
-			bs[off] = (byte)(n);
-			bs[off + 1] = (byte)(n >> 8);
-			bs[off + 2] = (byte)(n >> 16);
-			bs[off + 3] = (byte)(n >> 24);
-            #endif
+            n.ToLittleEndian(bs, off);
 		}
 
 		internal static byte[] UInt32_To_LE(uint[] ns)
 		{
-			byte[] bs = new byte[4 * ns.Length];
+            byte[] bs = new byte[sizeof(UInt32) * ns.Length];
 			UInt32_To_LE(ns, bs, 0);
 			return bs;
 		}
@@ -243,20 +210,16 @@ namespace ObscurCore.Cryptography.Support
 #endif
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static uint LE_To_UInt32(byte[] bs)
 		{
-            return (uint)bs[0]
-                | (uint)bs[1] << 8
-                | (uint)bs[2] << 16
-                | (uint)bs[3] << 24;
+		    return bs.LittleEndianToUInt32();
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static uint LE_To_UInt32(byte[] bs, int off)
 		{
-            return (uint)bs[off]
-                | (uint)bs[off + 1] << 8
-                | (uint)bs[off + 2] << 16
-                | (uint)bs[off + 3] << 24;
+            return bs.LittleEndianToUInt32(off);
 		}
 
 		internal static void LE_To_UInt32(byte[] bs, int off, uint[] ns)
@@ -282,37 +245,34 @@ namespace ObscurCore.Cryptography.Support
 #endif
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static byte[] UInt64_To_LE(ulong n)
 		{
-			byte[] bs = new byte[8];
-			UInt64_To_LE(n, bs, 0);
-			return bs;
+		    return n.ToLittleEndian();
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt64_To_LE(ulong n, byte[] bs)
 		{
-			UInt32_To_LE((uint)(n), bs);
-			UInt32_To_LE((uint)(n >> 32), bs, 4);
+            n.ToLittleEndian(bs);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void UInt64_To_LE(ulong n, byte[] bs, int off)
 		{
-			UInt32_To_LE((uint)(n), bs, off);
-			UInt32_To_LE((uint)(n >> 32), bs, off + 4);
+            n.ToLittleEndian(bs, off);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ulong LE_To_UInt64(byte[] bs)
 		{
-			uint lo = LE_To_UInt32(bs);
-			uint hi = LE_To_UInt32(bs, 4);
-			return ((ulong)hi << 32) | (ulong)lo;
+		    return bs.LittleEndianToUInt64();
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ulong LE_To_UInt64(byte[] bs, int off)
 		{
-			uint lo = LE_To_UInt32(bs, off);
-			uint hi = LE_To_UInt32(bs, off + 4);
-			return ((ulong)hi << 32) | (ulong)lo;
+            return bs.LittleEndianToUInt64(off);
 		}
 	}
 }

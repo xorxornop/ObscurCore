@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ObscurCore.DTO;
 using ObscurCore.Support;
 
 namespace ObscurCore
@@ -51,34 +50,17 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Serialises the dto.
+        /// Wraps a byte array in a <see cref="MemoryStream"/>.
         /// </summary>
-        /// <returns>The serialised DTO in a byte array.</returns>
-        /// <param name="obj">Object to serialise.</param>
-        /// <param name="prefixLength">If set to <c>true</c> prefix length of object to output; otherwise, <c>false</c>.</param>
-        /// <typeparam name="T">The 1st type parameter.</typeparam>
-        public static byte[] SerialiseDto<T>(this T obj, bool prefixLength = false) where T : IDataTransferObject
+        /// <param name="data">Data to wrap.</param>
+        /// <param name="writeable">If <c>true</c>, additional data can be written to the stream after creation.</param>
+        /// <returns></returns>
+        public static MemoryStream ToMemoryStream(byte[] data, bool writeable = true)
         {
-            return StratCom.SerialiseDataTransferObject(obj, prefixLength).ToArray();
+            return new MemoryStream(data, writeable);
         }
 
-        /// <summary>
-        ///     Serialises the data transfer object to a <see cref="System.IO.MemoryStream"/>.
-        /// </summary>
-        /// <returns>The serialised DTO in a <see cref="System.IO.MemoryStream"/>.</returns>
-        /// <param name="obj">Object to serialise.</param>
-        /// <param name="prefixLength">If set to <c>true</c> prefix length of object to output; otherwise, <c>false</c>.</param>
-        /// <typeparam name="T">Type of the data transfer object.</typeparam>
-        public static MemoryStream SerialiseDtoToMemory<T>(this T obj, bool prefixLength = false) where T : IDataTransferObject
-        {
-            return StratCom.SerialiseDataTransferObject(obj, prefixLength);
-        }
-
-        public static void SerialiseDto<T>(this T obj, Stream output, bool prefixLength = false)
-            where T : IDataTransferObject
-        {
-            StratCom.SerialiseDataTransferObject(obj, output, prefixLength);
-        }
+        
 
         /// <summary>
         ///     Parses an enumeration value encoded as a string into its enumeration equivalent.
@@ -231,13 +213,11 @@ namespace ObscurCore
             return hc;
         }
 
-        [CLSCompliant(false)]
         public static int GetHashCodeExt(this uint[] data)
         {
             return data.GetHashCodeExt(0, data.Length);
         }
 
-        [CLSCompliant(false)]
         public static int GetHashCodeExt(this uint[] data, int off, int count)
         {
             if (data == null) {
@@ -467,36 +447,6 @@ namespace ObscurCore
             value = b != 0;
         }
 
-        public static void WritePrimitive(this Stream stream, byte value)
-        {
-            stream.WriteByte(value);
-        }
-
-        public static void ReadPrimitive(this Stream stream, out byte value)
-        {
-            value = (byte) stream.ReadByte();
-        }
-
-        public static void WritePrimitive(this Stream stream, sbyte value)
-        {
-            stream.WriteByte((byte) value);
-        }
-
-        public static void ReadPrimitive(this Stream stream, out sbyte value)
-        {
-            value = (sbyte) stream.ReadByte();
-        }
-
-        public static void WritePrimitive(this Stream stream, char value)
-        {
-            WriteVarint32(stream, value);
-        }
-
-        public static void ReadPrimitive(this Stream stream, out char value)
-        {
-            value = (char) ReadVarint32(stream);
-        }
-
         public static void WritePrimitive(this Stream stream, ushort value)
         {
             WriteVarint32(stream, value);
@@ -582,223 +532,6 @@ namespace ObscurCore
             value = *(double*) (&v);
         }
 #endif
-
-        public static void WritePrimitive(this Stream stream, DateTime value)
-        {
-            long v = value.ToBinary();
-            WritePrimitive(stream, v);
-        }
-
-        public static void ReadPrimitive(this Stream stream, out DateTime value)
-        {
-            long v;
-            ReadPrimitive(stream, out v);
-            value = DateTime.FromBinary(v);
-        }
-
-        public static void WritePrimitive(this Stream stream, string value)
-        {
-            if (value == null) {
-                WritePrimitive(stream, (uint) 0);
-                return;
-            }
-
-            var encoding = new UTF8Encoding(false, true);
-
-            int len = encoding.GetByteCount(value);
-
-            WritePrimitive(stream, (uint) len + 1);
-
-            var buf = new byte[len];
-
-            encoding.GetBytes(value, 0, value.Length, buf, 0);
-
-            stream.Write(buf, 0, len);
-        }
-
-        public static void ReadPrimitive(this Stream stream, out string value)
-        {
-            uint len;
-            ReadPrimitive(stream, out len);
-
-            switch (len) {
-                case 0:
-                    value = null;
-                    return;
-                case 1:
-                    value = string.Empty;
-                    return;
-            }
-
-            len -= 1;
-
-            var encoding = new UTF8Encoding(false, true);
-
-            var buf = new byte[len];
-
-            int l = 0;
-
-            while (l < len) {
-                int r = stream.Read(buf, l, (int) len - l);
-                if (r == 0) {
-                    throw new EndOfStreamException();
-                }
-                l += r;
-            }
-
-            value = encoding.GetString(buf);
-        }
-
-
-        public static void WritePrimitive(this Stream stream, byte[] value)
-        {
-            if (value == null) {
-                WritePrimitive(stream, (uint) 0);
-                return;
-            }
-
-            WritePrimitive(stream, (uint) value.Length + 1);
-            stream.Write(value, 0, value.Length);
-        }
-
-        public static void WritePrimitive(this Stream stream, byte[] value, int offset, int count)
-        {
-            if (value == null) {
-                WritePrimitive(stream, (uint) 0);
-                return;
-            }
-
-            WritePrimitive(stream, (uint) count + 1);
-            stream.Write(value, offset, count);
-        }
-
-        public static void WritePrimitiveMeta(this Stream stream, byte[] value, bool negative)
-        {
-            stream.WritePrimitiveMeta(value, 0, value.Length, negative);
-        }
-
-        /// <summary>
-        ///     Writes a length-encoded byte array with additional
-        ///     boolean property stored in sign of length prefix.
-        /// </summary>
-        /// <param name="stream">Stream to write to.</param>
-        /// <param name="value">Source byte array.</param>
-        /// <param name="offset">Offset at which to start writing bytes from the source array.</param>
-        /// <param name="count">Number of bytes to be written.</param>
-        /// <param name="negative">If set to <c>true</c> length-specifying integer will be stored with negative sign.</param>
-        public static void WritePrimitiveMeta(this Stream stream, byte[] value, int offset, int count,
-            bool negative)
-        {
-            if (value == null) {
-                WritePrimitive(stream, 0);
-                return;
-            }
-
-            WritePrimitive(stream, negative ? -(count + 1) : count + 1);
-            stream.Write(value, offset, count);
-        }
-
-        private static readonly byte[] EmptyByteArray = new byte[0];
-
-        public static void ReadPrimitive(this Stream stream, out byte[] value)
-        {
-            uint len;
-            ReadPrimitive(stream, out len);
-
-            switch (len) {
-                case 0:
-                    value = null;
-                    return;
-                case 1:
-                    value = EmptyByteArray;
-                    return;
-            }
-
-            len -= 1;
-
-            value = new byte[len];
-            int l = 0;
-
-            while (l < len) {
-                int r = stream.Read(value, l, (int) len - l);
-                if (r == 0) {
-                    throw new EndOfStreamException();
-                }
-                l += r;
-            }
-        }
-
-        /// <summary>
-        ///     Reads a length-encoded byte array with additional boolean property stored as integer sign.
-        /// </summary>
-        /// <param name="stream">Stream to be read from.</param>
-        /// <param name="value">Output byte array.</param>
-        /// <param name="negative">Stored boolean state. Will be <c>true</c> if stored integer has negative sign.</param>
-        public static void ReadPrimitiveMeta(this Stream stream, out byte[] value, out bool negative)
-        {
-            int len;
-            ReadPrimitive(stream, out len);
-
-            negative = Math.Sign(len) < 0;
-            len = Math.Abs(len);
-
-            switch (len) {
-                case 0:
-                    value = null;
-                    return;
-                case 1:
-                    value = EmptyByteArray;
-                    return;
-            }
-
-            len -= 1;
-
-            value = new byte[len];
-            int l = 0;
-
-            while (l < len) {
-                int r = stream.Read(value, l, len - l);
-                if (r == 0) {
-                    throw new EndOfStreamException();
-                }
-                l += r;
-            }
-        }
-
-        /// <summary>
-        ///     Reads an enumeration value from a stream that was encoded as a string.
-        /// </summary>
-        /// <typeparam name='T'>
-        ///     Must be an enumeration type.
-        /// </typeparam>
-        public static void ReadPrimitive<T>(this Stream stream, out T value) where T : struct, IConvertible
-        {
-            if (!typeof (T).IsEnum) {
-                throw new InvalidOperationException("T must be an enumerated type.");
-            }
-            try {
-                string stringValue;
-                ReadPrimitive(stream, out stringValue);
-                value = (T) Enum.Parse(typeof (T), stringValue);
-            } catch (ArgumentException) {
-                throw new ArgumentException("Enumeration member is unknown or otherwise invalid.");
-            }
-        }
-
-        /// <summary>
-        ///     Writes an enumeration value into a stream, encoded as a string .
-        /// </summary>
-        /// <typeparam name='T'>
-        ///     Must be an enumeration type.
-        /// </typeparam>
-        public static void WritePrimitive<T>(this Stream stream, T value) where T : struct, IConvertible
-        {
-            if (!typeof (T).IsEnum) {
-                throw new InvalidOperationException("T must be an enumerated type.");
-            }
-
-            WritePrimitive(stream, Enum.GetName(typeof (T), value));
-        }
 
         private static uint EncodeZigZag32(int n)
         {

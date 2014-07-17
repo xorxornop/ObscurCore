@@ -41,6 +41,14 @@ namespace ObscurCore.Support.Random
         }
 
         /// <summary>
+        ///     Generate a 32-bit unsigned integer.
+        /// </summary>
+        public UInt64 NextUInt64()
+        {
+            return NextBytes(sizeof(UInt64)).LittleEndianToUInt64();
+        }
+
+        /// <summary>
         ///     Generate an integer between 0 (inclusive) and maxValue (exclusive).
         /// </summary>
         /// <param name="maxValue">Maximum value of output, exclusive.</param>
@@ -95,11 +103,14 @@ namespace ObscurCore.Support.Random
 
             return i;
         }
+
+        /// <inheritdoc />
         public sealed override double NextDouble()
         {
             return Sample();
         }
 
+        /// <inheritdoc />
         protected override double Sample()
         {
             byte[] buf = NextBytes(sizeof(double));

@@ -15,8 +15,18 @@
 
 namespace ObscurCore.Packaging
 {
+    /// <summary>
+    ///     Node in a tree representing a discrete content item.
+    /// </summary>
+    /// <typeparam name="T">Type of data stored in node.</typeparam>
     public class ContentTreeNode<T> : TreeNode<T>
     {
+        /// <summary>
+        ///     Creates a new content node.
+        /// </summary>
+        /// <param name="name">Name of the node.</param>
+        /// <param name="parent">Parent of the node.</param>
+        /// <param name="content">Content stored in the node.</param>
         public ContentTreeNode(string name, DirectoryTreeNode<T> parent, T content)
         {
             Name = name;
@@ -24,6 +34,9 @@ namespace ObscurCore.Packaging
             Content = content;
         }
 
+        /// <summary>
+        ///     Content stored in the node.
+        /// </summary>
         public T Content { get; set; }
     }
 }

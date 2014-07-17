@@ -33,8 +33,8 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		
 		public Pbkdf2Module (int outputSize, byte[] config) {
 			_outputSize = outputSize;
-            var pbkdf2Config = StratCom.DeserialiseDataTransferObject<Pbkdf2Configuration>(config);
-		    _iterations = pbkdf2Config.Iterations;
+		    var configObj = config.DeserialiseDto<Pbkdf2Configuration>();
+		    _iterations = configObj.Iterations;
 //		    _algorithm = pbkdf2Config.AlgorithmName;
 		}
 		
@@ -66,8 +66,8 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		}
 		
 		public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, byte[] config) {
-			var pbkdf2Config = StratCom.DeserialiseDataTransferObject<Pbkdf2Configuration>(config);
-			return DeriveKeyWithConfig (key, salt, outputSize, pbkdf2Config);
+            var configObj = config.DeserialiseDto<Pbkdf2Configuration>();
+            return DeriveKeyWithConfig(key, salt, outputSize, configObj);
 		}
 
         public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, Pbkdf2Configuration config) {

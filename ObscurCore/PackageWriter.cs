@@ -169,7 +169,7 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Configuration of function used in verifying the authenticity & integrity of the manifest.
+        ///     Configuration of function used in verifying the authenticity and integrity of the manifest.
         /// </summary>
         internal AuthenticationFunctionConfiguration ManifestAuthentication
         {
@@ -834,7 +834,7 @@ namespace ObscurCore
 
             try {
                 mux.Execute();
-            } catch (Exception e) {
+            } catch (Exception) {
                 throw;
             }
 
@@ -850,10 +850,10 @@ namespace ObscurCore
                     {
                         if (ManifestCompression) {
                             using (var compressor = new LZ4Stream(encryptor, CompressionMode.Compress)) {
-                                _manifest.SerialiseDto(compressor);
+                                _manifest.SerialiseDto(compressor, prefixLength:false);
                             }
                         } else {
-                            _manifest.SerialiseDto(encryptor);
+                            _manifest.SerialiseDto(encryptor, prefixLength: false);
                         }
                     }
                     authenticator.Update(((UInt32)authenticator.BytesOut).ToLittleEndian(), 0, sizeof(UInt32));
@@ -899,7 +899,7 @@ namespace ObscurCore
                 // Serialise and write ManifestHeader
                 Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest header offset",
                     outputStream.Position));
-                mh.SerialiseDto(outputStream, true);
+                mh.SerialiseDto(outputStream, prefixLength:true);
 
                 Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write",
                     "Manifest length prefix offset (absolute)",

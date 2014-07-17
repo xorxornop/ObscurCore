@@ -29,7 +29,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 
 	    public ScryptModule (int outputSize, byte[] config) {
 			_outputSize = outputSize;
-	        var configObj = StratCom.DeserialiseDataTransferObject<ScryptConfiguration>(config);
+	        var configObj = config.DeserialiseDto<ScryptConfiguration>();
 	        _iterationPower = configObj.Iterations;
 	        _blocks = configObj.Blocks;
 	        _parallelisation = configObj.Parallelism;
@@ -69,8 +69,8 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		}
 		
 		public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, byte[] config) {
-		    var scConfig = StratCom.DeserialiseDataTransferObject<ScryptConfiguration>(config);
-			return DeriveKeyWithConfig (key, salt, outputSize, scConfig);
+            var configObj = config.DeserialiseDto<ScryptConfiguration>();
+			return DeriveKeyWithConfig (key, salt, outputSize, configObj);
 		}
 
         public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, ScryptConfiguration config) {

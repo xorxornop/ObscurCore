@@ -20,10 +20,20 @@ using System.Linq;
 
 namespace ObscurCore.Packaging
 {
+    /// <summary>
+    ///     Node in a tree representing a directory, or index of other nodes.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public sealed class DirectoryTreeNode<T> : TreeNode<T>
     {
+        private readonly List<TreeNode<T>> _children = new List<TreeNode<T>>();
         private readonly bool _root;
 
+        /// <summary>
+        ///     Creates a new directory node.
+        /// </summary>
+        /// <param name="name">Name of the directory.</param>
+        /// <param name="parent">Parent of the node.</param>
         public DirectoryTreeNode(string name, DirectoryTreeNode<T> parent)
         {
             _root = false;
@@ -32,7 +42,7 @@ namespace ObscurCore.Packaging
         }
 
         /// <summary>
-        /// Creates a root directory node.
+        ///     Creates a root directory node.
         /// </summary>
         internal DirectoryTreeNode()
         {
@@ -41,24 +51,37 @@ namespace ObscurCore.Packaging
             Parent = null;
         }
 
+        /// <summary>
+        ///     Nodes contained in the directory.
+        /// </summary>
+        public IList<TreeNode<T>> Children
+        {
+            get { return _children; }
+        }
+
+        /// <summary>
+        /// If <c>true</c>, node contains child nodes.
+        /// </summary>
+        public bool HasChildren
+        {
+            get { return _children != null && (_children != null || _children.Count > 0); }
+        }
+
+        /// <summary>
+        ///     If node is the root of the tree.
+        /// </summary>
+        /// <returns>If <c>true</c>, node is the root.</returns>
         public bool IsRoot()
         {
             Debug.Assert((Parent == null) == _root);
             return _root;
         }
 
-        private readonly List<TreeNode<T>> _children = new List<TreeNode<T>>();
-
-        public IList<TreeNode<T>> Children
-        {
-            get { return _children; }
-        }
-
-        public bool HasChildren
-        {
-            get { return _children != null && (_children != null || _children.Count > 0); }
-        }
-
+        /// <summary>
+        /// Add a subdirectory.
+        /// </summary>
+        /// <param name="name">Name of the directory to add.</param>
+        /// <returns>Directory node.</returns>
         public DirectoryTreeNode<T> AddChildDirectory(string name)
         {
             var node = new DirectoryTreeNode<T>(name, this);
@@ -66,6 +89,12 @@ namespace ObscurCore.Packaging
             return node;
         }
 
+        /// <summary>
+        /// Add content to the directory.
+        /// </summary>
+        /// <param name="name">Name of the content.</param>
+        /// <param name="content">Content to add.</param>
+        /// <returns>Content tree node.</returns>
         public ContentTreeNode<T> AddChildItem(string name, T content)
         {
             var node = new ContentTreeNode<T>(name, this, content);
@@ -73,16 +102,25 @@ namespace ObscurCore.Packaging
             return node;
         }
 
-        internal TreeNode<T> AddChildNode(TreeNode<T> node)
+        /// <summary>
+        /// Add a node to the directory.
+        /// </summary>
+        /// <param name="node">Node to add.</param>
+        /// <returns></returns>
+        internal void AddChildNode(TreeNode<T> node)
         {
             node.Parent = this;
             _children.Add(node);
-            return node;
         }
 
+        /// <summary>
+        /// Remove a node from the directory.
+        /// </summary>
+        /// <param name="node">Node to remove.</param>
+        /// <param name="moveChildrenToParent">If <c>true</c>, move all children of removed node to this directory.</param>
         public void RemoveChildNode(TreeNode<T> node, bool moveChildrenToParent)
         {
-            var index = _children.IndexOf(node);
+            int index = _children.IndexOf(node);
             if (index == -1) {
                 //throw new ArgumentException("Specified node not present.", "node");
                 return;
@@ -90,24 +128,32 @@ namespace ObscurCore.Packaging
             RemoveChildNode(index, moveChildrenToParent);
         }
 
+        /// <summary>
+        /// Remove a node from the directory by name.
+        /// </summary>
+        /// <param name="name">Name of the node to remove.</param>
+        /// <param name="moveChildrenToParent">If <c>true</c>, move all children of removed node to this directory.</param>
         public void RemoveChildNode(string name, bool moveChildrenToParent)
         {
-            var index = _children.FindIndex(child => child.Name.Equals(name));
+            int index = _children.FindIndex(child => child.Name.Equals(name));
             if (index == -1) {
-                //throw new ArgumentException("Node with specified name not present.", "name");
-                return;
+                throw new ArgumentException("Node with specified name not present.", "name");
             }
             RemoveChildNode(index, moveChildrenToParent);
         }
 
+        /// <summary>
+        /// Remove a node from the directory by index.
+        /// </summary>
+        /// <param name="index">Index of the node to remove.</param>
+        /// <param name="moveChildrenToParent">If <c>true</c>, move all children of removed node to this directory.</param>
         public void RemoveChildNode(int index, bool moveChildrenToParent)
         {
-            if (_children.Count <= index) {
-                //throw new ArgumentException("Node of specified index not present (index is larger than collection length.", "index");
-                return;
+            if (index >= _children.Count) {
+                throw new ArgumentException("Node of specified index not present (index is larger than collection length.", "index");
             }
 
-            var node = _children[index];
+            TreeNode<T> node = _children[index];
             if (moveChildrenToParent && node is DirectoryTreeNode<T>) {
                 var dirNode = node as DirectoryTreeNode<T>;
                 foreach (var childNode in dirNode.Children) {
@@ -118,11 +164,22 @@ namespace ObscurCore.Packaging
             _children.RemoveAt(index);
         }
 
+        /// <summary>
+        /// Get the index of a child node of the directory by name.
+        /// </summary>
+        /// <param name="name">Name of the node to find.</param>
+        /// <returns>Index of the node. -1 if not found.</returns>
         public int FindChildNodeIndex(string name)
         {
             return _children.FindIndex(child => child.Name.Equals(name));
         }
 
+        /// <summary>
+        ///     Get a sequence of all content tree nodes in the directory, 
+        ///     optionally including subdirectories.
+        /// </summary>
+        /// <param name="recursive">If <c>true</c>, recursively include all subdirectory nodes.</param>
+        /// <returns>Sequence of contained content nodes.</returns>
         public IEnumerable<ContentTreeNode<T>> GetContent(bool recursive)
         {
             IEnumerable<ContentTreeNode<T>> e;
@@ -135,6 +192,22 @@ namespace ObscurCore.Packaging
             return e;
         }
 
+        /// <summary>
+        ///     Recursively enumerates nested structure for a specific type, 
+        ///     but does so iteratively using a stack for efficiency.
+        /// </summary>
+        /// <typeparam name="TBase">Type of objects to search.</typeparam>
+        /// <typeparam name="TCollection">
+        ///     Type containing collection of <typeparamref name="TBase"/>.
+        /// </typeparam>
+        /// <typeparam name="TSubtype">
+        ///     Type to select from collections of <typeparamref name="TCollection"/>.
+        /// </typeparam>
+        /// <param name="source">Source of objects to search.</param>
+        /// <param name="selector">
+        ///     Predicate for inclusion of objects of type <typeparamref name="TSubtype"/> found.
+        /// </param>
+        /// <returns>Sequence of found objects of type <typeparamref name="TSubtype"/></returns>
         public static IEnumerable<TSubtype> SelectSubtypeRecursive<TBase, TCollection, TSubtype>(
             IEnumerable<TBase> source,
             Func<TCollection, IEnumerable<TBase>> selector) where TSubtype : class, TBase
@@ -148,9 +221,9 @@ namespace ObscurCore.Packaging
             stack.Push(source.GetEnumerator());
 
             while (stack.Count > 0) {
-                var item = stack.Peek();
+                IEnumerator<TBase> item = stack.Peek();
                 if (item.MoveNext()) {
-                    var current = item.Current;
+                    TBase current = item.Current;
                     if (current is TSubtype) {
                         yield return item.Current as TSubtype;
                     } else if (current is TCollection) {

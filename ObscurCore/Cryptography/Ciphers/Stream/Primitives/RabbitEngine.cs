@@ -21,12 +21,12 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
 	public sealed class RabbitEngine : IStreamCipher, ICsprngCompatible
     {
-		private static uint[] A = new uint[] { 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D,
-			0xD34D34D3 };
+		private static uint[] A = new uint[] { 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D, 
+                                               0xD34D34D3, 0x34D34D34, 0x4D34D34D, 0xD34D34D3 };
 
         // Stores engine state
         private byte[]          _workingKey,
-                                _workingIV;
+                                _workingIv;
 
         private bool	        _initialised;
 
@@ -48,7 +48,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			if (iv.Length != 8)
 				throw new ArgumentException("Rabbit requires exactly 8 bytes of IV.", "iv");
 
-			_workingIV = iv;
+			_workingIv = iv;
 
 			if (key == null) 
 				throw new ArgumentNullException("key", "Rabbit initialisation requires a key.");
@@ -71,9 +71,9 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
         public void Reset () {
             KeySetup(_workingKey);
-            IVSetup(_workingIV);
+            IVSetup(_workingIv);
             _initialised = true;
-			Array.Clear (_keyStream, 0, 16);
+			_keyStream.SecureWipe();
 			_keyStreamPtr = 16;
         }
 
@@ -127,37 +127,25 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			var blocks = Math.DivRem(len, 16, out remainder);
 
 			#if INCLUDE_UNSAFE
-			if(BitConverter.IsLittleEndian) {
-				unsafe {
-					fixed (byte* inPtr = inBytes) {
-						fixed (byte* outPtr = outBytes) {
-							uint* inLongPtr = (uint*)(inPtr + inOff);
-							uint* outLongPtr = (uint*)(outPtr + outOff);
-							for (var i = 0; i < blocks; i++) {
-								NextState();
-								outLongPtr[0] = inLongPtr[0] ^ X[6] ^ (X[3] >> 16) ^ (X[1] << 16);
-								outLongPtr[1] = inLongPtr[1] ^ X[4] ^ (X[1] >> 16) ^ (X[7] << 16);
-								outLongPtr[2] = inLongPtr[2] ^ X[2] ^ (X[7] >> 16) ^ (X[5] << 16);
-								outLongPtr[3] = inLongPtr[3] ^ X[0] ^ (X[5] >> 16) ^ (X[3] << 16);
-								inLongPtr += 4;
-								outLongPtr += 4;
-							}
-						}
-					}
-				}
-				inOff += 16 * blocks;
-				outOff += 16 * blocks;
-			} else {
-				for (var i = 0; i < blocks; i++) {
-					NextState();
-					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 0) ^ X[6] ^ (X[3] >> 16) ^ (X[1] << 16), outBytes, outOff + 0);
-					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 4) ^ X[4] ^ (X[1] >> 16) ^ (X[7] << 16), outBytes, outOff + 4);
-					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 8) ^ X[2] ^ (X[7] >> 16) ^ (X[5] << 16), outBytes, outOff + 8);
-					Pack.UInt32_To_LE(Pack.LE_To_UInt32(inBytes, inOff + 12) ^ X[0] ^ (X[5] >> 16) ^ (X[3] << 16), outBytes, outOff + 12);
-					inOff += 16;
-					outOff += 16;
-				}
-			}
+            unsafe {
+                fixed (byte* inPtr = inBytes) {
+                    fixed (byte* outPtr = outBytes) {
+                        uint* inLongPtr = (uint*)(inPtr + inOff);
+                        uint* outLongPtr = (uint*)(outPtr + outOff);
+                        for (var i = 0; i < blocks; i++) {
+                            NextState();
+                            outLongPtr[0] = inLongPtr[0] ^ X[6] ^ (X[3] >> 16) ^ (X[1] << 16);
+                            outLongPtr[1] = inLongPtr[1] ^ X[4] ^ (X[1] >> 16) ^ (X[7] << 16);
+                            outLongPtr[2] = inLongPtr[2] ^ X[2] ^ (X[7] >> 16) ^ (X[5] << 16);
+                            outLongPtr[3] = inLongPtr[3] ^ X[0] ^ (X[5] >> 16) ^ (X[3] << 16);
+                            inLongPtr += 4;
+                            outLongPtr += 4;
+                        }
+                    }
+                }
+            }
+            inOff += 16 * blocks;
+            outOff += 16 * blocks;
 			#else
 			for (var i = 0; i < blocks; i++) {
 				NextState();

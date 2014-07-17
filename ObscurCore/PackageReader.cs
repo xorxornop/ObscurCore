@@ -244,7 +244,7 @@ namespace ObscurCore
                 "Manifest header offset (absolute)",
                 sourceStream.Position));
 
-            var manifestHeader = StratCom.DeserialiseDataTransferObject<ManifestHeader>(sourceStream);
+            var manifestHeader = StratCom.DeserialiseDataTransferObject<ManifestHeader>(sourceStream, true);
 
             if (manifestHeader.FormatVersion <= 0) {
                 throw new InvalidDataException("Package format descriptor is 0 or less (must be 1 or more).");
@@ -260,12 +260,14 @@ namespace ObscurCore
             cryptoScheme = manifestHeader.CryptographySchemeName.ToEnum<ManifestCryptographyScheme>();
             switch (manifestHeader.CryptographySchemeName.ToEnum<ManifestCryptographyScheme>()) {
                 case ManifestCryptographyScheme.SymmetricOnly:
-                    cryptoConfig = StratCom.DeserialiseDataTransferObject<SymmetricManifestCryptographyConfiguration>
-                        (manifestHeader.CryptographySchemeConfiguration);
+                    cryptoConfig =
+                        manifestHeader.CryptographySchemeConfiguration
+                                      .DeserialiseDto<SymmetricManifestCryptographyConfiguration>();
                     break;
                 case ManifestCryptographyScheme.Um1Hybrid:
-                    cryptoConfig = StratCom.DeserialiseDataTransferObject<Um1HybridManifestCryptographyConfiguration>
-                        (manifestHeader.CryptographySchemeConfiguration);
+                    cryptoConfig =
+                        manifestHeader.CryptographySchemeConfiguration
+                                      .DeserialiseDto<Um1HybridManifestCryptographyConfiguration>();
                     break;
                 default:
                     throw new NotSupportedException(String.Format(
@@ -455,8 +457,7 @@ namespace ObscurCore
                 }
 
                 try {
-                    manifest =
-                        (Manifest)StratCom.Serialiser.Deserialize(serialisedManifestStream, null, typeof(Manifest));
+                    manifest = serialisedManifestStream.DeserialiseDto<Manifest>(lengthPrefixed:false);
                 } catch (Exception e) {
                     throw new InvalidDataException("Manifest failed to deserialise.", e);
                 }

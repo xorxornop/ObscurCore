@@ -35,11 +35,14 @@ namespace ObscurCore
         private const int InitialSeedSize = 64; // bytes (512 bits)
 
         /// <summary>
-        ///     Cryptographically-secure random number generator.
+        ///     Primary cryptographically-secure random number generator.
         /// </summary>
+        /// <remarks>
+        ///     Alternative RNGs/PRNGs can be seeded from this.
+        /// </remarks>
         public static readonly CsRng EntropySupplier;
 
-        internal static readonly DtoSerialiser Serialiser = new DtoSerialiser();
+        private static readonly DtoSerialiser Serialiser = new DtoSerialiser();
 
         static StratCom()
         {
@@ -59,7 +62,8 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Adds entropy from an external source to the central entropy supplier, EntropySupplier.
+        ///     Adds entropy from an external source to the central entropy supplier, 
+        ///     <see cref="EntropySupplier"/>.
         ///     It is recommended to do so regularly from a high quality entropy source!
         /// </summary>
         public static void AddEntropy(byte[] entropy)
@@ -68,7 +72,8 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Adds entropy to the central entropy source, EntropySupplier, from a thread-based entropy collector.
+        ///     Adds entropy to the central entropy source, <see cref="EntropySupplier"/>, 
+        ///     from a thread-based entropy collector.
         /// </summary>
         public static void AddEntropy()
         {
@@ -78,20 +83,25 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Provides serialisation capabilities for any object that has a ProtoContract attribute (e.g. from ObscurCore.DTO
-        ///     namespace).
+        ///     Serialises a data transfer object (DTO) of type <typeparamref name="T"/> 
+        ///     into a <see cref="System.IO.Stream"/>, optionally with a Base128 length prefix.
         /// </summary>
-        /// <returns>The DTO object serialised to binary data wrapped in a MemoryStream.</returns>
-        public static MemoryStream SerialiseDataTransferObject(object obj, bool prefixLength = false)
+        /// <remarks>
+        ///     Provides deserialisation capabilities for any object which derives from 
+        ///     <see cref="IDataTransferObject"/> and that has a <see cref="ProtoContractAttribute"/> 
+        ///     attribute (e.g. those from ObscurCore.DTO namespace).
+        /// </remarks>
+        /// <typeparam name="T">The type of object to serialise.</typeparam>
+        /// <param name="obj">The object to serialise.</param>
+        /// <param name="output">The stream to write the serialised object to.</param>
+        /// <param name="prefixLength">
+        ///     If <c>true</c>, the object will be prefixed with its length in Base128 format. 
+        ///     Use when receiver does not know data length.
+        /// </param>
+        public static void SerialiseDataTransferObject<T>(T obj, Stream output, bool prefixLength = false)
+             where T : IDataTransferObject
         {
-            var ms = new MemoryStream();
-            SerialiseDataTransferObject(obj, ms, prefixLength);
-            return ms;
-        }
-
-        public static void SerialiseDataTransferObject(object obj, Stream output, bool prefixLength = false)
-        {
-            Type type = obj.GetType();
+            Type type = typeof (T);
             if (Serialiser.CanSerializeContractType(type) == false) {
                 throw new ArgumentException(
                     "Cannot serialise - object type does not have a serialisation contract.", "obj");
@@ -104,41 +114,34 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Provides serialisation capabilities for any object that has a ProtoContract attribute (e.g. from ObscurCore.DTO
-        ///     namespace).
+        ///     Deserialises a data transfer object (DTO) of type <typeparamref name="T"/> from
+        ///     a <see cref="System.IO.Stream"/>.
         /// </summary>
-        /// <returns>The DTO object serialised to binary data wrapped in a MemoryStream.</returns>
-        public static T DeserialiseDataTransferObject<T>(byte[] objectBytes, bool prefixLength = false)
+        /// <remarks>
+        ///     Provides deserialisation capabilities for any object which derives from 
+        ///     <see cref="IDataTransferObject"/> and that has a <see cref="ProtoContractAttribute"/> 
+        ///     attribute (e.g. those from ObscurCore.DTO namespace).
+        /// </remarks>
+        /// <typeparam name="T">Data transfer object.</typeparam>
+        /// <param name="objectStream">The stream to read the serialised object from.</param>
+        /// <param name="lengthPrefixed">
+        ///     If <c>true</c>, the object is prefixed with its length in Base128 format. 
+        ///     If <c>false</c>, the whole stream will be read.
+        /// </param>
+        public static T DeserialiseDataTransferObject<T>(Stream objectStream, bool lengthPrefixed = false) 
+            where T : IDataTransferObject
         {
             if (Serialiser.CanSerializeContractType(typeof (T)) == false) {
                 throw new ArgumentException(
                     "Cannot deserialise - requested type does not have a serialisation contract.");
             }
-            var ms = new MemoryStream(objectBytes);
-            T outputObj = default(T);
-            if (prefixLength) {
-                outputObj =
-                    (T) Serialiser.DeserializeWithLengthPrefix(ms, outputObj, typeof (T), PrefixStyle.Base128, 0);
+            var outputObj = default(T);
+            if (lengthPrefixed) {
+                outputObj = (T)Serialiser.DeserializeWithLengthPrefix(objectStream, outputObj, 
+                    typeof(T), PrefixStyle.Base128, 0);
             } else {
-                outputObj = (T) Serialiser.Deserialize(ms, outputObj, typeof (T));
+                outputObj = (T)Serialiser.Deserialize(objectStream, outputObj, typeof(T));
             }
-            return outputObj;
-        }
-
-        /// <summary>
-        ///     Reads a serialiser-length-prefixed DTO object from a stream.
-        /// </summary>
-        /// <typeparam name="T">Type of the DTO object.</typeparam>
-        /// <param name="input">Stream to read the serialised object from.</param>
-        /// <returns>Deserialised DTO object</returns>
-        public static T DeserialiseDataTransferObject<T>(Stream input)
-        {
-            if (Serialiser.CanSerializeContractType(typeof (T)) == false) {
-                throw new ArgumentException(
-                    "Cannot deserialise - requested type does not have a serialisation contract.");
-            }
-            var outputObj =
-                (T) Serialiser.DeserializeWithLengthPrefix(input, default(T), typeof (T), PrefixStyle.Base128, 0);
             return outputObj;
         }
     }

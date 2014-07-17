@@ -23,19 +23,19 @@ namespace ObscurCore.Cryptography.Authentication
         None,
 
         /// <summary>
-        ///     64-bit platform & software optimised, fast.
+        ///     64-bit platform and software optimised, fast.
         ///     Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
         /// </summary>
         Blake2B256,
 
         /// <summary>
-        ///     64-bit platform & software optimised, fast.
+        ///     64-bit platform and software optimised, fast.
         ///     Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
         /// </summary>
         Blake2B384,
 
         /// <summary>
-        ///     64-bit platform & software optimised, fast.
+        ///     64-bit platform and software optimised, fast.
         ///     Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
         /// </summary>
         Blake2B512,

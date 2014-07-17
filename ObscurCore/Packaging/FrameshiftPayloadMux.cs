@@ -28,7 +28,7 @@ using ObscurCore.DTO;
 namespace ObscurCore.Packaging
 {
     /// <summary>
-    /// Derived payload multiplexer implementing random-data item headers & trailers 
+    /// Derived payload multiplexer implementing random-data item headers and trailers 
     /// of either constant or CSPRNG-varied length.
     /// </summary>
     public sealed class FrameshiftPayloadMux : SimplePayloadMux
@@ -54,7 +54,7 @@ namespace ObscurCore.Packaging
             : base(writing, multiplexedStream, payloadItems, itemPreKeys, config)
         {
             var frameshiftConfig =
-                StratCom.DeserialiseDataTransferObject<PayloadSchemeConfiguration>(config.SchemeConfiguration);
+                config.SchemeConfiguration.DeserialiseDto<PayloadSchemeConfiguration>();
             if (frameshiftConfig.Minimum < MinimumPaddingLength) {
                 throw new ArgumentOutOfRangeException("config",
                     "Minimum padding length is set below specification minimum.");

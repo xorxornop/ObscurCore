@@ -46,7 +46,8 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                 throw new ArgumentException("Key is null or zero-length.", "key");
             }
 
-            Func<byte[], byte[]> validator = GetValidator(configuration, TagConstantBytes, configuration.SerialiseDto());
+            Func<byte[], byte[]> validator = GetValidator(configuration, TagConstantBytes, 
+                configuration.SerialiseDto());
             byte[] verifiedOutput = validator(key);
 
             Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "GenerateVerifiedOutput",
@@ -194,6 +195,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// </summary>
         /// <returns>Callable validation function.</returns>
         /// <param name="keyConfirmation">Key confirmation configuration defining validation method to be employed.</param>
+        /// <param name="tag"></param>
         /// <param name="message"></param>
         /// <param name="outputSizeBytes">Expected length of output of verification function in bytes.</param>
         /// <exception cref="ConfigurationInvalidException">

@@ -6,7 +6,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 {
 	/// <summary>
 	/// Implementation of the Skein family of parameterised hash functions in 256, 512 and 1024 bit block
-	/// sizes, based on the <see cref="Org.BouncyCastle.Crypto.Engines.ThreefishEngine">Threefish</see> tweakable block cipher.
+	/// sizes, based on the <see cref="ThreefishEngine">Threefish</see> tweakable block cipher.
 	/// </summary>
 	/// <remarks>
 	/// This is the 1.3 version of Skein defined in the Skein hash function submission to the NIST SHA-3
@@ -15,9 +15,9 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 	/// Skein was designed by Niels Ferguson - Stefan Lucks - Bruce Schneier - Doug Whiting - Mihir
 	/// Bellare - Tadayoshi Kohno - Jon Callas - Jesse Walker.
 	/// <p/>
-	/// This implementation is the basis for <see cref="Org.BouncyCastle.Crypto.Digests.SkeinDigest"/> and <see cref="Org.BouncyCastle.Crypto.Macs.SkeinMac"/>, implementing the
-	/// parameter based configuration system that allows Skein to be adapted to multiple applications. <br>
-	/// Initialising the engine with <see cref="Org.BouncyCastle.Crypto.Parameters.SkeinParameters"/> allows standard and arbitrary parameters to
+	/// This implementation is the basis for <see cref="SkeinDigest"/> and <see cref="SkeinMac"/>, implementing the
+	/// parameter based configuration system that allows Skein to be adapted to multiple applications. <br/>
+	/// Initialising the engine with <see cref="SkeinParameters"/> allows standard and arbitrary parameters to
 	/// be applied during the Skein hash function.
 	/// <p/>
 	/// Implemented:
@@ -35,7 +35,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 	/// <li>Tree hashing.</li>
 	/// </ul>
 	/// </remarks>
-	/// <seealso cref="Org.BouncyCastle.Crypto.Parameters.SkeinParameters"/>
+	/// <seealso cref="SkeinParameters"/>
 	public class SkeinEngine
 		: IMemoable
 	{
@@ -511,7 +511,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		/// <summary>
 		/// Constructs a Skein digest with an internal state size and output size.
 		/// </summary>
-		/// <param name="stateSizeBits">the internal state size in bits - one of <see cref="SKEIN_256"/> <see cref="SKEIN_512"/> or
+		/// <param name="blockSizeBits">the internal state size in bits - one of <see cref="SKEIN_256"/> <see cref="SKEIN_512"/> or
 		///                       <see cref="SKEIN_1024"/>.</param>
 		/// <param name="outputSizeBits">the output/digest size to produce in bits, which must be an integral number of
 		///                      bytes.</param>
@@ -587,7 +587,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		}
 
 		/// <summary>
-		/// Initialises the Skein engine with the provided parameters. See <see cref="Org.BouncyCastle.Crypto.Parameters.SkeinParameters"/> for
+		/// Initialises the Skein engine with the provided parameters. See <see cref="SkeinParameters"/> for
 		/// details on the parameterisation of the Skein hash function.
 		/// </summary>
 		/// <param name="parameters">the parameters to apply to this engine, or <code>null</code> to use no parameters.</param>

@@ -47,6 +47,7 @@ namespace ObscurCore.Support.Random
         /// <param name="offset"></param>
         protected abstract void GetNextState(byte[] buffer, int offset);
 
+        /// <inheritdoc />
         public override void NextBytes(byte[] buffer, int offset, int count)
         {
             int length = count;

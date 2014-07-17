@@ -22,19 +22,19 @@ namespace ObscurCore.Cryptography.Authentication
     public enum MacFunction
     {
         /// <summary>
-        ///     64-bit platform & software optimised, fast. Supports additional salt and tag inputs.
+        ///     64-bit platform and software optimised, fast. Supports additional salt and tag inputs.
         ///     Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
         /// </summary>
         Blake2B256,
 
         /// <summary>
-        ///     64-bit platform & software optimised, fast. Supports additional salt and tag inputs.
+        ///     64-bit platform and software optimised, fast. Supports additional salt and tag inputs.
         ///     Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
         /// </summary>
         Blake2B384,
 
         /// <summary>
-        ///     64-bit platform & software optimised, fast. Supports additional salt and tag inputs.
+        ///     64-bit platform and software optimised, fast. Supports additional salt and tag inputs.
         ///     Derivative of BLAKE, a SHA3 competition finalist - 2nd place.
         /// </summary>
         Blake2B512,

@@ -40,8 +40,8 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             if (Csprng == null) {
                 throw new ArgumentException();
             }
-            var config = StratCom.DeserialiseDataTransferObject<StreamCipherCsprngConfiguration>(configBytes);
-            cipher.Init(true, config.Key, config.Nonce);
+            var configObj = configBytes.DeserialiseDto<StreamCipherCsprngConfiguration>();
+            cipher.Init(true, configObj.Key, configObj.Nonce);
         }
 
         protected internal IStreamCipher Cipher

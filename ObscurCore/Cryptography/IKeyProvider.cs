@@ -20,7 +20,7 @@ namespace ObscurCore.Cryptography
 {
     /// <summary>
     ///     API for key providers to conform to.
-    ///     Key providers supply keys & keypairs for cryptographic operations.
+    ///     Key providers supply keys and keypairs for cryptographic operations.
     /// </summary>
     public interface IKeyProvider
     {

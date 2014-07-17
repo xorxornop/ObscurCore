@@ -14,7 +14,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 	/// Bellare - Tadayoshi Kohno - Jon Callas - Jesse Walker.
 	/// <p/>
 	/// This implementation inlines all round functions, unrolls 8 rounds, and uses 1.2k of static tables
-	/// to speed up key schedule injection. <br>
+	/// to speed up key schedule injection. <br/>
 	/// 2 x block size state is retained by each cipher instance.
 	/// </remarks>
 	public class ThreefishEngine

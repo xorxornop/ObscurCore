@@ -18,6 +18,9 @@ using System.Runtime.CompilerServices;
 
 namespace ObscurCore.Cryptography
 {
+    /// <summary>
+    /// Extension methods for cryptographic use.
+    /// </summary>
     public static class CryptographyExtensions
     {
         /// <summary>
@@ -33,6 +36,16 @@ namespace ObscurCore.Cryptography
             return a.SequenceEqualConstantTime(0, b, 0, a.Length);
         }
 
+        /// <summary>
+        ///     Compares two byte arrays for equality, 
+        ///     taking a constant time regardless of result.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="xOffset"></param>
+        /// <param name="y"></param>
+        /// <param name="yOffset"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
         public static bool SequenceEqualConstantTime(this byte[] x, int xOffset, byte[] y, int yOffset, int length)
         {
             if (x == null) {
@@ -71,7 +84,7 @@ namespace ObscurCore.Cryptography
         }
 
         /// <summary>
-        ///     XOR the specified a & b arrays into c.
+        ///     XOR two byte arrays together into <paramref name="output"/>.
         /// </summary>
         /// <param name="a">Source #0 array.</param>
         /// <param name="aOff">Source array #0 offset.</param>
@@ -110,38 +123,16 @@ namespace ObscurCore.Cryptography
         internal static void XorInternal(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff,
             int length)
         {
-#if (INCLUDE_UNSAFE && !X64)
-            int remainder;
-            int uintOps = Math.DivRem(length, sizeof (uint), out remainder);
-            unsafe {
-                fixed (byte* aPtr = a) {
-                    fixed (byte* bPtr = b) {
-                        fixed (byte* outputPtr = output) {
-                            var aUintPtr = (uint*) (aPtr + aOff);
-                            var bUintPtr = (uint*) (bPtr + bOff);
-                            var outputUintPtr = (uint*) (outputPtr + outputOff);
-                            for (int i = 0; i < uintOps; i++) {
-                                outputUintPtr[i] = aUintPtr[i] ^ bUintPtr[i];
-                            }
-                        }
-                    }
-                }
-            }
-            int increment = uintOps * sizeof (uint);
-            aOff += increment;
-            bOff += increment;
-            outputOff += increment;
-            length = remainder;
-#elif (INCLUDE_UNSAFE && X64)
+#if (INCLUDE_UNSAFE)
 			int remainder;
             var ulongOps = Math.DivRem(length, sizeof(ulong), out remainder);
 			unsafe {
 				fixed (byte* aPtr = a) {
 					fixed (byte* bPtr = b) {
 						fixed (byte* outputPtr = output) {
-							var aUlongPtr = (ulong*)(aPtr + aOff);
-							var bUlongPtr = (ulong*)(bPtr + bOff);
-							var outputUlongPtr = (ulong*)(outputPtr + outputOff);
+                            UInt64* aUlongPtr = (UInt64*)(aPtr + aOff);
+                            UInt64* bUlongPtr = (UInt64*)(bPtr + bOff);
+                            UInt64* outputUlongPtr = (UInt64*)(outputPtr + outputOff);
 							for (var i = 0; i < ulongOps; i++) {
 								outputUlongPtr[i] = aUlongPtr[i] ^ bUlongPtr[i];
 							}
@@ -149,7 +140,7 @@ namespace ObscurCore.Cryptography
 					}
 				}
 			}
-            var increment = ulongOps * sizeof(ulong);
+            var increment = ulongOps * sizeof(UInt64);
             aOff += increment;
 			bOff += increment;
 			outputOff += increment;
@@ -192,90 +183,132 @@ namespace ObscurCore.Cryptography
 
         internal static void XorInPlaceInternal(this byte[] a, int aOff, byte[] b, int bOff, int length)
         {
-#if (INCLUDE_UNSAFE && !X64)
+#if (INCLUDE_UNSAFE)
             int remainder;
-            int uintOps = Math.DivRem(length, sizeof (uint), out remainder);
-            unsafe {
-                fixed (byte* aPtr = a) {
-                    fixed (byte* bPtr = b) {
-                        var aUintPtr = (uint*) (aPtr + aOff);
-                        var bUintPtr = (uint*) (bPtr + bOff);
-                        for (int i = 0; i < uintOps; i++) {
-                            aUintPtr[i] ^= bUintPtr[i];
-                        }
-                    }
-                }
-            }
-            int increment = uintOps * sizeof (uint);
-            aOff += increment;
-            bOff += increment;
-            length = remainder;
-#elif (INCLUDE_UNSAFE && X64)
-            int remainder;
-			var ulongOps = Math.DivRem(length, sizeof(ulong), out remainder);
+            var ulongOps = Math.DivRem(length, sizeof(UInt64), out remainder);
 			unsafe {
 				fixed (byte* aPtr = a) {
 					fixed (byte* bPtr = b) {
-						var aUlongPtr = (ulong*)(aPtr + aOff);
-						var bUlongPtr = (ulong*)(bPtr + bOff);
+                        UInt64* aUlongPtr = (UInt64*)(aPtr + aOff);
+                        UInt64* bUlongPtr = (UInt64*)(bPtr + bOff);
 						for (var i = 0; i < ulongOps; i++) {
 							aUlongPtr[i] ^= bUlongPtr[i];
 						}
 					}
 				}
 			}
-			var increment = ulongOps * sizeof(ulong);
+            var increment = ulongOps * sizeof(UInt64);
 			aOff += increment;
 			bOff += increment;
 			length = remainder;
             #endif
 
-            for (int i = 0; i < length; i++) {
+            for (var i = 0; i < length; i++) {
                 a[aOff + i] ^= b[bOff + i];
             }
         }
 
-        public static uint RotateLeft(this uint i, int distance)
+        /// <summary>
+        ///     Rotate an integer left 
+        ///     (<paramref name="i"/> &lt;&lt;&lt; <paramref name="distance"/>).
+        /// </summary>
+        /// <param name="i">Integer to rotate.</param>
+        /// <param name="distance">Distance to rotate.</param>
+        /// <returns>Rotated integer.</returns>
+        public static UInt32 RotateLeft(this UInt32 i, int distance)
         {
             return (i << distance) | (i >> -distance);
         }
 
-        public static int RotateLeft(this int i, int distance)
+        /// <summary>
+        ///     Rotate an integer left 
+        ///     (<paramref name="i"/> &lt;&lt;&lt; <paramref name="distance"/>).
+        /// </summary>
+        /// <param name="i">Integer to rotate.</param>
+        /// <param name="distance">Distance to rotate.</param>
+        /// <returns>Rotated integer.</returns>
+        public static Int32 RotateLeft(this Int32 i, int distance)
         {
-            return (i << distance) ^ (int) ((uint) i >> -distance);
+            return (i << distance) ^ (Int32)((UInt32)i >> -distance);
         }
 
-        public static ulong RotateLeft(this ulong i, int distance)
+        /// <summary>
+        ///     Rotate an integer left 
+        ///     (<paramref name="i"/> &lt;&lt;&lt; <paramref name="distance"/>).
+        /// </summary>
+        /// <param name="i">Integer to rotate.</param>
+        /// <param name="distance">Distance to rotate.</param>
+        /// <returns>Rotated integer.</returns>
+        public static UInt64 RotateLeft(this UInt64 i, int distance)
         {
             return (i << distance) | (i >> -distance);
         }
 
-        public static long RotateLeft(this long i, int distance)
+        /// <summary>
+        ///     Rotate an integer left 
+        ///     (<paramref name="i"/> &lt;&lt;&lt; <paramref name="distance"/>).
+        /// </summary>
+        /// <param name="i">Integer to rotate.</param>
+        /// <param name="distance">Distance to rotate.</param>
+        /// <returns>Rotated integer.</returns>
+        public static Int64 RotateLeft(this Int64 i, int distance)
         {
-            return (i << distance) ^ (long) ((ulong) i >> -distance);
+            return (i << distance) ^ (Int64)((UInt64)i >> -distance);
         }
 
-        public static uint RotateRight(this uint i, int distance)
+        /// <summary>
+        ///     Rotate an integer right 
+        ///     (<paramref name="i"/> &gt;&gt;&gt; <paramref name="distance"/>).
+        /// </summary>
+        /// <param name="i">Integer to rotate.</param>
+        /// <param name="distance">Distance to rotate.</param>
+        /// <returns>Rotated integer.</returns>
+        public static UInt32 RotateRight(this UInt32 i, int distance)
         {
             return (i >> distance) | (i << -distance);
         }
 
-        public static int RotateRight(this int i, int distance)
+        /// <summary>
+        ///     Rotate an integer right 
+        ///     (<paramref name="i"/> &gt;&gt;&gt; <paramref name="distance"/>).
+        /// </summary>
+        /// <param name="i">Integer to rotate.</param>
+        /// <param name="distance">Distance to rotate.</param>
+        /// <returns>Rotated integer.</returns>
+        public static Int32 RotateRight(this Int32 i, int distance)
         {
-            return (int) ((uint) i >> distance) ^ (i << -distance);
+            return (Int32)((UInt32)i >> distance) ^ (i << -distance);
         }
 
-        public static ulong RotateRight(this ulong i, int distance)
+        /// <summary>
+        ///     Rotate an integer right 
+        ///     (<paramref name="i"/> &gt;&gt;&gt; <paramref name="distance"/>).
+        /// </summary>
+        /// <param name="i">Integer to rotate.</param>
+        /// <param name="distance">Distance to rotate.</param>
+        /// <returns>Rotated integer.</returns>
+        public static UInt64 RotateRight(this UInt64 i, int distance)
         {
             return (i >> distance) | (i << -distance);
         }
 
-        public static long RotateRight(this long i, int distance)
+        /// <summary>
+        ///     Rotate an integer right 
+        ///     (<paramref name="i"/> &gt;&gt;&gt; <paramref name="distance"/>).
+        /// </summary>
+        /// <param name="i">Integer to rotate.</param>
+        /// <param name="distance">Distance to rotate.</param>
+        /// <returns>Rotated integer.</returns>
+        public static Int64 RotateRight(this Int64 i, int distance)
         {
-            return (long) ((ulong) i >> distance) ^ (i << -distance);
+            return (Int64)((UInt64)i >> distance) ^ (i << -distance);
         }
 
-        public static void SecureWipe(this byte[] data)
+        /// <summary>
+        ///     Securely erase data by clearing its memory.
+        /// </summary>
+        /// <param name="data">Data to erase.</param>
+        public static void SecureWipe<T>(this T[] data) where T : struct
         {
             if (data == null) {
                 throw new ArgumentNullException("data");
@@ -284,7 +317,13 @@ namespace ObscurCore.Cryptography
             InternalWipe(data, 0, data.Length);
         }
 
-        public static void SecureWipe(this byte[] data, int offset, int count)
+        /// <summary>
+        ///     Securely erase data by clearing its memory.
+        /// </summary>
+        /// <param name="data">Data to erase.</param>
+        /// <param name="offset">Offset in <paramref name="data"/> to erase from.</param>
+        /// <param name="count">Number of elements to erase.</param>
+        public static void SecureWipe<T>(this T[] data, int offset, int count) where T : struct
         {
             if (data == null) {
                 throw new ArgumentNullException("data");
@@ -303,267 +342,58 @@ namespace ObscurCore.Cryptography
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void InternalWipe(byte[] data, int offset, int count)
+        internal static void InternalWipe<T>(T[] data, int offset, int count) where T : struct
         {
             Array.Clear(data, offset, count);
         }
 
-        /* BIT PACKING METHODS */
-
-        // Big endian
-        // Int32
-
-        public static byte[] ToBigEndian(this Int32 n)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void InternalWipe(byte[] data, int offset, int count)
         {
-            var bs = new byte[sizeof (Int32)];
-            n.ToBigEndian(bs);
-            return bs;
+#if INCLUDE_UNSAFE
+            unsafe {
+                fixed (byte* ptr = data) {
+                    InternalWipe(ptr, offset, count);
+                }
+            }
+#else
+            Array.Clear(data, offset, count);
+#endif
         }
 
-        public static void ToBigEndian(this Int32 n, byte[] bs)
+#if INCLUDE_UNSAFE
+        internal static unsafe void InternalWipe(byte* src, int offset, int length)
         {
-            bs[0] = (byte) (n >> 24);
-            bs[1] = (byte) (n >> 16);
-            bs[2] = (byte) (n >> 8);
-            bs[3] = (byte) (n);
+            while (length >= 16) {
+                *(UInt64*)src = default(UInt64);
+                src += 8;
+                *(UInt64*)src = default(UInt64);
+                src += 8;
+                length -= 16;
+            }
+
+            if (length >= 8) {
+                *(UInt64*)src = default(UInt64);
+                src += 8;
+                length -= 8;
+            }
+
+            if (length >= 4) {
+                *(UInt32*)src = default(UInt32);
+                src += 4;
+                length -= 4;
+            }
+
+            if (length >= 2) {
+                *(UInt16*)src = default(UInt16);
+                src += 2;
+                length -= 2;
+            }
+
+            if (length != 0) {
+                *src = 0x00;
+            }
         }
-
-        public static void ToBigEndian(this Int32 n, byte[] bs, int off)
-        {
-            bs[off + 0] = (byte) (n >> 24);
-            bs[off + 1] = (byte) (n >> 16);
-            bs[off + 2] = (byte) (n >> 8);
-            bs[off + 3] = (byte) (n);
-        }
-
-        public static Int32 BigEndianToInt32(this byte[] bs)
-        {
-            return bs[0] << 24
-                   | bs[1] << 16
-                   | bs[2] << 8
-                   | bs[3];
-        }
-
-        public static Int32 BigEndianToInt32(this byte[] bs, int off)
-        {
-            return bs[off] << 24
-                   | bs[off + 1] << 16
-                   | bs[off + 2] << 8
-                   | bs[off + 3];
-        }
-
-        // UInt32
-
-        [CLSCompliant(false)]
-        public static byte[] ToBigEndian(this UInt32 n)
-        {
-            var bs = new byte[sizeof (UInt32)];
-            n.ToBigEndian(bs);
-            return bs;
-        }
-
-        [CLSCompliant(false)]
-        public static void ToBigEndian(this UInt32 n, byte[] bs)
-        {
-            bs[0] = (byte) (n >> 24);
-            bs[1] = (byte) (n >> 16);
-            bs[2] = (byte) (n >> 8);
-            bs[3] = (byte) (n);
-        }
-
-        [CLSCompliant(false)]
-        public static void ToBigEndian(this UInt32 n, byte[] bs, int off)
-        {
-            bs[off + 0] = (byte) (n >> 24);
-            bs[off + 1] = (byte) (n >> 16);
-            bs[off + 2] = (byte) (n >> 8);
-            bs[off + 3] = (byte) (n);
-        }
-
-        [CLSCompliant(false)]
-        public static UInt32 BigEndianToUInt32(this byte[] bs)
-        {
-            return (UInt32) bs[0] << 24
-                   | (UInt32) bs[1] << 16
-                   | (UInt32) bs[2] << 8
-                   | bs[3];
-        }
-
-        [CLSCompliant(false)]
-        public static UInt32 BigEndianToUInt32(this byte[] bs, int off)
-        {
-            return (UInt32) bs[off] << 24
-                   | (UInt32) bs[off + 1] << 16
-                   | (UInt32) bs[off + 2] << 8
-                   | bs[off + 3];
-        }
-
-        // UInt64
-
-        [CLSCompliant(false)]
-        public static byte[] ToBigEndian(this UInt64 n)
-        {
-            var bs = new byte[sizeof (UInt64)];
-            n.ToBigEndian(bs);
-            return bs;
-        }
-
-        [CLSCompliant(false)]
-        public static void ToBigEndian(this UInt64 n, byte[] bs)
-        {
-            ((UInt32) (n >> 32)).ToBigEndian(bs, 0);
-            ((UInt32) (n)).ToBigEndian(bs, 4);
-        }
-
-        [CLSCompliant(false)]
-        public static void ToBigEndian(this UInt64 n, byte[] bs, int off)
-        {
-            ((UInt32) (n >> 32)).ToBigEndian(bs, off);
-            ((UInt32) (n)).ToBigEndian(bs, off + 4);
-        }
-
-        [CLSCompliant(false)]
-        public static UInt64 BigEndianToUInt64(this byte[] bs)
-        {
-            UInt32 hi = bs.BigEndianToUInt32();
-            UInt32 lo = bs.BigEndianToUInt32(4);
-            return ((UInt64) hi << 32) | lo;
-        }
-
-        [CLSCompliant(false)]
-        public static UInt64 BigEndianToUInt64(this byte[] bs, int off)
-        {
-            UInt32 hi = bs.BigEndianToUInt32(off);
-            UInt32 lo = bs.BigEndianToUInt32(off + 4);
-            return ((UInt64) hi << 32) | lo;
-        }
-
-        // Little endian
-        // Int32
-
-        public static byte[] ToLittleEndian(this Int32 n)
-        {
-            var bs = new byte[sizeof (Int32)];
-            n.ToLittleEndian(bs);
-            return bs;
-        }
-
-        public static void ToLittleEndian(this Int32 n, byte[] bs)
-        {
-            bs[0] = (byte) (n);
-            bs[1] = (byte) (n >> 8);
-            bs[2] = (byte) (n >> 16);
-            bs[3] = (byte) (n >> 24);
-        }
-
-        public static void ToLittleEndian(this Int32 n, byte[] bs, int off)
-        {
-            bs[off + 0] = (byte) (n);
-            bs[off + 1] = (byte) (n >> 8);
-            bs[off + 2] = (byte) (n >> 16);
-            bs[off + 3] = (byte) (n >> 24);
-        }
-
-        public static Int32 LittleEndianToInt32(this byte[] bs)
-        {
-            return bs[0]
-                   | bs[1] << 8
-                   | bs[2] << 16
-                   | bs[3] << 24;
-        }
-
-        public static Int32 LittleEndianToInt32(this byte[] bs, int off)
-        {
-            return bs[off]
-                   | bs[off + 1] << 8
-                   | bs[off + 2] << 16
-                   | bs[off + 3] << 24;
-        }
-
-        // UInt32
-
-        [CLSCompliant(false)]
-        public static byte[] ToLittleEndian(this UInt32 n)
-        {
-            var bs = new byte[sizeof (UInt32)];
-            n.ToLittleEndian(bs);
-            return bs;
-        }
-
-        [CLSCompliant(false)]
-        public static void ToLittleEndian(this UInt32 n, byte[] bs)
-        {
-            bs[0] = (byte) (n);
-            bs[1] = (byte) (n >> 8);
-            bs[2] = (byte) (n >> 16);
-            bs[3] = (byte) (n >> 24);
-        }
-
-        [CLSCompliant(false)]
-        public static void ToLittleEndian(this UInt32 n, byte[] bs, int off)
-        {
-            bs[off + 0] = (byte) (n);
-            bs[off + 1] = (byte) (n >> 8);
-            bs[off + 2] = (byte) (n >> 16);
-            bs[off + 3] = (byte) (n >> 24);
-        }
-
-        [CLSCompliant(false)]
-        public static UInt32 LittleEndianToUInt32(this byte[] bs)
-        {
-            return bs[0]
-                   | (UInt32) bs[1] << 8
-                   | (UInt32) bs[2] << 16
-                   | (UInt32) bs[3] << 24;
-        }
-
-        [CLSCompliant(false)]
-        public static UInt32 LittleEndianToUInt32(this byte[] bs, int off)
-        {
-            return bs[off]
-                   | (UInt32) bs[off + 1] << 8
-                   | (UInt32) bs[off + 2] << 16
-                   | (UInt32) bs[off + 3] << 24;
-        }
-
-        // UInt64
-
-        [CLSCompliant(false)]
-        public static byte[] ToLittleEndian(this UInt64 n)
-        {
-            var bs = new byte[sizeof (UInt64)];
-            n.ToLittleEndian(bs);
-            return bs;
-        }
-
-        [CLSCompliant(false)]
-        public static void ToLittleEndian(this UInt64 n, byte[] bs)
-        {
-            ((UInt32) n).ToLittleEndian(bs, 0);
-            ((UInt32) (n >> 32)).ToLittleEndian(bs, 4);
-        }
-
-        [CLSCompliant(false)]
-        public static void ToLittleEndian(this UInt64 n, byte[] bs, int off)
-        {
-            ((UInt32) n).ToLittleEndian(bs, off);
-            ((UInt32) (n >> 32)).ToLittleEndian(bs, off + 4);
-        }
-
-        [CLSCompliant(false)]
-        public static UInt64 LittleEndianToUInt64(this byte[] bs)
-        {
-            UInt32 lo = bs.LittleEndianToUInt32(0);
-            UInt32 hi = bs.LittleEndianToUInt32(4);
-            return ((UInt64) hi << 32) | lo;
-        }
-
-        [CLSCompliant(false)]
-        public static UInt64 LittleEndianToUInt64(this byte[] bs, int off)
-        {
-            UInt32 lo = bs.LittleEndianToUInt32(off);
-            UInt32 hi = bs.LittleEndianToUInt32(off + 4);
-            return ((UInt64) hi << 32) | lo;
-        }
+#endif
     }
 }

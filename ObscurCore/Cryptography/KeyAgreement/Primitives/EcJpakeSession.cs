@@ -233,7 +233,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <summary>
         ///     Provides the ability to suspend the session for later resumption by exporting the
         ///     session participant's private key. This key must be stored securely!
-        ///     DTO state objects created/sent & received thus far must also be retained
+        ///     DTO state objects created/sent and received thus far must also be retained
         ///     (these are not output by this method).
         /// </summary>
         public void SuspendSession(out byte[] x2Export)
@@ -400,7 +400,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         ///     Creates a round 3 (key confirmation) DTO to send to the partner participant.
         /// </summary>
         /// <exception cref="InvalidOperationException">
-        ///     Prior rounds (1 & 2) have not been completed yet, or method may have been called more than once.
+        ///     Prior rounds (1 and 2) have not been completed yet, or method may have been called more than once.
         /// </exception>
         public JpakeRound3 CreateRound3ToSend()
         {
@@ -428,7 +428,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <param name="round3Received">Round 3 DTO received from partner participant.</param>
         /// <param name="keyingMaterial">Shared secret to be derived further before use as a key (e.g. by a KDF).</param>
         /// <exception cref="InvalidOperationException">
-        ///     Key calculation and/or prior rounds (1 & 2) have not been completed yet, or
+        ///     Key calculation and/or prior rounds (1 and 2) have not been completed yet, or
         ///     method may have been called more than once.
         /// </exception>
         /// <exception cref="CryptoException">

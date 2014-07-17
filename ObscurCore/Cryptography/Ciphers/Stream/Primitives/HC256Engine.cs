@@ -184,31 +184,19 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			int blocks = Math.DivRem (len, 4, out remainder);
 
 			#if INCLUDE_UNSAFE
-			if (BitConverter.IsLittleEndian) {
-				unsafe {
-					fixed (byte* inPtr = input) {
-						fixed (byte* outPtr = output) {
-							uint* inUintPtr = (uint*)(inPtr + inOff);
-							uint* outUintPtr = (uint*)(outPtr + outOff);
-							for (int i = 0; i < blocks; i++) {
-								outUintPtr [i] = inUintPtr[i] ^ Step ();
-							}
-						}
-					}
-				}
-				inOff += 4 * blocks;
-				outOff += 4 * blocks;
-			} else {
-				for (int i = 0; i < blocks; i++) {
-					Pack.UInt32_To_LE(Step(), buf);
-					output[outOff + 0] = (byte)(input[inOff + 0] ^ buf[0]);
-					output[outOff + 1] = (byte)(input[inOff + 1] ^ buf[1]);
-					output[outOff + 2] = (byte)(input[inOff + 2] ^ buf[2]);
-					output[outOff + 3] = (byte)(input[inOff + 3] ^ buf[3]);
-					inOff += 4;
-					outOff += 4;
-				}
-			}
+            unsafe {
+                fixed (byte* inPtr = input) {
+                    fixed (byte* outPtr = output) {
+                        uint* inUintPtr = (uint*)(inPtr + inOff);
+                        uint* outUintPtr = (uint*)(outPtr + outOff);
+                        for (int i = 0; i < blocks; i++) {
+                            outUintPtr[i] = inUintPtr[i] ^ Step();
+                        }
+                    }
+                }
+            }
+            inOff += 4 * blocks;
+            outOff += 4 * blocks;
 			#else
 			for (int i = 0; i < blocks; i++) {
 				Pack.UInt32_To_LE(Step(), buf);

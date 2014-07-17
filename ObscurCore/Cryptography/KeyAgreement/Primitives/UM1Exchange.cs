@@ -116,7 +116,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// </summary>
         /// <param name="senderPublicKey">Public key of the sender.</param>
         /// <param name="receiverPrivateKey">Private key of the receiver.</param>
-        /// <param name='ephemeralPublicKey'>Ephemeral public key supplied by the initiator (U, sender).</param>
+        /// <param name='ephemeralSenderPublicKey'>Ephemeral public key supplied by the initiator (U, sender).</param>
         public static byte[] Respond(EcKeyConfiguration senderPublicKey, EcKeyConfiguration receiverPrivateKey,
             EcKeyConfiguration ephemeralSenderPublicKey)
         {

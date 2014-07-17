@@ -113,3 +113,4 @@ ObscurCore.Tests/test-data-src/large-binary-files/
 ObscurCore.Tests/test-data-dst/small-text-files/
 ObscurCore.Tests/test-data-dst/large-binary-files/
 ObscurCore.Tests/test-data-dst/package-output/
+ObscurCore/Help/

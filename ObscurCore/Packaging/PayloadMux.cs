@@ -29,7 +29,7 @@ namespace ObscurCore.Packaging
     /// </summary>
     /// <remarks>
     /// Supports extensions for control of operation size (partial/split item writes), ordering, 
-    /// and item headers & trailers. Records I/O history itemwise and total.
+    /// and item headers and trailers. Records I/O history itemwise and total.
     /// </remarks>
     public abstract class PayloadMux
     {
