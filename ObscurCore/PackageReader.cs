@@ -20,7 +20,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using LZ4PCL;
-using Nessos.LinqOptimizer.Base;
 using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
@@ -34,9 +33,9 @@ using ObscurCore.Packaging;
 namespace ObscurCore
 {
     /// <summary>
-    ///     Provides capability of reading ObscurCore packages.
+    ///     Reads and extracts ObscurCore packages.
     /// </summary>
-    public class PackageReader
+    public sealed class PackageReader
     {
         #region Instance variables
 
@@ -122,6 +121,9 @@ namespace ObscurCore
             get { return _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>(); }
         }
 
+        /// <summary>
+        ///     Items in the package payload.
+        /// </summary>
         public IEnumerable<IPayloadItem> PayloadItems
         {
             get { return _manifest.PayloadItems.Select(item => item as IPayloadItem); }
@@ -145,7 +147,7 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Read a package from a file.
+        ///     Reads a package from a file.
         /// </summary>
         /// <returns>Package ready for reading.</returns>
         /// <exception cref="ArgumentException">File does not exist at the path specified.</exception>
@@ -159,7 +161,7 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Read a package from a stream.
+        ///     Reads a package from a stream.
         /// </summary>
         /// <returns>Package ready for reading.</returns>
         public static PackageReader FromStream(Stream stream, IKeyProvider keyProvider)
@@ -170,6 +172,18 @@ namespace ObscurCore
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Exposes the payload items in the manifest as a tree, to facilitate treating it as a filesystem.
+        /// </summary>
+        public PayloadTree InspectPayloadAsFilesystem()
+        {
+            var tree = new PayloadTree();
+            foreach (var payloadItem in _manifest.PayloadItems) {
+                tree.AddItem(payloadItem, payloadItem.RelativePath);
+            }
+            return tree;
+        } 
 
         /// <summary>
         ///     Performs key confirmation and derivation on each payload item.
@@ -183,13 +197,11 @@ namespace ObscurCore
             List<byte[]> keys = payloadKeysSymmetric != null ? payloadKeysSymmetric.ToList() : new List<byte[]>();
             var errorList = new List<PayloadItem>();
 
-            IQueryExpr<IEnumerable<PayloadItem>> itemsToConfirm = _manifest.PayloadItems.AsQueryExpr()
-                                                                           .Where(
-                                                                               item =>
-                                                                                   item.SymmetricCipherKey.IsNullOrZeroLength() ||
-                                                                                   item.AuthenticationKey
-                                                                                       .IsNullOrZeroLength());
-            Parallel.ForEach(itemsToConfirm.Run(), item => {
+            IEnumerable<PayloadItem> itemsToConfirm = _manifest.PayloadItems.AsQueryExpr()
+                .Where(item => item.SymmetricCipherKey.IsNullOrZeroLength() || 
+                    item.AuthenticationKey.IsNullOrZeroLength()).Run();
+
+            Parallel.ForEach(itemsToConfirm, item => {
                 if (item.KeyConfirmation == null || item.KeyDerivation == null) {
                     errorList.Add(item);
                 }
@@ -212,12 +224,12 @@ namespace ObscurCore
         #endregion
 
         /// <summary>
-        ///     Reads a package manifest header (only) from a stream.
+        ///     Reads a package manifest header from a stream.
         /// </summary>
         /// <param name="sourceStream">Stream to read the header from.</param>
         /// <param name="cryptoScheme">Manifest cryptography scheme parsed from the header.</param>
         /// <param name="cryptoConfig">Manifest cryptography configuration deserialised from the header.</param>
-        /// <returns>Package manifest header object.</returns>
+        /// <returns>Package manifest header.</returns>
         /// <exception cref="DataLengthException">End of stream encountered unexpectedly (contents truncated).</exception>
         /// <exception cref="InvalidDataException">Package data structure is out of specification or otherwise malformed.</exception>
         /// <exception cref="NotSupportedException">Version format specified is unknown to the local version.</exception>
@@ -279,12 +291,20 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Read manifest from package.
+        ///     Reads a manifest from a package.
         /// </summary>
         /// <remarks>
         ///     Call method, supplying (all of) only the keys associated with the sender and the context.
-        ///     This maximises the chance that 1) the package will be successfully decrypted if multiple
-        ///     keys are in use by both parties, and 2) minimises the time spent validating potential key pairs.
+        ///     This maximises the chance that: <br/>
+        ///     <list type="number">
+        ///         <item><description>
+        ///             The package will be successfully decrypted if multiple 
+        ///             keys are in use by both parties.
+        ///         </description></item>
+        ///         <item><description>
+        ///             Minimises the time spent validating potential key pairs
+        ///         </description></item>
+        ///     </list>
         /// </remarks>
         /// <param name="keyProvider">Provider to get possible keys for the manifest from.</param>
         /// <param name="manifestScheme">Cryptography scheme used in the manifest.</param>
@@ -457,7 +477,7 @@ namespace ObscurCore
                 }
 
                 try {
-                    manifest = serialisedManifestStream.DeserialiseDto<Manifest>(lengthPrefixed:false);
+                    manifest = serialisedManifestStream.DeserialiseDto<Manifest>(false);
                 } catch (Exception e) {
                     throw new InvalidDataException("Manifest failed to deserialise.", e);
                 }
@@ -473,7 +493,7 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Read a package into a directory. Just like extracting an archive.
+        ///     Reads a package into a filesystem directory.
         /// </summary>
         /// <param name="path">Path to write items to.</param>
         /// <param name="overwrite"></param>
@@ -502,7 +522,7 @@ namespace ObscurCore
                     "path", e);
             }
 
-            foreach (var item in _manifest.PayloadItems) {
+            foreach (PayloadItem item in _manifest.PayloadItems) {
                 if (item.Type != PayloadItemType.KeyAction &&
                     item.RelativePath.Contains(Athena.Packaging.PathRelativeUp)) {
                     throw new ConfigurationInvalidException("A payload item specifies a relative path outside that of the package root. "
@@ -529,15 +549,17 @@ namespace ObscurCore
                 PayloadItem itemClosureVar = item;
                 item.SetStreamBinding(() => {
                     try {
-                        var directory = Path.GetDirectoryName(absolutePath);
+                        string directory = Path.GetDirectoryName(absolutePath);
                         Directory.CreateDirectory(directory);
                         FileStream stream = File.Create(absolutePath);
                         stream.SetLength(itemClosureVar.ExternalLength);
                         return stream;
                     } catch (ArgumentException e) {
-                        throw new ConfigurationInvalidException("Could not create payload item output stream: path contains invalid characters.", e);
+                        throw new ConfigurationInvalidException(
+                            "Could not create payload item output stream: path contains invalid characters.", e);
                     } catch (NotSupportedException e) {
-                        throw new ConfigurationInvalidException("Could not create payload item output stream: path is invalid.", e);
+                        throw new ConfigurationInvalidException(
+                            "Could not create payload item output stream: path is invalid.", e);
                     }
                 });
             }

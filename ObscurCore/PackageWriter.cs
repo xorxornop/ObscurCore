@@ -35,7 +35,7 @@ using ObscurCore.Packaging;
 namespace ObscurCore
 {
     /// <summary>
-    ///     Provides capability of writing ObscurCore packages.
+    ///     Constructs and writes ObscurCore packages.
     /// </summary>
     public sealed class PackageWriter
     {
@@ -46,7 +46,7 @@ namespace ObscurCore
 
         private readonly Dictionary<Guid, byte[]> _itemPreKeys = new Dictionary<Guid, byte[]>();
         private readonly Manifest _manifest;
-        private int _formatVersion = Athena.Packaging.PackageFormatVersion;
+        private readonly int _formatVersion = Athena.Packaging.PackageFormatVersion;
 
         /// <summary>
         ///     Configuration of the manifest cipher. Must be serialised into ManifestHeader when writing package.

@@ -30,21 +30,21 @@ namespace ObscurCore.Cryptography.Ciphers
     {
         private const string UnknownFinaliseError =
             "An unknown type of error occured while transforming the final block of ciphertext.";
-
-        //		private const string UnexpectedLengthError = "The data in the ciphertext is not the expected length.";
-        private const string WritingError = "Could not write transformed block bytes to output stream.";
-
-        private const string NotWritingError = "Stream is configured for encryption, and so may only be written to.";
-        private const string NotReadingError = "Stream is configured for decryption, and so may only be read from.";
+        private const string WritingError = 
+            "Could not write transformed block bytes to output stream.";
+        private const string NotWritingError = 
+            "Stream is configured for encryption, and so may only be written to.";
+        private const string NotReadingError = 
+            "Stream is configured for decryption, and so may only be read from.";
 
         private readonly ICipherWrapper _cipher;
 
-        private readonly byte[] _operationBuffer; // primary buffer
         private readonly int _operationSize;
-
-        private readonly RingBuffer _outBuffer;
-        private readonly byte[] _tempBuffer;
+        private byte[] _operationBuffer; // primary buffer
         private int _operationBufferOffset;
+
+        private byte[] _tempBuffer;
+        private RingBuffer _outBuffer;
 
         /// <summary>
         ///     Initialises the stream and its associated cipher for operation automatically from provided configuration
@@ -157,10 +157,10 @@ namespace ObscurCore.Cryptography.Ciphers
         }
 
         /// <summary>
-        ///     Writes specified quantity of bytes exactly (after decoration transform)
+        ///     Encrypts and writes specified quantity of bytes exactly (after cipher transform).
         /// </summary>
-        /// <param name="source">Source.</param>
-        /// <param name="length">Length.</param>
+        /// <param name="source">Stream containing data to be encrypted and written.</param>
+        /// <param name="length">Length of data to be written.</param>
         /// <returns>The quantity of bytes taken from the source stream to fulfil the request.</returns>
         public override long WriteExactlyFrom(System.IO.Stream source, long length)
         {
@@ -294,10 +294,10 @@ namespace ObscurCore.Cryptography.Ciphers
         }
 
         /// <summary>
-        ///     Writes a byte. Not guaranteed or likely to be written out immediately.
+        ///     Encrypts and writes a byte. Not guaranteed or even likely to be written out immediately.
         ///     If writing precision is required, do not use this wherever possible.
         /// </summary>
-        /// <param name="b">Byte to write.</param>
+        /// <param name="b">Byte to encrypt and write.</param>
         public override void WriteByte(byte b)
         {
             CheckIfCanDecorate();
@@ -524,7 +524,7 @@ namespace ObscurCore.Cryptography.Ciphers
 
 
         /// <summary>
-        ///     Decrypt an exact amount of bytes from the stream StreamBinding and write them
+        ///     Decrypt an exact amount of bytes from <see cref="DecoratingStream.StreamBinding"/> and write them
         ///     to a destination stream.
         /// </summary>
         /// <returns>The quantity of bytes written to the destination stream.</returns>

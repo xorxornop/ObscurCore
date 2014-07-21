@@ -20,7 +20,7 @@ using ProtoBuf;
 namespace ObscurCore
 {
     /// <summary>
-    /// Extension methods for data transfer object serialisation
+    /// Extension methods for data transfer object serialisation.
     /// </summary>
     public static class SerialisationExtensions
     {

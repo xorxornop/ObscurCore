@@ -33,7 +33,37 @@ namespace ObscurCore.Packaging
     public abstract class TreeNode<T> : IEquatable<TreeNode<T>>
     {
         private readonly Guid _identifier = new Guid();
+        private bool _mutable;
         private string _name;
+        private DirectoryTreeNode<T> _parent;
+
+        /// <summary>
+        ///     Create a new tree node.
+        /// </summary>
+        /// <param name="mutable">If <c>true</c>, node can be modified after creation.</param>
+        protected TreeNode(bool mutable)
+        {
+            _mutable = mutable;
+        }
+
+        /// <summary>
+        ///     Throws an <see cref="InvalidOperationException" /> if instance is set as immutable.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Attempted to modify immutable instance.</exception>
+        protected void ThrowIfImmutable()
+        {
+            if (_mutable == false) {
+                throw new InvalidOperationException("Cannot modify immutable object.");
+            }
+        }
+
+        /// <summary>
+        ///     Prohibits all future modification of the node (where <see cref="ThrowIfImmutable" /> is called).
+        /// </summary>
+        protected void SetImmutable()
+        {
+            _mutable = false;
+        }
 
         /// <summary>
         ///     Name of node.
@@ -43,6 +73,7 @@ namespace ObscurCore.Packaging
             get { return _name; }
             set
             {
+                ThrowIfImmutable();
                 if (Parent != null && Parent.Children.Any(t => t.Name.Equals(_name))) {
                     throw new InvalidOperationException(
                         "The parent node already has a child node with this name. Cannot duplicate.");
@@ -54,7 +85,15 @@ namespace ObscurCore.Packaging
         /// <summary>
         ///     Parent node.
         /// </summary>
-        public DirectoryTreeNode<T> Parent { get; protected internal set; }
+        public DirectoryTreeNode<T> Parent
+        {
+            get { return _parent; }
+            protected internal set
+            {
+                ThrowIfImmutable();
+                _parent = value;
+            }
+        }
 
         /// <summary>
         ///     Unique identifier.
@@ -75,6 +114,7 @@ namespace ObscurCore.Packaging
         /// <param name="newParent">Node to move this node to.</param>
         public void Move(DirectoryTreeNode<T> newParent)
         {
+            ThrowIfImmutable();
             if (newParent == null) {
                 throw new ArgumentNullException("newParent");
             }

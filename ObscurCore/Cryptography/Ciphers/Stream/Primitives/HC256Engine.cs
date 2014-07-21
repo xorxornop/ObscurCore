@@ -20,8 +20,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	public class Hc256Engine
 		: IStreamCipher
 	{
-		private readonly uint[] _p = new uint[1024];
-		private readonly uint[] _q = new uint[1024];
+		private uint[] _p = new uint[1024];
+		private uint[] _q = new uint[1024];
 		private uint _cnt;
 
 		private uint Step()
@@ -146,7 +146,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			initialised = true;
 		}
 
-		private readonly byte[] buf = new byte[4];
+		private byte[] buf = new byte[4];
 		private int idx;
 
 		private byte GetByte()

@@ -25,7 +25,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		/// <summary>
 		/// Internal buffer for partial blocks.
 		/// </summary>
-		private readonly byte[] _streamBuf = new byte[BufferLen];
+		private byte[] _streamBuf = new byte[BufferLen];
 
 		/// <summary>
 		/// Points to the first stream byte which 
@@ -42,7 +42,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         private uint lfsr5, lfsr6, lfsr7, lfsr8, lfsr9;
         private uint fsmR1, fsmR2;
 		// Subkeys for Serpent24: 100 32-bit words.
-		private readonly uint[] _serpent24SubKeys = new uint[100];
+		private uint[] _serpent24SubKeys = new uint[100];
         
 		public void Init (bool encrypting, byte[] key, byte[] iv) {
 			if (iv == null) 
@@ -147,8 +147,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
         #region Private implementation
 
-		private static readonly uint[] MulAlpha = new uint[256];
-		private static readonly uint[] DivAlpha = new uint[256];
+		private static uint[] MulAlpha = new uint[256];
+        private static uint[] DivAlpha = new uint[256];
 
         static SosemanukEngine() {
             /*

@@ -23,7 +23,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	/// </summary>
 	public class XSalsa20Engine : Salsa20Engine
 	{
-		public XSalsa20Engine (int rounds = DEFAULT_ROUNDS) : base(rounds)
+		public XSalsa20Engine (int rounds = DefaultRounds) : base(rounds)
 		{	
 			CipherName = "XSalsa20";
 		}
@@ -42,26 +42,26 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 			SetKey(key, iv);
 			Reset ();
-			initialised = true;
+			Initialised = true;
 		}
 
 		protected override void SetKey (byte[] keyBytes, byte[] ivBytes) {
-			PrepareHSalsaBlock (engineState, keyBytes, ivBytes);
-			var hsalsa20Out = new uint[engineState.Length];
-			HSalsa(rounds, engineState, 0, hsalsa20Out, 0);
+			PrepareHSalsaBlock (EngineState, keyBytes, ivBytes);
+			var hsalsa20Out = new uint[EngineState.Length];
+			HSalsa(Rounds, EngineState, 0, hsalsa20Out, 0);
 
-			engineState[1] = hsalsa20Out[0];
-			engineState[2] = hsalsa20Out[5];
-			engineState[3] = hsalsa20Out[10];
-			engineState[4] = hsalsa20Out[15];
+			EngineState[1] = hsalsa20Out[0];
+			EngineState[2] = hsalsa20Out[5];
+			EngineState[3] = hsalsa20Out[10];
+			EngineState[4] = hsalsa20Out[15];
 
-			engineState[11] = hsalsa20Out[6];
-			engineState[12] = hsalsa20Out[7];
-			engineState[13] = hsalsa20Out[8];
-			engineState[14] = hsalsa20Out[9];
+			EngineState[11] = hsalsa20Out[6];
+			EngineState[12] = hsalsa20Out[7];
+			EngineState[13] = hsalsa20Out[8];
+			EngineState[14] = hsalsa20Out[9];
 
-			engineState[6] = Pack.LE_To_UInt32(ivBytes, 16);
-			engineState[7] = Pack.LE_To_UInt32(ivBytes, 20);
+			EngineState[6] = Pack.LE_To_UInt32(ivBytes, 16);
+			EngineState[7] = Pack.LE_To_UInt32(ivBytes, 20);
 
 			ResetCounter();
 		}

@@ -26,26 +26,26 @@ namespace ObscurCore.Cryptography
         /// <summary>
         ///     A constant time equals comparison - does not terminate early if
         ///     test will fail.
-        ///     Checks as far as a is in length.
+        ///     Checks as far as <paramref name="a"/> is in length.
         /// </summary>
-        /// <param name="a">Array to compare against</param>
-        /// <param name="b">Array to test for equality</param>
-        /// <returns>If arrays equal <c>true</c>, false otherwise.</returns>
+        /// <param name="a">Array to compare against.</param>
+        /// <param name="b">Array to test for equality.</param>
+        /// <returns>If <c>true</c>, array section tested is equal.</returns>
         public static bool SequenceEqualConstantTime(this byte[] a, byte[] b)
         {
             return a.SequenceEqualConstantTime(0, b, 0, a.Length);
         }
 
         /// <summary>
-        ///     Compares two byte arrays for equality, 
-        ///     taking a constant time regardless of result.
+        ///     A constant time equals comparison - does not terminate early if
+        ///     test will fail.
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="xOffset"></param>
-        /// <param name="y"></param>
-        /// <param name="yOffset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
+        /// <param name="x">Array to compare against.</param>
+        /// <param name="xOffset">Index in <paramref name="x"/> to start comparison at.</param>
+        /// <param name="y">Array to test for equality.</param>
+        /// <param name="yOffset">Index in <paramref name="y"/> to start comparison at.</param>
+        /// <param name="length">Number of bytes to compare.</param>
+        /// <returns>If <c>true</c>, array section tested is equal.</returns>
         public static bool SequenceEqualConstantTime(this byte[] x, int xOffset, byte[] y, int yOffset, int length)
         {
             if (x == null) {
@@ -84,14 +84,14 @@ namespace ObscurCore.Cryptography
         }
 
         /// <summary>
-        ///     XOR two byte arrays together into <paramref name="output"/>.
+        ///     XOR byte arrays <paramref name="a"/> and <paramref name="b"/> together into <paramref name="output"/>.
         /// </summary>
         /// <param name="a">Source #0 array.</param>
         /// <param name="aOff">Source array #0 offset.</param>
         /// <param name="b">Source #1 array.</param>
         /// <param name="bOff">Source #1 array offset.</param>
         /// <param name="output">Output array.</param>
-        /// <param name="outputOff"></param>
+        /// <param name="outputOff">Output array offset.</param>
         /// <param name="length">Length to XOR.</param>
         public static void Xor(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff, int length)
         {
@@ -153,7 +153,7 @@ namespace ObscurCore.Cryptography
         }
 
         /// <summary>
-        ///     XOR the specified array 'b' into 'a' in-place.
+        ///     XOR the specified byte array <paramref name="b"/> into <paramref name="a"/> in-place.
         /// </summary>
         /// <param name="a">Destination and source #0 array.</param>
         /// <param name="aOff">Destination and source array #0 offset.</param>
@@ -305,7 +305,7 @@ namespace ObscurCore.Cryptography
         }
 
         /// <summary>
-        ///     Securely erase data by clearing its memory.
+        ///     Securely erase <paramref name="data"/> by clearing the memory used to store it.
         /// </summary>
         /// <param name="data">Data to erase.</param>
         public static void SecureWipe<T>(this T[] data) where T : struct
@@ -318,7 +318,7 @@ namespace ObscurCore.Cryptography
         }
 
         /// <summary>
-        ///     Securely erase data by clearing its memory.
+        ///     Securely erase <paramref name="data"/> by clearing the memory used to store it.
         /// </summary>
         /// <param name="data">Data to erase.</param>
         /// <param name="offset">Offset in <paramref name="data"/> to erase from.</param>

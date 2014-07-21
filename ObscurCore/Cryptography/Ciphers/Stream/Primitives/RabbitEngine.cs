@@ -25,10 +25,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                                                0xD34D34D3, 0x34D34D34, 0x4D34D34D, 0xD34D34D3 };
 
         // Stores engine state
-        private byte[]          _workingKey,
-                                _workingIv;
+	    private byte[] _workingKey;
+        private byte[] _workingIv;
 
-        private bool	        _initialised;
+        private bool _initialised;
 
 		private static uint rotl(uint value, int shift) {
 			return value << shift | value >> 32 - shift;
@@ -38,8 +38,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		private uint[] C = new uint[8];
 	    private byte b;
 
-		private readonly byte[] _keyStream 		= new byte[16];
-		private int 			_keyStreamPtr 	= 16;
+		private byte[] _keyStream 		= new byte[16];
+		private int _keyStreamPtr 	= 16;
 
 
 		public void Init (bool encrypting, byte[] key, byte[] iv) {

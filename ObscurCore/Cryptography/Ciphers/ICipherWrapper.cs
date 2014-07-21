@@ -20,6 +20,9 @@ namespace ObscurCore.Cryptography.Ciphers
     /// </summary>
     public interface ICipherWrapper
     {
+        /// <summary>
+        /// Whether the cipher is encrypting (<c>true</c>) or decrypting (<c>false</c>).
+        /// </summary>
         bool Encrypting { get; }
 
         /// <summary>

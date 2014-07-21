@@ -34,7 +34,9 @@ namespace ObscurCore.Packaging
         /// </summary>
         /// <param name="name">Name of the directory.</param>
         /// <param name="parent">Parent of the node.</param>
-        public DirectoryTreeNode(string name, DirectoryTreeNode<T> parent)
+        /// <param name="mutable">If <c>true</c>, node can be modified after creation.</param>
+        public DirectoryTreeNode(string name, DirectoryTreeNode<T> parent, bool mutable = true) 
+            : base(mutable)
         {
             _root = false;
             Name = name;
@@ -44,7 +46,8 @@ namespace ObscurCore.Packaging
         /// <summary>
         ///     Creates a root directory node.
         /// </summary>
-        internal DirectoryTreeNode()
+        internal DirectoryTreeNode(bool mutable = true)
+            : base(mutable)
         {
             _root = true;
             Name = "";
@@ -84,6 +87,7 @@ namespace ObscurCore.Packaging
         /// <returns>Directory node.</returns>
         public DirectoryTreeNode<T> AddChildDirectory(string name)
         {
+            ThrowIfImmutable();
             var node = new DirectoryTreeNode<T>(name, this);
             _children.Add(node);
             return node;
@@ -97,6 +101,7 @@ namespace ObscurCore.Packaging
         /// <returns>Content tree node.</returns>
         public ContentTreeNode<T> AddChildItem(string name, T content)
         {
+            ThrowIfImmutable();
             var node = new ContentTreeNode<T>(name, this, content);
             _children.Add(node);
             return node;
@@ -109,6 +114,7 @@ namespace ObscurCore.Packaging
         /// <returns></returns>
         internal void AddChildNode(TreeNode<T> node)
         {
+            ThrowIfImmutable();
             node.Parent = this;
             _children.Add(node);
         }
@@ -120,6 +126,7 @@ namespace ObscurCore.Packaging
         /// <param name="moveChildrenToParent">If <c>true</c>, move all children of removed node to this directory.</param>
         public void RemoveChildNode(TreeNode<T> node, bool moveChildrenToParent)
         {
+            ThrowIfImmutable();
             int index = _children.IndexOf(node);
             if (index == -1) {
                 //throw new ArgumentException("Specified node not present.", "node");
@@ -135,6 +142,7 @@ namespace ObscurCore.Packaging
         /// <param name="moveChildrenToParent">If <c>true</c>, move all children of removed node to this directory.</param>
         public void RemoveChildNode(string name, bool moveChildrenToParent)
         {
+            ThrowIfImmutable();
             int index = _children.FindIndex(child => child.Name.Equals(name));
             if (index == -1) {
                 throw new ArgumentException("Node with specified name not present.", "name");
@@ -149,6 +157,7 @@ namespace ObscurCore.Packaging
         /// <param name="moveChildrenToParent">If <c>true</c>, move all children of removed node to this directory.</param>
         public void RemoveChildNode(int index, bool moveChildrenToParent)
         {
+            ThrowIfImmutable();
             if (index >= _children.Count) {
                 throw new ArgumentException("Node of specified index not present (index is larger than collection length.", "index");
             }

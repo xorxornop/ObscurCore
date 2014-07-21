@@ -22,8 +22,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
     /// </summary>
     /// <remarks>
     ///     No buffering support is included for performance and precise control.
-    ///     All I/O operations must therefore be tailored to cipher block size.
-    ///     Similarly, a minimum of error-checking is done, and so should be done by the caller.
+    ///     All I/O operations must therefore be tailored to cipher block/state size.
+    ///     <para>
+    ///     Similarly, a minimum of error-checking is done, 
+    ///     and so should be done by the caller where necessary.
+    ///     </para>
     /// </remarks>
     public sealed class StreamCipherWrapper : ICipherWrapper
     {
@@ -31,11 +34,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         private readonly int _strideSize;
 
         /// <summary>
-        ///     Initializes a new <see cref="StreamCipherWrapper" />.
+        ///     Initialises a new <see cref="StreamCipherWrapper" />.
         /// </summary>
         /// <param name="encrypting">If set to <c>true</c> encrypting.</param>
         /// <param name="cipher">Cipher to wrap (must be pre-initialised).</param>
-        /// <param name="strideIncreaseFactor">Power to raise operation size by.</param>
+        /// <param name="strideIncreaseFactor">Factor to raise operation size by (size<superscript>x</superscript>).</param>
         public StreamCipherWrapper(bool encrypting, IStreamCipher cipher, int strideIncreaseFactor = 0)
         {
             if (cipher == null) {
@@ -50,24 +53,31 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
             _strideSize = _cipher.StateSize << strideIncreaseFactor;
         }
 
+        /// <inheritdoc />
         public bool Encrypting { get; private set; }
 
+        /// <inheritdoc />
         public int OperationSize
         {
             get { return _strideSize; }
         }
 
+        /// <summary>
+        /// Name of the stream cipher.
+        /// </summary>
         public string AlgorithmName
         {
             get { return _cipher.AlgorithmName; }
         }
 
+        /// <inheritdoc />
         public int ProcessBytes(byte[] input, int inputOffset, byte[] output, int outputOffset)
         {
             _cipher.ProcessBytes(input, inputOffset, _strideSize, output, outputOffset);
             return _strideSize;
         }
 
+        /// <inheritdoc />
         public int ProcessFinal(byte[] input, int inputOffset, int length, byte[] output, int outputOffset)
         {
             if (length == 0) {
@@ -77,6 +87,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
             return length;
         }
 
+        /// <inheritdoc />
         public void Reset()
         {
             _cipher.Reset();

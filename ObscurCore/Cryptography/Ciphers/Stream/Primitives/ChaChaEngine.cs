@@ -7,33 +7,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	/// <summary>
 	/// Implementation of Daniel J. Bernstein's ChaCha stream cipher.
 	/// </summary>
-	public class ChaChaEngine : IStreamCipher, ICsprngCompatible
+	public sealed class ChaChaEngine : IStreamCipher, ICsprngCompatible
 	{
         /* Constants */
-        private const int STATE_SIZE = 16; // 16, 32 bit ints = 64 bytes
-        protected const int STRIDE_SIZE = STATE_SIZE * 4;
-        protected const int DEFAULT_ROUNDS = 20;
+        private const int EngineStateSize = 16; // 16, 32 bit ints = 64 bytes
+	    private const int StrideSize = EngineStateSize * 4;
+	    private const int DefaultRounds = 20;
 
 		private const string CipherName = "ChaCha";
 
-        protected readonly static byte[]
-            Sigma = System.Text.Encoding.ASCII.GetBytes("expand 32-byte k"),
-            Tau = System.Text.Encoding.ASCII.GetBytes("expand 16-byte k");
+	    private readonly static byte[] Sigma = System.Text.Encoding.ASCII.GetBytes("expand 32-byte k");
+	    private readonly static byte[] Tau = System.Text.Encoding.ASCII.GetBytes("expand 16-byte k");
 
         /* Variables */
-        protected readonly int rounds;
-        protected bool initialised;
-        private int index;
-        protected readonly uint[] engineState = new uint[STATE_SIZE]; // state
-        protected readonly uint[] x = new uint[STATE_SIZE]; // internal buffer
-        private readonly byte[] keyStream = new byte[STATE_SIZE * 4];
+	    private readonly int _rounds;
+	    private bool _initialised;
+        private int _index;
+	    private uint[] _engineState = new uint[EngineStateSize]; // state
+	    private uint[] _x = new uint[EngineStateSize]; // internal buffer
+        private byte[] _keyStream = new byte[EngineStateSize * 4];
 
         private uint cW0, cW1, cW2;
 
 		/// <summary>
 		/// Creates a 20 round ChaCha engine.
 		/// </summary>
-		public ChaChaEngine() : this(DEFAULT_ROUNDS)
+		public ChaChaEngine() : this(DefaultRounds)
 		{
 		}
 
@@ -47,7 +46,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                 throw new ArgumentException("'rounds' must be a positive, even number.");
             }
 
-            this.rounds = rounds;
+            this._rounds = rounds;
 		}
 
         public void Init(bool encrypting, byte[] key, byte[] iv)
@@ -65,19 +64,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
             SetKey(key, iv);
             Reset();
-            initialised = true;
+            _initialised = true;
         }
 
-        protected int NonceSize
-        {
-            get { return 8; }
-        }
-
-        public virtual string AlgorithmName
+        public string AlgorithmName
         {
             get {
-                if (rounds != DEFAULT_ROUNDS) 
-                    return CipherName + rounds;
+                if (_rounds != DefaultRounds) 
+                    return CipherName + _rounds;
                 else return CipherName;
             }
         }
@@ -94,20 +88,20 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                 throw new MaxBytesExceededException("2^70 byte limit per IV; Change IV");
             }
 
-            if (index == 0) {
-                GenerateKeyStream(keyStream, 0);
+            if (_index == 0) {
+                GenerateKeyStream(_keyStream, 0);
                 AdvanceCounter();
             }
 
-            byte output = (byte)(keyStream[index] ^ input);
-            index = (index + 1) & 63;
+            byte output = (byte)(_keyStream[_index] ^ input);
+            _index = (_index + 1) & 63;
 
             return output;
         }
 
 		protected void AdvanceCounter() {
-			if (++engineState[12] == 0) {
-				++engineState[13];
+			if (++_engineState[12] == 0) {
+				++_engineState[13];
 			}
 		}
 
@@ -118,7 +112,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             byte[] outBytes,
             int outOff)
         {
-            if (!initialised)
+            if (!_initialised)
                 throw new InvalidOperationException(AlgorithmName + " not initialised.");
             if ((inOff + len) > inBytes.Length)
                 throw new ArgumentException("Input buffer too short.");
@@ -133,58 +127,58 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                 return;
 
             // Any left over from last time?
-            if (index > 0) {
-                var blen = STRIDE_SIZE - index;
+            if (_index > 0) {
+                var blen = StrideSize - _index;
                 if (blen > len)
                     blen = len;
-                inBytes.Xor(inOff, keyStream, index, outBytes, outOff, blen);
-                index += blen;
+                inBytes.Xor(inOff, _keyStream, _index, outBytes, outOff, blen);
+                _index += blen;
                 inOff += blen;
                 outOff += blen;
                 len -= blen;
             }
 
             int remainder;
-            var blocks = Math.DivRem(len, STRIDE_SIZE, out remainder);
+            var blocks = Math.DivRem(len, StrideSize, out remainder);
 
             for (var i = 0; i < blocks; i++) {
-                GenerateKeyStream(keyStream, 0);
+                GenerateKeyStream(_keyStream, 0);
                 AdvanceCounter();
-                inBytes.Xor(inOff, keyStream, 0, outBytes, outOff, STRIDE_SIZE);
-                inOff += STRIDE_SIZE;
-                outOff += STRIDE_SIZE;
+                inBytes.Xor(inOff, _keyStream, 0, outBytes, outOff, StrideSize);
+                inOff += StrideSize;
+                outOff += StrideSize;
             }
 
             if (remainder > 0) {
-                GenerateKeyStream(keyStream, 0);
+                GenerateKeyStream(_keyStream, 0);
                 AdvanceCounter();
-                inBytes.Xor(inOff, keyStream, 0, outBytes, outOff, remainder);
+                inBytes.Xor(inOff, _keyStream, 0, outBytes, outOff, remainder);
             }
-            index = remainder;
+            _index = remainder;
         }
 
         public void GetKeystream(byte[] buffer, int offset, int length)
         {
-            if (index > 0) {
-                var blen = STRIDE_SIZE - index;
+            if (_index > 0) {
+                var blen = StrideSize - _index;
                 if (blen > length)
                     blen = length;
-                keyStream.CopyBytes(index, buffer, offset, blen);
-                index += blen;
+                _keyStream.CopyBytes(_index, buffer, offset, blen);
+                _index += blen;
                 offset += blen;
                 length -= blen;
             }
             while (length > 0) {
-                if (length >= STRIDE_SIZE) {
+                if (length >= StrideSize) {
                     GenerateKeyStream(buffer, offset);
                     AdvanceCounter();
-                    offset += STRIDE_SIZE;
-                    length -= STRIDE_SIZE;
+                    offset += StrideSize;
+                    length -= StrideSize;
                 } else {
-                    GenerateKeyStream(keyStream, 0);
+                    GenerateKeyStream(_keyStream, 0);
                     AdvanceCounter();
-                    keyStream.CopyBytes(0, buffer, offset, length);
-                    index = length;
+                    _keyStream.CopyBytes(0, buffer, offset, length);
+                    _index = length;
                     length = 0;
                 }
             }
@@ -192,13 +186,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
         public void Reset()
         {
-            index = 0;
+            _index = 0;
             ResetLimitCounter();
             ResetCounter();
         }
 
 		protected void ResetCounter() {
-			engineState[12] = engineState[13] = 0;
+			_engineState[12] = _engineState[13] = 0;
 		}
 
 		protected void SetKey(byte[] keyBytes, byte[] ivBytes) {
@@ -206,10 +200,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			byte[] constants;
 
 			// Key
-			engineState[4] = Pack.LE_To_UInt32(keyBytes, 0);
-			engineState[5] = Pack.LE_To_UInt32(keyBytes, 4);
-			engineState[6] = Pack.LE_To_UInt32(keyBytes, 8);
-			engineState[7] = Pack.LE_To_UInt32(keyBytes, 12);
+			_engineState[4] = Pack.LE_To_UInt32(keyBytes, 0);
+			_engineState[5] = Pack.LE_To_UInt32(keyBytes, 4);
+			_engineState[6] = Pack.LE_To_UInt32(keyBytes, 8);
+			_engineState[7] = Pack.LE_To_UInt32(keyBytes, 12);
 
 			if (keyBytes.Length == 32) {
 				constants = Sigma;
@@ -218,28 +212,28 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				constants = Tau;
 			}
 
-			engineState[8] = Pack.LE_To_UInt32(keyBytes, offset);
-			engineState[9] = Pack.LE_To_UInt32(keyBytes, offset + 4);
-			engineState[10] = Pack.LE_To_UInt32(keyBytes, offset + 8);
-			engineState[11] = Pack.LE_To_UInt32(keyBytes, offset + 12);
+			_engineState[8] = Pack.LE_To_UInt32(keyBytes, offset);
+			_engineState[9] = Pack.LE_To_UInt32(keyBytes, offset + 4);
+			_engineState[10] = Pack.LE_To_UInt32(keyBytes, offset + 8);
+			_engineState[11] = Pack.LE_To_UInt32(keyBytes, offset + 12);
 
-			engineState[0] = Pack.LE_To_UInt32(constants, 0);
-			engineState[1] = Pack.LE_To_UInt32(constants, 4);
-			engineState[2] = Pack.LE_To_UInt32(constants, 8);
-			engineState[3] = Pack.LE_To_UInt32(constants, 12);
+			_engineState[0] = Pack.LE_To_UInt32(constants, 0);
+			_engineState[1] = Pack.LE_To_UInt32(constants, 4);
+			_engineState[2] = Pack.LE_To_UInt32(constants, 8);
+			_engineState[3] = Pack.LE_To_UInt32(constants, 12);
 
 			// Counter
-			engineState[12] = engineState[13] = 0;
+			_engineState[12] = _engineState[13] = 0;
 
 			// IV
-			engineState[14] = Pack.LE_To_UInt32(ivBytes, 0);
-			engineState[15] = Pack.LE_To_UInt32(ivBytes, 4);
+			_engineState[14] = Pack.LE_To_UInt32(ivBytes, 0);
+			_engineState[15] = Pack.LE_To_UInt32(ivBytes, 4);
 		}
 
 		protected void GenerateKeyStream(byte[] output, int offset)
 		{
-			ChaChaCoreNoChecks(rounds, engineState, x);
-			Pack.UInt32_To_LE(x, output, offset);
+			ChaChaCoreNoChecks(_rounds, _engineState, _x);
+			Pack.UInt32_To_LE(_x, output, offset);
 		}
 
 		/// <summary>

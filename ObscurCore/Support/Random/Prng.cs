@@ -22,7 +22,7 @@ namespace ObscurCore.Support.Random
     ///     Base class for pseudorandom number generators (PRNGs).
     /// </summary>
     /// <remarks>
-    ///     All generators deriving from this operate must deterministically.
+    ///     All generators deriving from this must operate deterministically.
     /// </remarks>
     public abstract class Prng : Rng
     {

@@ -21,13 +21,17 @@ namespace ObscurCore.Packaging
     /// <typeparam name="T">Type of data stored in node.</typeparam>
     public class ContentTreeNode<T> : TreeNode<T>
     {
+        private T _content;
+
         /// <summary>
         ///     Creates a new content node.
         /// </summary>
         /// <param name="name">Name of the node.</param>
         /// <param name="parent">Parent of the node.</param>
         /// <param name="content">Content stored in the node.</param>
-        public ContentTreeNode(string name, DirectoryTreeNode<T> parent, T content)
+        /// <param name="mutable">If <c>true</c>, node can be modified after creation.</param>
+        public ContentTreeNode(string name, DirectoryTreeNode<T> parent, T content, bool mutable = true) 
+            : base(mutable)
         {
             Name = name;
             Parent = parent;
@@ -37,6 +41,13 @@ namespace ObscurCore.Packaging
         /// <summary>
         ///     Content stored in the node.
         /// </summary>
-        public T Content { get; set; }
+        public T Content
+        {
+            get { return _content; }
+            set {
+                ThrowIfImmutable();
+                _content = value;
+            }
+        }
     }
 }

@@ -36,18 +36,26 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             _blockSize = cipher.BlockSize;
         }
 
+        /// <summary>
+        /// Block size of the cipher in bytes.
+        /// </summary>
         public int BlockSize
         {
             get { return _blockSize; }
         }
 
+        /// <inheritdoc />
         public bool Encrypting { get; private set; }
 
+        /// <inheritdoc />
         public int OperationSize
         {
             get { return _blockSize; }
         }
 
+        /// <summary>
+        /// Name of the block cipher complex, including mode of operation, and padding (where applicable).
+        /// </summary>
         public string AlgorithmName
         {
             get
@@ -59,6 +67,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             }
         }
 
+        /// <inheritdoc />
         public int ProcessBytes(byte[] input, int inputOffset, byte[] output, int outputOffset)
         {
             if (input.Length < inputOffset + _blockSize) {
@@ -70,6 +79,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             return _cipher.ProcessBlock(input, inputOffset, output, outputOffset);
         }
 
+        /// <inheritdoc />
         public int ProcessFinal(byte[] input, int inputOffset, int length, byte[] output, int outputOffset)
         {
             var workingBlock = new byte[_blockSize];
@@ -122,6 +132,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             return length;
         }
 
+        /// <inheritdoc />
         public void Reset()
         {
             _cipher.Reset();

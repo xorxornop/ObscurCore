@@ -14,13 +14,12 @@
 //    limitations under the License.
 
 using System;
-using ObscurCore.Cryptography;
 
 namespace ObscurCore.Support.Random
 {
     public abstract class XorShiftPrng : Prng
     {
-        protected readonly ulong[] S;
+        protected ulong[] S;
 
         protected XorShiftPrng(int stateSize, ulong[] seed)
             : base(sizeof (UInt64))

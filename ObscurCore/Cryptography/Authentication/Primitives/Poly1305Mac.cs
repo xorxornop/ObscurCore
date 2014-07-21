@@ -55,7 +55,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		// Accumulating state
 
 		/*		* Current block of buffered input */
-		private readonly byte[] currentBlock = new byte[BLOCK_SIZE];
+		private byte[] currentBlock = new byte[BLOCK_SIZE];
 
 		/*		* Current offset in input buffer */
 		private int currentBlockOffset = 0;

@@ -37,7 +37,7 @@ namespace ObscurCore.Tests.Packaging
             var preKey = new byte[preKeyEnumerated.Length];
             Array.Copy(preKeyEnumerated, preKey, preKey.Length);
 
-            int totalLen = IOTestBase.LargeBinaryFileList.Aggregate(0, (i, info) => (int)info.Length);
+            var totalLen = IOTestBase.LargeBinaryFileList.Sum(file => file.Length);
             int expLen = (int)(totalLen * 1.1);
 
             TimeSpan enc, dec;
@@ -66,8 +66,8 @@ namespace ObscurCore.Tests.Packaging
             }
 
             var megabytes = (double)totalLen / 1024 / 1024;
-            Assert.Pass("{0} ms / {1:N2} MB/s -> {2} ms / {3:N2} MB/s.", enc.Milliseconds, (1 / ((double)enc.Milliseconds / 1000)) * megabytes,
-                dec.Milliseconds, (1 / ((double)dec.Milliseconds / 1000)) * megabytes);
+            Assert.Pass("{0} ms / {1:N2} MB/s -> {2} ms / {3:N2} MB/s.", enc.Milliseconds, (1000.0 / (double)enc.Milliseconds) * megabytes,
+                dec.Milliseconds, (1000.0 / (double)dec.Milliseconds) * megabytes);
         }
 
         // EC-UM1
@@ -109,7 +109,7 @@ namespace ObscurCore.Tests.Packaging
             var receiverKeyEnumerated = KeyProviders.Bob.EcKeypairs.First(
                 keypair => keypair.CurveName.Equals(senderKeyEnumerated.CurveName));
 
-            int totalLen = data.Aggregate(0, (i, info) => (int)info.Length);
+            var totalLen = data.Sum(file => file.Length);
             int expLen = (int)(totalLen * 1.1);
 
             TimeSpan enc, dec;
@@ -138,8 +138,8 @@ namespace ObscurCore.Tests.Packaging
             }
 
             var megabytes = (double)totalLen / 1024 / 1024;
-            Assert.Pass("{0} ms / {1:N2} MB/s -> {2} ms / {3:N2} MB/s. Used curve {4}", enc.Milliseconds, (1 / ((double)enc.Milliseconds / 1000)) * megabytes,
-                dec.Milliseconds, (1 / ((double)dec.Milliseconds / 1000)) * megabytes, senderKeyEnumerated.CurveName);
+            Assert.Pass("{0} ms / {1:N2} MB/s -> {2} ms / {3:N2} MB/s. Used curve {4}", enc.Milliseconds, (1000.0 / (double)enc.Milliseconds) * megabytes,
+                dec.Milliseconds, (1000.0 / (double)dec.Milliseconds) * megabytes, senderKeyEnumerated.CurveName);
         }
         private static void UM1PackageTest(string testName, DirectoryInfo dir, PayloadLayoutScheme scheme)
         {
@@ -150,8 +150,8 @@ namespace ObscurCore.Tests.Packaging
             var receiverKeyEnumerated = KeyProviders.Bob.EcKeypairs.First(
                 keypair => keypair.CurveName.Equals(senderKeyEnumerated.CurveName));
 
-            int totalLen = dir.EnumerateFiles("*", SearchOption.AllDirectories)
-                .Aggregate(0, (i, info) => (int)info.Length);
+            var files = dir.EnumerateFiles("*", SearchOption.AllDirectories);
+            var totalLen = files.Sum(file => file.Length);
             int expLen = (int)(totalLen * 1.1);
 
             TimeSpan enc, dec;
@@ -178,8 +178,8 @@ namespace ObscurCore.Tests.Packaging
             }
 
             var megabytes = (double)totalLen / 1024 / 1024;
-            Assert.Pass("{0} ms / {1:N2} MB/s -> {2} ms / {3:N2} MB/s. Used curve {4}", enc.Milliseconds, (1 / ((double)enc.Milliseconds / 1000)) * megabytes,
-                dec.Milliseconds, (1 / ((double)dec.Milliseconds / 1000)) * megabytes, senderKeyEnumerated.CurveName);
+            Assert.Pass("{0} ms / {1:N2} MB/s -> {2} ms / {3:N2} MB/s. Used curve {4}", enc.Milliseconds, (1000.0 / (double)enc.Milliseconds) * megabytes,
+                dec.Milliseconds, (1000.0 / (double)dec.Milliseconds) * megabytes, senderKeyEnumerated.CurveName);
         }
     }
 }
