@@ -102,6 +102,7 @@
     <Compile Include="Cryptography\KeyAgreement\Information\TpbF2mEcNamedCurveInformation.cs" />
     <Compile Include="Cryptography\KeyDerivation\KdfInformationStore.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="IStreamDecorator.cs" />
     <Compile Include="Packaging\ContentTreeNode.cs" />
     <Compile Include="Cryptography\Authentication\IDigest.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />
