@@ -122,45 +122,49 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             if (config.Salt != null) {
                 if (config.Salt.Length != 16)
                     throw new ArgumentException("config.Salt has invalid length");
-                rawConfig[4] = Blake2BCore.BytesToUInt64(config.Salt, 0);
-                rawConfig[5] = Blake2BCore.BytesToUInt64(config.Salt, 8);
+                //rawConfig[4] = Blake2BCore.BytesToUInt64(config.Salt, 0);
+                //rawConfig[5] = Blake2BCore.BytesToUInt64(config.Salt, 8);
+                rawConfig[4] = config.Salt.LittleEndianToUInt64();
+                rawConfig[5] = config.Salt.LittleEndianToUInt64(8);
             }
             // Personalization
             if (config.Personalization != null) {
                 if (config.Personalization.Length != 16)
                     throw new ArgumentException("config.Personalization has invalid length");
-                rawConfig[6] = Blake2BCore.BytesToUInt64(config.Personalization, 0);
-                rawConfig[6] = Blake2BCore.BytesToUInt64(config.Personalization, 8);
+                //rawConfig[6] = Blake2BCore.BytesToUInt64(config.Personalization, 0);
+                //rawConfig[6] = Blake2BCore.BytesToUInt64(config.Personalization, 8);
+                rawConfig[6] = config.Personalization.LittleEndianToUInt64();
+                rawConfig[7] = config.Personalization.LittleEndianToUInt64(8);
             }
 
             return rawConfig;
         }
         #endregion
 
-        internal static ulong BytesToUInt64(byte[] buf, int offset)
-		{
-			return
-				((ulong)buf[offset + 7] << 7 * 8 |
-				 ((ulong)buf[offset + 6] << 6 * 8) |
-				 ((ulong)buf[offset + 5] << 5 * 8) |
-				 ((ulong)buf[offset + 4] << 4 * 8) |
-				 ((ulong)buf[offset + 3] << 3 * 8) |
-				 ((ulong)buf[offset + 2] << 2 * 8) |
-				 ((ulong)buf[offset + 1] << 1 * 8) |
-				 ((ulong)buf[offset]));
-		}
+        //internal static ulong BytesToUInt64(byte[] buf, int offset)
+        //{
+        //    return
+        //        ((ulong)buf[offset + 7] << 7 * 8 |
+        //         ((ulong)buf[offset + 6] << 6 * 8) |
+        //         ((ulong)buf[offset + 5] << 5 * 8) |
+        //         ((ulong)buf[offset + 4] << 4 * 8) |
+        //         ((ulong)buf[offset + 3] << 3 * 8) |
+        //         ((ulong)buf[offset + 2] << 2 * 8) |
+        //         ((ulong)buf[offset + 1] << 1 * 8) |
+        //         ((ulong)buf[offset]));
+        //}
 		
-		private static void UInt64ToBytes(ulong value, byte[] buf, int offset)
-		{
-			buf[offset + 7] = (byte)(value >> 7 * 8);
-			buf[offset + 6] = (byte)(value >> 6 * 8);
-			buf[offset + 5] = (byte)(value >> 5 * 8);
-			buf[offset + 4] = (byte)(value >> 4 * 8);
-			buf[offset + 3] = (byte)(value >> 3 * 8);
-			buf[offset + 2] = (byte)(value >> 2 * 8);
-			buf[offset + 1] = (byte)(value >> 1 * 8);
-			buf[offset] = (byte)value;
-		}
+        //private static void UInt64ToBytes(ulong value, byte[] buf, int offset)
+        //{
+        //    buf[offset + 7] = (byte)(value >> 7 * 8);
+        //    buf[offset + 6] = (byte)(value >> 6 * 8);
+        //    buf[offset + 5] = (byte)(value >> 5 * 8);
+        //    buf[offset + 4] = (byte)(value >> 4 * 8);
+        //    buf[offset + 3] = (byte)(value >> 3 * 8);
+        //    buf[offset + 2] = (byte)(value >> 2 * 8);
+        //    buf[offset + 1] = (byte)(value >> 1 * 8);
+        //    buf[offset] = (byte)value;
+        //}
 
 		public void Initialize(ulong[] config)
 		{
@@ -260,8 +264,9 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			
 			//Output
 			byte[] hash = new byte[64];
-			for (int i = 0; i < 8; ++i)
-				UInt64ToBytes(_h[i], hash, i << 3);
+		    for (int i = 0; i < 8; ++i)
+		        //UInt64ToBytes(_h[i], hash, i << 3);
+		        _h[i].ToLittleEndian(hash, i << 3);
 			return hash;
 		}
 
@@ -271,12 +276,13 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             var h = _h;
             var m = _m;
 
-            //if (BitConverter.IsLittleEndian) {
-            //    Buffer.BlockCopy(block, start, m, 0, BlockSizeInBytes);
-            //} else {
-            //    for (int i = 0; i < 16; ++i)
-            //        m[i] = BytesToUInt64(block, start + (i << 3));
-            //}
+            if (BitConverter.IsLittleEndian) {
+                Buffer.BlockCopy(block, start, m, 0, BlockSizeInBytes);
+            } else {
+                for (int i = 0; i < 16; ++i)
+                    //m[i] = BytesToUInt64(block, start + (i << 3));
+                    m[i] = block.LittleEndianToUInt64(start + (i << 3));
+            }
 
             Buffer.BlockCopy(block, start, m, 0, BlockSizeInBytes);
 

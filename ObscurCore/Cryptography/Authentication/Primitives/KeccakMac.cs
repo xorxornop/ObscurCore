@@ -34,7 +34,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 	    }
 
 		public void Init (byte[] key) {
-			if (!key.IsNullOrZeroLength()) {
+			if (key.IsNullOrZeroLength() == false) {
 				BlockUpdate(key, 0, key.Length);
 			}
 		}

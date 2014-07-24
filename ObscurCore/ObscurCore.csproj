@@ -90,6 +90,8 @@
     <Compile Include="Athena.cs" />
     <Compile Include="BitPackingExtensions.cs" />
     <Compile Include="Cryptography\Authentication\AuthenticationInformationStore.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\KeccakDigestSafe.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\KeccakDigestUnsafe.cs" />
     <Compile Include="Cryptography\Ciphers\CipherInformationStore.cs" />
     <Compile Include="Cryptography\Ciphers\Information\BlockCipherInformation.cs" />
     <Compile Include="Cryptography\Ciphers\Information\StreamCipherInformation.cs" />
