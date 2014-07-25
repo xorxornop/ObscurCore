@@ -116,17 +116,19 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			_cnt = 0;
 		}
 
+        /// <inheritdoc/>
 		public string AlgorithmName
 		{
 			get { return "HC-256"; }
 		}
 
+        /// <inheritdoc/>
 		public int StateSize
 		{
 			get { return 32; }
 		}
 
-
+        /// <inheritdoc/>
 		public void Init (bool encrypting, byte[] key, byte[] iv) {
 			if(key == null) {
 				throw new ArgumentNullException("key", "HC-256 initialisation requires a key.");
@@ -160,6 +162,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return ret;
 		}
 
+        /// <inheritdoc/>
 		public void ProcessBytes(
 			byte[]	input,
 			int		inOff,
@@ -190,7 +193,33 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                         uint* inUintPtr = (uint*)(inPtr + inOff);
                         uint* outUintPtr = (uint*)(outPtr + outOff);
                         for (int i = 0; i < blocks; i++) {
-                            outUintPtr[i] = inUintPtr[i] ^ Step();
+                            uint j = _cnt & 0x3FF;
+                            uint ret;
+                            if (_cnt < 1024) {
+                                uint x = _p[(j - 3 & 0x3FF)];
+                                uint y = _p[(j - 1023 & 0x3FF)];
+                                _p[j] += _p[(j - 10 & 0x3FF)]
+                                    + (x.RotateRight(10) ^ y.RotateRight(23))
+                                    + _q[((x ^ y) & 0x3FF)];
+
+                                x = _p[(j - 12 & 0x3FF)];
+                                ret = (_q[x & 0xFF] + _q[((x >> 8) & 0xFF) + 256]
+                                    + _q[((x >> 16) & 0xFF) + 512] + _q[((x >> 24) & 0xFF) + 768])
+                                    ^ _p[j];
+                            } else {
+                                uint x = _q[(j - 3 & 0x3FF)];
+                                uint y = _q[(j - 1023 & 0x3FF)];
+                                _q[j] += _q[(j - 10 & 0x3FF)]
+                                    + (x.RotateRight(10) ^ y.RotateRight(23))
+                                    + _p[((x ^ y) & 0x3FF)];
+
+                                x = _q[(j - 12 & 0x3FF)];
+                                ret = (_p[x & 0xFF] + _p[((x >> 8) & 0xFF) + 256]
+                                    + _p[((x >> 16) & 0xFF) + 512] + _p[((x >> 24) & 0xFF) + 768])
+                                    ^ _q[j];
+                            }
+                            _cnt = _cnt + 1 & 0x7FF;
+                            outUintPtr[i] = inUintPtr[i] ^ ret;
                         }
                     }
                 }
@@ -219,12 +248,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			}
 		}
 
+        /// <inheritdoc/>
 		public void Reset()
 		{
 			idx = 0;
 			Init();
 		}
 
+        /// <inheritdoc/>
 		public byte ReturnByte(byte input)
 		{
 			return (byte)(input ^ GetByte());

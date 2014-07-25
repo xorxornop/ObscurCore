@@ -49,6 +49,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             this._rounds = rounds;
 		}
 
+        /// <inheritdoc />
         public void Init(bool encrypting, byte[] key, byte[] iv)
         {
             if (iv == null)
@@ -67,6 +68,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _initialised = true;
         }
 
+        /// <inheritdoc />
         public string AlgorithmName
         {
             get {
@@ -76,11 +78,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
         }
 
+        /// <inheritdoc />
         public int StateSize
         {
             get { return 64; }
         }
 
+        /// <inheritdoc />
         public byte ReturnByte(
             byte input)
         {
@@ -105,6 +109,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			}
 		}
 
+        /// <inheritdoc />
         public void ProcessBytes(
             byte[] inBytes,
             int inOff,
@@ -141,6 +146,21 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             int remainder;
             var blocks = Math.DivRem(len, StrideSize, out remainder);
 
+#if INCLUDE_UNSAFE
+            unsafe {
+                fixed (byte* inPtr = inBytes) {
+                    fixed (byte* outPtr = outBytes) {
+                        for (var i = 0; i < blocks; i++) {
+                            ProcessStride(inPtr + inOff + (StrideSize * i),
+                                outPtr + outOff + (StrideSize * i));
+                            AdvanceCounter();
+                        }
+                    }
+                }
+            }
+            inOff += StrideSize * blocks;
+            outOff += StrideSize * blocks;
+#else
             for (var i = 0; i < blocks; i++) {
                 GenerateKeyStream(_keyStream, 0);
                 AdvanceCounter();
@@ -148,6 +168,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                 inOff += StrideSize;
                 outOff += StrideSize;
             }
+#endif
 
             if (remainder > 0) {
                 GenerateKeyStream(_keyStream, 0);
@@ -157,6 +178,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _index = remainder;
         }
 
+        /// <inheritdoc />
         public void GetKeystream(byte[] buffer, int offset, int length)
         {
             if (_index > 0) {
@@ -184,6 +206,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
         }
 
+        /// <inheritdoc />
         public void Reset()
         {
             _index = 0;
@@ -191,11 +214,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             ResetCounter();
         }
 
-		protected void ResetCounter() {
+	    private void ResetCounter() {
 			_engineState[12] = _engineState[13] = 0;
 		}
 
-		protected void SetKey(byte[] keyBytes, byte[] ivBytes) {
+	    private void SetKey(byte[] keyBytes, byte[] ivBytes) {
 			int offset = 0;
 			byte[] constants;
 
@@ -230,11 +253,25 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			_engineState[15] = Pack.LE_To_UInt32(ivBytes, 4);
 		}
 
-		protected void GenerateKeyStream(byte[] output, int offset)
+		private void GenerateKeyStream(byte[] output, int offset)
 		{
 			ChaChaCoreNoChecks(_rounds, _engineState, _x);
 			Pack.UInt32_To_LE(_x, output, offset);
 		}
+
+#if INCLUDE_UNSAFE
+        private unsafe void ProcessStride(byte* input, byte* output)
+        {
+            ChaChaCoreNoChecks(_rounds, _engineState, _x);
+            int ops = _x.Length;
+
+            var inPtr = (uint*)input;
+            var outPtr = (uint*)output;
+            for (var i = 0; i < ops; i++) {
+                outPtr[i] = inPtr[i] ^ _x[i];
+            }
+        }
+#endif
 
 		/// <summary>
 		/// ChaCha function.

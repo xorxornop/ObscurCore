@@ -43,10 +43,6 @@ namespace ObscurCore.Cryptography.Ciphers
             EngineInstantiatorsBlock = new Dictionary<BlockCipher, Func<int, IBlockCipher>> {
                 { BlockCipher.Aes, blockSize => new AesFastEngine() },
                 { BlockCipher.Blowfish, blockSize => new BlowfishEngine() },
-#if INCLUDE_CAST5AND6
-                { BlockCipher.Cast5, blockSize => new Cast5Engine() },
-                { BlockCipher.Cast6, blockSize => new Cast6Engine() },
-#endif
                 { BlockCipher.Camellia, blockSize => new CamelliaEngine() },
 #if INCLUDE_IDEA
                 { BlockCipher.Idea, blockSize => new IdeaEngine() },
@@ -62,9 +58,6 @@ namespace ObscurCore.Cryptography.Ciphers
                 { StreamCipher.Hc128, () => new Hc128Engine() },
                 { StreamCipher.Hc256, () => new Hc256Engine() },
                 { StreamCipher.Rabbit, () => new RabbitEngine() },
-#if INCLUDE_RC4
-                { StreamCipher.Rc4, () => new Rc4Engine() },
-#endif
                 { StreamCipher.Salsa20, () => new Salsa20Engine() },
                 { StreamCipher.ChaCha, () => new ChaChaEngine() },
                 { StreamCipher.XSalsa20, () => new XSalsa20Engine() },

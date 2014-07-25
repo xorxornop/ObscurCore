@@ -167,16 +167,33 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
 
             int remainder;
-            int blocks = Math.DivRem(len, sizeof (uint), out remainder);
+            var blocks = Math.DivRem(len, sizeof(UInt32), out remainder);
 
 #if INCLUDE_UNSAFE
             unsafe {
                 fixed (byte* inPtr = input) {
                     fixed (byte* outPtr = output) {
-                        var inUintPtr = (uint*) (inPtr + inOff);
-                        var outUintPtr = (uint*) (outPtr + outOff);
-                        for (int i = 0; i < blocks; i++) {
-                            outUintPtr[i] = inUintPtr[i] ^ Step();
+                        var inUintPtr = (UInt32*) (inPtr + inOff);
+                        var outUintPtr = (UInt32*) (outPtr + outOff);
+                        for (var i = 0; i < blocks; i++) {
+                            uint j = _cnt & 0x1FF;
+                            uint ret;
+
+                            // Precompute resources
+                            uint dimJ3 = (j - 3) & 0x1FF;
+                            uint dimJ10 = (j - 10) & 0x1FF;
+                            uint dimJ511 = (j - 511) & 0x1FF;
+                            uint dimJ12 = (j - 12) & 0x1FF;
+
+                            if (_cnt < 512) {
+                                _p[j] += (_p[dimJ3].RotateRight(10) ^ _p[dimJ511].RotateRight(23)) + _p[dimJ10].RotateRight(8);
+                                ret = (_q[_p[dimJ12] & 0xFF] + _q[((_p[dimJ12] >> 16) & 0xFF) + 256]) ^ _p[j];
+                            } else {
+                                _q[j] += (_q[dimJ3].RotateLeft(10) ^ _q[dimJ511].RotateLeft(23)) + _q[dimJ10].RotateLeft(8);
+                                ret = (_p[_q[dimJ12] & 0xFF] + _p[((_q[dimJ12] >> 16) & 0xFF) + 256]) ^ _q[j];
+                            }
+                            _cnt = (_cnt + 1) & 0x3FF;
+                            outUintPtr[i] = inUintPtr[i] ^ ret;
                         }
                     }
                 }
@@ -184,7 +201,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             inOff += sizeof (uint) * blocks;
             outOff += sizeof (uint) * blocks;
 #else
-			for (int i = 0; i < blocks; i++) {
+            for (int i = 0; i < blocks; i++) {
 				Step().ToLittleEndian(_buf);
 				output[outOff + 0] = (byte)(input[inOff + 0] ^ _buf[0]);
 				output[outOff + 1] = (byte)(input[inOff + 1] ^ _buf[1]);
@@ -196,7 +213,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 #endif
 
             // Process remainder input (insufficient width for a full step)
-            for (int i = 0; i < remainder; i++) {
+            for (var i = 0; i < remainder; i++) {
                 if (_idx == 0) {
                     Step().ToLittleEndian(_buf);
                 }

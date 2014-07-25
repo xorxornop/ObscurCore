@@ -43,26 +43,6 @@ namespace ObscurCore.Cryptography.Ciphers
                         DefaultBlockSize = 128,
                         AllowableKeySizes = new[] { 128, 192, 256 },
                         DefaultKeySize = 256
-#if INCLUDE_CAST5AND6
-                        }), 
-                    new KeyValuePair<BlockCipher, BlockCipherInformation> (
-                        BlockCipher.Cast5, new BlockCipherInformation {
-                            Name = BlockCipher.Cast5.ToString(),
-                            DisplayName = "CAST-5 (CAST-128)",
-                            AllowableBlockSizes = new[] { 64 },
-                            DefaultBlockSize = 64,
-                            AllowableKeySizes = new[] { 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128 },
-                            DefaultKeySize = 128
-                        }), 
-                    new KeyValuePair<BlockCipher, BlockCipherInformation> (
-                        BlockCipher.Cast6, new BlockCipherInformation {
-                            Name = BlockCipher.Cast6.ToString(),
-                            DisplayName = "CAST-6 (CAST-256)",
-                            AllowableBlockSizes = new[] { 128 },
-                            DefaultBlockSize = 128,
-                            AllowableKeySizes = new[] { 128, 160, 192, 224, 256 },
-                            DefaultKeySize = 256
-#endif
 #if INCLUDE_IDEA
                     }),
                 new KeyValuePair<BlockCipher, BlockCipherInformation>(
@@ -149,17 +129,6 @@ namespace ObscurCore.Cryptography.Ciphers
                         DefaultNonceSize = 64,
                         AllowableKeySizes = new[] { 128 },
                         DefaultKeySize = 128
-#if(INCLUDE_RC4)
-                        }), 
-                    new KeyValuePair<StreamCipher, StreamCipherInformation> (
-                        StreamCipher.Rc4, new StreamCipherInformation {
-                            Name = StreamCipher.Rc4.ToString(),
-                            DisplayName = "RC4",
-                            AllowableNonceSizes = null,
-                            DefaultNonceSize = -1,
-                            AllowableKeySizes = new[] { 40, 56, 64, 72, 96, 128, 192, 256 },
-                            DefaultKeySize = 128
-#endif
                     }),
                 new KeyValuePair<StreamCipher, StreamCipherInformation>(
                     StreamCipher.Salsa20, new StreamCipherInformation {

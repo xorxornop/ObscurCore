@@ -130,9 +130,9 @@ namespace ObscurCore.Cryptography
 				fixed (byte* aPtr = a) {
 					fixed (byte* bPtr = b) {
 						fixed (byte* outputPtr = output) {
-                            UInt64* aUlongPtr = (UInt64*)(aPtr + aOff);
-                            UInt64* bUlongPtr = (UInt64*)(bPtr + bOff);
-                            UInt64* outputUlongPtr = (UInt64*)(outputPtr + outputOff);
+                            var aUlongPtr = (UInt64*)(aPtr + aOff);
+                            var bUlongPtr = (UInt64*)(bPtr + bOff);
+                            var outputUlongPtr = (UInt64*)(outputPtr + outputOff);
 							for (var i = 0; i < ulongOps; i++) {
 								outputUlongPtr[i] = aUlongPtr[i] ^ bUlongPtr[i];
 							}
@@ -215,6 +215,7 @@ namespace ObscurCore.Cryptography
         /// <param name="i">Integer to rotate.</param>
         /// <param name="distance">Distance to rotate.</param>
         /// <returns>Rotated integer.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UInt32 RotateLeft(this UInt32 i, int distance)
         {
             return (i << distance) | (i >> -distance);
@@ -227,6 +228,7 @@ namespace ObscurCore.Cryptography
         /// <param name="i">Integer to rotate.</param>
         /// <param name="distance">Distance to rotate.</param>
         /// <returns>Rotated integer.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Int32 RotateLeft(this Int32 i, int distance)
         {
             return (i << distance) ^ (Int32)((UInt32)i >> -distance);
@@ -239,6 +241,7 @@ namespace ObscurCore.Cryptography
         /// <param name="i">Integer to rotate.</param>
         /// <param name="distance">Distance to rotate.</param>
         /// <returns>Rotated integer.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UInt64 RotateLeft(this UInt64 i, int distance)
         {
             return (i << distance) | (i >> -distance);
@@ -251,6 +254,7 @@ namespace ObscurCore.Cryptography
         /// <param name="i">Integer to rotate.</param>
         /// <param name="distance">Distance to rotate.</param>
         /// <returns>Rotated integer.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Int64 RotateLeft(this Int64 i, int distance)
         {
             return (i << distance) ^ (Int64)((UInt64)i >> -distance);
@@ -263,6 +267,7 @@ namespace ObscurCore.Cryptography
         /// <param name="i">Integer to rotate.</param>
         /// <param name="distance">Distance to rotate.</param>
         /// <returns>Rotated integer.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UInt32 RotateRight(this UInt32 i, int distance)
         {
             return (i >> distance) | (i << -distance);
@@ -275,6 +280,7 @@ namespace ObscurCore.Cryptography
         /// <param name="i">Integer to rotate.</param>
         /// <param name="distance">Distance to rotate.</param>
         /// <returns>Rotated integer.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Int32 RotateRight(this Int32 i, int distance)
         {
             return (Int32)((UInt32)i >> distance) ^ (i << -distance);
@@ -287,6 +293,7 @@ namespace ObscurCore.Cryptography
         /// <param name="i">Integer to rotate.</param>
         /// <param name="distance">Distance to rotate.</param>
         /// <returns>Rotated integer.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UInt64 RotateRight(this UInt64 i, int distance)
         {
             return (i >> distance) | (i << -distance);
@@ -299,6 +306,7 @@ namespace ObscurCore.Cryptography
         /// <param name="i">Integer to rotate.</param>
         /// <param name="distance">Distance to rotate.</param>
         /// <returns>Rotated integer.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Int64 RotateRight(this Int64 i, int distance)
         {
             return (Int64)((UInt64)i >> distance) ^ (i << -distance);

@@ -36,17 +36,6 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         /// 128-bit block cipher jointly developed by Mitsubishi and NTT. Comparable to AES.
         /// </summary>
         Camellia,
-#if INCLUDE_CAST5AND6
-        /// <summary>
-        /// Default cipher in some versions of GPG and PGP. Also known as CAST-128. 
-        /// </summary><seealso cref="Cast6"/>
-        Cast5,
-
-        /// <summary>
-        /// Block cipher published in June 1998. Also known as CAST-256.
-        /// </summary><seealso cref="Cast5"/>
-        Cast6,
-#endif
 #if INCLUDE_IDEA
         /// <summary>
         /// International Data SymmetricCipher Algorithm - patent unencumbered as of 2012. 64 bit block size.

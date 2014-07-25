@@ -100,7 +100,13 @@ namespace ObscurCore.Cryptography.Authentication
                         Name = HashFunction.Tiger.ToString(),
                         DisplayName = "Tiger",
                         OutputSize = 192
-                    })
+                    }),
+                new KeyValuePair<HashFunction, HashFunctionInformation>(
+                HashFunction.Whirlpool, new HashFunctionInformation {
+                    Name = HashFunction.Whirlpool.ToString(),
+                    DisplayName = "Whirlpool",
+                    OutputSize = 512
+                })
             });
 
             MacFunctionDictionary = ImmutableDictionary.CreateRange(new[] {

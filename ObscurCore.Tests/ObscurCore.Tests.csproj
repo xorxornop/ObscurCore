@@ -75,8 +75,6 @@
     <Compile Include="Cryptography\Ciphers\Block\AES.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Blowfish.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Camellia.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\CAST5.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\CAST6.cs" />
     <Compile Include="Cryptography\Ciphers\Block\IDEA.cs" />
     <Compile Include="Cryptography\Ciphers\Block\NOEKEON.cs" />
     <Compile Include="Cryptography\Ciphers\Block\RC6.cs" />
@@ -90,7 +88,6 @@
     <Compile Include="Cryptography\Ciphers\Stream\Hc128.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Salsa20.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\XSalsa20.cs" />
-    <Compile Include="Cryptography\Ciphers\Stream\Rc4.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Rabbit.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Sosemanuk.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\ChaCha.cs" />

@@ -17,6 +17,7 @@ namespace ObscurCore.DTO
         /// Value within some key-value system, that should not be treated as either <see cref="File"/> or <see cref="Message"/>.
         /// </summary>
         Value,
+
 		KeyAction
     }
 }

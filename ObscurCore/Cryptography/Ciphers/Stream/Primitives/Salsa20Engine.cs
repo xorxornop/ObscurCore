@@ -48,6 +48,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             this.Rounds = rounds;
         }
 
+        /// <inheritdoc />
         public virtual void Init(bool encrypting, byte[] key, byte[] iv)
         {
             if (iv == null) {
@@ -67,6 +68,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             Initialised = true;
         }
 
+        /// <inheritdoc />
         public virtual string AlgorithmName
         {
             get
@@ -79,11 +81,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
         }
 
+        /// <inheritdoc />
         public int StateSize
         {
             get { return 64; }
         }
 
+        /// <inheritdoc />
         public byte ReturnByte(
             byte input)
         {
@@ -109,6 +113,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
         }
 
+        /// <inheritdoc />
         public void ProcessBytes(
             byte[] inBytes,
             int inOff,
@@ -150,6 +155,21 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             int remainder;
             var blocks = Math.DivRem(len, StrideSize, out remainder);
 
+#if INCLUDE_UNSAFE
+            unsafe {
+                fixed (byte* inPtr = inBytes) {
+                    fixed (byte* outPtr = outBytes) {
+                        for (var i = 0; i < blocks; i++) {
+                            ProcessStride(inPtr + inOff + (StrideSize * i),
+                                outPtr + outOff + (StrideSize * i));
+                            AdvanceCounter();
+                        }
+                    }
+                }
+            }
+            inOff += StrideSize * blocks;
+            outOff += StrideSize * blocks;
+#else
             for (var i = 0; i < blocks; i++) {
                 GenerateKeyStream(_keyStream, 0);
                 AdvanceCounter();
@@ -157,6 +177,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                 inOff += StrideSize;
                 outOff += StrideSize;
             }
+#endif
 
             if (remainder > 0) {
                 GenerateKeyStream(_keyStream, 0);
@@ -166,6 +187,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             _index = remainder;
         }
 
+        /// <inheritdoc />
         public void GetKeystream(byte[] buffer, int offset, int length)
         {
             if (_index > 0) {
@@ -194,6 +216,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
         }
 
+        /// <inheritdoc />
         public void Reset()
         {
             _index = 0;
@@ -246,6 +269,20 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             SalsaCoreNoChecks(Rounds, EngineState, X);
             Pack.UInt32_To_LE(X, output, offset);
         }
+
+#if INCLUDE_UNSAFE
+        protected unsafe void ProcessStride(byte* input, byte* output)
+        {
+            SalsaCoreNoChecks(Rounds, EngineState, X);
+            int ops = X.Length;
+
+            var inPtr = (uint*)input;
+            var outPtr = (uint*)output;
+            for (var i = 0; i < ops; i++) {
+                outPtr[i] = inPtr[i] ^ X[i];
+            }
+        }
+#endif
 
         /// <summary>
         /// Salsa function.

@@ -87,6 +87,8 @@ namespace ObscurCore.Cryptography.Authentication
         /// <summary>
         ///     Output size of 192 bits.
         /// </summary>
-        Tiger
+        Tiger,
+
+        Whirlpool
     }
 }

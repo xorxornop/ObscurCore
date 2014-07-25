@@ -18,6 +18,9 @@ using ObscurCore.Cryptography.Entropy;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
+    /// <summary>
+    /// Implementation of the SOSEMANUK stream cipher.
+    /// </summary>
     public sealed class SosemanukEngine : IStreamCipher, ICsprngCompatible
     {
 		private const int BufferLen = 80;
@@ -43,16 +46,17 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         private uint fsmR1, fsmR2;
 		// Subkeys for Serpent24: 100 32-bit words.
 		private uint[] _serpent24SubKeys = new uint[100];
-        
+
+        /// <inheritdoc />
 		public void Init (bool encrypting, byte[] key, byte[] iv) {
 			if (iv == null) 
 				throw new ArgumentNullException("iv", "SOSEMANUK initialisation requires an IV.");
-			else if (!iv.Length.IsBetween(4, 16))
+			else if (iv.Length.IsBetween(4, 16) == false)
 				throw new ArgumentException("SOSEMANUK requires 4 to 16 bytes (32 to 128 bits) of IV.", "iv");
 
 			if (key == null) 
 				throw new ArgumentNullException("key", "SOSEMANUK initialisation requires a key.");
-			else if (!key.Length.IsBetween(8, 32)) 
+			else if (key.Length.IsBetween(8, 32) == false) 
 				throw new ArgumentException("SOSEMANUK requires 8 to 32 bytes (64 to 256 bits) of key.", "key");
 
 			KeySetup(key);
@@ -60,25 +64,28 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			_initialised = true;
 		}
 
+        /// <inheritdoc />
         public string AlgorithmName {
 			get { return Athena.Cryptography.StreamCiphers[StreamCipher.Sosemanuk].DisplayName; }
         }
 
+        /// <inheritdoc />
 		public int StateSize
 		{
 			get { return BufferLen; }
 		}
 
+        /// <inheritdoc />
         public void Reset () {
             KeySetup(_workingKey);
             IVSetup(_workingIV);
             _initialised = true;
         }
 
+        /// <inheritdoc />
         public byte ReturnByte (byte input) {
             if (!_initialised) 
 				throw new InvalidOperationException (AlgorithmName + " not initialised.");
-            //CheckLimitExceeded();
 		
 			if (_streamPtr == BufferLen) {
 				MakeStreamBlock (_streamBuf, 0);
@@ -87,62 +94,69 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return (byte)(input ^ _streamBuf[_streamPtr++]);
         }
 
-        public void ProcessBytes (byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff) {
-            if (!_initialised) 
-				throw new InvalidOperationException(AlgorithmName + " not initialised.");
-			if ((inOff + len) > inBytes.Length) 
-				throw new ArgumentException ("Input buffer too short.");
-			if ((outOff + len) > outBytes.Length) 
-				throw new ArgumentException("Output buffer too short.");
-            //CheckLimitExceeded();
+        /// <inheritdoc />
+        public void ProcessBytes(byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff)
+        {
+            if (!_initialised)
+                throw new InvalidOperationException(AlgorithmName + " not initialised.");
+            if (inOff + len > inBytes.Length)
+                throw new ArgumentException("Input buffer too short.");
+            if (outOff + len > outBytes.Length)
+                throw new ArgumentException("Output buffer too short.");
 
-			if (len < 1)
-				return;
+            if (len < 1)
+                return;
 
-			// Any left over from last time?
-			if (_streamPtr < BufferLen) {
-				var blen = BufferLen - _streamPtr;
-				if (blen > len)
-					blen = len;
-				inBytes.Xor (inOff, _streamBuf, _streamPtr, outBytes, outOff, blen);
-				_streamPtr += blen;
-				inOff += blen;
-				outOff += blen;
-				len -= blen;
-			}
+            // Any left over from last time?
+            if (_streamPtr < BufferLen) {
+                var blen = BufferLen - _streamPtr;
+                if (blen > len)
+                    blen = len;
+                inBytes.Xor(inOff, _streamBuf, _streamPtr, outBytes, outOff, blen);
+                _streamPtr += blen;
+                inOff += blen;
+                outOff += blen;
+                len -= blen;
+            }
 
-			int remainder;
-			var blocks = Math.DivRem (len, BufferLen, out remainder);
+            int remainder;
+            var blocks = Math.DivRem(len, BufferLen, out remainder);
 
-			for (var i = 0; i < blocks; i++) {
-				MakeStreamBlock (_streamBuf, 0);
-				inBytes.Xor (inOff, _streamBuf, 0, outBytes, outOff, BufferLen);
-				inOff += BufferLen;
-				outOff += BufferLen;
-			}
+#if INCLUDE_UNSAFE
+            unsafe {
+                fixed (byte* inPtr = inBytes) {
+                    fixed (byte* outPtr = outBytes) {
+                        for (var i = 0; i < blocks; i++) {
+                            ProcessStride(inPtr + inOff + (BufferLen * i), 
+                                outPtr + outOff + (BufferLen * i));
+                        }
+                    }
+                }
+            }
+            inOff += BufferLen * blocks;
+            outOff += BufferLen * blocks;
+#else
+            for (var i = 0; i < blocks; i++) {
+                MakeStreamBlock(_streamBuf, 0);
+                inBytes.Xor(inOff, _streamBuf, 0, outBytes, outOff, BufferLen);
+                inOff += BufferLen;
+                outOff += BufferLen;
+            }
+#endif
 
-			if(remainder > 0) {
-				MakeStreamBlock (_streamBuf, 0);
-				inBytes.Xor (inOff, _streamBuf, 0, outBytes, outOff, remainder);
-				_streamPtr = remainder;
-			}
+            if (remainder > 0) {
+                MakeStreamBlock(_streamBuf, 0);
+                inBytes.Xor(inOff, _streamBuf, 0, outBytes, outOff, remainder);
+                _streamPtr = remainder;
+            }
         }
 
         public void GetKeystream(byte[] buffer, int offset, int len) {
             if (!_initialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
 			if ((offset + len) > buffer.Length) 
 				throw new ArgumentException("Output buffer too short.");
-            //CheckLimitExceeded();
 
             GenerateKeystream(buffer, offset, len);
-        }
-
-        private void CheckLimitExceeded() {
-            /*
-             * if (limitExceeded(len)) {
-             *      throw new MaxBytesExceededException("2^70 byte limit per IV would be exceeded; Change IV");
-             * } 
-             */
         }
 
         #region Private implementation
@@ -552,6 +566,343 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		    fsmR1 = r1;
 		    fsmR2 = r2;
         }
+
+#if INCLUDE_UNSAFE
+        private unsafe void ProcessStride(byte* input, byte* output)
+        {
+            var inputUintPtr = (uint*)input;
+            var outputUintPtr = (uint*)output;
+
+            uint s0 = lfsr0;
+            uint s1 = lfsr1;
+            uint s2 = lfsr2;
+            uint s3 = lfsr3;
+            uint s4 = lfsr4;
+            uint s5 = lfsr5;
+            uint s6 = lfsr6;
+            uint s7 = lfsr7;
+            uint s8 = lfsr8;
+            uint s9 = lfsr9;
+            uint r1 = fsmR1;
+            uint r2 = fsmR2;
+            uint f0, f1, f2, f3, f4;
+            uint v0, v1, v2, v3;
+            uint tt;
+
+            tt = r1;
+            r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v0 = s0;
+            s0 = ((s0 << 8) ^ MulAlpha[s0 >> 24])
+                ^ ((s3 >> 8) ^ DivAlpha[s3 & 0xFF]) ^ s9;
+            f0 = (s9 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v1 = s1;
+            s1 = ((s1 << 8) ^ MulAlpha[s1 >> 24])
+                ^ ((s4 >> 8) ^ DivAlpha[s4 & 0xFF]) ^ s0;
+            f1 = (s0 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v2 = s2;
+            s2 = ((s2 << 8) ^ MulAlpha[s2 >> 24])
+                ^ ((s5 >> 8) ^ DivAlpha[s5 & 0xFF]) ^ s1;
+            f2 = (s1 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v3 = s3;
+            s3 = ((s3 << 8) ^ MulAlpha[s3 >> 24])
+                ^ ((s6 >> 8) ^ DivAlpha[s6 & 0xFF]) ^ s2;
+            f3 = (s2 + r1) ^ r2;
+
+            /*
+             * Apply the third S-box (number 2) on (f3, f2, f1, f0).
+             */
+            f4 = f0;
+            f0 &= f2;
+            f0 ^= f3;
+            f2 ^= f1;
+            f2 ^= f0;
+            f3 |= f4;
+            f3 ^= f1;
+            f4 ^= f2;
+            f1 = f3;
+            f3 |= f4;
+            f3 ^= f0;
+            f0 &= f1;
+            f4 ^= f0;
+            f1 ^= f3;
+            f1 ^= f4;
+            f4 = ~f4;
+
+            /*
+             * S-box result is in (f2, f3, f1, f4).
+             */
+            outputUintPtr[0] = (f2 ^ v0) ^ inputUintPtr[0];
+            outputUintPtr[1] = (f3 ^ v1) ^ inputUintPtr[1];
+            outputUintPtr[2] = (f1 ^ v2) ^ inputUintPtr[2];
+            outputUintPtr[3] = (f4 ^ v3) ^ inputUintPtr[3];
+
+            tt = r1;
+            r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v0 = s4;
+            s4 = ((s4 << 8) ^ MulAlpha[s4 >> 24])
+                ^ ((s7 >> 8) ^ DivAlpha[s7 & 0xFF]) ^ s3;
+            f0 = (s3 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v1 = s5;
+            s5 = ((s5 << 8) ^ MulAlpha[s5 >> 24])
+                ^ ((s8 >> 8) ^ DivAlpha[s8 & 0xFF]) ^ s4;
+            f1 = (s4 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v2 = s6;
+            s6 = ((s6 << 8) ^ MulAlpha[s6 >> 24])
+                ^ ((s9 >> 8) ^ DivAlpha[s9 & 0xFF]) ^ s5;
+            f2 = (s5 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v3 = s7;
+            s7 = ((s7 << 8) ^ MulAlpha[s7 >> 24])
+                ^ ((s0 >> 8) ^ DivAlpha[s0 & 0xFF]) ^ s6;
+            f3 = (s6 + r1) ^ r2;
+
+            /*
+             * Apply the third S-box (number 2) on (f3, f2, f1, f0).
+             */
+            f4 = f0;
+            f0 &= f2;
+            f0 ^= f3;
+            f2 ^= f1;
+            f2 ^= f0;
+            f3 |= f4;
+            f3 ^= f1;
+            f4 ^= f2;
+            f1 = f3;
+            f3 |= f4;
+            f3 ^= f0;
+            f0 &= f1;
+            f4 ^= f0;
+            f1 ^= f3;
+            f1 ^= f4;
+            f4 = ~f4;
+
+            /*
+             * S-box result is in (f2, f3, f1, f4).
+             */
+            outputUintPtr[4] = (f2 ^ v0) ^ inputUintPtr[4];
+            outputUintPtr[5] = (f3 ^ v1) ^ inputUintPtr[5];
+            outputUintPtr[6] = (f1 ^ v2) ^ inputUintPtr[6];
+            outputUintPtr[7] = (f4 ^ v3) ^ inputUintPtr[7];
+
+            tt = r1;
+            r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v0 = s8;
+            s8 = ((s8 << 8) ^ MulAlpha[s8 >> 24])
+                ^ ((s1 >> 8) ^ DivAlpha[s1 & 0xFF]) ^ s7;
+            f0 = (s7 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v1 = s9;
+            s9 = ((s9 << 8) ^ MulAlpha[s9 >> 24])
+                ^ ((s2 >> 8) ^ DivAlpha[s2 & 0xFF]) ^ s8;
+            f1 = (s8 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v2 = s0;
+            s0 = ((s0 << 8) ^ MulAlpha[s0 >> 24])
+                ^ ((s3 >> 8) ^ DivAlpha[s3 & 0xFF]) ^ s9;
+            f2 = (s9 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v3 = s1;
+            s1 = ((s1 << 8) ^ MulAlpha[s1 >> 24])
+                ^ ((s4 >> 8) ^ DivAlpha[s4 & 0xFF]) ^ s0;
+            f3 = (s0 + r1) ^ r2;
+
+            /*
+             * Apply the third S-box (number 2) on (f3, f2, f1, f0).
+             */
+            f4 = f0;
+            f0 &= f2;
+            f0 ^= f3;
+            f2 ^= f1;
+            f2 ^= f0;
+            f3 |= f4;
+            f3 ^= f1;
+            f4 ^= f2;
+            f1 = f3;
+            f3 |= f4;
+            f3 ^= f0;
+            f0 &= f1;
+            f4 ^= f0;
+            f1 ^= f3;
+            f1 ^= f4;
+            f4 = ~f4;
+
+            /*
+             * S-box result is in (f2, f3, f1, f4).
+             */
+            outputUintPtr[8] = (f2 ^ v0) ^ inputUintPtr[8];
+            outputUintPtr[9] = (f3 ^ v1) ^ inputUintPtr[9];
+            outputUintPtr[10] = (f1 ^ v2) ^ inputUintPtr[10];
+            outputUintPtr[11] = (f4 ^ v3) ^ inputUintPtr[11];
+
+            tt = r1;
+            r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v0 = s2;
+            s2 = ((s2 << 8) ^ MulAlpha[s2 >> 24])
+                ^ ((s5 >> 8) ^ DivAlpha[s5 & 0xFF]) ^ s1;
+            f0 = (s1 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v1 = s3;
+            s3 = ((s3 << 8) ^ MulAlpha[s3 >> 24])
+                ^ ((s6 >> 8) ^ DivAlpha[s6 & 0xFF]) ^ s2;
+            f1 = (s2 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v2 = s4;
+            s4 = ((s4 << 8) ^ MulAlpha[s4 >> 24])
+                ^ ((s7 >> 8) ^ DivAlpha[s7 & 0xFF]) ^ s3;
+            f2 = (s3 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v3 = s5;
+            s5 = ((s5 << 8) ^ MulAlpha[s5 >> 24])
+                ^ ((s8 >> 8) ^ DivAlpha[s8 & 0xFF]) ^ s4;
+            f3 = (s4 + r1) ^ r2;
+
+            /*
+             * Apply the third S-box (number 2) on (f3, f2, f1, f0).
+             */
+            f4 = f0;
+            f0 &= f2;
+            f0 ^= f3;
+            f2 ^= f1;
+            f2 ^= f0;
+            f3 |= f4;
+            f3 ^= f1;
+            f4 ^= f2;
+            f1 = f3;
+            f3 |= f4;
+            f3 ^= f0;
+            f0 &= f1;
+            f4 ^= f0;
+            f1 ^= f3;
+            f1 ^= f4;
+            f4 = ~f4;
+
+            /*
+             * S-box result is in (f2, f3, f1, f4).
+             */
+            outputUintPtr[12] = (f2 ^ v0) ^ inputUintPtr[12];
+            outputUintPtr[13] = (f3 ^ v1) ^ inputUintPtr[13];
+            outputUintPtr[14] = (f1 ^ v2) ^ inputUintPtr[14];
+            outputUintPtr[15] = (f4 ^ v3) ^ inputUintPtr[15];
+
+            tt = r1;
+            r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v0 = s6;
+            s6 = ((s6 << 8) ^ MulAlpha[s6 >> 24])
+                ^ ((s9 >> 8) ^ DivAlpha[s9 & 0xFF]) ^ s5;
+            f0 = (s5 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v1 = s7;
+            s7 = ((s7 << 8) ^ MulAlpha[s7 >> 24])
+                ^ ((s0 >> 8) ^ DivAlpha[s0 & 0xFF]) ^ s6;
+            f1 = (s6 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v2 = s8;
+            s8 = ((s8 << 8) ^ MulAlpha[s8 >> 24])
+                ^ ((s1 >> 8) ^ DivAlpha[s1 & 0xFF]) ^ s7;
+            f2 = (s7 + r1) ^ r2;
+
+            tt = r1;
+            r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
+            r2 = (tt * 0x54655307).RotateLeft(7);
+            v3 = s9;
+            s9 = ((s9 << 8) ^ MulAlpha[s9 >> 24])
+                ^ ((s2 >> 8) ^ DivAlpha[s2 & 0xFF]) ^ s8;
+            f3 = (s8 + r1) ^ r2;
+
+            /*
+             * Apply the third S-box (number 2) on (f3, f2, f1, f0).
+             */
+            f4 = f0;
+            f0 &= f2;
+            f0 ^= f3;
+            f2 ^= f1;
+            f2 ^= f0;
+            f3 |= f4;
+            f3 ^= f1;
+            f4 ^= f2;
+            f1 = f3;
+            f3 |= f4;
+            f3 ^= f0;
+            f0 &= f1;
+            f4 ^= f0;
+            f1 ^= f3;
+            f1 ^= f4;
+            f4 = ~f4;
+
+            /*
+             * S-box result is in (f2, f3, f1, f4).
+             */
+            outputUintPtr[16] = (f2 ^ v0) ^ inputUintPtr[16];
+            outputUintPtr[17] = (f3 ^ v1) ^ inputUintPtr[17];
+            outputUintPtr[18] = (f1 ^ v2) ^ inputUintPtr[18];
+            outputUintPtr[19] = (f4 ^ v3) ^ inputUintPtr[19];
+
+            lfsr0 = s0;
+            lfsr1 = s1;
+            lfsr2 = s2;
+            lfsr3 = s3;
+            lfsr4 = s4;
+            lfsr5 = s5;
+            lfsr6 = s6;
+            lfsr7 = s7;
+            lfsr8 = s8;
+            lfsr9 = s9;
+            fsmR1 = r1;
+            fsmR2 = r2;
+        }
+#endif
 
         /// <summary>
         /// Initialise the engine state with key material.

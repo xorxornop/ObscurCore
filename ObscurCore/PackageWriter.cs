@@ -601,9 +601,9 @@ namespace ObscurCore
         /// <summary>
         ///     Creates a new PayloadItem DTO object.
         /// </summary>
-        /// <returns>A payload item as a <see cref="ObscurCore.DTO.PayloadItem" /> 'data transfer object'.</returns>
+        /// <returns>A payload item as a <see cref="PayloadItem" /> 'data transfer object'.</returns>
         /// <param name="itemData">Function supplying a stream of the item data.</param>
-        /// <param name="itemType">Type of the item, e.g., Utf8 (text) or Binary (data/file).</param>
+        /// <param name="itemType">Type of the item (as <see cref="PayloadItemType"/>).</param>
         /// <param name="externalLength">External length (outside the payload) of the item.</param>
         /// <param name="relativePath">Relative path of the item.</param>
         /// <param name="skipCrypto">
@@ -637,7 +637,7 @@ namespace ObscurCore
         /// </summary>
         /// <returns>A payload item as a <see cref="ObscurCore.DTO.PayloadItem" /> 'data transfer object'.</returns>
         /// <param name="itemData">Function supplying a stream of the item data.</param>
-        /// <param name="itemType">Type of the item, e.g., Utf8 (text) or Binary (data/file).</param>
+        /// <param name="itemType">Type of the item (as <see cref="PayloadItemType"/>).</param>
         /// <param name="externalLength">External length (outside the payload) of the item.</param>
         /// <param name="relativePath">Relative path of the item.</param>
         /// <param name="preKey">Key to be found on recipient's system and used as a basis for derivation.</param>

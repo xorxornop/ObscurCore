@@ -47,7 +47,9 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             BuffLength = 0;
             _buffer.SecureWipe();
             _state.SecureWipe();
-            _stateTemp.SecureWipe();
+            if (_stateTemp != null) {
+                _stateTemp.SecureWipe();
+            } 
         }
 
         private void HashCore(byte[] array, int offset, int length)

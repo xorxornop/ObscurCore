@@ -48,7 +48,8 @@ namespace ObscurCore.Cryptography.Authentication
                 { HashFunction.Sha256, () => new Sha256Digest() },
                 { HashFunction.Sha512, () => new Sha512Digest() },
                 { HashFunction.Ripemd160, () => new RipeMD160Digest() },
-                { HashFunction.Tiger, () => new TigerDigest() }
+                { HashFunction.Tiger, () => new TigerDigest() },
+                { HashFunction.Whirlpool, () => new WhirlpoolDigest() }
             };
 
             // ######################################## MAC FUNCTIONS ########################################

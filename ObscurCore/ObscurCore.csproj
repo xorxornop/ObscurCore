@@ -92,6 +92,7 @@
     <Compile Include="Cryptography\Authentication\AuthenticationInformationStore.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigestSafe.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigestUnsafe.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\WhirlpoolDigest.cs" />
     <Compile Include="Cryptography\Ciphers\CipherInformationStore.cs" />
     <Compile Include="Cryptography\Ciphers\Information\BlockCipherInformation.cs" />
     <Compile Include="Cryptography\Ciphers\Information\StreamCipherInformation.cs" />
@@ -136,8 +137,6 @@
     <Compile Include="Cryptography\Ciphers\Block\Primitives\AesFastEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\BlowfishEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\CamelliaEngine.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Primitives\Cast5Engine.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\Primitives\Cast6Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\IdeaEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\NoekeonEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\Rc6Engine.cs" />
@@ -192,7 +191,6 @@
     <Compile Include="Cryptography\Ciphers\Stream\IStreamCipher.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Hc256Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\RabbitEngine.cs" />
-    <Compile Include="Cryptography\Ciphers\Stream\Primitives\Rc4Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Salsa20Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\SosemanukEngine.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\DigestCsRng.cs" />

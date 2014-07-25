@@ -141,31 +141,6 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         }
         #endregion
 
-        //internal static ulong BytesToUInt64(byte[] buf, int offset)
-        //{
-        //    return
-        //        ((ulong)buf[offset + 7] << 7 * 8 |
-        //         ((ulong)buf[offset + 6] << 6 * 8) |
-        //         ((ulong)buf[offset + 5] << 5 * 8) |
-        //         ((ulong)buf[offset + 4] << 4 * 8) |
-        //         ((ulong)buf[offset + 3] << 3 * 8) |
-        //         ((ulong)buf[offset + 2] << 2 * 8) |
-        //         ((ulong)buf[offset + 1] << 1 * 8) |
-        //         ((ulong)buf[offset]));
-        //}
-		
-        //private static void UInt64ToBytes(ulong value, byte[] buf, int offset)
-        //{
-        //    buf[offset + 7] = (byte)(value >> 7 * 8);
-        //    buf[offset + 6] = (byte)(value >> 6 * 8);
-        //    buf[offset + 5] = (byte)(value >> 5 * 8);
-        //    buf[offset + 4] = (byte)(value >> 4 * 8);
-        //    buf[offset + 3] = (byte)(value >> 3 * 8);
-        //    buf[offset + 2] = (byte)(value >> 2 * 8);
-        //    buf[offset + 1] = (byte)(value >> 1 * 8);
-        //    buf[offset] = (byte)value;
-        //}
-
 		public void Initialize(ulong[] config)
 		{
 			if (config == null)
@@ -277,14 +252,23 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             var m = _m;
 
             if (BitConverter.IsLittleEndian) {
+#if INCLUDE_UNSAFE
+                unsafe {
+                    fixed (byte* inPtr = block) {
+                        ulong* inUlongPtr = (ulong*)(inPtr + start);
+                        for (int i = 0; i < 16; ++i)
+                            //m[i] = BytesToUInt64(block, start + (i << 3));
+                            m[i] = inUlongPtr[i];
+                    }
+                }
+#else
                 Buffer.BlockCopy(block, start, m, 0, BlockSizeInBytes);
+#endif
+
             } else {
                 for (int i = 0; i < 16; ++i)
-                    //m[i] = BytesToUInt64(block, start + (i << 3));
                     m[i] = block.LittleEndianToUInt64(start + (i << 3));
             }
-
-            Buffer.BlockCopy(block, start, m, 0, BlockSizeInBytes);
 
             /*var m0 = m[0];
             var m1 = m[1];

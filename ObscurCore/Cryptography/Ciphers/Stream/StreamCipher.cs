@@ -39,12 +39,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         /// eSTREAM Phase 3 candidate. Patented, but free for non-commercial use.
         /// </summary>
         Rabbit,
-#if INCLUDE_RC4
-    /// <summary>
-    /// 40-to-2048-bit adjustible-length key stream cipher, used most famously in SSL and WEP encryption.
-    /// </summary>
-		Rc4,
-#endif
+
 		/// <summary>
 		/// Stream cipher by Daniel J. Bernstein. eSTREAM Phase 3 candidate.
         /// </summary>

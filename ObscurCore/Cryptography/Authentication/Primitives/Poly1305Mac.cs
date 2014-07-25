@@ -16,6 +16,7 @@
 // Ported and refactored/adapted from floodyberry's Poly1305Donna implementation in C
 
 using System;
+using System.Runtime.CompilerServices;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Support;
 
@@ -280,10 +281,26 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		}
 
 		private void ProcessBlock(byte[] block, int offset, bool padded) {
-			ulong t0 = Pack.LE_To_UInt32(block, offset + 0);
-			ulong t1 = Pack.LE_To_UInt32(block, offset + 4);
-			ulong t2 = Pack.LE_To_UInt32(block, offset + 8);
-			ulong t3 = Pack.LE_To_UInt32(block, offset + 12);
+            ulong t0;
+            ulong t1;
+            ulong t2;
+            ulong t3;
+#if INCLUDE_UNSAFE
+		    unsafe {
+		        fixed (byte* inPtr = block) {
+                    ulong* inUlongPtr = (ulong*)(inPtr + offset);
+		            t0 = *inUlongPtr;
+                    t1 = *inUlongPtr + 1;
+                    t2 = *inUlongPtr + 2;
+                    t3 = *inUlongPtr + 3;
+		        }
+		    }
+#else
+			t0 = Pack.LE_To_UInt32(block, offset + 0);
+			t1 = Pack.LE_To_UInt32(block, offset + 4);
+			t2 = Pack.LE_To_UInt32(block, offset + 8);
+			t3 = Pack.LE_To_UInt32(block, offset + 12);
+#endif
 
 			h0 += (uint)(t0 & 0x3ffffffU);
 			h1 += (uint)((((t1 << 32) | t0) >> 26) & 0x3ffffff);
@@ -308,6 +325,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			h0 += (uint)(b * 5);
 		}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ulong mul32x32_64 (uint i1, uint i2) {
 			return ((ulong)i1) * i2;
 		}

@@ -36,7 +36,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			outputSize = size;
 			if (!init) return;
 
-			var config = new Blake2BCore.Blake2BConfig () {
+			var config = new Blake2BCore.Blake2BConfig {
 				Key = null,
 				Salt = null,
 				Personalization = null,
@@ -50,11 +50,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             rawConfig = Blake2BCore.ConfigB(config ?? DefaultConfig);
 			if (config.Key != null && config.Key.Length != 0) {
 				key = new byte[128];
-				Array.Copy(config.Key, key, config.Key.Length);
+				config.Key.CopyBytes(0, key, 0, config.Key.Length);
 			}
 			outputSize = config.OutputSizeInBytes;
 			_core.Initialize (rawConfig);
-			if(!key.IsNullOrZeroLength()) {
+			if (key.IsNullOrZeroLength() == false) {
 				_core.HashCore (key, 0, key.Length);
 			}
 		}
@@ -82,26 +82,25 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		public int DoFinal (byte[] output, int outOff)
 		{
 			var fullResult = _core.HashFinal();
-			Array.Copy(fullResult, 0, output, outOff, outputSize);
+			fullResult.CopyBytes(0, output, outOff, outputSize);
 			Reset ();
 			return outputSize;
 		}
 
 		public void Reset ()
 		{
-			if(rawConfig == null) {
+			if (rawConfig == null) {
 				throw new InvalidOperationException ();
 			}
 			_core.Initialize (rawConfig);
-			if(!key.IsNullOrZeroLength()) {
-				_core.HashCore (key, 0, key.Length);
+			if (key.IsNullOrZeroLength() == false) {
+				_core.HashCore(key, 0, key.Length);
 			}
 		}
 
-		public string AlgorithmName {
-			get {
-				return "BLAKE2B" + outputSize * 8;
-			}
+		public string AlgorithmName 
+        {
+			get { return "BLAKE2B-" + outputSize * 8; }
 		}
 
 		#endregion
