@@ -29,18 +29,18 @@ namespace ObscurCore.Cryptography.Ciphers
     /// </summary>
     public static class CipherFactory
     {
-        private static readonly IDictionary<BlockCipher, Func<int, IBlockCipher>> EngineInstantiatorsBlock;
+        private static readonly IDictionary<BlockCipher, Func<int, BlockCipherBase>> EngineInstantiatorsBlock;
 
         private static readonly IDictionary<StreamCipher, Func<StreamCipherEngine>> EngineInstantiatorsStream;
 
-        private static readonly IDictionary<BlockCipherMode, Func<IBlockCipher, IBlockCipher>> ModeInstantiatorsBlock;
+        private static readonly IDictionary<BlockCipherMode, Func<BlockCipherBase, BlockCipherModeBase>> ModeInstantiatorsBlock;
 
         private static readonly IDictionary<BlockCipherPadding, Func<IBlockCipherPadding>> PaddingInstantiators;
 
         static CipherFactory()
         {
             // ######################################## ENGINES ########################################
-            EngineInstantiatorsBlock = new Dictionary<BlockCipher, Func<int, IBlockCipher>> {
+            EngineInstantiatorsBlock = new Dictionary<BlockCipher, Func<int, BlockCipherBase>> {
                 { BlockCipher.Aes, blockSize => new AesEngine() },
                 { BlockCipher.Blowfish, blockSize => new BlowfishEngine() },
                 { BlockCipher.Camellia, blockSize => new CamelliaEngine() },
@@ -65,7 +65,7 @@ namespace ObscurCore.Cryptography.Ciphers
             };
 
             // ######################################## BLOCK MODES ########################################
-            ModeInstantiatorsBlock = new Dictionary<BlockCipherMode, Func<IBlockCipher, IBlockCipher>> {
+            ModeInstantiatorsBlock = new Dictionary<BlockCipherMode, Func<BlockCipherBase, BlockCipherModeBase>> {
                 { BlockCipherMode.Cbc, cipher => new CbcBlockCipher(cipher) },
                 { BlockCipherMode.Cfb, cipher => new CfbBlockCipher(cipher) },
                 { BlockCipherMode.Ctr, cipher => new CtrBlockCipher(cipher) },
@@ -85,8 +85,8 @@ namespace ObscurCore.Cryptography.Ciphers
         /// <summary>
         ///     Instantiates and returns an implementation of the requested symmetric block cipher.
         /// </summary>
-        /// <returns>A <see cref="IBlockCipher"/> cipher object implementing the relevant cipher algorithm.</returns>
-        public static IBlockCipher CreateBlockCipher(BlockCipher cipherEnum, int? blockSize = null)
+        /// <returns>A <see cref="BlockCipherBase"/> cipher object implementing the relevant cipher algorithm.</returns>
+        public static BlockCipherBase CreateBlockCipher(BlockCipher cipherEnum, int? blockSize = null)
         {
             if (cipherEnum == BlockCipher.None) {
                 throw new ArgumentException("Cipher set to None.", "cipherEnum",
@@ -101,8 +101,8 @@ namespace ObscurCore.Cryptography.Ciphers
         /// <summary>
         ///     Instantiates and returns an implementation of the requested symmetric block cipher.
         /// </summary>
-        /// <returns>A <see cref="IBlockCipher"/> cipher object implementing the relevant cipher algorithm.</returns>
-        public static IBlockCipher CreateBlockCipher(string cipherName, int? blockSize = null)
+        /// <returns>A <see cref="BlockCipherBase"/> cipher object implementing the relevant cipher algorithm.</returns>
+        public static BlockCipherBase CreateBlockCipher(string cipherName, int? blockSize = null)
         {
             return CreateBlockCipher(cipherName.ToEnum<BlockCipher>(), blockSize);
         }
@@ -113,10 +113,10 @@ namespace ObscurCore.Cryptography.Ciphers
         /// <param name="cipher">The block cipher to implement this mode of operation on top of.</param>
         /// <param name="modeEnum">The mode of operation to implement.</param>
         /// <returns>
-        ///     A <see cref="IBlockCipher"/> object implementing the relevant mode of operation,
+        ///     A <see cref="BlockCipherBase"/> object implementing the relevant mode of operation,
         ///     overlaying the supplied symmetric block cipher.
         /// </returns>
-        public static IBlockCipher OverlayBlockCipherWithMode(IBlockCipher cipher, BlockCipherMode modeEnum)
+        public static BlockCipherModeBase OverlayBlockCipherWithMode(BlockCipherBase cipher, BlockCipherMode modeEnum)
         {
             if (cipher == null) {
                 throw new ArgumentNullException();
@@ -125,11 +125,11 @@ namespace ObscurCore.Cryptography.Ciphers
                 throw new ArgumentException("Mode set to none.", "modeEnum",
                     new InvalidOperationException("Cannot instantiate null mode of operation."));
             }
-            IBlockCipher cipherMode = ModeInstantiatorsBlock[modeEnum](cipher);
+            BlockCipherModeBase cipherMode = ModeInstantiatorsBlock[modeEnum](cipher);
             return cipherMode;
         }
 
-        public static IBlockCipher OverlayBlockCipherWithMode(IBlockCipher cipher, string modeName)
+        public static BlockCipherModeBase OverlayBlockCipherWithMode(BlockCipherBase cipher, string modeName)
         {
             return OverlayBlockCipherWithMode(cipher, modeName.ToEnum<BlockCipherMode>());
         }

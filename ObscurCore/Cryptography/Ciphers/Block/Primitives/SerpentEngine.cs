@@ -15,83 +15,37 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 	* </p>
     */
     public class SerpentEngine
-		: IBlockCipher
+		: BlockCipherBase
     {
         private const int    BLOCK_SIZE = 16;
 
         static readonly int ROUNDS = 32;
         static readonly int PHI    = unchecked((int)0x9E3779B9);       // (Sqrt(5) - 1) * 2**31
 
-        private bool        encrypting;
         private int[]          wKey;
 
         private int           X0, X1, X2, X3;    // registers
 
 
-		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			if (key == null) {
-				throw new ArgumentNullException ("key");
-			} else if (!key.Length.IsBetween(16, 32)) {
-				throw new ArgumentException ("Key length incompatible.", "key");
-			}
+        public SerpentEngine() : base(BlockCipher.Serpent, BLOCK_SIZE) { }
 
-			this.encrypting = encrypting;
-			this.wKey = MakeWorkingKey (key);
-		}
-
-		public string AlgorithmName
-		{
-			get { return "Serpent"; }
-		}
-
-		public bool IsPartialBlockOkay
-		{
-			get { return false; }
-		}
-
-        public int BlockSize {
-            get { return BLOCK_SIZE; }
+        protected override void InitState()
+        {
+            this.wKey = MakeWorkingKey(Key);
         }
 
-        /**
-        * Process one block of input from the array in and write it to
-        * the out array.
-        *
-        * @param in the array containing the input data.
-        * @param inOff offset into the in array the data starts at.
-        * @param out the array the output data will be copied into.
-        * @param outOff the offset into the out array the output will start at.
-        * @exception DataLengthException if there isn't enough data in in, or
-        * space in out.
-        * @exception InvalidOperationException if the cipher isn't initialised.
-        * @return the number of bytes processed and produced.
-        */
-        public  int ProcessBlock(
-            byte[]  input,
-            int     inOff,
-            byte[]  output,
-            int     outOff)
+        internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
-            if (wKey == null)
-                throw new InvalidOperationException("Serpent not initialised");
-            if ((inOff + BLOCK_SIZE) > input.Length)
-                throw new DataLengthException("input buffer too short");
-            if ((outOff + BLOCK_SIZE) > output.Length)
-                throw new DataLengthException("output buffer too short");
-
-			if (encrypting)
-            {
+            if (Encrypting) {
                 EncryptBlock(input, inOff, output, outOff);
-            }
-            else
-            {
+            } else {
                 DecryptBlock(input, inOff, output, outOff);
             }
 
             return BLOCK_SIZE;
         }
 
-        public void Reset()
+        public override void Reset()
         {
         }
 

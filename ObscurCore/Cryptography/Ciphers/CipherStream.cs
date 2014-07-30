@@ -80,11 +80,12 @@ namespace ObscurCore.Cryptography.Ciphers
                             "key");
                     }
 
-                    IBlockCipher blockCipher = CipherFactory.CreateBlockCipher(blockConfigWrapper.BlockCipher,
+                    BlockCipherBase blockCipherPrimitive = CipherFactory.CreateBlockCipher(blockConfigWrapper.BlockCipher,
                         blockConfigWrapper.BlockSizeBits);
                     // Overlay the cipher with the mode of operation
+                    BlockCipherModeBase blockCipher = null;
                     try {
-                        blockCipher = CipherFactory.OverlayBlockCipherWithMode(blockCipher, blockConfigWrapper.Mode);
+                        blockCipher = CipherFactory.OverlayBlockCipherWithMode(blockCipherPrimitive, blockConfigWrapper.Mode);
                     } catch (Exception e) {
                         throw new ConfigurationInvalidException(
                             "Configuration of block cipher mode of operation is invalid.", e.InnerException);

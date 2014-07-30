@@ -27,60 +27,28 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 	* </p>
     */
     public class IdeaEngine
-		: IBlockCipher
+		: BlockCipherBase
     {
         private const int  BLOCK_SIZE = 8;
         private int[] workingKey;
 
+        public IdeaEngine() : base(BlockCipher.Idea, BLOCK_SIZE) {}
 
-		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			if (key == null) {
-				throw new ArgumentNullException ("key");
-			} else if (key.Length != 16) {
-				throw new ArgumentException ("Key length incompatible.", "key");
-			}
-
-			this.workingKey = GenerateWorkingKey(encrypting, key);
-		}
-
-		public string AlgorithmName
+        protected override void InitState()
         {
-            get { return "IDEA"; }
+            workingKey = GenerateWorkingKey(Encrypting, Key);
         }
 
-		public bool IsPartialBlockOkay
-		{
-			get { return false; }
-		}
-
-        public int BlockSize {
-            get { return BLOCK_SIZE; }
-        }
-
-        public int ProcessBlock(
-            byte[] input,
-            int inOff,
-            byte[] output,
-            int outOff)
+        internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
-            if (workingKey == null)
-            {
-                throw new InvalidOperationException("IDEA engine not initialised");
-            }
-            if ((inOff + BLOCK_SIZE) > input.Length)
-            {
-                throw new DataLengthException("input buffer too short");
-            }
-            if ((outOff + BLOCK_SIZE) > output.Length)
-            {
-                throw new DataLengthException("output buffer too short");
-            }
             IdeaFunc(workingKey, input, inOff, output, outOff);
             return BLOCK_SIZE;
         }
-        public void Reset()
+
+        public override void Reset()
         {
         }
+
         private static readonly int    MASK = 0xffff;
         private static readonly int    BASE = 0x10001;
         private static int BytesToWord(

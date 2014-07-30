@@ -30,7 +30,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
     public sealed class BlockCipherWrapper : ICipherWrapper
     {
         private readonly int _blockSize;
-        private readonly IBlockCipher _cipher;
+        private readonly BlockCipherModeBase _cipher;
         private readonly IBlockCipherPadding _padding;
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         /// <param name="encrypting">If set to <c>true</c> encrypting.</param>
         /// <param name="cipher">Cipher to wrap.</param>
         /// <param name="padding">Padding scheme used with the cipher. Null if none.</param>
-        public BlockCipherWrapper(bool encrypting, IBlockCipher cipher, IBlockCipherPadding padding)
+        public BlockCipherWrapper(bool encrypting, BlockCipherModeBase cipher, IBlockCipherPadding padding)
         {
             if (cipher == null) {
                 throw new ArgumentNullException("cipher");

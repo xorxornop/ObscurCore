@@ -7,7 +7,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 	* Camellia - based on RFC 3713.
 	*/
 	public class CamelliaEngine
-		: IBlockCipher
+		: BlockCipherBase
 	{
 		private bool initialised;
 		private bool _keyIs128;
@@ -217,7 +217,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			0xbb00bbbb, 0xe300e3e3, 0x40004040, 0x4f004f4f
 		};
 
-		private static uint rightRotate(uint x, int s)
+	    public CamelliaEngine() : base(BlockCipher.Camellia, BLOCK_SIZE) {}
+
+	    private static uint rightRotate(uint x, int s)
 		{
 			return ((x >> s) + (x << (32 - s)));
 		}
@@ -606,56 +608,22 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			return BLOCK_SIZE;
 		}
 
-
-		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			if (key == null) {
-				throw new ArgumentNullException ("key");
-			} else if (key.Length != 16 && key.Length != 24 && key.Length != 32) {
-				throw new ArgumentException ("Key length incompatible.", "key");
-			}
-
-			setKey (encrypting, key);
-			initialised = true;
-		}
-
-		public string AlgorithmName
-		{
-			get { return "Camellia"; }
-		}
-
-		public bool IsPartialBlockOkay
-		{
-			get { return false; }
-		}
-
-	    public int BlockSize {
-	        get { return BLOCK_SIZE; }
+	    protected override void InitState()
+	    {
+            setKey(Encrypting, Key);
 	    }
 
-	    public int ProcessBlock(
-			byte[]	input,
-			int		inOff,
-			byte[]	output,
-			int		outOff)
-		{
-			if (!initialised)
-				throw new InvalidOperationException("Camellia engine not initialised");
-			if ((inOff + BLOCK_SIZE) > input.Length)
-				throw new DataLengthException("input buffer too short");
-			if ((outOff + BLOCK_SIZE) > output.Length)
-				throw new DataLengthException("output buffer too short");
+	    
+	    internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
+	    {
+            if (_keyIs128) {
+                return processBlock128(input, inOff, output, outOff);
+            } else {
+                return processBlock192or256(input, inOff, output, outOff);
+            }
+	    }
 
-			if (_keyIs128)
-			{
-				return processBlock128(input, inOff, output, outOff);
-			}
-			else
-			{
-				return processBlock192or256(input, inOff, output, outOff);
-			}
-		}
-
-		public void Reset()
+	    public override void Reset()
 		{
 			// nothing
 		}

@@ -6,10 +6,12 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
     * An RC6 engine.
     */
     public class Rc6Engine
-		: IBlockCipher
+		: BlockCipherBase
     {
         private const int wordSize = 32;
         private const int bytesPerWord = wordSize/8;
+
+        private const int BLOCK_SIZE = 4 * bytesPerWord;
 
         /*
         * the number of rounds to perform
@@ -35,54 +37,21 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 
         private const int LGW = 5; // log2(32)
 
-        private bool forEncryption;
+        public Rc6Engine() : base(BlockCipher.Rc6, BLOCK_SIZE) { }
 
-        public string AlgorithmName
+        protected override void InitState()
         {
-            get { return "RC6"; }
+            SetKey(Key);
         }
 
-		public bool IsPartialBlockOkay
-		{
-			get { return false; }
-		}
-
-        public int BlockSize {
-            get { return 4*bytesPerWord; }
-        }
-
-
-		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			if (key == null) {
-				throw new ArgumentNullException ("key");
-			} else if (!key.Length.IsBetween(16, 32)) {
-				throw new ArgumentException ("Key length incompatible.", "key");
-			}
-
-			this.forEncryption = encrypting;
-			SetKey(key);
-		}
-
-        public int ProcessBlock(
-            byte[]	input,
-            int		inOff,
-            byte[]	output,
-            int		outOff)
+        internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
-			int blockSize = BlockSize;
-			if (_S == null)
-				throw new InvalidOperationException("RC6 engine not initialised");
-			if ((inOff + blockSize) > input.Length)
-				throw new DataLengthException("input buffer too short");
-			if ((outOff + blockSize) > output.Length)
-				throw new DataLengthException("output buffer too short");
-
-			return (forEncryption)
-				?	EncryptBlock(input, inOff, output, outOff)
-				:	DecryptBlock(input, inOff, output, outOff);
+            return (Encrypting)
+                ? EncryptBlock(input, inOff, output, outOff)
+                : DecryptBlock(input, inOff, output, outOff);
         }
 
-		public void Reset()
+        public override void Reset()
         {
         }
 

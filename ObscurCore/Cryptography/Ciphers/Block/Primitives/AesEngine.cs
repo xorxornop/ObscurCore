@@ -7,7 +7,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
     /// AES (Rijndael) block cipher implementation.
     /// </summary>
     public class AesEngine
-        : IBlockCipher
+        : BlockCipherBase
     {
         // The S box
         private static readonly byte[] S =
@@ -542,16 +542,6 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return ((x & m2) << 1) ^ (((x & m1) >> 7) * m3);
         }
 
-        /*
-        The following defines provide alternative definitions of FFmulX that might
-        give improved performance if a fast 32-bit multiply is not available.
-
-        private int FFmulX(int x) { int u = x & m1; u |= (u >> 1); return ((x & m2) << 1) ^ ((u >>> 3) | (u >>> 6)); }
-        private static final int  m4 = 0x1b1b1b1b;
-        private int FFmulX(int x) { int u = x & m1; return ((x & m2) << 1) ^ ((u - (u >>> 7)) & m4); }
-
-        */
-
         private static uint Inv_Mcol(
             uint x)
         {
@@ -629,59 +619,21 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 
         private int ROUNDS;
         private uint[,] WorkingKey;
-        //private uint	C0, C1, C2, C3;
-        private bool forEncryption;
 
         private const int BLOCK_SIZE = 16;
 
-
-        public void Init(bool encrypting, byte[] key, byte[] iv)
+        public AesEngine() : base(BlockCipher.Aes, BLOCK_SIZE)
         {
-            this.forEncryption = encrypting;
-            if (key == null) {
-                throw new ArgumentNullException("key");
-            }
-            if (key.Length == 16 || key.Length == 24 || key.Length == 32) {
-                WorkingKey = GenerateWorkingKey(key, encrypting);
-            } else {
-                throw new ArgumentException("Key length incompatible.", "key");
-            }
         }
 
-        public string AlgorithmName
+        protected override void InitState()
         {
-            get { return "AES"; }
+            WorkingKey = GenerateWorkingKey(Key, Encrypting);
         }
 
-        public bool IsPartialBlockOkay
+        internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
-            get { return false; }
-        }
-
-        public int BlockSize
-        {
-            get { return BLOCK_SIZE; }
-        }
-
-        public int ProcessBlock(
-            byte[] input,
-            int inOff,
-            byte[] output,
-            int outOff)
-        {
-            if (WorkingKey == null) {
-                throw new InvalidOperationException("AES engine not initialised");
-            }
-
-            if ((inOff + (32 / 2)) > input.Length) {
-                throw new DataLengthException("input buffer too short");
-            }
-
-            if ((outOff + (32 / 2)) > output.Length) {
-                throw new DataLengthException("output buffer too short");
-            }
-
-            if (forEncryption) {
+            if (Encrypting) {
                 EncryptBlock(input, inOff, output, outOff);
             } else {
                 DecryptBlock(input, inOff, output, outOff);
@@ -690,7 +642,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return BLOCK_SIZE;
         }
 
-        public void Reset()
+        public override void Reset()
         {
         }
 

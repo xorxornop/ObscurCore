@@ -40,7 +40,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 	{
 		private const int BLOCK_SIZE = 16;
 
-		private readonly IBlockCipher cipher;
+		private readonly BlockCipherBase cipher;
 
 		// Initialised state
 
@@ -73,7 +73,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		/*		*
 	     * Constructs a Poly1305 MAC, using a 128 bit block cipher.
 	     */
-		public Poly1305Mac(IBlockCipher cipher)
+		public Poly1305Mac(BlockCipherBase cipher)
 		{
 			if (cipher.BlockSize != BLOCK_SIZE)
 			{
@@ -153,7 +153,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 				kBytes = new byte[BLOCK_SIZE];
 				Array.Copy(key, 0, kBytes, 0, kBytes.Length);
 
-				cipher.Init(true, kBytes, null);
+				cipher.Init(true, kBytes);
 				cipher.ProcessBlock(nonce, 0, kBytes, 0);
 			} else {
 				kBytes = key;

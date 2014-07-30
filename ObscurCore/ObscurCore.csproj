@@ -93,6 +93,7 @@
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigestSafe.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigestUnsafe.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\WhirlpoolDigest.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\BlockCipherModeBase.cs" />
     <Compile Include="Cryptography\Ciphers\CipherInformationStore.cs" />
     <Compile Include="Cryptography\Ciphers\Information\BlockCipherInformation.cs" />
     <Compile Include="Cryptography\Ciphers\Information\StreamCipherInformation.cs" />
@@ -187,7 +188,7 @@
     <Compile Include="Cryptography\Ciphers\Block\Primitives\SerpentEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Block\Primitives\TwofishEngine.cs" />
     <Compile Include="Cryptography\Ciphers\InvalidCipherTextException.cs" />
-    <Compile Include="Cryptography\Ciphers\Block\IBlockCipher.cs" />
+    <Compile Include="Cryptography\Ciphers\Block\BlockCipherBase.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\StreamCipherEngine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Hc256Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\RabbitEngine.cs" />

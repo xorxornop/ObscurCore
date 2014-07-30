@@ -18,7 +18,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 	/// 2 x block size state is retained by each cipher instance.
 	/// </remarks>
 	public class ThreefishEngine
-		: IBlockCipher
+		: BlockCipherBase
 	{
 		/// <summary>
 		/// 256 bit block size - Threefish-256
@@ -109,14 +109,12 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 	     */
 		private readonly ThreefishCipher cipher;
 
-		private bool forEncryption;
-
 		/// <summary>
 		/// Constructs a new Threefish cipher, with a specified block size.
 		/// </summary>
 		/// <param name="blocksizeBits">the block size in bits, one of <see cref="BLOCKSIZE_256"/>, <see cref="BLOCKSIZE_512"/>,
 		///                      <see cref="BLOCKSIZE_1024"/> .</param>
-		public ThreefishEngine(int blocksizeBits)
+		public ThreefishEngine(int blocksizeBits) : base(BlockCipher.Threefish, blocksizeBits / 8)
 		{
 			this.blocksizeBytes = (blocksizeBits / 8);
 			this.blocksizeWords = (this.blocksizeBytes / 8);
@@ -148,10 +146,10 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 //		/// <summary>
 //		/// Initialise the engine.
 //		/// </summary>
-//		/// <param name="forEncryption">Initialise for encryption if true, for decryption if false.</param>
+//		/// <param name="encrypting">Initialise for encryption if true, for decryption if false.</param>
 //		/// <param name="parameters">an instance of <see cref="TweakableBlockCipherParameters"/> or <see cref="KeyParameter"/> (to
 //		///               use a 0 tweak)</param>
-//		public void Init(bool forEncryption, ICipherParameters parameters)
+//		public void Init(bool encrypting, ICipherParameters parameters)
 //		{
 //			byte[] keyBytes;
 //			byte[] tweakBytes;
@@ -197,33 +195,32 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 //				}
 //				tweakWords = new ulong[]{BytesToWord(tweakBytes, 0), BytesToWord(tweakBytes, 8)};
 //			}
-//			Init(forEncryption, keyWords, tweakWords);
+//			Init(encrypting, keyWords, tweakWords);
 //		}
 
-		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			if (key == null) {
-				throw new ArgumentNullException ("key");
-			} else if (key.Length != this.blocksizeBytes) {
-				throw new ArgumentException("Threefish key must be same size as block (" + blocksizeBytes
-					+ " bytes)");
-			}
+        protected override void InitState()
+        {
+            if (Key.Length != this.blocksizeBytes) {
+                throw new ArgumentException("Threefish key must be same size as block (" + blocksizeBytes
+                    + " bytes)");
+            }
 
-			ulong[] keyWords = new ulong[blocksizeWords];
-			for (int i = 0; i < keyWords.Length; i++) {
-				keyWords[i] = BytesToWord(key, i * 8);
-			}
-			Init (encrypting, keyWords, null);
-		}
+            ulong[] keyWords = new ulong[blocksizeWords];
+            for (int i = 0; i < keyWords.Length; i++) {
+                keyWords[i] = BytesToWord(Key, i * 8);
+            }
+            Init(Encrypting, keyWords, null);
+        }
 
 		/// <summary>
 		/// Initialise the engine, specifying the key and tweak directly.
 		/// </summary>
-		/// <param name="forEncryption">the cipher mode.</param>
+		/// <param name="encrypting">the cipher mode.</param>
 		/// <param name="key">the words of the key, or <code>null</code> to use the current key.</param>
 		/// <param name="tweak">the 2 word (128 bit) tweak, or <code>null</code> to use the current tweak.</param>
-		internal void Init(bool forEncryption, ulong[] key, ulong[] tweak)
+		internal void Init(bool encrypting, ulong[] key, ulong[] tweak)
 		{
-			this.forEncryption = forEncryption;
+			this.Encrypting = encrypting;
 			if (key != null)
 			{
 				SetKey(key);
@@ -277,49 +274,29 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			t[4] = t[1];
 		}
 
-		public string AlgorithmName
+		public override string AlgorithmName
 		{
-			get { return "Threefish-" + (blocksizeBytes * 8); }
+			get { return CipherIdentity.ToString() + (blocksizeBytes * 8); }
 		}
 
-		public bool IsPartialBlockOkay
+	    internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
+	    {
+            for (int i = 0; i < blocksizeBytes; i += 8) {
+                currentBlock[i >> 3] = BytesToWord(input, inOff + i);
+            }
+            ProcessBlock(this.currentBlock, this.currentBlock);
+            for (int i = 0; i < blocksizeBytes; i += 8) {
+                WordToBytes(this.currentBlock[i >> 3], output, outOff + i);
+            }
+
+            return blocksizeBytes;
+	    }
+
+	    public override void Reset()
 		{
-			get { return false; }
 		}
 
-		public int BlockSize
-		{
-			get { return blocksizeBytes; }
-		}
-
-		public void Reset()
-		{
-		}
-
-		public int ProcessBlock(byte[] inBytes, int inOff, byte[] outBytes, int outOff)
-		{
-			if ((outOff + blocksizeBytes) > outBytes.Length)
-			{
-				throw new DataLengthException("Output buffer too short");
-			}
-
-			if ((inOff + blocksizeBytes) > inBytes.Length)
-			{
-				throw new DataLengthException("Input buffer too short");
-			}
-
-			for (int i = 0; i < blocksizeBytes; i += 8)
-			{
-				currentBlock[i >> 3] = BytesToWord(inBytes, inOff + i);
-			}
-			ProcessBlock(this.currentBlock, this.currentBlock);
-			for (int i = 0; i < blocksizeBytes; i += 8)
-			{
-				WordToBytes(this.currentBlock[i >> 3], outBytes, outOff + i);
-			}
-
-			return blocksizeBytes;
-		}
+	    
 
 		/// <summary>
 		/// Process a block of data represented as 64 bit words.
@@ -345,7 +322,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 				throw new DataLengthException("Output buffer too short");
 			}
 
-			if (forEncryption)
+			if (Encrypting)
 			{
 				cipher.EncryptBlock(inWords, outWords);
 			}

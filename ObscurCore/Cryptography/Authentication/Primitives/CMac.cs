@@ -36,7 +36,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		private readonly byte[] _buf;
 		private int _bufOff;
 
-		private readonly IBlockCipher _cipher;
+        private readonly CbcBlockCipher _cipher;
 		private readonly int macSize;
 
 		private byte[] L, Lu, Lu2;
@@ -49,7 +49,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		* @param cipher the cipher to be used as the basis of the MAC generation.
 		*/
 		public CMac(
-			IBlockCipher cipher)
+			BlockCipherBase cipher)
 			: this(cipher, cipher.BlockSize * 8)
 		{
 		}
@@ -67,7 +67,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		* @param macSizeInBits the size of the MAC in bits, must be a multiple of 8 and @lt;= 128.
 		*/
 		public CMac(
-			IBlockCipher	cipher,
+			BlockCipherBase	cipher,
 			int				macSizeInBits)
 		{
 			if ((macSizeInBits % 8) != 0)

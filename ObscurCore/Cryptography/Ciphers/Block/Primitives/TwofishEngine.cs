@@ -10,7 +10,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
     ///     Bruce Schneier and developed by Raif S. Naffah.
     /// </remarks>
     public sealed class TwofishEngine
-		: IBlockCipher
+		: BlockCipherBase
     {
         private static readonly byte[,] P =  {
         {  // p0
@@ -200,8 +200,6 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         private const int    SK_BUMP = 0x01010101;
         private const int    SK_ROTL = 9;
 
-        private bool encrypting;
-
         private int[] gMDS0 = new int[MAX_KEY_BITS];
         private int[] gMDS1 = new int[MAX_KEY_BITS];
         private int[] gMDS2 = new int[MAX_KEY_BITS];
@@ -216,9 +214,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 
         private int k64Cnt;
 
-        private byte[] workingKey;
-
         public TwofishEngine()
+            : base(BlockCipher.Twofish, BLOCK_SIZE)
         {
             // calculate the MDS matrix
             int[] m1 = new int[2];
@@ -252,64 +249,29 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             }
         }
 
-		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			if (key == null) {
-				throw new ArgumentNullException ("key");
-			} else if (!key.Length.IsBetween(16, 32)) {
-				throw new ArgumentException ("Key length incompatible.", "key");
-			}
-
-			this.encrypting = encrypting;
-			this.workingKey = key;
-			this.k64Cnt = this.workingKey.Length / 8;
-			SetKey(this.workingKey);
-		}
-
-		public string AlgorithmName
+        protected override void InitState()
         {
-            get { return "Twofish"; }
+            this.k64Cnt = this.Key.Length / 8;
+            SetKey(this.Key);
         }
 
-		public bool IsPartialBlockOkay
-		{
-			get { return false; }
-		}
-
-		public int ProcessBlock(
-            byte[]	input,
-            int		inOff,
-            byte[]	output,
-            int		outOff)
+        internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
-            if (workingKey == null)
-                throw new InvalidOperationException("Twofish not initialised");
-            if ((inOff + BLOCK_SIZE) > input.Length)
-                throw new DataLengthException("input buffer too short");
-            if ((outOff + BLOCK_SIZE) > output.Length)
-                throw new DataLengthException("output buffer too short");
-
-			if (encrypting)
-            {
+            if (Encrypting) {
                 EncryptBlock(input, inOff, output, outOff);
-            }
-            else
-            {
+            } else {
                 DecryptBlock(input, inOff, output, outOff);
             }
 
             return BLOCK_SIZE;
         }
 
-        public void Reset()
+        public override void Reset()
         {
-            if (this.workingKey != null)
+            if (this.Key != null)
             {
-                SetKey(this.workingKey);
+                SetKey(this.Key);
             }
-        }
-
-        public int BlockSize {
-            get { return BLOCK_SIZE; }
         }
 
         //==================================

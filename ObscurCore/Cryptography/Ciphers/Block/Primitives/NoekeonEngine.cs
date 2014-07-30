@@ -7,7 +7,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 	* A Noekeon engine, using direct-key mode.
 	*/
 	public class NoekeonEngine
-		: IBlockCipher
+		: BlockCipherBase
 	{
 		private const int GenericSize = 16; // Block and key size, as well as the amount of rounds.
 
@@ -29,64 +29,27 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 						subKeys = new uint[4], // k
 						decryptKeys = new uint[4];
 
-		private bool _initialised, _forEncryption;
-
 		/**
 		* Create an instance of the Noekeon encryption algorithm
 		* and set some defaults
 		*/
-		public NoekeonEngine()
+		public NoekeonEngine() : base(BlockCipher.Noekeon, GenericSize)
 		{
-			_initialised = false;
 		}
 
-		public string AlgorithmName
-		{
-			get { return "Noekeon"; }
-		}
-
-		public bool IsPartialBlockOkay
-		{
-			get { return false; }
-		}
-
-	    public int BlockSize {
-	        get { return GenericSize; }
+	    protected override void InitState()
+	    {
+            setKey(Key);
 	    }
 
+	    internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
+	    {
+            return Encrypting
+                ? encryptBlock(input, inOff, output, outOff)
+                : decryptBlock(input, inOff, output, outOff);
+	    }
 
-		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			if (key == null) {
-				throw new ArgumentNullException ("key");
-			} else if (key.Length != 16) {
-				throw new ArgumentException ("Key length incompatible.", "key");
-			}
-
-			_forEncryption = encrypting;
-			_initialised = true;
-
-			setKey(key);
-		}
-
-		public int ProcessBlock(
-			byte[]	input,
-			int		inOff,
-			byte[]	output,
-			int		outOff)
-		{
-			if (!_initialised)
-				throw new InvalidOperationException(AlgorithmName + " not initialised");
-			if ((inOff + GenericSize) > input.Length)
-				throw new DataLengthException("input buffer too short");
-			if ((outOff + GenericSize) > output.Length)
-				throw new DataLengthException("output buffer too short");
-
-			return _forEncryption
-				?	encryptBlock(input, inOff, output, outOff)
-				:	decryptBlock(input, inOff, output, outOff);
-		}
-
-		public void Reset()
+	    public override void Reset()
 		{
 			// TODO This should do something in case the encryption is aborted
 		}

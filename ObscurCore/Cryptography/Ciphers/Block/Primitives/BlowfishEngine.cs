@@ -10,7 +10,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
     * and implement a simplified cryptography interface.
     */
     public sealed class BlowfishEngine
-		: IBlockCipher
+		: BlockCipherBase
     {
         private readonly static uint[] KP =
 		{
@@ -301,11 +301,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         private readonly uint[] S0, S1, S2, S3;     // the s-boxes
         private readonly uint[] P;                  // the p-array
 
-        private bool encrypting;
-
-        private byte[] workingKey;
-
-        public BlowfishEngine()
+        public BlowfishEngine() : base(BlockCipher.Blowfish, BLOCK_SIZE)
         {
             S0 = new uint[SBOX_SK];
             S1 = new uint[SBOX_SK];
@@ -314,69 +310,24 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             P = new uint[P_SZ];
         }
 
-
-		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			this.encrypting = encrypting;
-
-			if (key == null) {
-				throw new ArgumentNullException ("key");
-			} else if (!key.Length.IsBetween(4, 56)) {
-				throw new ArgumentException ("Key length incompatible.", "key");
-			}
-
-			this.workingKey = key;
-			SetKey(this.workingKey);
-		}
-
-		public string AlgorithmName
+        protected override void InitState()
         {
-            get { return "Blowfish"; }
+            SetKey(Key);
         }
 
-		public bool IsPartialBlockOkay
-		{
-			get { return false; }
-		}
-
-		public  int ProcessBlock(
-            byte[]	input,
-            int		inOff,
-            byte[]	output,
-            int		outOff)
+        internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
-            if (workingKey == null)
-            {
-                throw new InvalidOperationException("Blowfish not initialised");
-            }
-
-            if ((inOff + BLOCK_SIZE) > input.Length)
-            {
-                throw new DataLengthException("input buffer too short");
-            }
-
-            if ((outOff + BLOCK_SIZE) > output.Length)
-            {
-                throw new DataLengthException("output buffer too short");
-            }
-
-            if (encrypting)
-            {
+            if (Encrypting) {
                 EncryptBlock(input, inOff, output, outOff);
-            }
-            else
-            {
+            } else {
                 DecryptBlock(input, inOff, output, outOff);
             }
 
             return BLOCK_SIZE;
         }
 
-        public void Reset()
+        public override void Reset()
         {
-        }
-
-        public int BlockSize {
-            get { return BLOCK_SIZE; }
         }
 
         //==================================
