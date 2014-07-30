@@ -19,9 +19,9 @@ using ObscurCore.Cryptography.Entropy;
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
     /// <summary>
-    /// Implementation of the SOSEMANUK stream cipher.
+    /// SOSEMANUK stream cipher implementation.
     /// </summary>
-    public sealed class SosemanukEngine : IStreamCipher, ICsprngCompatible
+    public sealed class SosemanukEngine : StreamCipherEngine, ICsprngCompatible
     {
 		private const int BufferLen = 80;
 
@@ -37,54 +37,40 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		private int _streamPtr = BufferLen;
 
         // Stores engine state
-		private bool	        _initialised;
-        private byte[]          _workingKey,
-                                _workingIV;
-
         private uint lfsr0, lfsr1, lfsr2, lfsr3, lfsr4;
         private uint lfsr5, lfsr6, lfsr7, lfsr8, lfsr9;
         private uint fsmR1, fsmR2;
 		// Subkeys for Serpent24: 100 32-bit words.
 		private uint[] _serpent24SubKeys = new uint[100];
 
-        /// <inheritdoc />
-		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			if (iv == null) 
-				throw new ArgumentNullException("iv", "SOSEMANUK initialisation requires an IV.");
-			else if (iv.Length.IsBetween(4, 16) == false)
-				throw new ArgumentException("SOSEMANUK requires 4 to 16 bytes (32 to 128 bits) of IV.", "iv");
+        public SosemanukEngine()
+            : base(StreamCipher.Sosemanuk)
+	    {
+	    }
 
-			if (key == null) 
-				throw new ArgumentNullException("key", "SOSEMANUK initialisation requires a key.");
-			else if (key.Length.IsBetween(8, 32) == false) 
-				throw new ArgumentException("SOSEMANUK requires 8 to 32 bytes (64 to 256 bits) of key.", "key");
-
-			KeySetup(key);
-			IVSetup(iv);
-			_initialised = true;
-		}
-
-        /// <inheritdoc />
-        public string AlgorithmName {
-			get { return Athena.Cryptography.StreamCiphers[StreamCipher.Sosemanuk].DisplayName; }
+        protected override void InitState()
+        {
+            KeySetup(Key);
+            IVSetup(Nonce);
+            IsInitialised = true;
         }
 
         /// <inheritdoc />
-		public int StateSize
+		public override int StateSize
 		{
 			get { return BufferLen; }
 		}
 
         /// <inheritdoc />
-        public void Reset () {
-            KeySetup(_workingKey);
-            IVSetup(_workingIV);
-            _initialised = true;
+        public override void Reset () {
+            KeySetup(Key);
+            IVSetup(Nonce);
+            IsInitialised = true;
         }
 
         /// <inheritdoc />
-        public byte ReturnByte (byte input) {
-            if (!_initialised) 
+        public override byte ReturnByte (byte input) {
+            if (!IsInitialised) 
 				throw new InvalidOperationException (AlgorithmName + " not initialised.");
 		
 			if (_streamPtr == BufferLen) {
@@ -94,38 +80,27 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return (byte)(input ^ _streamBuf[_streamPtr++]);
         }
 
-        /// <inheritdoc />
-        public void ProcessBytes(byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff)
+        internal override void ProcessBytesInternal(byte[] input, int inOff, int length, byte[] output, int outOff)
         {
-            if (!_initialised)
-                throw new InvalidOperationException(AlgorithmName + " not initialised.");
-            if (inOff + len > inBytes.Length)
-                throw new ArgumentException("Input buffer too short.");
-            if (outOff + len > outBytes.Length)
-                throw new ArgumentException("Output buffer too short.");
-
-            if (len < 1)
-                return;
-
             // Any left over from last time?
             if (_streamPtr < BufferLen) {
                 var blen = BufferLen - _streamPtr;
-                if (blen > len)
-                    blen = len;
-                inBytes.Xor(inOff, _streamBuf, _streamPtr, outBytes, outOff, blen);
+                if (blen > length)
+                    blen = length;
+                input.XorInternal(inOff, _streamBuf, _streamPtr, output, outOff, blen);
                 _streamPtr += blen;
                 inOff += blen;
                 outOff += blen;
-                len -= blen;
+                length -= blen;
             }
 
             int remainder;
-            var blocks = Math.DivRem(len, BufferLen, out remainder);
+            var blocks = Math.DivRem(length, BufferLen, out remainder);
 
 #if INCLUDE_UNSAFE
             unsafe {
-                fixed (byte* inPtr = inBytes) {
-                    fixed (byte* outPtr = outBytes) {
+                fixed (byte* inPtr = input) {
+                    fixed (byte* outPtr = output) {
                         for (var i = 0; i < blocks; i++) {
                             ProcessStride(inPtr + inOff + (BufferLen * i), 
                                 outPtr + outOff + (BufferLen * i));
@@ -138,7 +113,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 #else
             for (var i = 0; i < blocks; i++) {
                 MakeStreamBlock(_streamBuf, 0);
-                inBytes.Xor(inOff, _streamBuf, 0, outBytes, outOff, BufferLen);
+                input.XorInternal(inOff, _streamBuf, 0, output, outOff, BufferLen);
                 inOff += BufferLen;
                 outOff += BufferLen;
             }
@@ -146,13 +121,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
             if (remainder > 0) {
                 MakeStreamBlock(_streamBuf, 0);
-                inBytes.Xor(inOff, _streamBuf, 0, outBytes, outOff, remainder);
+                input.XorInternal(inOff, _streamBuf, 0, output, outOff, remainder);
                 _streamPtr = remainder;
             }
         }
 
         public void GetKeystream(byte[] buffer, int offset, int len) {
-            if (!_initialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
+            if (!IsInitialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
 			if ((offset + len) > buffer.Length) 
 				throw new ArgumentException("Output buffer too short.");
 
@@ -909,13 +884,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         /// </summary>
         private void KeySetup (byte[] key) {
 			if (key.Length == 32) {
-				_workingKey = key;
+				Key = key;
 			} else {
-				_workingKey = new byte[32];
-				Array.Copy(key, 0, _workingKey, 0, key.Length);
-				_workingKey[key.Length] = 0x01;
-				for (int j = key.Length + 1; j < _workingKey.Length; j++) {
-					_workingKey [j] = 0x00;
+                Key = new byte[32];
+                Array.Copy(key, 0, Key, 0, key.Length);
+                Key[key.Length] = 0x01;
+                for (int j = key.Length + 1; j < Key.Length; j++) {
+                    Key[j] = 0x00;
 				}
 			}
 
@@ -923,14 +898,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             uint r0, r1, r2, r3, r4, tt;
             uint i = 0;
 
-			w0 = _workingKey.LittleEndianToUInt32 (0);
-			w1 = _workingKey.LittleEndianToUInt32 (4);
-			w2 = _workingKey.LittleEndianToUInt32 (8);
-			w3 = _workingKey.LittleEndianToUInt32 (12);
-			w4 = _workingKey.LittleEndianToUInt32 (16);
-			w5 = _workingKey.LittleEndianToUInt32 (20);
-			w6 = _workingKey.LittleEndianToUInt32 (24);
-			w7 = _workingKey.LittleEndianToUInt32 (28);
+            w0 = Key.LittleEndianToUInt32(0);
+            w1 = Key.LittleEndianToUInt32(4);
+            w2 = Key.LittleEndianToUInt32(8);
+            w3 = Key.LittleEndianToUInt32(12);
+            w4 = Key.LittleEndianToUInt32(16);
+            w5 = Key.LittleEndianToUInt32(20);
+            w6 = Key.LittleEndianToUInt32(24);
+            w7 = Key.LittleEndianToUInt32(28);
 
             tt = (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (0)));
             w0 = tt.RotateLeft(11);
@@ -1802,22 +1777,22 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         /// </summary>
         private void IVSetup (byte[] iv) {
 			if (iv == null)
-				_workingIV = new byte[0];
+				iv = new byte[0];
 			if (iv.Length == 16) {
-				_workingIV = iv;
+                Nonce = iv;
 			} else {
-				_workingIV = new byte[16];
-				Array.Copy(iv, 0, _workingIV, 0, iv.Length);
-				for (int i = iv.Length; i < _workingIV.Length; i ++)
-					_workingIV[i] = 0x00;
+                Nonce = new byte[16];
+                Array.Copy(iv, 0, Nonce, 0, iv.Length);
+                for (int i = iv.Length; i < Nonce.Length; i++)
+                    Nonce[i] = 0x00;
 			}
 
             uint r0, r1, r2, r3, r4;
 
-            r0 = _workingIV.LittleEndianToUInt32(0);
-            r1 = _workingIV.LittleEndianToUInt32(4);
-            r2 = _workingIV.LittleEndianToUInt32(8);
-            r3 = _workingIV.LittleEndianToUInt32(12);
+            r0 = Nonce.LittleEndianToUInt32(0);
+            r1 = Nonce.LittleEndianToUInt32(4);
+            r2 = Nonce.LittleEndianToUInt32(8);
+            r3 = Nonce.LittleEndianToUInt32(12);
 
             r0 ^= _serpent24SubKeys[0];
             r1 ^= _serpent24SubKeys[0 + 1];

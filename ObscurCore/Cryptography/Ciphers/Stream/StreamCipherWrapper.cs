@@ -30,7 +30,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
     /// </remarks>
     public sealed class StreamCipherWrapper : ICipherWrapper
     {
-        private readonly IStreamCipher _cipher;
+        private readonly StreamCipherEngine _cipher;
         private readonly int _strideSize;
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         /// <param name="encrypting">If set to <c>true</c> encrypting.</param>
         /// <param name="cipher">Cipher to wrap (must be pre-initialised).</param>
         /// <param name="strideIncreaseFactor">Factor to raise operation size by (size<superscript>x</superscript>).</param>
-        public StreamCipherWrapper(bool encrypting, IStreamCipher cipher, int strideIncreaseFactor = 0)
+        public StreamCipherWrapper(bool encrypting, StreamCipherEngine cipher, int strideIncreaseFactor = 0)
         {
             if (cipher == null) {
                 throw new ArgumentNullException("cipher");
@@ -62,18 +62,24 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
             get { return _strideSize; }
         }
 
-        /// <summary>
-        /// Name of the stream cipher.
-        /// </summary>
+        /// <inheritdoc />
         public string AlgorithmName
         {
             get { return _cipher.AlgorithmName; }
         }
 
+        /// <summary>
+        ///     Display-friendly name of the stream cipher.
+        /// </summary>
+        public string DisplayName
+        {
+            get { return _cipher.DisplayName; }
+        }
+
         /// <inheritdoc />
         public int ProcessBytes(byte[] input, int inputOffset, byte[] output, int outputOffset)
         {
-            _cipher.ProcessBytes(input, inputOffset, _strideSize, output, outputOffset);
+            _cipher.ProcessBytesInternal(input, inputOffset, _strideSize, output, outputOffset);
             return _strideSize;
         }
 
@@ -83,7 +89,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
             if (length == 0) {
                 return 0;
             }
-            _cipher.ProcessBytes(input, inputOffset, length, output, outputOffset);
+            _cipher.ProcessBytesInternal(input, inputOffset, length, output, outputOffset);
             return length;
         }
 

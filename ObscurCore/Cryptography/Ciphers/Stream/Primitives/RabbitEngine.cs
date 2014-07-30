@@ -19,16 +19,10 @@ using ObscurCore.Cryptography.Support;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
-	public sealed class RabbitEngine : IStreamCipher, ICsprngCompatible
+	public sealed class RabbitEngine : StreamCipherEngine, ICsprngCompatible
     {
 		private static uint[] A = new uint[] { 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D, 
                                                0xD34D34D3, 0x34D34D34, 0x4D34D34D, 0xD34D34D3 };
-
-        // Stores engine state
-	    private byte[] _workingKey;
-        private byte[] _workingIv;
-
-        private bool _initialised;
 
 		private static uint rotl(uint value, int shift) {
 			return value << shift | value >> 32 - shift;
@@ -41,47 +35,35 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		private byte[] _keyStream 		= new byte[16];
 		private int _keyStreamPtr 	= 16;
 
+        public RabbitEngine()
+            : base(StreamCipher.Rabbit)
+	    {
+	    }
 
-		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			if (iv == null) 
-				throw new ArgumentNullException("iv", "Rabbit initialisation requires an IV.");
-			if (iv.Length != 8)
-				throw new ArgumentException("Rabbit requires exactly 8 bytes of IV.", "iv");
+	    protected override void InitState()
+	    {
+	        Reset();
+	    }
 
-			_workingIv = iv;
-
-			if (key == null) 
-				throw new ArgumentNullException("key", "Rabbit initialisation requires a key.");
-			if (key.Length != 16)
-				throw new ArgumentException("Rabbit requires an exactly 16 byte key.", "key");
-
-			_workingKey = key;
-
-			Reset ();
-		}
-
-        public string AlgorithmName {
+	    public override string AlgorithmName {
             get { return "Rabbit"; }
         }
 
-		public int StateSize
+		public override int StateSize
 		{
 			get { return 16; }
 		}
 
-        public void Reset () {
-            KeySetup(_workingKey);
-            IVSetup(_workingIv);
-            _initialised = true;
+        public override void Reset () {
+            KeySetup(Key);
+            IVSetup(Nonce);
+            IsInitialised = true;
 			_keyStream.SecureWipe();
 			_keyStreamPtr = 16;
         }
 
-        public byte ReturnByte (byte input) {
-            //if (limitExceeded()) {
-            //throw new MaxBytesExceededException("2^70 byte limit per IV; Change IV");
-            //}
-            if (!_initialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
+        public override byte ReturnByte (byte input) {
+            if (!IsInitialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
 
 			if (_keyStreamPtr == 16) {
 				GenerateKeystream (_keyStream, 0);
@@ -90,30 +72,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return (byte)(_keyStream [_keyStreamPtr++] ^ input);
         }
 
-        public void ProcessBytes (byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff) {
-            if (!_initialised) {
-                throw new InvalidOperationException(AlgorithmName + " not initialised.");
-			} else if ((inOff + len) > inBytes.Length) {
-				throw new ArgumentException("Input buffer too short.");
-			} else if ((outOff + len) > outBytes.Length) {
-				throw new ArgumentException("Output buffer too short.");
-            }
-
-            //if (limitExceeded(len)) {
-            //throw new MaxBytesExceededException("2^70 byte limit per IV would be exceeded; Change IV");
-            //}
-
-			if (len == 0)
-				return;
-
-			if(_keyStreamPtr < 16) {
+	    internal override void ProcessBytesInternal (byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff) {
+			if (_keyStreamPtr < 16) {
 				var blockLength = 16 - _keyStreamPtr;
 				if (blockLength > len) {
 					blockLength = len;
 				}
-				for (var i = 0; i < blockLength; i++) {
-					outBytes [outOff + i] = (byte)(_keyStream [_keyStreamPtr + i] ^ inBytes [inOff + i]);
-				}
+				
+                inBytes.XorInternal(inOff, _keyStream, _keyStreamPtr, outBytes, outOff, blockLength);
 				_keyStreamPtr += blockLength;
 				inOff += blockLength;
 				outOff += blockLength;
@@ -130,16 +96,16 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             unsafe {
                 fixed (byte* inPtr = inBytes) {
                     fixed (byte* outPtr = outBytes) {
-                        uint* inLongPtr = (uint*)(inPtr + inOff);
-                        uint* outLongPtr = (uint*)(outPtr + outOff);
+                        uint* inUintPtr = (uint*)(inPtr + inOff);
+                        uint* outUintPtr = (uint*)(outPtr + outOff);
                         for (var i = 0; i < blocks; i++) {
                             NextState();
-                            outLongPtr[0] = inLongPtr[0] ^ X[6] ^ (X[3] >> 16) ^ (X[1] << 16);
-                            outLongPtr[1] = inLongPtr[1] ^ X[4] ^ (X[1] >> 16) ^ (X[7] << 16);
-                            outLongPtr[2] = inLongPtr[2] ^ X[2] ^ (X[7] >> 16) ^ (X[5] << 16);
-                            outLongPtr[3] = inLongPtr[3] ^ X[0] ^ (X[5] >> 16) ^ (X[3] << 16);
-                            inLongPtr += 4;
-                            outLongPtr += 4;
+                            outUintPtr[0] = inUintPtr[0] ^ (X[6] ^ (X[3] >> 16) ^ (X[1] << 16));
+                            outUintPtr[1] = inUintPtr[1] ^ (X[4] ^ (X[1] >> 16) ^ (X[7] << 16));
+                            outUintPtr[2] = inUintPtr[2] ^ (X[2] ^ (X[7] >> 16) ^ (X[5] << 16));
+                            outUintPtr[3] = inUintPtr[3] ^ (X[0] ^ (X[5] >> 16) ^ (X[3] << 16));
+                            inUintPtr += 4;
+                            outUintPtr += 4;
                         }
                     }
                 }
@@ -162,13 +128,11 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			}
 			#endif
 
-			if (remainder == 0) return;
-
-			GenerateKeystream (_keyStream, 0);
-			for (var i = 0; i < remainder; i++) {
-				outBytes[outOff + i] = (byte) (inBytes[inOff + i] ^ _keyStream[i]);
-			}
-			_keyStreamPtr = remainder;
+            if (remainder > 0) {
+                GenerateKeystream (_keyStream, 0);
+                inBytes.XorInternal(inOff, _keyStream, 0, outBytes, outOff, remainder);
+			    _keyStreamPtr = remainder;
+            }
         }
 
 		public void GetKeystream(byte[] buffer, int offset, int length) {

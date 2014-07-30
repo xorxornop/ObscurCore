@@ -18,11 +18,16 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	* </p>
 	*/
 	public class Hc256Engine
-		: IStreamCipher
+		: StreamCipherEngine
 	{
 		private uint[] _p = new uint[1024];
 		private uint[] _q = new uint[1024];
 		private uint _cnt;
+
+        public Hc256Engine()
+            : base(StreamCipher.Hc256)
+	    {
+	    }
 
 		private uint Step()
 		{
@@ -58,27 +63,24 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return ret;
 		}
 
-		private byte[] key, iv;
-		private bool initialised;
-
 		private void Init()
 		{
-			if (key.Length != 32) {
+			if (Key.Length != 32) {
 				byte[] k = new byte[32];
 
-				Array.Copy(key, 0, k, 0, key.Length);
-				Array.Copy(key, 0, k, 16, key.Length);
+                Array.Copy(Key, 0, k, 0, Key.Length);
+                Array.Copy(Key, 0, k, 16, Key.Length);
 
-				key = k;
+                Key = k;
 			}
 
-			if (iv.Length < 32) {
+			if (Nonce.Length < 32) {
 				byte[] newIV = new byte[32];
 
-				Array.Copy(iv, 0, newIV, 0, iv.Length);
-				Array.Copy(iv, 0, newIV, iv.Length, newIV.Length - iv.Length);
+                Array.Copy(Nonce, 0, newIV, 0, Nonce.Length);
+                Array.Copy(Nonce, 0, newIV, Nonce.Length, newIV.Length - Nonce.Length);
 
-				iv = newIV;
+                Nonce = newIV;
 			}
 
 			_cnt = 0;
@@ -87,12 +89,12 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
 			for (int i = 0; i < 32; i++)
 			{
-				w[i >> 2] |= ((uint)key[i] << (8 * (i & 0x3)));
+				w[i >> 2] |= ((uint)Key[i] << (8 * (i & 0x3)));
 			}
 
 			for (int i = 0; i < 32; i++)
 			{
-				w[(i >> 2) + 8] |= ((uint)iv[i] << (8 * (i & 0x3)));
+                w[(i >> 2) + 8] |= ((uint)Nonce[i] << (8 * (i & 0x3)));
 			}
 
 			for (uint i = 16; i < 2560; i++)
@@ -117,38 +119,24 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		}
 
         /// <inheritdoc/>
-		public string AlgorithmName
+		public override string AlgorithmName
 		{
 			get { return "HC-256"; }
 		}
 
         /// <inheritdoc/>
-		public int StateSize
+		public override int StateSize
 		{
 			get { return 32; }
 		}
 
-        /// <inheritdoc/>
-		public void Init (bool encrypting, byte[] key, byte[] iv) {
-			if(key == null) {
-				throw new ArgumentNullException("key", "HC-256 initialisation requires a key.");
-			} else if (key.Length != 16 && key.Length != 32) {
-				throw new ArgumentException ("HC-256 requires a 16 or 32 byte key.");
-			}
-			this.key = key;
+	    protected override void InitState()
+	    {
+            Init();
+            IsInitialised = true;
+	    }
 
-			if(iv == null) {
-				throw new ArgumentNullException("iv", "HC-256 initialisation requires an IV.");
-			} else if (key.Length.IsBetween(16, 32) == false) {
-				throw new ArgumentException ("HC-256 requires a 16 to 32 byte IV.", "iv");
-			}
-			this.iv = iv;
-
-			Init ();
-			initialised = true;
-		}
-
-		private byte[] buf = new byte[4];
+	    private byte[] buf = new byte[4];
 		private int idx;
 
 		private byte GetByte()
@@ -163,20 +151,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		}
 
         /// <inheritdoc/>
-		public void ProcessBytes(
+		internal override void ProcessBytesInternal(
 			byte[]	input,
 			int		inOff,
 			int		len,
 			byte[]	output,
 			int		outOff)
 		{
-			if (!initialised) 
-				throw new InvalidOperationException(AlgorithmName + " not initialised.");
-			if ((inOff + len) > input.Length) 
-				throw new ArgumentException ("Input buffer too short.");
-			if ((outOff + len) > output.Length) 
-				throw new ArgumentException("Output buffer too short.");
-
 			// Process leftover keystream
 			for (; idx != 0; idx = (idx + 1) & 3) {
 				output[outOff++] = (byte)(input[inOff++] ^ buf[idx]);
@@ -249,14 +230,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		}
 
         /// <inheritdoc/>
-		public void Reset()
+		public override void Reset()
 		{
 			idx = 0;
 			Init();
 		}
 
         /// <inheritdoc/>
-		public byte ReturnByte(byte input)
+		public override byte ReturnByte(byte input)
 		{
 			return (byte)(input ^ GetByte());
 		}

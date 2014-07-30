@@ -19,33 +19,19 @@ using ObscurCore.Cryptography.Support;
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
 	/// <summary>
-	/// Variant of Salsa20 with a extended nonce for greater security.
+	///     XSalsa20 stream cipher implementation.
 	/// </summary>
+    /// <remarks>
+    ///     A variant of Salsa20 with a extended nonce for greater security.
+    /// </remarks>
 	public class XSalsa20Engine : Salsa20Engine
 	{
-		public XSalsa20Engine (int rounds = DefaultRounds) : base(rounds)
+		public XSalsa20Engine (int rounds = DefaultRounds) : base(StreamCipher.XSalsa20, rounds)
 		{	
 			CipherName = "XSalsa20";
 		}
 
-		public override void Init (bool encrypting, byte[] key, byte[] iv) {
-			if (iv == null) 
-				throw new ArgumentNullException("iv", "XSalsa20 initialisation requires an IV.");
-			else if (iv.Length != 24)
-				throw new ArgumentException("XSalsa20 requires exactly 24 bytes of IV.", "iv");
-
-			if (key == null) 
-				throw new ArgumentNullException("key", "XSalsa20 initialisation requires a key.");
-			else if (key.Length != 16 && key.Length != 32) {
-				throw new ArgumentException ("XSalsa20 requires a 16 or 32 byte key.", "key");
-			}
-
-			SetKey(key, iv);
-			Reset ();
-			Initialised = true;
-		}
-
-		protected override void SetKey (byte[] keyBytes, byte[] ivBytes) {
+	    protected override void SetKey (byte[] keyBytes, byte[] ivBytes) {
 			PrepareHSalsaBlock (EngineState, keyBytes, ivBytes);
 			var hsalsa20Out = new uint[EngineState.Length];
 			HSalsa(Rounds, EngineState, 0, hsalsa20Out, 0);

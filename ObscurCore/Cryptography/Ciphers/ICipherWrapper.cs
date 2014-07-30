@@ -35,11 +35,17 @@ namespace ObscurCore.Cryptography.Ciphers
         int OperationSize { get; }
 
         /// <summary>
-        ///     Description/name of the cipher construction, e.g. AES/CTR, Blowfish/CBC/PKCS7,
-        ///     or XSalsa20 etc.
+        ///     Name of the cipher construction, including any configuration-specific identifiers, 
+        ///     e.g. AES/CTR, Salsa20/16.
         /// </summary>
         /// <value>The name of the cipher algorithm.</value>
         string AlgorithmName { get; }
+
+        /// <summary>
+        ///     Display-friendly name of the cipher.
+        /// </summary>
+        /// <value>The display name of the cipher.</value>
+        string DisplayName { get; }
 
         /// <summary>
         ///     Encrypt/decrypt exactly <see cref="OperationSize"/> bytes from <paramref name="input"/> 

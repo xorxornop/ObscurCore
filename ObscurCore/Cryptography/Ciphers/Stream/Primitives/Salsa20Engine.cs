@@ -7,7 +7,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
     /// <summary>
     /// Implementation of Daniel J. Bernstein's Salsa20 stream cipher, Snuffle 2005
     /// </summary>
-    public class Salsa20Engine : IStreamCipher, ICsprngCompatible
+    public class Salsa20Engine : StreamCipherEngine, ICsprngCompatible
     {
         /* Constants */
         private const int EngineStateSize = 16; // 16, 32 bit ints = 64 bytes
@@ -21,7 +21,6 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
         /* Variables */
         protected readonly int Rounds;
-        protected bool Initialised;
         private int _index;
         protected uint[] EngineState = new uint[EngineStateSize]; // state
         protected uint[] X = new uint[EngineStateSize]; // internal buffer
@@ -39,7 +38,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         /// Creates a Salsa20 engine with a specific number of rounds.
         /// </summary>
         /// <param name="rounds">the number of rounds (must be an even number).</param>
-        public Salsa20Engine(int rounds)
+        public Salsa20Engine(int rounds) : base(StreamCipher.Salsa20)
         {
             if (rounds <= 0 || (rounds & 1) != 0) {
                 throw new ArgumentException("'rounds' must be a positive, even number");
@@ -48,28 +47,29 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             this.Rounds = rounds;
         }
 
-        /// <inheritdoc />
-        public virtual void Init(bool encrypting, byte[] key, byte[] iv)
+        /// <summary>
+        /// Creates a Salsa20 derivative engine with a specific number of rounds.
+        /// </summary>
+        /// <param name="rounds">the number of rounds (must be an even number).</param>
+        protected Salsa20Engine(StreamCipher cipherIdentity, int rounds)
+            : base(cipherIdentity)
         {
-            if (iv == null) {
-                throw new ArgumentNullException("iv", "Salsa20 initialisation requires an IV.");
-            } else if (iv.Length != 8) {
-                throw new ArgumentException("Salsa20 requires exaStateSizetes of IV.", "iv");
+            if (rounds <= 0 || (rounds & 1) != 0) {
+                throw new ArgumentException("'rounds' must be a positive, even number");
             }
 
-            if (key == null) {
-                throw new ArgumentNullException("key", "Salsa20 initialisation requires a key.");
-            } else if (key.Length != 16 && key.Length != 32) {
-                throw new ArgumentException("Salsa20 requires a 16 or 32 byte key");
-            }
+            this.Rounds = rounds;
+        }
 
-            SetKey(key, iv);
+        protected override void InitState()
+        {
+            SetKey(Key, Nonce);
             Reset();
-            Initialised = true;
+            IsInitialised = true;
         }
 
         /// <inheritdoc />
-        public virtual string AlgorithmName
+        public override string AlgorithmName
         {
             get
             {
@@ -82,13 +82,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         }
 
         /// <inheritdoc />
-        public int StateSize
+        public override int StateSize
         {
             get { return 64; }
         }
 
         /// <inheritdoc />
-        public byte ReturnByte(
+        public override byte ReturnByte(
             byte input)
         {
             if (LimitExceeded()) {
@@ -113,52 +113,32 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
         }
 
-        /// <inheritdoc />
-        public void ProcessBytes(
-            byte[] inBytes,
-            int inOff,
-            int len,
-            byte[] outBytes,
-            int outOff)
+        internal override void ProcessBytesInternal(byte[] input, int inOff, int length, byte[] output, int outOff)
         {
-            if (!Initialised) {
-                throw new InvalidOperationException(AlgorithmName + " not initialised.");
-            }
-            if ((inOff + len) > inBytes.Length) {
-                throw new ArgumentException("Input buffer too short.");
-            }
-            if ((outOff + len) > outBytes.Length) {
-                throw new ArgumentException("Output buffer too short.");
-            }
-
-            if (LimitExceeded((uint) len)) {
+            if (LimitExceeded((uint)length)) {
                 throw new MaxBytesExceededException("2^70 byte limit per IV would be exceeded; Change IV");
-            }
-
-            if (len < 1) {
-                return;
             }
 
             // Any left over from last time?
             if (_index > 0) {
                 var blen = StrideSize - _index;
-                if (blen > len) {
-                    blen = len;
+                if (blen > length) {
+                    blen = length;
                 }
-                inBytes.Xor(inOff, _keyStream, _index, outBytes, outOff, blen);
+                input.XorInternal(inOff, _keyStream, _index, output, outOff, blen);
                 _index += blen;
                 inOff += blen;
                 outOff += blen;
-                len -= blen;
+                length -= blen;
             }
 
             int remainder;
-            var blocks = Math.DivRem(len, StrideSize, out remainder);
+            var blocks = Math.DivRem(length, StrideSize, out remainder);
 
 #if INCLUDE_UNSAFE
             unsafe {
-                fixed (byte* inPtr = inBytes) {
-                    fixed (byte* outPtr = outBytes) {
+                fixed (byte* inPtr = input) {
+                    fixed (byte* outPtr = output) {
                         for (var i = 0; i < blocks; i++) {
                             ProcessStride(inPtr + inOff + (StrideSize * i),
                                 outPtr + outOff + (StrideSize * i));
@@ -173,7 +153,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             for (var i = 0; i < blocks; i++) {
                 GenerateKeyStream(_keyStream, 0);
                 AdvanceCounter();
-                inBytes.Xor(inOff, _keyStream, 0, outBytes, outOff, StrideSize);
+                input.Xor(inOff, _keyStream, 0, output, outOff, StrideSize);
                 inOff += StrideSize;
                 outOff += StrideSize;
             }
@@ -182,7 +162,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             if (remainder > 0) {
                 GenerateKeyStream(_keyStream, 0);
                 AdvanceCounter();
-                inBytes.Xor(inOff, _keyStream, 0, outBytes, outOff, remainder);
+                input.XorInternal(inOff, _keyStream, 0, output, outOff, remainder);
             }
             _index = remainder;
         }
@@ -217,7 +197,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         }
 
         /// <inheritdoc />
-        public void Reset()
+        public override void Reset()
         {
             _index = 0;
             ResetLimitCounter();

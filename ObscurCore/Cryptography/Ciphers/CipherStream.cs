@@ -105,7 +105,7 @@ namespace ObscurCore.Cryptography.Ciphers
                             "key");
                     }
 
-                    IStreamCipher streamCipher;
+                    StreamCipherEngine streamCipher;
                     try {
                         streamCipher = CipherFactory.CreateStreamCipher(streamConfigWrapper.StreamCipher);
                         streamCipher.Init(encrypting, key, streamConfigWrapper.Nonce);

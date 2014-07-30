@@ -2,13 +2,13 @@ using System;
 
 namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 {
-    /**
-    * A class that provides Twofish encryption operations.
-    *
-    * This Java implementation is based on the Java reference
-    * implementation provided by Bruce Schneier and developed
-    * by Raif S. Naffah.
-    */
+    /// <summary>
+    ///     Twofish block cipher implementation.
+    /// </summary>
+    /// <remarks>
+    ///     Based on the Java reference implementation provided by 
+    ///     Bruce Schneier and developed by Raif S. Naffah.
+    /// </remarks>
     public sealed class TwofishEngine
 		: IBlockCipher
     {
@@ -658,5 +658,4 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             b[offset + 3] = (byte)(inData >> 24);
         }
     }
-
 }

@@ -31,7 +31,7 @@ namespace ObscurCore.Cryptography.Ciphers
     {
         private static readonly IDictionary<BlockCipher, Func<int, IBlockCipher>> EngineInstantiatorsBlock;
 
-        private static readonly IDictionary<StreamCipher, Func<IStreamCipher>> EngineInstantiatorsStream;
+        private static readonly IDictionary<StreamCipher, Func<StreamCipherEngine>> EngineInstantiatorsStream;
 
         private static readonly IDictionary<BlockCipherMode, Func<IBlockCipher, IBlockCipher>> ModeInstantiatorsBlock;
 
@@ -41,7 +41,7 @@ namespace ObscurCore.Cryptography.Ciphers
         {
             // ######################################## ENGINES ########################################
             EngineInstantiatorsBlock = new Dictionary<BlockCipher, Func<int, IBlockCipher>> {
-                { BlockCipher.Aes, blockSize => new AesFastEngine() },
+                { BlockCipher.Aes, blockSize => new AesEngine() },
                 { BlockCipher.Blowfish, blockSize => new BlowfishEngine() },
                 { BlockCipher.Camellia, blockSize => new CamelliaEngine() },
 #if INCLUDE_IDEA
@@ -54,7 +54,7 @@ namespace ObscurCore.Cryptography.Ciphers
                 { BlockCipher.Twofish, blockSize => new TwofishEngine() }
             };
 
-            EngineInstantiatorsStream = new Dictionary<StreamCipher, Func<IStreamCipher>> {
+            EngineInstantiatorsStream = new Dictionary<StreamCipher, Func<StreamCipherEngine>> {
                 { StreamCipher.Hc128, () => new Hc128Engine() },
                 { StreamCipher.Hc256, () => new Hc256Engine() },
                 { StreamCipher.Rabbit, () => new RabbitEngine() },
@@ -160,8 +160,8 @@ namespace ObscurCore.Cryptography.Ciphers
         /// <summary>
         ///     Instantiates and returns an implementation of the requested symmetric stream cipher.
         /// </summary>
-        /// <returns>A <see cref="IStreamCipher"/> cipher object implementing the relevant cipher algorithm.</returns>
-        public static IStreamCipher CreateStreamCipher(StreamCipher cipherEnum)
+        /// <returns>A <see cref="StreamCipherEngine"/> cipher object implementing the relevant cipher algorithm.</returns>
+        public static StreamCipherEngine CreateStreamCipher(StreamCipher cipherEnum)
         {
             if (cipherEnum == StreamCipher.None) {
                 throw new ArgumentException("Cipher set to none.", "cipherEnum",
@@ -170,7 +170,7 @@ namespace ObscurCore.Cryptography.Ciphers
             return EngineInstantiatorsStream[cipherEnum]();
         }
 
-        public static IStreamCipher CreateStreamCipher(string cipherName)
+        public static StreamCipherEngine CreateStreamCipher(string cipherName)
         {
             return EngineInstantiatorsStream[cipherName.ToEnum<StreamCipher>()]();
         }

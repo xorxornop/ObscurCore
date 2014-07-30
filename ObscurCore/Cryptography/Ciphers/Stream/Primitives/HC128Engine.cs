@@ -21,15 +21,18 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
     /// <summary>
     ///     HC-128 stream cipher implementation.
     /// </summary>
-    public class Hc128Engine : IStreamCipher
+    public class Hc128Engine : StreamCipherEngine
     {
-        private byte[] _key, _iv;
-        private bool _initialised;
         private byte[] _buf = new byte[4];
         private int _idx;
         private uint[] _p = new uint[512];
         private uint[] _q = new uint[512];
         private uint _cnt;
+
+        public Hc128Engine()
+            : base(StreamCipher.Hc128)
+	    {
+	    }
 
         private static uint F1(uint x)
         {
@@ -70,12 +73,12 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             var w = new uint[1280];
 
             for (int i = 0; i < 16; i++) {
-                w[i >> 2] |= ((uint) _key[i] << (8 * (i & 0x3)));
+                w[i >> 2] |= ((uint) Key[i] << (8 * (i & 0x3)));
             }
             Array.Copy(w, 0, w, 4, 4);
 
-            for (int i = 0; i < _iv.Length && i < 16; i++) {
-                w[(i >> 2) + 8] |= ((uint) _iv[i] << (8 * (i & 0x3)));
+            for (int i = 0; i < Nonce.Length && i < 16; i++) {
+                w[(i >> 2) + 8] |= ((uint) Nonce[i] << (8 * (i & 0x3)));
             }
             Array.Copy(w, 8, w, 12, 4);
 
@@ -97,38 +100,15 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         }
 
         /// <inheritdoc/>
-        public string AlgorithmName
-        {
-            get { return "HC-128"; }
-        }
-
-        /// <inheritdoc/>
-        public int StateSize
+        public override int StateSize
         {
             get { return 32; }
         }
 
-        /// <inheritdoc/>
-        public void Init(bool encrypting, byte[] key, byte[] iv)
+        protected override void InitState()
         {
-            this._iv = iv ?? new byte[0];
-            if (key == null) {
-                throw new ArgumentNullException("key", "HC-128 initialisation requires a key.");
-            }
-            if (key.Length != 16) {
-                throw new ArgumentException("HC-128 requires an exactly 16 byte key.");
-            }
-            this._key = key;
-            if (iv == null) {
-                throw new ArgumentNullException("iv", "HC-256 initialisation requires an IV.");
-            }
-            if (key.Length != 16) {
-                throw new ArgumentException("HC-256 requires an exactly 16 byte IV.", "iv");
-            }
-            this._iv = iv;
-
             Init();
-            _initialised = true;
+            IsInitialised = true;
         }
 
         /// <inheritdoc/>
@@ -143,23 +123,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         }
 
         /// <inheritdoc/>
-        public void ProcessBytes(
+        internal override void ProcessBytesInternal(
             byte[] input,
             int inOff,
             int len,
             byte[] output,
             int outOff)
         {
-            if (!_initialised) {
-                throw new InvalidOperationException(AlgorithmName + " not initialised");
-            }
-            if ((inOff + len) > input.Length) {
-                throw new DataLengthException("input buffer too short");
-            }
-            if ((outOff + len) > output.Length) {
-                throw new DataLengthException("output buffer too short");
-            }
-
             // Process leftover keystream
             for (; _idx != 0; _idx = (_idx + 1) & 3) {
                 output[outOff++] = (byte) (input[inOff++] ^ _buf[_idx]);
@@ -223,14 +193,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         }
 
         /// <inheritdoc/>
-        public void Reset()
+        public override void Reset()
         {
             _idx = 0;
             Init();
         }
 
         /// <inheritdoc/>
-        public byte ReturnByte(byte input)
+        public override byte ReturnByte(byte input)
         {
             return (byte) (input ^ GetByte());
         }

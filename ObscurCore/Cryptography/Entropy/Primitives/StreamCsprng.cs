@@ -23,7 +23,7 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
     {
         protected readonly ICsprngCompatible Csprng;
 
-        public StreamCsprng(IStreamCipher cipher, StreamCipherCsprngConfiguration config) 
+        public StreamCsprng(StreamCipherEngine cipher, StreamCipherCsprngConfiguration config) 
             : base(cipher.StateSize)
         {
             Csprng = cipher as ICsprngCompatible;
@@ -33,7 +33,7 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             cipher.Init(true, config.Key, config.Nonce);
         }
 
-        public StreamCsprng(IStreamCipher cipher, byte[] configBytes)
+        public StreamCsprng(StreamCipherEngine cipher, byte[] configBytes)
             : base(cipher.StateSize)
         {
             Csprng = cipher as ICsprngCompatible;
@@ -44,9 +44,9 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             cipher.Init(true, configObj.Key, configObj.Nonce);
         }
 
-        protected internal IStreamCipher Cipher
+        protected internal StreamCipherEngine Cipher
         {
-            get { return Csprng as IStreamCipher; }
+            get { return Csprng as StreamCipherEngine; }
         }
 
         public static StreamCipherCsprngConfiguration CreateRandomConfiguration(CsPseudorandomNumberGenerator csprng)
@@ -76,7 +76,7 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
 
         public override void Reset()
         {
-            ((IStreamCipher)Csprng).Reset();
+            ((StreamCipherEngine)Csprng).Reset();
         }
     }
 }

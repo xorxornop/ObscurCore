@@ -7,7 +7,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	/// <summary>
 	/// Implementation of Daniel J. Bernstein's ChaCha stream cipher.
 	/// </summary>
-	public sealed class ChaChaEngine : IStreamCipher, ICsprngCompatible
+	public sealed class ChaChaEngine : StreamCipherEngine, ICsprngCompatible
 	{
         /* Constants */
         private const int EngineStateSize = 16; // 16, 32 bit ints = 64 bytes
@@ -40,7 +40,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		/// Creates a ChaCha engine with a specific number of rounds.
 		/// </summary>
 		/// <param name="rounds">the number of rounds (must be an even number).</param>
-		public ChaChaEngine(int rounds)
+		public ChaChaEngine(int rounds) : base(StreamCipher.ChaCha)
 		{
             if (rounds <= 0 || (rounds & 1) != 0) {
                 throw new ArgumentException("'rounds' must be a positive, even number.");
@@ -49,43 +49,31 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             this._rounds = rounds;
 		}
 
-        /// <inheritdoc />
-        public void Init(bool encrypting, byte[] key, byte[] iv)
+        protected override void InitState()
         {
-            if (iv == null)
-                throw new ArgumentNullException("iv", "ChaCha initialisation requires an IV.");
-            else if (iv.Length != 8)
-                throw new ArgumentException("ChaCha requires 8 bytes of IV.", "iv");
-
-            if (key == null)
-                throw new ArgumentNullException("key", "ChaCha initialisation requires a key.");
-            else if (key.Length != 16 && key.Length != 32) {
-                throw new ArgumentException("ChaCha requires a 16 or 32 byte key");
-            }
-
-            SetKey(key, iv);
+            SetKey(Key, Nonce);
             Reset();
-            _initialised = true;
+            IsInitialised = true;
         }
 
         /// <inheritdoc />
-        public string AlgorithmName
+        public override string AlgorithmName
         {
             get {
                 if (_rounds != DefaultRounds) 
-                    return CipherName + _rounds;
+                    return CipherName + "/" + _rounds;
                 else return CipherName;
             }
         }
 
         /// <inheritdoc />
-        public int StateSize
+        public override int StateSize
         {
             get { return 64; }
         }
 
         /// <inheritdoc />
-        public byte ReturnByte(
+        public override byte ReturnByte(
             byte input)
         {
             if (LimitExceeded()) {
@@ -110,33 +98,23 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		}
 
         /// <inheritdoc />
-        public void ProcessBytes(
+        internal override void ProcessBytesInternal(
             byte[] inBytes,
             int inOff,
             int len,
             byte[] outBytes,
             int outOff)
         {
-            if (!_initialised)
-                throw new InvalidOperationException(AlgorithmName + " not initialised.");
-            if ((inOff + len) > inBytes.Length)
-                throw new ArgumentException("Input buffer too short.");
-            if ((outOff + len) > outBytes.Length)
-                throw new ArgumentException("Output buffer too short.");
-
             if (LimitExceeded((uint)len)) {
                 throw new MaxBytesExceededException("2^70 byte limit per IV would be exceeded; Change IV");
             }
-
-            if (len < 1)
-                return;
 
             // Any left over from last time?
             if (_index > 0) {
                 var blen = StrideSize - _index;
                 if (blen > len)
                     blen = len;
-                inBytes.Xor(inOff, _keyStream, _index, outBytes, outOff, blen);
+                inBytes.XorInternal(inOff, _keyStream, _index, outBytes, outOff, blen);
                 _index += blen;
                 inOff += blen;
                 outOff += blen;
@@ -173,7 +151,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             if (remainder > 0) {
                 GenerateKeyStream(_keyStream, 0);
                 AdvanceCounter();
-                inBytes.Xor(inOff, _keyStream, 0, outBytes, outOff, remainder);
+                inBytes.XorInternal(inOff, _keyStream, 0, outBytes, outOff, remainder);
             }
             _index = remainder;
         }
@@ -207,7 +185,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         }
 
         /// <inheritdoc />
-        public void Reset()
+        public override void Reset()
         {
             _index = 0;
             ResetLimitCounter();

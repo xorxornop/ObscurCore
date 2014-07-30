@@ -39,6 +39,16 @@ namespace ObscurCore
             return value.CompareTo(low) >= 0 && value.CompareTo(high) <= 0;
         }
 
+        public static int BytesToBits(this int byteLength)
+        {
+            return byteLength * 8;
+        }
+
+        public static int BitsToBytes(this int bitLength)
+        {
+            return bitLength / 8;
+        }
+
         /// <summary>
         ///     Determines if specified array is null or zero length.
         /// </summary>
@@ -97,6 +107,22 @@ namespace ObscurCore
         {
             foreach (string candidate in candidates) {
                 if (candidate.Equals(s, comparison)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        ///     Determines if number is/equals one of the specified comparison candidates.
+        /// </summary>
+        /// <returns><c>true</c> if is one of the specified candidates; otherwise, <c>false</c>.</returns>
+        /// <param name="n">Number to compare</param>
+        /// <param name="candidates">Candidate strings</param>
+        public static bool IsOneOf(this int n, IEnumerable<int> candidates)
+        {
+            foreach (var candidate in candidates) {
+                if (candidate == n) {
                     return true;
                 }
             }

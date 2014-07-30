@@ -399,7 +399,7 @@ namespace ObscurCore.Cryptography
             }
 
             if (length != 0) {
-                *src = 0x00;
+                *src = default(byte);
             }
         }
 #endif
