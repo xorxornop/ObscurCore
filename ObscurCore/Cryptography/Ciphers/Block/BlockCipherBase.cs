@@ -18,7 +18,7 @@ using System;
 namespace ObscurCore.Cryptography.Ciphers.Block
 {
     /// <summary>
-    ///     The interface that block ciphers conform to.
+    ///     Base class for block cipher implementations.
     /// </summary>
     public abstract class BlockCipherBase 
     {
@@ -78,10 +78,22 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         protected abstract void InitState();
 
         /// <summary>
-        ///      Process one block of input from the array in and write it to the out array.
-        ///  </summary><param name="input">The input byte array.</param><param name="inOff">The offset in <paramref name="input" /> at which the input block begins.</param><param name="output">The output byte array.</param><param name="outOff">The offset in <paramref name="output" /> at which to write the output block to.</param><exception cref="!:DataLengthException">
-        ///      If input or output buffers (byte arrays) are of insufficient length to read/write input/output.
-        ///  </exception><returns>The number of bytes written to the output.</returns>
+        ///     Encrypt/decrypt a block from <paramref name="input"/> 
+        ///     and put the result into <paramref name="output"/>. 
+        /// </summary>
+        /// <param name="input">The input byte array.</param>
+        /// <param name="inOff">
+        ///      The offset in <paramref name="input" /> at which the input data begins.
+        ///  </param>
+        /// <param name="output">The output byte array.</param>
+        /// <param name="outOff">
+        ///      The offset in <paramref name="output" /> at which to write the output data to.
+        ///  </param>
+        /// <returns>Number of bytes processed.</returns>
+        /// <exception cref="InvalidOperationException">Cipher is not initialised.</exception>
+        /// <exception cref="DataLengthException">
+        ///      A input or output buffer is of insufficient length.
+        ///  </exception>
         public int ProcessBlock(byte[] input, int inOff, byte[] output, int outOff)
         {
             if (IsInitialised == false) {
@@ -100,16 +112,19 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         }
 
         /// <summary>
-        ///     Encrypt/decrypt bytes from <paramref name="input"/> and put the result into <paramref name="output"/>. 
-        ///     Performs no checks on argument validity - use only when pre-validated!
+        ///     Encrypt/decrypt a block from <paramref name="input"/> 
+        ///     and put the result into <paramref name="output"/>. 
+        ///     Performs no checks on argument validity - use only when arguments are pre-validated!
         /// </summary>
         /// <param name="input">The input byte array.</param>
         /// <param name="inOff">
         ///      The offset in <paramref name="input" /> at which the input data begins.
         ///  </param>
-        /// <param name="output">The output byte array.</param><param name="outOff">
+        /// <param name="output">The output byte array.</param>
+        /// <param name="outOff">
         ///      The offset in <paramref name="output" /> at which to write the output data to.
         ///  </param>
+        /// <returns>Number of bytes processed.</returns>
         internal abstract int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff);
 
         /// <summary>

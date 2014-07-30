@@ -18,7 +18,7 @@ using System;
 namespace ObscurCore.Cryptography.Ciphers.Stream
 {
     /// <summary>
-    ///     The interface that stream ciphers conform to.
+    ///     Base class for stream cipher implementations.
     /// </summary>
     public abstract class StreamCipherEngine
     {
@@ -117,13 +117,21 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         public abstract byte ReturnByte(byte input);
 
         /// <summary>
-        ///      Encrypt/decrypt bytes from <c>input</c> and put the result into <c>output</c>.
-        ///  </summary><param name="input">The input byte array.</param><param name="inOff">
+        ///     Encrypt/decrypt bytes from <paramref name="input"/> 
+        ///     and put the result into <paramref name="output"/>. 
+        /// </summary>
+        /// <param name="input">The input byte array.</param>
+        /// <param name="inOff">
         ///      The offset in <paramref name="input" /> at which the input data begins.
-        ///  </param><param name="length">The number of bytes to be processed.</param><param name="output">The output byte array.</param><param name="outOff">
+        ///  </param>
+        /// <param name="length">Number of bytes to process.</param>
+        /// <param name="output">The output byte array.</param>
+        /// <param name="outOff">
         ///      The offset in <paramref name="output" /> at which to write the output data to.
-        ///  </param><exception cref="!:DataLengthException">
-        ///      If input or output buffers are of insufficient length to read/write input/output.
+        ///  </param>
+        /// <exception cref="InvalidOperationException">Cipher is not initialised.</exception>
+        /// <exception cref="DataLengthException">
+        ///      A input or output buffer is of insufficient length.
         ///  </exception>
         public void ProcessBytes(byte[] input, int inOff, int length, byte[] output, int outOff)
         {
@@ -160,7 +168,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         ///      The offset in <paramref name="input" /> at which the input data begins.
         ///  </param>
         /// <param name="length">The number of bytes to be processed.</param>
-        /// <param name="output">The output byte array.</param><param name="outOff">
+        /// <param name="output">The output byte array.</param>
+        /// <param name="outOff">
         ///      The offset in <paramref name="output" /> at which to write the output data to.
         ///  </param>
         internal abstract void ProcessBytesInternal(byte[] input, int inOff, int length, byte[] output, int outOff);

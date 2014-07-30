@@ -125,30 +125,29 @@ namespace ObscurCore.Cryptography
         internal static void XorInternal(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff,
             int length)
         {
-            
 #if (INCLUDE_UNSAFE)
             if (length > XorUnmanagedLengthThreshold) {
-			    int remainder;
-                var ulongOps = Math.DivRem(length, sizeof(ulong), out remainder);
-			    unsafe {
-				    fixed (byte* aPtr = a) {
-					    fixed (byte* bPtr = b) {
-						    fixed (byte* outputPtr = output) {
-                                var aUlongPtr = (UInt64*)(aPtr + aOff);
-                                var bUlongPtr = (UInt64*)(bPtr + bOff);
-                                var outputUlongPtr = (UInt64*)(outputPtr + outputOff);
-							    for (var i = 0; i < ulongOps; i++) {
-								    outputUlongPtr[i] = aUlongPtr[i] ^ bUlongPtr[i];
-							    }
-						    }
-					    }
-				    }
-			    }
-                var increment = ulongOps * sizeof(UInt64);
+                int remainder;
+                var ulongOps = Math.DivRem(length, sizeof (ulong), out remainder);
+                unsafe {
+                    fixed (byte* aPtr = a) {
+                        fixed (byte* bPtr = b) {
+                            fixed (byte* outputPtr = output) {
+                                var aUlongPtr = (UInt64*) (aPtr + aOff);
+                                var bUlongPtr = (UInt64*) (bPtr + bOff);
+                                var outputUlongPtr = (UInt64*) (outputPtr + outputOff);
+                                for (var i = 0; i < ulongOps; i++) {
+                                    outputUlongPtr[i] = aUlongPtr[i] ^ bUlongPtr[i];
+                                }
+                            }
+                        }
+                    }
+                }
+                var increment = ulongOps * sizeof (UInt64);
                 aOff += increment;
-			    bOff += increment;
-			    outputOff += increment;
-			    length = remainder;	
+                bOff += increment;
+                outputOff += increment;
+                length = remainder;
             }
 #endif
 
@@ -191,22 +190,22 @@ namespace ObscurCore.Cryptography
 #if (INCLUDE_UNSAFE)
             if (length > XorUnmanagedLengthThreshold) {
                 int remainder;
-                var ulongOps = Math.DivRem(length, sizeof(UInt64), out remainder);
-			    unsafe {
-				    fixed (byte* aPtr = a) {
-					    fixed (byte* bPtr = b) {
-                            UInt64* aUlongPtr = (UInt64*)(aPtr + aOff);
-                            UInt64* bUlongPtr = (UInt64*)(bPtr + bOff);
-						    for (var i = 0; i < ulongOps; i++) {
-							    aUlongPtr[i] ^= bUlongPtr[i];
-						    }
-					    }
-				    }
-			    }
-                var increment = ulongOps * sizeof(UInt64);
-			    aOff += increment;
-			    bOff += increment;
-			    length = remainder;
+                var ulongOps = Math.DivRem(length, sizeof (UInt64), out remainder);
+                unsafe {
+                    fixed (byte* aPtr = a) {
+                        fixed (byte* bPtr = b) {
+                            var aUlongPtr = (UInt64*) (aPtr + aOff);
+                            var bUlongPtr = (UInt64*) (bPtr + bOff);
+                            for (var i = 0; i < ulongOps; i++) {
+                                aUlongPtr[i] ^= bUlongPtr[i];
+                            }
+                        }
+                    }
+                }
+                var increment = ulongOps * sizeof (UInt64);
+                aOff += increment;
+                bOff += increment;
+                length = remainder;
             }
 #endif
 
@@ -215,109 +214,6 @@ namespace ObscurCore.Cryptography
             }
         }
 
-        /// <summary>
-        ///     Rotate an integer left 
-        ///     (<paramref name="i"/> &lt;&lt;&lt; <paramref name="distance"/>).
-        /// </summary>
-        /// <param name="i">Integer to rotate.</param>
-        /// <param name="distance">Distance to rotate.</param>
-        /// <returns>Rotated integer.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt32 RotateLeft(this UInt32 i, int distance)
-        {
-            return (i << distance) | (i >> -distance);
-        }
-
-        /// <summary>
-        ///     Rotate an integer left 
-        ///     (<paramref name="i"/> &lt;&lt;&lt; <paramref name="distance"/>).
-        /// </summary>
-        /// <param name="i">Integer to rotate.</param>
-        /// <param name="distance">Distance to rotate.</param>
-        /// <returns>Rotated integer.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Int32 RotateLeft(this Int32 i, int distance)
-        {
-            return (i << distance) ^ (Int32)((UInt32)i >> -distance);
-        }
-
-        /// <summary>
-        ///     Rotate an integer left 
-        ///     (<paramref name="i"/> &lt;&lt;&lt; <paramref name="distance"/>).
-        /// </summary>
-        /// <param name="i">Integer to rotate.</param>
-        /// <param name="distance">Distance to rotate.</param>
-        /// <returns>Rotated integer.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt64 RotateLeft(this UInt64 i, int distance)
-        {
-            return (i << distance) | (i >> -distance);
-        }
-
-        /// <summary>
-        ///     Rotate an integer left 
-        ///     (<paramref name="i"/> &lt;&lt;&lt; <paramref name="distance"/>).
-        /// </summary>
-        /// <param name="i">Integer to rotate.</param>
-        /// <param name="distance">Distance to rotate.</param>
-        /// <returns>Rotated integer.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Int64 RotateLeft(this Int64 i, int distance)
-        {
-            return (i << distance) ^ (Int64)((UInt64)i >> -distance);
-        }
-
-        /// <summary>
-        ///     Rotate an integer right 
-        ///     (<paramref name="i"/> &gt;&gt;&gt; <paramref name="distance"/>).
-        /// </summary>
-        /// <param name="i">Integer to rotate.</param>
-        /// <param name="distance">Distance to rotate.</param>
-        /// <returns>Rotated integer.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt32 RotateRight(this UInt32 i, int distance)
-        {
-            return (i >> distance) | (i << -distance);
-        }
-
-        /// <summary>
-        ///     Rotate an integer right 
-        ///     (<paramref name="i"/> &gt;&gt;&gt; <paramref name="distance"/>).
-        /// </summary>
-        /// <param name="i">Integer to rotate.</param>
-        /// <param name="distance">Distance to rotate.</param>
-        /// <returns>Rotated integer.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Int32 RotateRight(this Int32 i, int distance)
-        {
-            return (Int32)((UInt32)i >> distance) ^ (i << -distance);
-        }
-
-        /// <summary>
-        ///     Rotate an integer right 
-        ///     (<paramref name="i"/> &gt;&gt;&gt; <paramref name="distance"/>).
-        /// </summary>
-        /// <param name="i">Integer to rotate.</param>
-        /// <param name="distance">Distance to rotate.</param>
-        /// <returns>Rotated integer.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt64 RotateRight(this UInt64 i, int distance)
-        {
-            return (i >> distance) | (i << -distance);
-        }
-
-        /// <summary>
-        ///     Rotate an integer right 
-        ///     (<paramref name="i"/> &gt;&gt;&gt; <paramref name="distance"/>).
-        /// </summary>
-        /// <param name="i">Integer to rotate.</param>
-        /// <param name="distance">Distance to rotate.</param>
-        /// <returns>Rotated integer.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Int64 RotateRight(this Int64 i, int distance)
-        {
-            return (Int64)((UInt64)i >> distance) ^ (i << -distance);
-        }
 
         /// <summary>
         ///     Securely erase <paramref name="data"/> by clearing the memory used to store it.
@@ -380,27 +276,27 @@ namespace ObscurCore.Cryptography
         internal static unsafe void InternalWipe(byte* src, int offset, int length)
         {
             while (length >= 16) {
-                *(UInt64*)src = default(UInt64);
+                *(UInt64*) src = default(UInt64);
                 src += 8;
-                *(UInt64*)src = default(UInt64);
+                *(UInt64*) src = default(UInt64);
                 src += 8;
                 length -= 16;
             }
 
             if (length >= 8) {
-                *(UInt64*)src = default(UInt64);
+                *(UInt64*) src = default(UInt64);
                 src += 8;
                 length -= 8;
             }
 
             if (length >= 4) {
-                *(UInt32*)src = default(UInt32);
+                *(UInt32*) src = default(UInt32);
                 src += 4;
                 length -= 4;
             }
 
             if (length >= 2) {
-                *(UInt16*)src = default(UInt16);
+                *(UInt16*) src = default(UInt16);
                 src += 2;
                 length -= 2;
             }

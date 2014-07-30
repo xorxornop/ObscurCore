@@ -89,6 +89,7 @@
   <ItemGroup>
     <Compile Include="Athena.cs" />
     <Compile Include="BitPackingExtensions.cs" />
+    <Compile Include="CopyExtensions.cs" />
     <Compile Include="Cryptography\Authentication\AuthenticationInformationStore.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigestSafe.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigestUnsafe.cs" />
@@ -105,6 +106,7 @@
     <Compile Include="Cryptography\KeyAgreement\Information\FpEcNamedCurveInformation.cs" />
     <Compile Include="Cryptography\KeyAgreement\Information\TpbF2mEcNamedCurveInformation.cs" />
     <Compile Include="Cryptography\KeyDerivation\KdfInformationStore.cs" />
+    <Compile Include="Cryptography\RotationExtensions.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IStreamDecorator.cs" />
     <Compile Include="Packaging\ContentTreeNode.cs" />
@@ -197,6 +199,7 @@
     <Compile Include="Cryptography\Entropy\Primitives\DigestCsRng.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\ReversedWindowRng.cs" />
     <Compile Include="SerialisationExtensions.cs" />
+    <Compile Include="StreamExtensions.cs" />
     <Compile Include="Support\Random\Rng.cs" />
     <Compile Include="Support\Random\ThreadedSeedRng.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\StreamCsprng.cs" />
@@ -241,7 +244,7 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\WTauNafMultiplier.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\WTauNafPreCompInfo.cs" />
     <Compile Include="Cryptography\Support\X9IntegerConverter.cs" />
-    <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="BasicExtensions.cs" />
     <Compile Include="Cryptography\KeyDerivation\ScryptModule.cs" />
     <Compile Include="Cryptography\KeyDerivation\Pbkdf2Module.cs" />
     <Compile Include="ConfigurationInvalidException.cs" />
