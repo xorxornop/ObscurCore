@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.KeyAgreement;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
-using ObscurCore.Cryptography.Support;
 using ObscurCore.DTO;
 
 namespace ObscurCore.Tests.Cryptography.KeyAgreements

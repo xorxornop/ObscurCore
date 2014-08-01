@@ -7,17 +7,20 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 {
     public class ECAlgorithms
     {
-        public static bool IsF2mCurve (ECCurve c) {
+        public static bool IsF2mCurve(ECCurve c)
+        {
             IFiniteField field = c.Field;
             return field.Dimension > 1 && field.Characteristic.Equals(BigInteger.Two)
                 && field is IPolynomialExtensionField;
         }
 
-        public static bool IsFpCurve (ECCurve c) {
+        public static bool IsFpCurve(ECCurve c)
+        {
             return c.Field.Dimension == 1;
         }
 
-        public static ECPoint SumOfMultiplies (ECPoint[] ps, BigInteger[] ks) {
+        public static ECPoint SumOfMultiplies(ECPoint[] ps, BigInteger[] ks)
+        {
             if (ps == null || ks == null || ps.Length != ks.Length || ps.Length < 1)
                 throw new ArgumentException("point and scalar arrays should be non-null, and of equal, non-zero, length");
 
@@ -42,13 +45,14 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 
             GlvEndomorphism glvEndomorphism = c.GetEndomorphism() as GlvEndomorphism;
             if (glvEndomorphism != null) {
-                return ImplSumOfMultipliesGlv(imported, ks, glvEndomorphism);
+                return ValidatePoint(ImplSumOfMultipliesGlv(imported, ks, glvEndomorphism));
             }
 
-            return ImplSumOfMultiplies(imported, ks);
+            return ValidatePoint(ImplSumOfMultiplies(imported, ks));
         }
 
-        public static ECPoint SumOfTwoMultiplies (ECPoint P, BigInteger a, ECPoint Q, BigInteger b) {
+        public static ECPoint SumOfTwoMultiplies(ECPoint P, BigInteger a, ECPoint Q, BigInteger b)
+        {
             ECCurve cp = P.Curve;
             Q = ImportPoint(cp, Q);
 
@@ -56,16 +60,17 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             if (cp is F2mCurve) {
                 F2mCurve f2mCurve = (F2mCurve)cp;
                 if (f2mCurve.IsKoblitz) {
-                    return P.Multiply(a).Add(Q.Multiply(b));
+                    return ValidatePoint(P.Multiply(a).Add(Q.Multiply(b)));
                 }
             }
 
             GlvEndomorphism glvEndomorphism = cp.GetEndomorphism() as GlvEndomorphism;
             if (glvEndomorphism != null) {
-                return ImplSumOfMultipliesGlv(new ECPoint[] { P, Q }, new BigInteger[] { a, b }, glvEndomorphism);
+                return ValidatePoint(
+                    ImplSumOfMultipliesGlv(new ECPoint[] { P, Q }, new BigInteger[] { a, b }, glvEndomorphism));
             }
 
-            return ImplShamirsTrickWNaf(P, a, Q, b);
+            return ValidatePoint(ImplShamirsTrickWNaf(P, a, Q, b));
         }
 
         /*
@@ -86,14 +91,16 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
         * 8: end for
         * 9: return R
         */
-        public static ECPoint ShamirsTrick (ECPoint P, BigInteger k, ECPoint Q, BigInteger l) {
+        public static ECPoint ShamirsTrick(ECPoint P, BigInteger k, ECPoint Q, BigInteger l)
+        {
             ECCurve cp = P.Curve;
             Q = ImportPoint(cp, Q);
 
-            return ImplShamirsTrickJsf(P, k, Q, l);
+            return ValidatePoint(ImplShamirsTrickJsf(P, k, Q, l));
         }
 
-        public static ECPoint ImportPoint (ECCurve c, ECPoint p) {
+        public static ECPoint ImportPoint(ECCurve c, ECPoint p)
+        {
             ECCurve cp = p.Curve;
             if (!c.Equals(cp))
                 throw new ArgumentException("Point must be on the same curve");
@@ -101,7 +108,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return c.ImportPoint(p);
         }
 
-        public static void MontgomeryTrick (ECFieldElement[] zs, int off, int len) {
+        public static void MontgomeryTrick(ECFieldElement[] zs, int off, int len)
+        {
             /*
              * Uses the "Montgomery Trick" to invert many field elements, with only a single actual
              * field inversion. See e.g. the paper:
@@ -129,7 +137,45 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             zs[off] = u;
         }
 
-        internal static ECPoint ImplShamirsTrickJsf (ECPoint P, BigInteger k, ECPoint Q, BigInteger l) {
+        /**
+         * Simple shift-and-add multiplication. Serves as reference implementation
+         * to verify (possibly faster) implementations, and for very small scalars.
+         * 
+         * @param p
+         *            The point to multiply.
+         * @param k
+         *            The multiplier.
+         * @return The result of the point multiplication <code>kP</code>.
+         */
+        public static ECPoint ReferenceMultiply(ECPoint p, BigInteger k)
+        {
+            BigInteger x = k.Abs();
+            ECPoint q = p.Curve.Infinity;
+            int t = x.BitLength;
+            if (t > 0) {
+                if (x.TestBit(0)) {
+                    q = p;
+                }
+                for (int i = 1; i < t; i++) {
+                    p = p.Twice();
+                    if (x.TestBit(i)) {
+                        q = q.Add(p);
+                    }
+                }
+            }
+            return k.SignValue < 0 ? q.Negate() : q;
+        }
+
+        public static ECPoint ValidatePoint(ECPoint p)
+        {
+            if (!p.IsValid())
+                throw new ArgumentException("Invalid point", "p");
+
+            return p;
+        }
+
+        internal static ECPoint ImplShamirsTrickJsf(ECPoint P, BigInteger k, ECPoint Q, BigInteger l)
+        {
             ECCurve curve = P.Curve;
             ECPoint infinity = curve.Infinity;
 
@@ -163,8 +209,9 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return R;
         }
 
-        internal static ECPoint ImplShamirsTrickWNaf (ECPoint P, BigInteger k,
-            ECPoint Q, BigInteger l) {
+        internal static ECPoint ImplShamirsTrickWNaf(ECPoint P, BigInteger k,
+            ECPoint Q, BigInteger l)
+        {
             bool negK = k.SignValue < 0, negL = l.SignValue < 0;
 
             k = k.Abs();
@@ -187,7 +234,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return ImplShamirsTrickWNaf(preCompP, preCompNegP, wnafP, preCompQ, preCompNegQ, wnafQ);
         }
 
-        internal static ECPoint ImplShamirsTrickWNaf (ECPoint P, BigInteger k, ECPointMap pointMapQ, BigInteger l) {
+        internal static ECPoint ImplShamirsTrickWNaf(ECPoint P, BigInteger k, ECPointMap pointMapQ, BigInteger l)
+        {
             bool negK = k.SignValue < 0, negL = l.SignValue < 0;
 
             k = k.Abs();
@@ -210,8 +258,9 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return ImplShamirsTrickWNaf(preCompP, preCompNegP, wnafP, preCompQ, preCompNegQ, wnafQ);
         }
 
-        private static ECPoint ImplShamirsTrickWNaf (ECPoint[] preCompP, ECPoint[] preCompNegP, byte[] wnafP,
-            ECPoint[] preCompQ, ECPoint[] preCompNegQ, byte[] wnafQ) {
+        private static ECPoint ImplShamirsTrickWNaf(ECPoint[] preCompP, ECPoint[] preCompNegP, byte[] wnafP,
+            ECPoint[] preCompQ, ECPoint[] preCompNegQ, byte[] wnafQ)
+        {
             int len = System.Math.Max(wnafP.Length, wnafQ.Length);
 
             ECCurve curve = preCompP[0].Curve;
@@ -256,7 +305,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return R;
         }
 
-        internal static ECPoint ImplSumOfMultiplies (ECPoint[] ps, BigInteger[] ks) {
+        internal static ECPoint ImplSumOfMultiplies(ECPoint[] ps, BigInteger[] ks)
+        {
             int count = ps.Length;
             bool[] negs = new bool[count];
             WNafPreCompInfo[] infos = new WNafPreCompInfo[count];
@@ -273,7 +323,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return ImplSumOfMultiplies(negs, infos, wnafs);
         }
 
-        internal static ECPoint ImplSumOfMultipliesGlv (ECPoint[] ps, BigInteger[] ks, GlvEndomorphism glvEndomorphism) {
+        internal static ECPoint ImplSumOfMultipliesGlv(ECPoint[] ps, BigInteger[] ks, GlvEndomorphism glvEndomorphism)
+        {
             BigInteger n = ps[0].Curve.Order;
 
             int len = ps.Length;
@@ -300,7 +351,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return ECAlgorithms.ImplSumOfMultiplies(pqs, abs);
         }
 
-        internal static ECPoint ImplSumOfMultiplies (ECPoint[] ps, ECPointMap pointMap, BigInteger[] ks) {
+        internal static ECPoint ImplSumOfMultiplies(ECPoint[] ps, ECPointMap pointMap, BigInteger[] ks)
+        {
             int halfCount = ps.Length, fullCount = halfCount << 1;
 
             bool[] negs = new bool[fullCount];
@@ -325,7 +377,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return ImplSumOfMultiplies(negs, infos, wnafs);
         }
 
-        private static ECPoint ImplSumOfMultiplies (bool[] negs, WNafPreCompInfo[] infos, byte[][] wnafs) {
+        private static ECPoint ImplSumOfMultiplies(bool[] negs, WNafPreCompInfo[] infos, byte[][] wnafs)
+        {
             int len = 0, count = wnafs.Length;
             for (int i = 0; i < count; ++i) {
                 len = System.Math.Max(len, wnafs[i].Length);

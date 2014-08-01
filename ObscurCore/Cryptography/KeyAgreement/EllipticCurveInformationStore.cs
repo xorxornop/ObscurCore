@@ -173,7 +173,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
                         DisplayName = "brainpoolP160t1",
                         BitLength = 160,
                         Q = "E95E4A5F737059DC60DFC7AD95B3D8139515620F",
-                        A = "340E7BE2A280EB74E2BE61BADA745D97E8F7C300",
+                        A = "E95E4A5F737059DC60DFC7AD95B3D8139515620C",
                         B = "7A556B6DAE535B7B51ED2C4D7DAA7A0B5C55F380",
                         G = "04B199B13B9B34EFC1397E64BAEB05ACC265FF2378ADD6718B7C7C1961F0991B842443772152C9E0AD",
                         N = "E95E4A5F737059DC60DF5991D45029409E60FC09",
@@ -572,7 +572,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
                         BitLength = 409,
                         M = 409,
                         K = 87,
-                        A = "1",
+                        A = "01",
                         B =
                             "0021A5C2C8EE9FEB5C4B9A753B7B476B7FD6422EF1F3DD674761FA99D6AC27C8A9A197B272822F6CD57A55AA4F50AE317B13545F",
                         G = "04"

@@ -70,19 +70,23 @@ namespace ObscurCore.Cryptography.KeyAgreement
             BigInteger n = domain.N;
             int minWeight = n.BitLength >> 2;
 
-            do {
-                do {
-                    d = new BigInteger(n.BitLength, StratCom.EntropySupplier);
-                    /*
-                     * WNAF requirement in while condition:
-                     * A minimum weight of the NAF representation, since low-weight primes may be 
-                     * weak against a version of the number-field-sieve for the discrete-logarithm-problem.
-                     * 
-                     * See "The number field sieve for integers of low weight", Oliver Schirokauer.
-                     */
-                } while ((d.CompareTo(BigInteger.Two) < 0 || d.CompareTo(n) >= 0) &&
-                         WNafUtilities.GetNafWeight(d) < minWeight);
-            } while (d.SignValue == 0 || (d.CompareTo(n) >= 0));
+            for (; ; ) {
+                d = new BigInteger(n.BitLength, StratCom.EntropySupplier);
+
+                if (d.CompareTo(BigInteger.Two) < 0 || d.CompareTo(n) >= 0)
+                    continue;
+
+                /*
+                 * Require a minimum weight of the NAF representation, since low-weight primes may be
+                 * weak against a version of the number-field-sieve for the discrete-logarithm-problem.
+                 * 
+                 * See "The number field sieve for integers of low weight", Oliver Schirokauer.
+                 */
+                if (WNafUtilities.GetNafWeight(d) < minWeight)
+                    continue;
+
+                break;
+            }
 
             Q = EcBasePointMultiplier.Multiply(g, d);
         }

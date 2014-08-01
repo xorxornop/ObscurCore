@@ -3,7 +3,7 @@
 namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 {
     internal class SecP224K1Point
-        : ECPointBase
+        : AbstractFpPoint
     {
         /**
          * Create a point which encodes with point compression.
@@ -49,10 +49,6 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 
         protected override ECPoint Detach () {
             return new SecP224K1Point(null, AffineXCoord, AffineYCoord);
-        }
-
-        protected internal override bool CompressionYTilde {
-            get { return this.AffineYCoord.TestBitZero(); }
         }
 
         public override ECPoint Add (ECPoint b) {
@@ -237,13 +233,6 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 
             // NOTE: Be careful about recursions between TwicePlus and ThreeTimes
             return Twice().Add(this);
-        }
-
-        public override ECPoint Subtract (ECPoint b) {
-            if (b.IsInfinity)
-                return this;
-
-            return Add(b.Negate());
         }
 
         public override ECPoint Negate () {

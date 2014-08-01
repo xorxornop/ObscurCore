@@ -4,11 +4,15 @@ using System.Collections;
 
 namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 {
+    /**
+     * base class for points on elliptic curves.
+     */
     public abstract class ECPoint
     {
         protected static ECFieldElement[] EMPTY_ZS = new ECFieldElement[0];
 
-        protected static ECFieldElement[] GetInitialZCoords (ECCurve curve) {
+        protected static ECFieldElement[] GetInitialZCoords(ECCurve curve)
+        {
             // Cope with null curve, most commonly used by implicitlyCa
             int coord = null == curve ? ECCurve.COORD_AFFINE : curve.CoordinateSystem;
 
@@ -44,11 +48,13 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
         // Dictionary is (string -> PreCompInfo)
         protected internal IDictionary m_preCompTable = null;
 
-        protected ECPoint (ECCurve curve, ECFieldElement x, ECFieldElement y, bool withCompression)
-            : this(curve, x, y, GetInitialZCoords(curve), withCompression) {
+        protected ECPoint(ECCurve curve, ECFieldElement x, ECFieldElement y, bool withCompression)
+            : this(curve, x, y, GetInitialZCoords(curve), withCompression)
+        {
         }
 
-        internal ECPoint (ECCurve curve, ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression) {
+        internal ECPoint(ECCurve curve, ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression)
+        {
             this.m_curve = curve;
             this.m_x = x;
             this.m_y = y;
@@ -56,18 +62,24 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             this.m_withCompression = withCompression;
         }
 
-        public ECPoint GetDetachedPoint () {
+        protected abstract bool SatisfiesCurveEquation();
+
+        public ECPoint GetDetachedPoint()
+        {
             return Normalize().Detach();
         }
 
-        public virtual ECCurve Curve {
+        public virtual ECCurve Curve
+        {
             get { return m_curve; }
         }
 
-        protected abstract ECPoint Detach ();
+        protected abstract ECPoint Detach();
 
-        protected virtual int CurveCoordinateSystem {
-            get {
+        protected virtual int CurveCoordinateSystem
+        {
+            get
+            {
                 // Cope with null curve, most commonly used by implicitlyCa
                 return null == m_curve ? ECCurve.COORD_AFFINE : m_curve.CoordinateSystem;
             }
@@ -80,7 +92,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * of caller-controlled normalization.
          */
         [Obsolete("Use AffineXCoord, or Normalize() and XCoord, instead")]
-        public virtual ECFieldElement X {
+        public virtual ECFieldElement X
+        {
             get { return Normalize().XCoord; }
         }
 
@@ -91,7 +104,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * of caller-controlled normalization.
          */
         [Obsolete("Use AffineYCoord, or Normalize() and YCoord, instead")]
-        public virtual ECFieldElement Y {
+        public virtual ECFieldElement Y
+        {
             get { return Normalize().YCoord; }
         }
 
@@ -101,8 +115,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * @return The affine x-coordinate of this point
          * @throws IllegalStateException if the point is not normalized
          */
-        public virtual ECFieldElement AffineXCoord {
-            get {
+        public virtual ECFieldElement AffineXCoord
+        {
+            get
+            {
                 CheckNormalized();
                 return XCoord;
             }
@@ -114,8 +130,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * @return The affine y-coordinate of this point
          * @throws IllegalStateException if the point is not normalized
          */
-        public virtual ECFieldElement AffineYCoord {
-            get {
+        public virtual ECFieldElement AffineYCoord
+        {
+            get
+            {
                 CheckNormalized();
                 return YCoord;
             }
@@ -130,7 +148,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * 
          * @return the x-coordinate of this point
          */
-        public virtual ECFieldElement XCoord {
+        public virtual ECFieldElement XCoord
+        {
             get { return m_x; }
         }
 
@@ -143,15 +162,18 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * 
          * @return the y-coordinate of this point
          */
-        public virtual ECFieldElement YCoord {
+        public virtual ECFieldElement YCoord
+        {
             get { return m_y; }
         }
 
-        public virtual ECFieldElement GetZCoord (int index) {
+        public virtual ECFieldElement GetZCoord(int index)
+        {
             return (index < 0 || index >= m_zs.Length) ? null : m_zs[index];
         }
 
-        public virtual ECFieldElement[] GetZCoords () {
+        public virtual ECFieldElement[] GetZCoords()
+        {
             int zsLen = m_zs.Length;
             if (zsLen == 0) {
                 return m_zs;
@@ -161,24 +183,29 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return copy;
         }
 
-        protected internal ECFieldElement RawXCoord {
+        protected internal ECFieldElement RawXCoord
+        {
             get { return m_x; }
         }
 
-        protected internal ECFieldElement RawYCoord {
+        protected internal ECFieldElement RawYCoord
+        {
             get { return m_y; }
         }
 
-        protected internal ECFieldElement[] RawZCoords {
+        protected internal ECFieldElement[] RawZCoords
+        {
             get { return m_zs; }
         }
 
-        protected virtual void CheckNormalized () {
+        protected virtual void CheckNormalized()
+        {
             if (!IsNormalized())
                 throw new InvalidOperationException("point not in normal form");
         }
 
-        public virtual bool IsNormalized () {
+        public virtual bool IsNormalized()
+        {
             int coord = this.CurveCoordinateSystem;
 
             return coord == ECCurve.COORD_AFFINE
@@ -193,7 +220,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * 
          * @return a new ECPoint instance representing the same point, but with normalized coordinates
          */
-        public virtual ECPoint Normalize () {
+        public virtual ECPoint Normalize()
+        {
             if (this.IsInfinity) {
                 return this;
             }
@@ -214,7 +242,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        internal virtual ECPoint Normalize (ECFieldElement zInv) {
+        internal virtual ECPoint Normalize(ECFieldElement zInv)
+        {
             switch (this.CurveCoordinateSystem) {
                 case ECCurve.COORD_HOMOGENEOUS:
                 case ECCurve.COORD_LAMBDA_PROJECTIVE: {
@@ -232,35 +261,64 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        protected virtual ECPoint CreateScaledPoint (ECFieldElement sx, ECFieldElement sy) {
+        protected virtual ECPoint CreateScaledPoint(ECFieldElement sx, ECFieldElement sy)
+        {
             return Curve.CreateRawPoint(RawXCoord.Multiply(sx), RawYCoord.Multiply(sy), IsCompressed);
         }
 
-        public bool IsInfinity {
+        public bool IsInfinity
+        {
             get { return m_x == null && m_y == null; }
         }
 
-        public bool IsCompressed {
+        public bool IsCompressed
+        {
             get { return m_withCompression; }
         }
 
-        public virtual ECPoint ScaleX (ECFieldElement scale) {
+        public bool IsValid()
+        {
+            if (IsInfinity)
+                return true;
+
+            // TODO Sanity-check the field elements
+
+            ECCurve curve = Curve;
+            if (curve != null) {
+                if (!SatisfiesCurveEquation())
+                    return false;
+
+                BigInteger h = curve.Cofactor;
+                if (h != null && !h.Equals(BigInteger.One)
+                    && ECAlgorithms.ReferenceMultiply(this, h).IsInfinity) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public virtual ECPoint ScaleX(ECFieldElement scale)
+        {
             return IsInfinity
                 ? this
                 : Curve.CreateRawPoint(RawXCoord.Multiply(scale), RawYCoord, RawZCoords, IsCompressed);
         }
 
-        public virtual ECPoint ScaleY (ECFieldElement scale) {
+        public virtual ECPoint ScaleY(ECFieldElement scale)
+        {
             return IsInfinity
                 ? this
                 : Curve.CreateRawPoint(RawXCoord, RawYCoord.Multiply(scale), RawZCoords, IsCompressed);
         }
 
-        public override bool Equals (object obj) {
+        public override bool Equals(object obj)
+        {
             return Equals(obj as ECPoint);
         }
 
-        public virtual bool Equals (ECPoint other) {
+        public virtual bool Equals(ECPoint other)
+        {
             if (this == other)
                 return true;
             if (null == other)
@@ -298,7 +356,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return p1.XCoord.Equals(p2.XCoord) && p1.YCoord.Equals(p2.YCoord);
         }
 
-        public override int GetHashCode () {
+        public override int GetHashCode()
+        {
             ECCurve c = this.Curve;
             int hc = (null == c) ? 0 : ~c.GetHashCode();
 
@@ -314,7 +373,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return hc;
         }
 
-        public override string ToString () {
+        public override string ToString()
+        {
             if (this.IsInfinity) {
                 return "INF";
             }
@@ -332,19 +392,21 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return sb.ToString();
         }
 
-        public virtual byte[] GetEncoded () {
+        public virtual byte[] GetEncoded()
+        {
             return GetEncoded(m_withCompression);
         }
 
-        public abstract byte[] GetEncoded (bool compressed);
+        public abstract byte[] GetEncoded(bool compressed);
 
         protected internal abstract bool CompressionYTilde { get; }
 
-        public abstract ECPoint Add (ECPoint b);
-        public abstract ECPoint Subtract (ECPoint b);
-        public abstract ECPoint Negate ();
+        public abstract ECPoint Add(ECPoint b);
+        public abstract ECPoint Subtract(ECPoint b);
+        public abstract ECPoint Negate();
 
-        public virtual ECPoint TimesPow2 (int e) {
+        public virtual ECPoint TimesPow2(int e)
+        {
             if (e < 0)
                 throw new ArgumentException("cannot be negative", "e");
 
@@ -355,14 +417,16 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return p;
         }
 
-        public abstract ECPoint Twice ();
-        public abstract ECPoint Multiply (BigInteger b);
+        public abstract ECPoint Twice();
+        public abstract ECPoint Multiply(BigInteger b);
 
-        public virtual ECPoint TwicePlus (ECPoint b) {
+        public virtual ECPoint TwicePlus(ECPoint b)
+        {
             return Twice().Add(b);
         }
 
-        public virtual ECPoint ThreeTimes () {
+        public virtual ECPoint ThreeTimes()
+        {
             return TwicePlus(this);
         }
     }
@@ -370,22 +434,25 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
     public abstract class ECPointBase
         : ECPoint
     {
-        protected internal ECPointBase (
+        protected internal ECPointBase(
             ECCurve curve,
             ECFieldElement x,
             ECFieldElement y,
             bool withCompression)
-            : base(curve, x, y, withCompression) {
+            : base(curve, x, y, withCompression)
+        {
         }
 
-        protected internal ECPointBase (ECCurve curve, ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression)
-            : base(curve, x, y, zs, withCompression) {
+        protected internal ECPointBase(ECCurve curve, ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression)
+            : base(curve, x, y, zs, withCompression)
+        {
         }
 
         /**
          * return the field element encoded with point compression. (S 4.3.6)
          */
-        public override byte[] GetEncoded (bool compressed) {
+        public override byte[] GetEncoded(bool compressed)
+        {
             if (this.IsInfinity) {
                 return new byte[1];
             }
@@ -417,8 +484,74 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * @param k The multiplicator.
          * @return <code>k * this</code>.
          */
-        public override ECPoint Multiply (BigInteger k) {
+        public override ECPoint Multiply(BigInteger k)
+        {
             return this.Curve.GetMultiplier().Multiply(this, k);
+        }
+    }
+
+    public abstract class AbstractFpPoint
+        : ECPointBase
+    {
+        protected AbstractFpPoint(ECCurve curve, ECFieldElement x, ECFieldElement y, bool withCompression)
+            : base(curve, x, y, withCompression)
+        {
+        }
+
+        protected AbstractFpPoint(ECCurve curve, ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression)
+            : base(curve, x, y, zs, withCompression)
+        {
+        }
+
+        protected internal override bool CompressionYTilde
+        {
+            get { return this.AffineYCoord.TestBitZero(); }
+        }
+
+        protected override bool SatisfiesCurveEquation()
+        {
+            ECFieldElement X = this.RawXCoord, Y = this.RawYCoord, A = Curve.A, B = Curve.B;
+            ECFieldElement lhs = Y.Square();
+
+            switch (CurveCoordinateSystem) {
+                case ECCurve.COORD_AFFINE:
+                    break;
+                case ECCurve.COORD_HOMOGENEOUS: {
+                        ECFieldElement Z = this.RawZCoords[0];
+                        if (!Z.IsOne) {
+                            ECFieldElement Z2 = Z.Square(), Z3 = Z.Multiply(Z2);
+                            lhs = lhs.Multiply(Z);
+                            A = A.Multiply(Z2);
+                            B = B.Multiply(Z3);
+                        }
+                        break;
+                    }
+                case ECCurve.COORD_JACOBIAN:
+                case ECCurve.COORD_JACOBIAN_CHUDNOVSKY:
+                case ECCurve.COORD_JACOBIAN_MODIFIED: {
+                        ECFieldElement Z = this.RawZCoords[0];
+                        if (!Z.IsOne) {
+                            ECFieldElement Z2 = Z.Square(), Z4 = Z2.Square(), Z6 = Z2.Multiply(Z4);
+                            A = A.Multiply(Z4);
+                            B = B.Multiply(Z6);
+                        }
+                        break;
+                    }
+                default:
+                    throw new InvalidOperationException("unsupported coordinate system");
+            }
+
+            ECFieldElement rhs = X.Square().Add(A).Multiply(X).Add(B);
+            return lhs.Equals(rhs);
+        }
+
+        public override ECPoint Subtract(ECPoint b)
+        {
+            if (b.IsInfinity)
+                return this;
+
+            // Add -b
+            return Add(b.Negate());
         }
     }
 
@@ -426,46 +559,47 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
      * Elliptic curve points over Fp
      */
     public class FpPoint
-        : ECPointBase
+        : AbstractFpPoint
     {
         /**
-         * Create a point which encodes with point compression.
+         * Create a point which encodes without point compression.
          *
          * @param curve the curve to use
          * @param x affine x co-ordinate
          * @param y affine y co-ordinate
          */
-        public FpPoint (ECCurve curve, ECFieldElement x, ECFieldElement y)
-            : this(curve, x, y, false) {
+        public FpPoint(ECCurve curve, ECFieldElement x, ECFieldElement y)
+            : this(curve, x, y, false)
+        {
         }
 
         /**
-         * Create a point that encodes with or without point compresion.
+         * Create a point that encodes with or without point compression.
          *
          * @param curve the curve to use
          * @param x affine x co-ordinate
          * @param y affine y co-ordinate
          * @param withCompression if true encode with point compression
          */
-        public FpPoint (ECCurve curve, ECFieldElement x, ECFieldElement y, bool withCompression)
-            : base(curve, x, y, withCompression) {
+        public FpPoint(ECCurve curve, ECFieldElement x, ECFieldElement y, bool withCompression)
+            : base(curve, x, y, withCompression)
+        {
             if ((x == null) != (y == null))
                 throw new ArgumentException("Exactly one of the field elements is null");
         }
 
-        internal FpPoint (ECCurve curve, ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression)
-            : base(curve, x, y, zs, withCompression) {
+        internal FpPoint(ECCurve curve, ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression)
+            : base(curve, x, y, zs, withCompression)
+        {
         }
 
-        protected override ECPoint Detach () {
+        protected override ECPoint Detach()
+        {
             return new FpPoint(null, AffineXCoord, AffineYCoord);
         }
 
-        protected internal override bool CompressionYTilde {
-            get { return this.AffineYCoord.TestBitZero(); }
-        }
-
-        public override ECFieldElement GetZCoord (int index) {
+        public override ECFieldElement GetZCoord(int index)
+        {
             if (index == 1 && ECCurve.COORD_JACOBIAN_MODIFIED == this.CurveCoordinateSystem) {
                 return GetJacobianModifiedW();
             }
@@ -474,7 +608,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
         }
 
         // B.3 pg 62
-        public override ECPoint Add (ECPoint b) {
+        public override ECPoint Add(ECPoint b)
+        {
             if (this.IsInfinity)
                 return b;
             if (b.IsInfinity)
@@ -662,7 +797,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
         }
 
         // B.3 pg 62
-        public override ECPoint Twice () {
+        public override ECPoint Twice()
+        {
             if (this.IsInfinity)
                 return this;
 
@@ -772,7 +908,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        public override ECPoint TwicePlus (ECPoint b) {
+        public override ECPoint TwicePlus(ECPoint b)
+        {
             if (this == b)
                 return ThreeTimes();
             if (this.IsInfinity)
@@ -833,7 +970,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        public override ECPoint ThreeTimes () {
+        public override ECPoint ThreeTimes()
+        {
             if (this.IsInfinity)
                 return this;
 
@@ -877,7 +1015,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        public override ECPoint TimesPow2 (int e) {
+        public override ECPoint TimesPow2(int e)
+        {
             if (e < 0)
                 throw new ArgumentException("cannot be negative", "e");
             if (e == 0 || this.IsInfinity)
@@ -953,24 +1092,29 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        protected virtual ECFieldElement Two (ECFieldElement x) {
+        protected virtual ECFieldElement Two(ECFieldElement x)
+        {
             return x.Add(x);
         }
 
-        protected virtual ECFieldElement Three (ECFieldElement x) {
+        protected virtual ECFieldElement Three(ECFieldElement x)
+        {
             return Two(x).Add(x);
         }
 
-        protected virtual ECFieldElement Four (ECFieldElement x) {
+        protected virtual ECFieldElement Four(ECFieldElement x)
+        {
             return Two(Two(x));
         }
 
-        protected virtual ECFieldElement Eight (ECFieldElement x) {
+        protected virtual ECFieldElement Eight(ECFieldElement x)
+        {
             return Four(Two(x));
         }
 
-        protected virtual ECFieldElement DoubleProductFromSquares (ECFieldElement a, ECFieldElement b,
-            ECFieldElement aSquared, ECFieldElement bSquared) {
+        protected virtual ECFieldElement DoubleProductFromSquares(ECFieldElement a, ECFieldElement b,
+            ECFieldElement aSquared, ECFieldElement bSquared)
+        {
             /*
              * NOTE: If squaring in the field is faster than multiplication, then this is a quicker
              * way to calculate 2.A.B, if A^2 and B^2 are already known.
@@ -978,16 +1122,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return a.Add(b).Square().Subtract(aSquared).Subtract(bSquared);
         }
 
-        public override ECPoint Subtract (
-            ECPoint b) {
-            if (b.IsInfinity)
-                return this;
-
-            // Add -b
-            return Add(b.Negate());
-        }
-
-        public override ECPoint Negate () {
+        public override ECPoint Negate()
+        {
             if (IsInfinity)
                 return this;
 
@@ -1001,7 +1137,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return new FpPoint(curve, RawXCoord, RawYCoord.Negate(), IsCompressed);
         }
 
-        protected virtual ECFieldElement CalculateJacobianModifiedW (ECFieldElement Z, ECFieldElement ZSquared) {
+        protected virtual ECFieldElement CalculateJacobianModifiedW(ECFieldElement Z, ECFieldElement ZSquared)
+        {
             ECFieldElement a4 = this.Curve.A;
             if (a4.IsZero || Z.IsOne)
                 return a4;
@@ -1020,7 +1157,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return W;
         }
 
-        protected virtual ECFieldElement GetJacobianModifiedW () {
+        protected virtual ECFieldElement GetJacobianModifiedW()
+        {
             ECFieldElement[] ZZ = this.RawZCoords;
             ECFieldElement W = ZZ[1];
             if (W == null) {
@@ -1030,7 +1168,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return W;
         }
 
-        protected virtual FpPoint TwiceJacobianModified (bool calculateW) {
+        protected virtual FpPoint TwiceJacobianModified(bool calculateW)
+        {
             ECFieldElement X1 = this.RawXCoord, Y1 = this.RawYCoord, Z1 = this.RawZCoords[0], W1 = GetJacobianModifiedW();
 
             ECFieldElement X1Squared = X1.Square();
@@ -1049,22 +1188,95 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
         }
     }
 
+    public abstract class AbstractF2mPoint
+        : ECPointBase
+    {
+        protected AbstractF2mPoint(ECCurve curve, ECFieldElement x, ECFieldElement y, bool withCompression)
+            : base(curve, x, y, withCompression)
+        {
+        }
+
+        protected AbstractF2mPoint(ECCurve curve, ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression)
+            : base(curve, x, y, zs, withCompression)
+        {
+        }
+
+        protected override bool SatisfiesCurveEquation()
+        {
+            ECCurve curve = Curve;
+            ECFieldElement X = this.RawXCoord, Y = this.RawYCoord, A = curve.A, B = curve.B;
+            ECFieldElement lhs, rhs;
+
+            int coord = curve.CoordinateSystem;
+            if (coord == ECCurve.COORD_LAMBDA_PROJECTIVE) {
+                ECFieldElement Z = this.RawZCoords[0];
+                bool ZIsOne = Z.IsOne;
+
+                if (X.IsZero) {
+                    // NOTE: For x == 0, we expect the affine-y instead of the lambda-y 
+                    lhs = Y.Square();
+                    rhs = B;
+                    if (!ZIsOne) {
+                        ECFieldElement Z2 = Z.Square();
+                        rhs = rhs.Multiply(Z2);
+                    }
+                } else {
+                    ECFieldElement L = Y, X2 = X.Square();
+                    if (ZIsOne) {
+                        lhs = L.Square().Add(L).Add(A);
+                        rhs = X2.Square().Add(B);
+                    } else {
+                        ECFieldElement Z2 = Z.Square(), Z4 = Z2.Square();
+                        lhs = L.Add(Z).MultiplyPlusProduct(L, A, Z2);
+                        // TODO If sqrt(b) is precomputed this can be simplified to a single square
+                        rhs = X2.SquarePlusProduct(B, Z4);
+                    }
+                    lhs = lhs.Multiply(X2);
+                }
+            } else {
+                lhs = Y.Add(X).Multiply(Y);
+
+                switch (coord) {
+                    case ECCurve.COORD_AFFINE:
+                        break;
+                    case ECCurve.COORD_HOMOGENEOUS: {
+                            ECFieldElement Z = this.RawZCoords[0];
+                            if (!Z.IsOne) {
+                                ECFieldElement Z2 = Z.Square(), Z3 = Z.Multiply(Z2);
+                                lhs = lhs.Multiply(Z);
+                                A = A.Multiply(Z);
+                                B = B.Multiply(Z3);
+                            }
+                            break;
+                        }
+                    default:
+                        throw new InvalidOperationException("unsupported coordinate system");
+                }
+
+                rhs = X.Add(A).Multiply(X.Square()).Add(B);
+            }
+
+            return lhs.Equals(rhs);
+        }
+    }
+
     /**
      * Elliptic curve points over F2m
      */
     public class F2mPoint
-        : ECPointBase
+        : AbstractF2mPoint
     {
         /**
          * @param curve base curve
          * @param x x point
          * @param y y point
          */
-        public F2mPoint (
+        public F2mPoint(
             ECCurve curve,
             ECFieldElement x,
             ECFieldElement y)
-            : this(curve, x, y, false) {
+            : this(curve, x, y, false)
+        {
         }
 
         /**
@@ -1073,12 +1285,13 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * @param y y point
          * @param withCompression true if encode with point compression.
          */
-        public F2mPoint (
+        public F2mPoint(
             ECCurve curve,
             ECFieldElement x,
             ECFieldElement y,
             bool withCompression)
-            : base(curve, x, y, withCompression) {
+            : base(curve, x, y, withCompression)
+        {
             if ((x == null) != (y == null)) {
                 throw new ArgumentException("Exactly one of the field elements is null");
             }
@@ -1094,25 +1307,30 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        internal F2mPoint (ECCurve curve, ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression)
-            : base(curve, x, y, zs, withCompression) {
+        internal F2mPoint(ECCurve curve, ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression)
+            : base(curve, x, y, zs, withCompression)
+        {
         }
 
         /**
          * Constructor for point at infinity
          */
         [Obsolete("Use ECCurve.Infinity property")]
-        public F2mPoint (
+        public F2mPoint(
             ECCurve curve)
-            : this(curve, null, null) {
+            : this(curve, null, null)
+        {
         }
 
-        protected override ECPoint Detach () {
+        protected override ECPoint Detach()
+        {
             return new F2mPoint(null, AffineXCoord, AffineYCoord);
         }
 
-        public override ECFieldElement YCoord {
-            get {
+        public override ECFieldElement YCoord
+        {
+            get
+            {
                 int coord = this.CurveCoordinateSystem;
 
                 switch (coord) {
@@ -1140,7 +1358,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        public override ECPoint ScaleX (ECFieldElement scale) {
+        public override ECPoint ScaleX(ECFieldElement scale)
+        {
             if (this.IsInfinity)
                 return this;
 
@@ -1171,7 +1390,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        public override ECPoint ScaleY (ECFieldElement scale) {
+        public override ECPoint ScaleY(ECFieldElement scale)
+        {
             if (this.IsInfinity)
                 return this;
 
@@ -1191,8 +1411,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        protected internal override bool CompressionYTilde {
-            get {
+        protected internal override bool CompressionYTilde
+        {
+            get
+            {
                 ECFieldElement X = this.RawXCoord;
                 if (X.IsZero) {
                     return false;
@@ -1220,9 +1442,10 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * @throws IllegalArgumentException if <code>a</code> and <code>b</code>
          * cannot be added.
          */
-        private static void CheckPoints (
+        private static void CheckPoints(
             ECPoint a,
-            ECPoint b) {
+            ECPoint b)
+        {
             // Check, if points are on the same curve
             if (!a.Curve.Equals(b.Curve))
                 throw new ArgumentException("Only points on the same curve can be added or subtracted");
@@ -1233,7 +1456,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
         /* (non-Javadoc)
          * @see org.bouncycastle.math.ec.ECPoint#add(org.bouncycastle.math.ec.ECPoint)
          */
-        public override ECPoint Add (ECPoint b) {
+        public override ECPoint Add(ECPoint b)
+        {
             CheckPoints(this, b);
             return AddSimple((F2mPoint)b);
         }
@@ -1247,7 +1471,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * <code>this</code>.
          * @return <code>this + b</code>
          */
-        internal F2mPoint AddSimple (F2mPoint b) {
+        internal F2mPoint AddSimple(F2mPoint b)
+        {
             if (this.IsInfinity)
                 return b;
             if (b.IsInfinity)
@@ -1411,8 +1636,9 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
         /* (non-Javadoc)
          * @see org.bouncycastle.math.ec.ECPoint#subtract(org.bouncycastle.math.ec.ECPoint)
          */
-        public override ECPoint Subtract (
-            ECPoint b) {
+        public override ECPoint Subtract(
+            ECPoint b)
+        {
             CheckPoints(this, b);
             return SubtractSimple((F2mPoint)b);
         }
@@ -1426,8 +1652,9 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
          * <code>this</code>.
          * @return <code>this - b</code>
          */
-        internal F2mPoint SubtractSimple (
-            F2mPoint b) {
+        internal F2mPoint SubtractSimple(
+            F2mPoint b)
+        {
             if (b.IsInfinity)
                 return this;
 
@@ -1435,7 +1662,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             return AddSimple((F2mPoint)b.Negate());
         }
 
-        public virtual F2mPoint Tau () {
+        public virtual F2mPoint Tau()
+        {
             if (this.IsInfinity) {
                 return this;
             }
@@ -1465,7 +1693,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
         /* (non-Javadoc)
          * @see Org.BouncyCastle.Math.EC.ECPoint#twice()
          */
-        public override ECPoint Twice () {
+        public override ECPoint Twice()
+        {
             if (this.IsInfinity)
                 return this;
 
@@ -1556,7 +1785,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        public override ECPoint TwicePlus (ECPoint b) {
+        public override ECPoint TwicePlus(ECPoint b)
+        {
             if (this.IsInfinity)
                 return b;
             if (b.IsInfinity)
@@ -1618,7 +1848,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             }
         }
 
-        public override ECPoint Negate () {
+        public override ECPoint Negate()
+        {
             if (this.IsInfinity)
                 return this;
 

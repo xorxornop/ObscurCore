@@ -54,9 +54,14 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
         /// <inheritdoc />
         public override ECDomainParameters GetParameters()
         {
-            var n = new BigInteger(N, 16);
-            var h = new BigInteger(H, 16);
-            var curve = new FpCurve(new BigInteger(Q, 16), new BigInteger(A, 16), new BigInteger(B, 16), n, h);
+            var n = new BigInteger(N, 16); // order
+            var h = new BigInteger(H, 16); // cofactor
+
+            BigInteger q = new BigInteger(Q, 16);
+            BigInteger a = new BigInteger(A, 16);
+            BigInteger b = new BigInteger(B, 16);
+
+            var curve = new FpCurve(q, a, b, n, h);
             return new ECDomainParameters(curve, curve.DecodePoint(G.HexToBinary()), n, h,
                 String.IsNullOrEmpty(Seed) ? null : Seed.HexToBinary());
         }

@@ -147,10 +147,6 @@
     <Compile Include="Cryptography\CryptoException.cs" />
     <Compile Include="Cryptography\IncompleteBlockException.cs" />
     <Compile Include="Cryptography\KeyConfirmation\ConfirmationConfigurationFactory.cs" />
-    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\DJB\Curve25519.cs" />
-    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\DJB\Curve25519Field.cs" />
-    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\DJB\Curve25519FieldElement.cs" />
-    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\DJB\Curve25519Point.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\ECPointMap.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Endomorphism\ECEndomorphism.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Endomorphism\GlvEndomorphism.cs" />

@@ -1,11 +1,9 @@
-﻿using System;
-using ObscurCore.Cryptography.Support.Math.Field;
-using ObscurCore.Support;
+﻿using ObscurCore.Support;
 
 namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 {
     internal class SecP192K1Curve
-        : ECCurve
+        : AbstractFpCurve
     {
         public static readonly BigInteger q = new BigInteger(1,
             Hex.Decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFEE37"));
@@ -15,7 +13,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
         protected readonly SecP192K1Point m_infinity;
 
         public SecP192K1Curve ()
-            : base(FiniteFields.GetPrimeField(q)) {
+            : base(q) {
             this.m_infinity = new SecP192K1Point(this, null, null);
 
             this.m_a = FromBigInteger(BigInteger.Zero);
@@ -60,26 +58,6 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC
 
         protected internal override ECPoint CreateRawPoint (ECFieldElement x, ECFieldElement y, ECFieldElement[] zs, bool withCompression) {
             return new SecP192K1Point(this, x, y, zs, withCompression);
-        }
-
-        protected override ECPoint DecompressPoint (int yTilde, BigInteger X1) {
-            ECFieldElement x = FromBigInteger(X1);
-            ECFieldElement alpha = x.Square().Multiply(x).Add(B);
-            ECFieldElement beta = alpha.Sqrt();
-
-            //
-            // if we can't find a sqrt we haven't got a point on the
-            // curve - run!
-            //
-            if (beta == null)
-                throw new ArithmeticException("Invalid point compression");
-
-            if (beta.TestBitZero() != (yTilde == 1)) {
-                // Use the other root
-                beta = beta.Negate();
-            }
-
-            return new SecP192K1Point(this, x, beta, true);
         }
     }
 }
