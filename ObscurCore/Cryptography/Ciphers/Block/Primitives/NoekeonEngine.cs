@@ -37,11 +37,13 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 		{
 		}
 
+        /// <inheritdoc />
 	    protected override void InitState()
 	    {
             setKey(Key);
 	    }
 
+        /// <inheritdoc />
 	    internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
 	    {
             return Encrypting
@@ -49,6 +51,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
                 : decryptBlock(input, inOff, output, outOff);
 	    }
 
+        /// <inheritdoc />
 	    public override void Reset()
 		{
 			// TODO This should do something in case the encryption is aborted

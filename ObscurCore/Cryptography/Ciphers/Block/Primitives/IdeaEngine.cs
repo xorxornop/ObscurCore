@@ -34,17 +34,20 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 
         public IdeaEngine() : base(BlockCipher.Idea, BLOCK_SIZE) {}
 
+        /// <inheritdoc />
         protected override void InitState()
         {
             workingKey = GenerateWorkingKey(Encrypting, Key);
         }
 
+        /// <inheritdoc />
         internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
             IdeaFunc(workingKey, input, inOff, output, outOff);
             return BLOCK_SIZE;
         }
 
+        /// <inheritdoc />
         public override void Reset()
         {
         }

@@ -24,6 +24,7 @@ namespace ObscurCore.Cryptography.Entropy
     {
         protected CsPrng(int stateSize) : base(stateSize) {}
 
+        /// <inheritdoc />
         public abstract void Reset();
     }
 }

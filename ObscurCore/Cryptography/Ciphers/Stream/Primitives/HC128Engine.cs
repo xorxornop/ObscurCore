@@ -105,6 +105,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             get { return 32; }
         }
 
+        /// <inheritdoc />
         protected override void InitState()
         {
             Init();

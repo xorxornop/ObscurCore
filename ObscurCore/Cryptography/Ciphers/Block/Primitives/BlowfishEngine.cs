@@ -310,11 +310,13 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             P = new uint[P_SZ];
         }
 
+        /// <inheritdoc />
         protected override void InitState()
         {
             SetKey(Key);
         }
 
+        /// <inheritdoc />
         internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
             if (Encrypting) {
@@ -326,6 +328,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return BLOCK_SIZE;
         }
 
+        /// <inheritdoc />
         public override void Reset()
         {
         }

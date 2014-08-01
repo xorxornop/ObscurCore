@@ -33,9 +33,20 @@ namespace ObscurCore.Packaging
     /// </summary>
     public class SimplePayloadMux : PayloadMux
     {
+        /// <summary>
+        ///     Size of the internal buffer to use for multiplexing/demultiplexing I/O.
+        /// </summary>
         protected const int BufferSize = 4096;
+
+        /// <summary>
+        ///     Internal buffer to use for multiplexing/demultiplexing I/O.
+        /// </summary>
         protected readonly byte[] Buffer = new byte[BufferSize];
-        protected readonly Prng SelectionSource;
+
+        /// <summary>
+        ///     Pseudorandom number source for stream selection and other tasks (depending on implementation).
+        /// </summary>
+        protected Prng SelectionSource;
 
         /// <summary>
         ///     Initializes a new instance of a payload multiplexer.
@@ -63,12 +74,16 @@ namespace ObscurCore.Packaging
                 throw new NotSupportedException();
                 //SelectionSource = new XorShift128PlusPrng(seed);
             } else {
-                throw new ConfigurationInvalidException();
+                throw new ConfigurationInvalidException("Unknown payload multiplexer PRNG specified.");
             }
 
             NextSource();
         }
 
+        /// <summary>
+        ///     How many bytes written/read not constituting 
+        ///     item data emitted/consumed by their decorators.
+        /// </summary>
         public int Overhead { get; protected set; }
 
         protected override void ExecuteOperation()
@@ -77,7 +92,7 @@ namespace ObscurCore.Packaging
 
             bool skip = ItemSkipRegister != null && ItemSkipRegister.Contains(item.Identifier);
 
-            if (Writing || skip == false) {
+            if (skip == false) {
                 DecoratingStream itemDecorator;
                 MacStream itemAuthenticator;
                 CreateEtMDecorator(item, out itemDecorator, out itemAuthenticator);
@@ -98,11 +113,19 @@ namespace ObscurCore.Packaging
                     itemDecorator.ReadExactlyTo(item.StreamBinding, item.InternalLength, true);
                 }
 
-                // Emission/consumption of trailers is done in this method before item completion.
+                if (Writing) {
+                    EmitTrailer(itemAuthenticator);
+                } else {
+                    ConsumeTrailer(itemAuthenticator);
+                }
+
                 FinishItem(item, itemDecorator, itemAuthenticator);
 
                 // Close the source/destination
                 item.StreamBinding.Close();
+            } else {
+                var skipLength = GetHeaderLength() + item.InternalLength + GetTrailerLength();
+                PayloadStream.Seek(skipLength, SeekOrigin.Current);
             }
 
             // Mark the item as completed in the register
@@ -114,15 +137,16 @@ namespace ObscurCore.Packaging
                 String.Format("{0} ({1}) ***]", Index, item.Identifier)));
         }
 
+        /// <summary>
+        ///     Close the item decorator, check lengths, authenticate the item (emit or verify), 
+        ///     and if writing, commit the authentication value to the payload item DTO.
+        /// </summary>
+        /// <param name="item">Payload item to finish.</param>
+        /// <param name="decorator">Item decorator.</param>
+        /// <param name="authenticator">Item authenticator.</param>
         protected override void FinishItem(PayloadItem item, DecoratingStream decorator, MacStream authenticator)
         {
-            // Item is finished, we need to do some things.
             decorator.Close();
-            if (Writing) {
-                EmitTrailer(authenticator);
-            } else {
-                ConsumeTrailer(authenticator);
-            }
 
             // Length checks & commits
             if (Writing) {
@@ -179,22 +203,66 @@ namespace ObscurCore.Packaging
                 Index));
         }
 
+        /// <summary>
+        /// Get the length of a header of the current item.
+        /// </summary>
+        /// <returns>Length of the header.</returns>
+        protected virtual int GetHeaderLength()
+        {
+            // Unused in this version
+            return 0;
+        }
+
+        /// <summary>
+        /// Generate and write an item header into the payload stream.
+        /// </summary>
+        /// <param name="authenticator">
+        ///     Authenticator for the item, if header is to be authenticated.
+        /// </param>
         protected virtual void EmitHeader(MacStream authenticator)
         {
             // Unused in this version
         }
 
-        protected virtual void EmitTrailer(MacStream authenticator)
-        {
-            // Unused in this version
-        }
-
+        /// <summary>
+        /// Read an item header from the payload stream.
+        /// </summary>
+        /// <param name="authenticator">
+        ///     Authenticator for the item, if header is to be authenticated.
+        /// </param>
         protected virtual void ConsumeHeader(MacStream authenticator)
         {
             // Unused in this version
             // Could throw an exception in an implementation where a header must be present
         }
 
+        /// <summary>
+        /// Get the length of a trailer of the current item.
+        /// </summary>
+        /// <returns>Length of the trailer.</returns>
+        protected virtual int GetTrailerLength()
+        {
+            // Unused in this version
+            return 0;
+        }
+
+        /// <summary>
+        /// Generate and write an item trailer into the payload stream.
+        /// </summary>
+        /// <param name="authenticator">
+        ///     Authenticator for the item, if trailer is to be authenticated.
+        /// </param>
+        protected virtual void EmitTrailer(MacStream authenticator)
+        {
+            // Unused in this version
+        }
+
+        /// <summary>
+        /// Read an item trailer from the payload stream.
+        /// </summary>
+        /// <param name="authenticator">
+        ///     Authenticator for the item, if trailer is to be authenticated.
+        /// </param>
         protected virtual void ConsumeTrailer(MacStream authenticator)
         {
             // Unused in this version

@@ -18,14 +18,16 @@ using System.Collections.Generic;
 
 namespace ObscurCore.Cryptography.KeyDerivation
 {
-	public static class KeyDerivationUtility
+    /// <summary>
+    ///     Factory for key derivation primitives.
+    /// </summary>
+	public static class KdfFactory
 	{
 		private readonly static IDictionary<KeyDerivationFunction, Func<int, byte[], IKdfFunction>> KdfInstantiators =
 			new Dictionary<KeyDerivationFunction, Func<int, byte[], IKdfFunction>>();
 
 		private readonly static IDictionary<KeyDerivationFunction, Func<byte[], byte[], int, byte[], byte[]>> KdfStatics =
 			new Dictionary<KeyDerivationFunction, Func<byte[], byte[], int, byte[], byte[]>>();
-
 
 		/// <summary>
 		/// Derives a working key with the KDF module.
@@ -44,12 +46,7 @@ namespace ObscurCore.Cryptography.KeyDerivation
 			return KdfInstantiators[kdfEnum](outputSize, config);
 		}
 
-		public static IKdfFunction CreateKdf(string kdfName, int outputSize, byte[] config) {
-			return CreateKdf(kdfName.ToEnum<KeyDerivationFunction>(), outputSize, config);
-		}
-
-
-		static KeyDerivationUtility ()
+		static KdfFactory ()
 		{
 			KdfInstantiators.Add(KeyDerivationFunction.Pbkdf2, (outputSize, config) => new Pbkdf2Module(outputSize, config));
 			KdfInstantiators.Add(KeyDerivationFunction.Scrypt, (outputSize, config) => new ScryptModule(outputSize, config));

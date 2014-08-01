@@ -257,7 +257,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                             message.CopyBytes(0, input, index, message.Length);
                         }
 
-                        return KeyDerivationUtility.DeriveKeyWithKdf(kdfEnum, key, input,
+                        return KdfFactory.DeriveKeyWithKdf(kdfEnum, key, input,
                             outputSizeBytes.Value, keyConfirmation.FunctionConfiguration);
                     };
                     break;

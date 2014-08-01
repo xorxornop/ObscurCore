@@ -419,7 +419,7 @@
     <Compile Include="Packaging\PayloadMultiplexerFactory.cs" />
     <Compile Include="Cryptography\Authentication\AuthenticatorFactory.cs" />
     <Compile Include="Cryptography\Ciphers\CipherFactory.cs" />
-    <Compile Include="Cryptography\KeyDerivation\KeyDerivationUtility.cs" />
+    <Compile Include="Cryptography\KeyDerivation\KdfFactory.cs" />
     <Compile Include="Cryptography\Entropy\CsPrngFactory.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\Nat224.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP224R1Curve.cs" />

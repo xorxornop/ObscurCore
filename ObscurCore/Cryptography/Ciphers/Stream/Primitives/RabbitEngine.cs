@@ -40,20 +40,24 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	    {
 	    }
 
+        /// <inheritdoc />
 	    protected override void InitState()
 	    {
 	        Reset();
 	    }
 
+        /// <inheritdoc />
 	    public override string AlgorithmName {
             get { return "Rabbit"; }
         }
 
+        /// <inheritdoc />
 		public override int StateSize
 		{
 			get { return 16; }
 		}
 
+        /// <inheritdoc />
         public override void Reset () {
             KeySetup(Key);
             IVSetup(Nonce);
@@ -62,6 +66,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			_keyStreamPtr = 16;
         }
 
+        /// <inheritdoc />
         public override byte ReturnByte (byte input) {
             if (!IsInitialised) throw new InvalidOperationException(AlgorithmName + " not initialised.");
 
@@ -72,6 +77,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			return (byte)(_keyStream [_keyStreamPtr++] ^ input);
         }
 
+        /// <inheritdoc />
 	    internal override void ProcessBytesInternal (byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff) {
 			if (_keyStreamPtr < 16) {
 				var blockLength = 16 - _keyStreamPtr;
@@ -135,6 +141,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
         }
 
+        /// <inheritdoc />
 		public void GetKeystream(byte[] buffer, int offset, int length) {
 			if (_keyStreamPtr < 16) {
 				var blockLength = 16 - _keyStreamPtr;
@@ -184,7 +191,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			setupKey(sKey);
         }
 
-        public void setupKey(UInt16[] key)
+        private void setupKey(UInt16[] key)
         {
 			/*			 unroll */
 			X[0] = (uint)key[1] << 16 | (uint)(key[0] & 0xFFFF);

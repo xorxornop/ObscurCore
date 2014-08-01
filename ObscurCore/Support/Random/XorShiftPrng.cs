@@ -56,11 +56,13 @@ namespace ObscurCore.Support.Random
 
         protected abstract ulong Generate();
 
+        /// <inheritdoc />
         protected override void NextState()
         {
             StateBuffer.Put(Generate().ToLittleEndian());
         }
 
+        /// <inheritdoc />
         protected override void GetNextState(byte[] buffer, int offset)
         {
             Generate().ToLittleEndian(buffer, offset);

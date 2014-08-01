@@ -22,13 +22,33 @@ namespace ObscurCore.Cryptography.Ciphers.Block
     /// </summary>
     public abstract class BlockCipherBase 
     {
+        /// <summary>
+        /// Type of block cipher, as-per the <see cref="BlockCipher"/> enumeration.
+        /// </summary>
         protected readonly BlockCipher CipherIdentity;
+
+        /// <summary>
+        /// Key for the cipher.
+        /// </summary>
         protected byte[] Key;
+
+        /// <summary>
+        /// If cipher has been initialised.
+        /// </summary>
         protected bool IsInitialised;
+
+        /// <summary>
+        /// If cipher is encrypting, <c>true</c>, otherwise <c>false</c>.
+        /// </summary>
         protected bool Encrypting;
 
         private int _blockSize;
 
+        /// <summary>
+        /// Instantiate the block cipher.
+        /// </summary>
+        /// <param name="cipherIdentity">Type of the block cipher. Used to provide and verify configuration.</param>
+        /// <param name="blockSize">Block size of the block cipher, if variable/modifiable.</param>
         protected BlockCipherBase(BlockCipher cipherIdentity, int? blockSize = null)
         {
             CipherIdentity = cipherIdentity;
@@ -46,7 +66,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 
         /// <summary>
         ///      The size of block in bytes that the cipher processes.
-        ///  </summary><value>Block size for this cipher in bytes.</value>
+        ///  </summary>
+        /// <value>Block size for this cipher in bytes.</value>
         public int BlockSize 
         {
             get { return _blockSize; }

@@ -62,6 +62,7 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             return config;
         }
 
+        /// <inheritdoc />
         protected override void NextState()
         {
             byte[] buf = new byte[StateSize];
@@ -69,11 +70,13 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             StateBuffer.Put(buf);
         }
 
+        /// <inheritdoc />
         protected override void GetNextState(byte[] buffer, int offset)
         {
             Csprng.GetKeystream(buffer, offset, StateSize);
         }
 
+        /// <inheritdoc />
         public override void Reset()
         {
             ((StreamCipherEngine)Csprng).Reset();

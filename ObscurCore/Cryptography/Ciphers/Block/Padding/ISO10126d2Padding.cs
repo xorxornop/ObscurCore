@@ -3,10 +3,9 @@ using ObscurCore.Cryptography.Entropy;
 
 namespace ObscurCore.Cryptography.Ciphers.Block.Padding
 {
-
-    /**
-    * A padder that adds ISO10126-2 padding to a block.
-    */
+    /// <summary>
+    /// Adds ISO10126-2 padding to a block.
+    /// </summary>
     public class Iso10126D2Padding: IBlockCipherPadding
     {
         private CsRng _random;

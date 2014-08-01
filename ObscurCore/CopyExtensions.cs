@@ -27,6 +27,11 @@ namespace ObscurCore
         private const int DeepCopyUnmanagedThreshold = 64;
 #endif
 
+        /// <summary>
+        /// Produce a deep copy (copied value by value) of <paramref name="data"/> array.
+        /// </summary>
+        /// <param name="data">Array to produce a copy of.</param>
+        /// <returns>Copy of <paramref name="data"/> array.</returns>
         public static byte[] DeepCopy(this byte[] data)
         {
             if (data == null) {
@@ -37,6 +42,18 @@ namespace ObscurCore
             return dst;
         }
 
+        /// <summary>
+        ///     Copy bytes from <paramref name="src"/> into <paramref name="dst"/>.
+        /// </summary>
+        /// <param name="src">The source byte array.</param>
+        /// <param name="srcOffset">
+        ///     The offset in <paramref name="src"/> at which the source data begins.
+        /// </param>
+        /// <param name="length">The number of bytes to copy.</param>
+        /// <param name="dst">The destination byte array.</param>
+        /// <param name="dstOffset">
+        ///     The offset in <paramref name="dst"/> at which to copy into.
+        /// </param>
         public static void CopyBytes(this byte[] src, int srcOffset, byte[] dst, int dstOffset, int length)
         {
 #if INCLUDE_UNSAFE
@@ -48,7 +65,7 @@ namespace ObscurCore
                 unsafe {
                     fixed (byte* srcPtr = src) {
                         fixed (byte* dstPtr = dst) {
-                            CopyMemory(dstPtr + dstOffset, srcPtr + srcOffset, length);
+                            CopyMemory(srcPtr + srcOffset, dstPtr + dstOffset, length);
                         }
                     }
                 }
@@ -64,6 +81,11 @@ namespace ObscurCore
 #endif
         }
 
+        /// <summary>
+        ///     Produce a deep copy (copied value by value) of <paramref name="data"/> array.
+        /// </summary>
+        /// <param name="data">Array to produce a copy of.</param>
+        /// <returns>Copy of <paramref name="data"/> array.</returns>
         public static int[] DeepCopy(this int[] data)
         {
             if (data == null) {
@@ -74,6 +96,11 @@ namespace ObscurCore
             return dst;
         }
 
+        /// <summary>
+        ///     Copy values from <paramref name="src"/> array into <paramref name="dst"/> array.
+        /// </summary>
+        /// <param name="src">Array to copy from.</param>
+        /// <param name="dst">Array to copy into.</param>
         public static void DeepCopy(this int[] src, int[] dst)
         {
 #if INCLUDE_UNSAFE
@@ -84,7 +111,7 @@ namespace ObscurCore
                         fixed (int* dstPtr = dst) {
                             var srcBP = (byte*)srcPtr;
                             var dstBP = (byte*)dstPtr;
-                            CopyMemory(dstBP, srcBP, src.Length * sizeof(int));
+                            CopyMemory(srcBP, dstBP, src.Length * sizeof(int));
                         }
                     }
                 }
@@ -100,6 +127,11 @@ namespace ObscurCore
 #endif
         }
 
+        /// <summary>
+        /// Produce a deep copy (copied value by value) of <paramref name="data"/> array.
+        /// </summary>
+        /// <param name="data">Array to produce a copy of.</param>
+        /// <returns>Copy of <paramref name="data"/> array.</returns>
         public static long[] DeepCopy(this long[] data)
         {
             if (data == null) {
@@ -110,6 +142,11 @@ namespace ObscurCore
             return dst;
         }
 
+        /// <summary>
+        ///     Copy values from <paramref name="src"/> array into <paramref name="dst"/> array.
+        /// </summary>
+        /// <param name="src">Array to copy from.</param>
+        /// <param name="dst">Array to copy into.</param>
         public static void DeepCopy(this long[] src, long[] dst)
         {
 #if INCLUDE_UNSAFE
@@ -120,7 +157,7 @@ namespace ObscurCore
                         fixed (long* dstPtr = dst) {
                             var srcBP = (byte*)srcPtr;
                             var dstBP = (byte*)dstPtr;
-                            CopyMemory(dstBP, srcBP, src.Length * sizeof(long));
+                            CopyMemory(srcBP, dstBP, src.Length * sizeof(long));
                         }
                     }
                 }
@@ -136,6 +173,11 @@ namespace ObscurCore
 #endif
         }
 
+        /// <summary>
+        /// Produce a deep copy (copied value by value) of <paramref name="data"/> array.
+        /// </summary>
+        /// <param name="data">Array to produce a copy of.</param>
+        /// <returns>Copy of <paramref name="data"/> array.</returns>
         public static ulong[] DeepCopy(this ulong[] data)
         {
             if (data == null) {
@@ -146,6 +188,11 @@ namespace ObscurCore
             return dst;
         }
 
+        /// <summary>
+        ///     Copy values from <paramref name="src"/> array into <paramref name="dst"/> array.
+        /// </summary>
+        /// <param name="src">Array to copy from.</param>
+        /// <param name="dst">Array to copy into.</param>
         public static void DeepCopy(this ulong[] src, ulong[] dst)
         {
 #if INCLUDE_UNSAFE
@@ -156,7 +203,7 @@ namespace ObscurCore
                         fixed (ulong* dstPtr = dst) {
                             var srcBP = (byte*)srcPtr;
                             var dstBP = (byte*)dstPtr;
-                            CopyMemory(dstBP, srcBP, src.Length * sizeof(ulong));
+                            CopyMemory(srcBP, dstBP, src.Length * sizeof(ulong));
                         }
                     }
                 }
@@ -173,7 +220,13 @@ namespace ObscurCore
         }
 
 #if INCLUDE_UNSAFE
-        internal static unsafe void CopyMemory(byte* dst, byte* src, int length)
+        /// <summary>
+        ///     Copy data from <paramref name="src"/> into <paramref name="dst"/>.
+        /// </summary>
+        /// <param name="src">Pointer to source of data.</param>
+        /// <param name="dst">Pointer to destination for data.</param>
+        /// <param name="length">Length of data to copy in bytes.</param>
+        internal static unsafe void CopyMemory(byte* src, byte* dst, int length)
         {
             while (length >= 16) {
                 *(ulong*)dst = *(ulong*)src;

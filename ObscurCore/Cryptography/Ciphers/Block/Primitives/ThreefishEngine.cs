@@ -274,11 +274,14 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			t[4] = t[1];
 		}
 
+        /// <inheritdoc />
+
 		public override string AlgorithmName
 		{
 			get { return CipherIdentity.ToString() + (blocksizeBytes * 8); }
 		}
 
+        /// <inheritdoc />
 	    internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
 	    {
             for (int i = 0; i < blocksizeBytes; i += 8) {
@@ -292,11 +295,10 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return blocksizeBytes;
 	    }
 
+        /// <inheritdoc />
 	    public override void Reset()
 		{
 		}
-
-	    
 
 		/// <summary>
 		/// Process a block of data represented as 64 bit words.

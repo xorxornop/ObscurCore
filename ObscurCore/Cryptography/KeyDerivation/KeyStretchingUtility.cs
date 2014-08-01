@@ -31,13 +31,13 @@ namespace ObscurCore.Cryptography.KeyDerivation
         /// <param name="macKeySize">MAC key size in bytes.</param>
         /// <param name="kdfConfig">Key derivation function configuration.</param>
         /// <param name="cipherKey">Cipher key.</param>
-        /// <param name="macKey">Authentication key.</param>
+        /// <param name="macKey">MAC key.</param>
         public static void DeriveWorkingKeys(byte[] preKey, int cipherKeySize, int macKeySize,
             KeyDerivationConfiguration kdfConfig, out byte[] cipherKey, out byte[] macKey)
         {
             // Derive the key which will be used for encrypting the manifest
             byte[] stretchedKeys =
-                KeyDerivationUtility.DeriveKeyWithKdf(kdfConfig.FunctionName.ToEnum<KeyDerivationFunction>(),
+                KdfFactory.DeriveKeyWithKdf(kdfConfig.FunctionName.ToEnum<KeyDerivationFunction>(),
                     preKey, kdfConfig.Salt, cipherKeySize + macKeySize,
                     kdfConfig.FunctionConfiguration);
 

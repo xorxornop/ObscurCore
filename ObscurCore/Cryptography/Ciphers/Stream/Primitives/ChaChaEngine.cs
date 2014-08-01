@@ -21,7 +21,6 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
         /* Variables */
 	    private readonly int _rounds;
-	    private bool _initialised;
         private int _index;
 	    private uint[] _engineState = new uint[EngineStateSize]; // state
 	    private uint[] _x = new uint[EngineStateSize]; // internal buffer
@@ -49,6 +48,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             this._rounds = rounds;
 		}
 
+        /// <inheritdoc />
         protected override void InitState()
         {
             SetKey(Key, Nonce);
@@ -91,7 +91,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             return output;
         }
 
-		protected void AdvanceCounter() {
+	    private void AdvanceCounter() {
 			if (++_engineState[12] == 0) {
 				++_engineState[13];
 			}

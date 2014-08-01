@@ -249,12 +249,14 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             }
         }
 
+        /// <inheritdoc />
         protected override void InitState()
         {
             this.k64Cnt = this.Key.Length / 8;
             SetKey(this.Key);
         }
 
+        /// <inheritdoc />
         internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
             if (Encrypting) {
@@ -266,6 +268,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return BLOCK_SIZE;
         }
 
+        /// <inheritdoc />
         public override void Reset()
         {
             if (this.Key != null)

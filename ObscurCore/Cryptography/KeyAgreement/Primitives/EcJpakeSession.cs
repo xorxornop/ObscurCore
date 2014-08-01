@@ -148,7 +148,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <summary>
         ///     The state of the protocol.
         /// </summary>
-        protected internal State ProtocolState { get; private set; }
+        public State ProtocolState { get; private set; }
 
         /// <summary>
         ///     Unique identifier of this local instance's participant.
@@ -494,7 +494,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         ///     A session key must be derived from this key material using a secure key derivation function (KDF).
         ///     The KDF used to derive the key is handled externally.
         /// </summary>
-        protected internal byte[] CalculateKeyingMaterial()
+        internal byte[] CalculateKeyingMaterial()
         {
             return CalculateKeyingMaterialInternal().ToByteArrayUnsigned();
         }
@@ -502,7 +502,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <summary>
         ///     Calculates keying material derived from shared secrets and password.
         /// </summary>
-        protected BigInteger CalculateKeyingMaterialInternal()
+        private BigInteger CalculateKeyingMaterialInternal()
         {
             if (ProtocolState >= State.KeyCalculated) {
                 throw new InvalidOperationException("Key already calculated for " + ParticipantId);
@@ -537,7 +537,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <summary>
         ///     Creates a zero knowledge proof.
         /// </summary>
-        protected void CreateZeroKnowledgeProof(ECPoint generator, BigInteger x, ECPoint X,
+        private void CreateZeroKnowledgeProof(ECPoint generator, BigInteger x, ECPoint X,
             string participantId, out ECPoint V, out BigInteger r)
         {
             // Generate a random v from [1, n-1], and compute V = G*v
@@ -554,7 +554,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         ///     Verifies a zero knowledge proof.
         /// </summary>
         /// <returns><c>true</c>, if zero knowledge proof is valid/correct, <c>false</c> otherwise.</returns>
-        protected bool ZeroKnowledgeProofValid(ECPoint generator, ECPoint X, ECPoint V, BigInteger r,
+        private bool ZeroKnowledgeProofValid(ECPoint generator, ECPoint X, ECPoint V, BigInteger r,
             string participantId)
         {
             // ZKP: { V=G*v, r }
@@ -609,7 +609,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <summary>
         ///     Hashes a BigInteger into another BigInteger.
         /// </summary>
-        protected BigInteger Hash(BigInteger k)
+        private BigInteger Hash(BigInteger k)
         {
             _digest.Reset();
 
@@ -629,7 +629,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <summary>
         ///     Calculates the hash for a zero-knowledge proof.
         /// </summary>
-        protected BigInteger Hash(ECPoint generator, ECPoint V, ECPoint X, string participantId)
+        private BigInteger Hash(ECPoint generator, ECPoint V, ECPoint X, string participantId)
         {
             _digest.Reset();
 
@@ -687,7 +687,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <param name="gx3">GX3 (GX1 for partner).</param>
         /// <param name="gx4">GX4 (GX2 for partner).</param>
         /// <param name="keyingMaterial">Keying material.</param>
-        protected BigInteger CalculateMacTag(string participantId, string partnerParticipantId,
+        private BigInteger CalculateMacTag(string participantId, string partnerParticipantId,
             ECPoint gx1, ECPoint gx2, ECPoint gx3, ECPoint gx4, BigInteger keyingMaterial)
         {
             _digest.Reset();
@@ -736,7 +736,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             return new BigInteger(macTag);
         }
 
-        protected internal enum State : byte
+        public enum State : byte
         {
             Noninitialised = 0x00,
             Initialised = 0x01,

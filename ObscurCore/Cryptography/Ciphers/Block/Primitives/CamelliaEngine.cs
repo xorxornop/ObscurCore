@@ -9,7 +9,6 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 	public class CamelliaEngine
 		: BlockCipherBase
 	{
-		private bool initialised;
 		private bool _keyIs128;
 
 		private const int BLOCK_SIZE = 16;
@@ -608,12 +607,13 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 			return BLOCK_SIZE;
 		}
 
+        /// <inheritdoc />
 	    protected override void InitState()
 	    {
             setKey(Encrypting, Key);
 	    }
 
-	    
+        /// <inheritdoc />
 	    internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
 	    {
             if (_keyIs128) {
@@ -623,6 +623,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             }
 	    }
 
+        /// <inheritdoc />
 	    public override void Reset()
 		{
 			// nothing

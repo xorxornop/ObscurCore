@@ -51,6 +51,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 
         public string Seed { get; internal set; }
 
+        /// <inheritdoc />
         public override ECDomainParameters GetParameters()
         {
             var n = new BigInteger(N, 16);

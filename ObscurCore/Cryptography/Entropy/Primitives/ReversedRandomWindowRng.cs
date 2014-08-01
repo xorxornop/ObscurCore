@@ -51,6 +51,7 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             get { return _rng; }
         }
 
+        /// <inheritdoc />
         public override void AddSeedMaterial(
             byte[] seed)
         {
@@ -64,6 +65,7 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             }
         }
 
+        /// <inheritdoc />
         public override void NextBytes(
             byte[] buffer,
             int offset,

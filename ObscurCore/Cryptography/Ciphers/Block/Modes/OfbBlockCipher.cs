@@ -17,6 +17,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             this._ofbOutV = new byte[CipherBlockSize];
         }
 
+        /// <inheritdoc />
         protected override void InitState(byte[] key)
         {
             // Prepend the supplied IV with zeros (as per FIPS PUB 81)
@@ -29,6 +30,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             BlockCipher.Init(true, key); // Streaming mode - cipher always used in encryption mode
         }
 
+        /// <inheritdoc />
 	    internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
 	    {
             BlockCipher.ProcessBlock(_ofbV, 0, _ofbOutV, 0);
@@ -44,10 +46,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             return CipherBlockSize;
 	    }
 
-        /**
-        * reset the feedback vector back to the IV and reset the underlying
-        * cipher.
-        */
+        /// <summary>
+        ///     Reset the chaining vector back to the IV and reset the underlying cipher.
+        /// </summary>
 		public override void Reset() {
             Array.Copy(IV, 0, _ofbV, 0, IV.Length);
             BlockCipher.Reset();

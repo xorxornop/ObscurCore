@@ -29,10 +29,14 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 
         public SerpentEngine() : base(BlockCipher.Serpent, BLOCK_SIZE) { }
 
+        /// <inheritdoc />
+
         protected override void InitState()
         {
             this.wKey = MakeWorkingKey(Key);
         }
+
+        /// <inheritdoc />
 
         internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
@@ -45,6 +49,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return BLOCK_SIZE;
         }
 
+        /// <inheritdoc />
         public override void Reset()
         {
         }

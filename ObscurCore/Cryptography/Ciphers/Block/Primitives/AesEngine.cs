@@ -626,11 +626,13 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
         {
         }
 
+        /// <inheritdoc />
         protected override void InitState()
         {
             WorkingKey = GenerateWorkingKey(Key, Encrypting);
         }
 
+        /// <inheritdoc />
         internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
             if (Encrypting) {
@@ -642,6 +644,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             return BLOCK_SIZE;
         }
 
+        /// <inheritdoc />
         public override void Reset()
         {
         }

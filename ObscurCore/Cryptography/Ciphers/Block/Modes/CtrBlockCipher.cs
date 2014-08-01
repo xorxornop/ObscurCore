@@ -16,13 +16,14 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             _counterOut = new byte[CipherBlockSize];
 		}
 
+        /// <inheritdoc />
 	    protected override void InitState(byte[] key)
 	    {
             Reset();
             BlockCipher.Init(true, key); // Streaming mode - cipher always used in encryption mode
 	    }
-	    
 
+        /// <inheritdoc />
 	    internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
 	    {
             BlockCipher.ProcessBlock(_counter, 0, _counterOut, 0);
@@ -37,6 +38,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             return CipherBlockSize;
 	    }
 
+        /// <inheritdoc />
 	    public override void Reset()
 		{
             IV.CopyBytes(0, _counter, 0, CipherBlockSize);

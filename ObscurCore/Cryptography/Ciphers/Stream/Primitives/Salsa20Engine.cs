@@ -61,6 +61,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             this.Rounds = rounds;
         }
 
+        /// <inheritdoc />
         protected override void InitState()
         {
             SetKey(Key, Nonce);
@@ -113,6 +114,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             }
         }
 
+        /// <inheritdoc />
         internal override void ProcessBytesInternal(byte[] input, int inOff, int length, byte[] output, int outOff)
         {
             if (LimitExceeded((uint)length)) {

@@ -99,15 +99,6 @@ namespace ObscurCore.Cryptography.Ciphers
         }
 
         /// <summary>
-        ///     Instantiates and returns an implementation of the requested symmetric block cipher.
-        /// </summary>
-        /// <returns>A <see cref="BlockCipherBase"/> cipher object implementing the relevant cipher algorithm.</returns>
-        public static BlockCipherBase CreateBlockCipher(string cipherName, int? blockSize = null)
-        {
-            return CreateBlockCipher(cipherName.ToEnum<BlockCipher>(), blockSize);
-        }
-
-        /// <summary>
         ///     Implements a mode of operation on top of an existing block cipher.
         /// </summary>
         /// <param name="cipher">The block cipher to implement this mode of operation on top of.</param>
@@ -129,11 +120,6 @@ namespace ObscurCore.Cryptography.Ciphers
             return cipherMode;
         }
 
-        public static BlockCipherModeBase OverlayBlockCipherWithMode(BlockCipherBase cipher, string modeName)
-        {
-            return OverlayBlockCipherWithMode(cipher, modeName.ToEnum<BlockCipherMode>());
-        }
-
         /// <summary>
         ///     Instantiates and returns an implementation of the requested padding mode.
         ///     Must be combined with a block cipher for operation. <seealso cref="BlockCipherWrapper"/>
@@ -150,11 +136,6 @@ namespace ObscurCore.Cryptography.Ciphers
             return PaddingInstantiators[paddingEnum]();
         }
 
-        public static IBlockCipherPadding CreatePadding(string paddingName)
-        {
-            return CreatePadding(paddingName.ToEnum<BlockCipherPadding>());
-        }
-
         // Stream ciphers
 
         /// <summary>
@@ -168,11 +149,6 @@ namespace ObscurCore.Cryptography.Ciphers
                     new InvalidOperationException("Cannot instantiate null stream cipher."));
             }
             return EngineInstantiatorsStream[cipherEnum]();
-        }
-
-        public static StreamCipherEngine CreateStreamCipher(string cipherName)
-        {
-            return EngineInstantiatorsStream[cipherName.ToEnum<StreamCipher>()]();
         }
     }
 }

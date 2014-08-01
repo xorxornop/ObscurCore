@@ -8,14 +8,35 @@ namespace ObscurCore.Cryptography.Ciphers.Block
     /// </summary>
     public abstract class BlockCipherModeBase
     {
+        /// <summary>
+        /// If cipher and operation mode have been initialised.
+        /// </summary>
         protected bool IsInitialised;
+
+        /// <summary>
+        ///     If cipher is encrypting, <c>true</c>, otherwise <c>false</c>.
+        /// </summary>
         protected bool Encrypting;
+
+        /// <summary>
+        ///     Initialisation vector for the operation mode.
+        /// </summary>
         protected byte[] IV;
+
+        /// <summary>
+        /// 
+        /// </summary>
         protected int CipherBlockSize;
 
         protected BlockCipherBase BlockCipher;
         protected BlockCipherMode ModeIdentity;
 
+        /// <summary>
+        /// Instantiate the block cipher mode of operation.
+        /// </summary>
+        /// <param name="modeIdentity">Type of the mode of operation. Used to provide and verify configuration.</param>
+        /// <param name="cipher">Block cipher to wrap with operation mode.</param>
+        /// <param name="blockSize"></param>
         protected BlockCipherModeBase(BlockCipherMode modeIdentity, BlockCipherBase cipher, int? blockSize = null)
         {
             ModeIdentity = modeIdentity;
@@ -23,6 +44,10 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             CipherBlockSize = blockSize ?? cipher.BlockSize;
         }
 
+        /// <summary>
+        ///     The name of the wrapped block cipher paired with the mode of operation, 
+        ///     including any mode-configuration identifiers (e.g. CFB feedback size).
+        ///  </summary>
         public string AlgorithmName
         {
             get { return BlockCipher.AlgorithmName + "/" + Athena.Cryptography.BlockCipherModes[ModeIdentity].Name; }
@@ -30,12 +55,19 @@ namespace ObscurCore.Cryptography.Ciphers.Block
 
         /// <summary>
         ///      The size of block in bytes that the cipher processes.
-        ///  </summary><value>Block size for this cipher in bytes.</value>
+        ///  </summary>
+        /// <value>Block size for this cipher in bytes.</value>
         public int BlockSize
         {
             get { return CipherBlockSize; }
         }
 
+        /// <summary>
+        ///      Initialise the wrapped block cipher, and mode of operation.
+        ///  </summary>
+        /// <param name="encrypting">If set to <c>true</c> encrypting, otherwise decrypting.</param>
+        /// <param name="key">Key for the cipher.</param>
+        /// <param name="iv">Initialisation vector for the mode of operation.</param>
         public void Init(bool encrypting, byte[] key, byte[] iv)
         {
             BlockCipher.Init(encrypting, key);
@@ -120,6 +152,10 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             }
         }
 
+        /// <summary>
+        ///     Reset the wrapped cipher and this operation mode to the same state 
+        ///     as it was after the last call to <see cref="Init"/>.
+        /// </summary>
         public abstract void Reset();
     }
 }

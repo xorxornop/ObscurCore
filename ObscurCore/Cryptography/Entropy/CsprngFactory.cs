@@ -38,10 +38,6 @@ namespace ObscurCore.Cryptography.Entropy
 			return PrngInstantiators[csprngEnum](config);
 		}
 
-		public static CsPrng CreateCsprng (string csprngName, byte[] config) {
-			return CreateCsprng(csprngName.ToEnum<CsPseudorandomNumberGenerator>(), config);
-		}
-
 		public static StreamCipherCsprngConfiguration CreateStreamCipherCsprngConfiguration
 			(CsPseudorandomNumberGenerator cipherEnum)
 		{

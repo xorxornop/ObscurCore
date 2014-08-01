@@ -42,8 +42,16 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 
         public int BitLength { get; protected internal set; }
 
+        /// <summary>
+        /// Get parameter object for performing computations.
+        /// </summary>
+        /// <returns></returns>
         public abstract ECDomainParameters GetParameters();
 
+        /// <summary>
+        /// Convert a hex representation of an integer into a <see cref="BigInteger"/>.
+        /// </summary>
+        /// <param name="hex">Hex representation.</param>
         protected static BigInteger FromHex(string hex)
         {
             return new BigInteger(1, Hex.Decode(hex));

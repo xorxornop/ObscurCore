@@ -60,6 +60,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
 
         public string Seed { get; protected internal set; }
 
+        /// <inheritdoc />
         public override ECDomainParameters GetParameters()
         {
             ECCurve curve = CurveFunc();

@@ -17,12 +17,14 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             this._cbcNextV = new byte[CipherBlockSize];
         }
 
+        /// <inheritdoc />
         protected override void InitState(byte[] key)
         {
             BlockCipher.Init(Encrypting, key);
             Reset();
         }
 
+        /// <inheritdoc />
         internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
             return (Encrypting)

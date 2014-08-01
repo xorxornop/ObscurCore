@@ -37,58 +37,91 @@ namespace ObscurCore
     /// </summary>
     public static class Athena
     {
+        /// <summary>
+        /// Cryptographic primitive information provider.
+        /// </summary>
         public static class Cryptography
         {
+            /// <summary>
+            /// Information about block cipher primitives.
+            /// </summary>
             public static IReadOnlyDictionary<BlockCipher, BlockCipherInformation> BlockCiphers
             {
                 get { return CipherInformationStore.BlockCipherDictionary; }
             }
 
+            /// <summary>
+            /// Information about stream cipher primitives.
+            /// </summary>
             public static IReadOnlyDictionary<StreamCipher, StreamCipherInformation> StreamCiphers
             {
                 get { return CipherInformationStore.StreamCipherDictionary; }
             }
 
+            /// <summary>
+            /// Information about block cipher modes of operation.
+            /// </summary>
             public static IReadOnlyDictionary<BlockCipherMode, BlockCipherModeInformation> BlockCipherModes
             {
                 get { return CipherInformationStore.BlockCipherModeDictionary; }
             }
 
+            /// <summary>
+            /// Information about block cipher padding schemes.
+            /// </summary>
             public static IReadOnlyDictionary<BlockCipherPadding, BlockCipherPaddingInformation> BlockCipherPaddings
             {
                 get { return CipherInformationStore.BlockCipherPaddingDictionary; }
             }
 
+            /// <summary>
+            /// Information about hash/digest primitives.
+            /// </summary>
             public static IReadOnlyDictionary<HashFunction, HashFunctionInformation> HashFunctions
             {
                 get { return AuthenticationInformationStore.HashFunctionDictionary; }
             }
 
+            /// <summary>
+            /// Information about MAC/authentication primitives.
+            /// </summary>
             public static IReadOnlyDictionary<MacFunction, MacFunctionInformation> MacFunctions
             {
                 get { return AuthenticationInformationStore.MacFunctionDictionary; }
             }
 
+            /// <summary>
+            /// Information about named elliptic curves.
+            /// </summary>
             public static IReadOnlyDictionary<string, EllipticCurveInformation> Curves
             {
                 get { return EllipticCurveInformationStore.CurveDictionary; }
             }
 
+            /// <summary>
+            /// Information about key derivation functions.
+            /// </summary>
             public static IReadOnlyDictionary<KeyDerivationFunction, KdfInformation> KeyDerivationFunctions
             {
                 get { return KdfInformationStore.KdfDictionary; }
             }
 
+            /// <summary>
+            /// Information about CSPRNG primitives.
+            /// </summary>
             public static IReadOnlyDictionary<CsPseudorandomNumberGenerator, CsprngDescription> Csprngs
             {
                 get { return CsprngInformationStore.CsprngDictionary; }
             }
         }
 
+        /// <summary>
+        /// Packaging system information provider.
+        /// </summary>
         public static class Packaging
         {
             /// <summary>
-            ///     Version of operational scheme and DTO objects that code includes support for
+            ///     Version of operational scheme and DTO objects that code includes support for.
             /// </summary>
             public const int PackageFormatVersion = 1;
 
@@ -96,11 +129,19 @@ namespace ObscurCore
             public static readonly string PathRelativeUp = "..";
             public static readonly string PathRelativeUpSeperator = PathRelativeUp + PathDirectorySeperator;
 
+            /// <summary>
+            /// Get the header byte sequence used to denote the start of an ObscurCore package.
+            /// </summary>
+            /// <returns>Header tag as byte array.</returns>
             public static byte[] GetPackageHeaderTag()
             {
                 return Encoding.UTF8.GetBytes("OCpkgV1>"); // 8 bytes
             }
 
+            /// <summary>
+            /// Get the trailer byte sequence used to denote the end of an ObscurCore package.
+            /// </summary>
+            /// <returns>Trailer tag as byte array.</returns>
             public static byte[] GetPackageTrailerTag()
             {
                 return Encoding.UTF8.GetBytes("<|OCpkg|"); // 8 bytes

@@ -21,6 +21,9 @@ using ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC;
 
 namespace ObscurCore.Cryptography.KeyAgreement
 {
+    /// <summary>
+    /// Storage for information on named elliptic curves.
+    /// </summary>
     public static class EllipticCurveInformationStore
     {
         internal static readonly ImmutableDictionary<string, EllipticCurveInformation> CurveDictionary;

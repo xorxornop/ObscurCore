@@ -28,6 +28,15 @@ namespace ObscurCore.Cryptography.Ciphers
     /// </summary>
     public static class CipherConfigurationFactory
     {
+        /// <summary>
+        /// Create a configuration for a block cipher.
+        /// </summary>
+        /// <param name="cipher">Block cipher to use.</param>
+        /// <param name="mode">Mode of operation for the cipher.</param>
+        /// <param name="padding">Padding scheme to use with the mode, where necessary (e.g. CBC).</param>
+        /// <param name="keySize">Key size to use, in bits.</param>
+        /// <param name="blockSize">Cipher block size to use, in bits.</param>
+        /// <returns>Block cipher configuration DTO.</returns>
         public static CipherConfiguration CreateBlockCipherConfiguration(BlockCipher cipher,
             BlockCipherMode mode, BlockCipherPadding padding, int? keySize = null, int? blockSize = null)
         {
@@ -67,6 +76,12 @@ namespace ObscurCore.Cryptography.Ciphers
             return config;
         }
 
+        /// <summary>
+        ///     Create a configuration for a stream cipher.
+        /// </summary>
+        /// <param name="cipher">Stream cipher to use.</param>
+        /// <param name="keySize">Key size to use, in bits.</param>
+        /// <returns>Stream cipher configuration DTO.</returns>
         public static CipherConfiguration CreateStreamCipherConfiguration(StreamCipher cipher, int? keySize = null)
         {
             var config = new CipherConfiguration { Type = CipherType.Stream };

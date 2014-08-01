@@ -22,10 +22,25 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
     /// </summary>
     public abstract class StreamCipherEngine
     {
+        /// <summary>
+        /// Type of stream cipher, as-per the <see cref="StreamCipher"/> enumeration.
+        /// </summary>
         protected readonly StreamCipher CipherIdentity;
 
+        /// <summary>
+        /// If cipher has been initialised.
+        /// </summary>
         protected bool IsInitialised;
-        protected byte[] Key, Nonce;
+
+        /// <summary>
+        /// Key for the cipher.
+        /// </summary>
+        protected byte[] Key;
+
+        /// <summary>
+        ///     Nonce/initialisation vector for cipher.
+        /// </summary>
+        protected byte[] Nonce;
 
         /// <summary>
         /// Instantiate a new stream cipher engine.

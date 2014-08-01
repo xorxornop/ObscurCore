@@ -76,11 +76,6 @@ namespace ObscurCore.Cryptography.Authentication
             return DigestInstantiators[hashEnum]();
         }
 
-        public static IDigest CreateHashPrimitive(string hashName)
-        {
-            return CreateHashPrimitive(hashName.ToEnum<HashFunction>());
-        }
-
         /// <summary>
         ///     Instantiates and initialises a Message Authentication Code (MAC) primitive.
         ///     If salt is used, it is applied as: salt||message, where || is concatenation.
@@ -130,12 +125,6 @@ namespace ObscurCore.Cryptography.Authentication
             }
 
             return macObj;
-        }
-
-        public static IMac CreateMacPrimitive(string macName, byte[] key, byte[] salt = null, byte[] config = null,
-            byte[] nonce = null)
-        {
-            return CreateMacPrimitive(macName.ToEnum<MacFunction>(), key, salt, config, nonce);
         }
 
         /// <summary>

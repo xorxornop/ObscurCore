@@ -39,11 +39,13 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 
         public Rc6Engine() : base(BlockCipher.Rc6, BLOCK_SIZE) { }
 
+        /// <inheritdoc />
         protected override void InitState()
         {
             SetKey(Key);
         }
 
+        /// <inheritdoc />
         internal override int ProcessBlockInternal(byte[] input, int inOff, byte[] output, int outOff)
         {
             return (Encrypting)
@@ -51,6 +53,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
                 : DecryptBlock(input, inOff, output, outOff);
         }
 
+        /// <inheritdoc />
         public override void Reset()
         {
         }

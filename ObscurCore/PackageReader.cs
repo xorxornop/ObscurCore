@@ -35,7 +35,7 @@ namespace ObscurCore
     /// <summary>
     ///     Reads and extracts ObscurCore packages.
     /// </summary>
-    public sealed class PackageReader
+    public sealed class PackageReader : IDisposable
     {
         #region Instance variables
 
@@ -58,6 +58,8 @@ namespace ObscurCore
         ///     Offset at which the payload starts.
         /// </summary>
         private long _readingPayloadStreamOffset;
+
+        private bool _closeOnDispose;
 
         #endregion
 
@@ -134,12 +136,20 @@ namespace ObscurCore
         #region Constructors (including static methods that return a PackageReader)
 
         /// <summary>
-        ///     Constructor for static-origin inits (reads).
-        ///     Immediately reads package manifest header and manifest.
+        ///     Creates a package reader configured to read from a provided stream (containing the package).
         /// </summary>
-        internal PackageReader(Stream stream, IKeyProvider keyProvider)
+        /// <remarks>
+        ///     Immediately reads package manifest header and manifest.
+        /// </remarks>
+        /// <param name="stream">Stream to read the package from.</param>
+        /// <param name="keyProvider">Service that supplies possible cryptographic keys.</param>
+        /// <param name="closeOnDispose">
+        ///     If <c>true</c>, <paramref name="stream"/> will be closed when the reader is disposed.
+        /// </param>
+        internal PackageReader(Stream stream, IKeyProvider keyProvider, bool closeOnDispose = false)
         {
             _readingStream = stream;
+            _closeOnDispose = closeOnDispose;
             ManifestCryptographyScheme mCryptoScheme;
 
             _manifestHeader = ReadManifestHeader(_readingStream, out mCryptoScheme, out _manifestCryptoConfig);
@@ -147,8 +157,10 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Reads a package from a file.
+        ///     Creates a package reader configured to read from a file.
         /// </summary>
+        /// <param name="filePath">Path of the file containing a package.</param>
+        /// <param name="keyProvider">Service that supplies possible cryptographic keys.</param>
         /// <returns>Package ready for reading.</returns>
         /// <exception cref="ArgumentException">File does not exist at the path specified.</exception>
         public static PackageReader FromFile(string filePath, IKeyProvider keyProvider)
@@ -161,8 +173,13 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Reads a package from a stream.
+        ///     Creates a package reader configured to read from a provided stream (containing the package).
         /// </summary>
+        /// <remarks>
+        ///     Immediately reads package manifest header and manifest.
+        /// </remarks>
+        /// <param name="stream">Stream to read the package from.</param>
+        /// <param name="keyProvider">Service that supplies possible cryptographic keys.</param>
         /// <returns>Package ready for reading.</returns>
         public static PackageReader FromStream(Stream stream, IKeyProvider keyProvider)
         {
@@ -291,7 +308,7 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Reads a manifest from a package.
+        ///     Reads the manifest from the package.
         /// </summary>
         /// <remarks>
         ///     Call method, supplying (all of) only the keys associated with the sender and the context.
@@ -302,7 +319,7 @@ namespace ObscurCore
         ///             keys are in use by both parties.
         ///         </description></item>
         ///         <item><description>
-        ///             Minimises the time spent validating potential key pairs
+        ///             Minimises the time spent validating potential key pairs.
         ///         </description></item>
         ///     </list>
         /// </remarks>
@@ -395,8 +412,8 @@ namespace ObscurCore
             // Derive working manifest encryption & authentication keys from the manifest pre-key
             byte[] workingManifestCipherKey, workingManifestMacKey;
             try {
-                KeyStretchingUtility.DeriveWorkingKeys(preMKey, _manifestCryptoConfig.SymmetricCipher.KeySizeBits / 8,
-                    _manifestCryptoConfig.Authentication.KeySizeBits.Value / 8, _manifestCryptoConfig.KeyDerivation,
+                KeyStretchingUtility.DeriveWorkingKeys(preMKey, _manifestCryptoConfig.SymmetricCipher.KeySizeBits.BitsToBytes(),
+                    _manifestCryptoConfig.Authentication.KeySizeBits.Value.BitsToBytes(), _manifestCryptoConfig.KeyDerivation,
                     out workingManifestCipherKey, out workingManifestMacKey);
             } catch (Exception e) {
                 throw new CryptoException("Unexpected error in manifest key derivation.", e);
@@ -439,6 +456,7 @@ namespace ObscurCore
                             workingManifestCipherKey, false)) {
                             cs.ReadExactlyTo(decryptedManifestStream, manifestLength, true);
                         }
+                        // Authenticate manifest length tag
                         authenticator.Update(manifestLengthLe, 0, manifestLengthLe.Length);
 
                         byte[] manifestCryptoDtoForAuth;
@@ -456,15 +474,16 @@ namespace ObscurCore
                             default:
                                 throw new NotSupportedException();
                         }
+                        // Authenticate manifest cryptography configuration (from manifest header)
                         authenticator.Update(manifestCryptoDtoForAuth, 0, manifestCryptoDtoForAuth.Length);
                     }
                 } catch (Exception e) {
                     throw new CryptoException("Unexpected error in manifest decrypt-then-MAC operation.", e);
                 }
 
-                // Authenticate the manifest
+                // Verify that manifest authenticated successfully
                 if (manifestMac.SequenceEqualConstantTime(_manifestCryptoConfig.AuthenticationVerifiedOutput) == false) {
-                    throw new CiphertextAuthenticationException("Manifest not authenticated.");
+                    throw new CiphertextAuthenticationException("Manifest failed authentication.");
                 }
                 decryptedManifestStream.Seek(0, SeekOrigin.Begin);
 
@@ -493,7 +512,7 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Reads a package into a filesystem directory.
+        ///     Unpacks/extracts the payload items into a directory.
         /// </summary>
         /// <param name="path">Path to write items to.</param>
         /// <param name="overwrite"></param>
@@ -567,9 +586,14 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Read payload from package.
+        ///     Read the payload.
         /// </summary>
+        /// <remarks>
+        ///     All payload items to be read must have have valid stream bindings 
+        ///     (<see cref="PayloadItem.StreamBinding"/>) prior to calling this.
+        /// </remarks>
         /// <param name="payloadKeys">Potential keys for payload items (optional).</param>
+        /// <exception cref="KeyConfirmationException">Key confirmation for payload items failed.</exception>
         /// <exception cref="ConfigurationInvalidException">Payload layout scheme malformed/missing.</exception>
         /// <exception cref="InvalidDataException">Package data structure malformed.</exception>
         private void ReadPayload(IEnumerable<byte[]> payloadKeys = null)
@@ -607,7 +631,7 @@ namespace ObscurCore
                 mux.Execute();
             } catch (Exception e) {
                 // Catch different kinds of exception in future
-                throw new Exception("Error in demultiplexing payload items.", e);
+                throw new Exception("Error in demultiplexing payload.", e);
             }
 
             Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPayload", "Trailer offset (absolute)",
@@ -628,8 +652,14 @@ namespace ObscurCore
             }
 
             Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadPayload",
-                "[* PACKAGE END *] Offset (absolute)",
-                _readingStream.Position));
+                "[* PACKAGE END *] Offset (absolute)", _readingStream.Position));
+        }
+
+        public void Dispose()
+        {
+            if (_closeOnDispose && _readingStream != null) {
+                _readingStream.Close();
+            }
         }
     }
 }

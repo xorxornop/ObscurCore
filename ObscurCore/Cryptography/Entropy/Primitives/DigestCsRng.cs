@@ -31,6 +31,7 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             _stateCounter = 1;
         }
 
+        /// <inheritdoc />
         public override void AddSeedMaterial(
             byte[] inSeed)
         {
@@ -41,6 +42,7 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             }
         }
 
+        /// <inheritdoc />
         public override void NextBytes(
             byte[] bytes,
             int start,

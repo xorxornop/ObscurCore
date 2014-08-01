@@ -57,6 +57,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         /// </summary>
         Serpent,
 
+        /// <summary>
+        /// High performance large-block cipher. Successor to Twofish.
+        /// </summary>
 		Threefish,
 
         /// <summary>
