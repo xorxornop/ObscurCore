@@ -32,7 +32,7 @@ namespace ObscurCore.Support.Random
         protected Prng(int stateSize)
         {
             StateSize = stateSize;
-            StateBuffer = new RingBuffer(stateSize);
+            StateBuffer = new SequentialRingBuffer(stateSize);
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace ObscurCore.Support.Random
         public override void NextBytes(byte[] buffer, int offset, int count)
         {
             int length = count;
-            int sbLength = Math.Min(StateBuffer.Length, count);
+            int sbLength = Math.Min(StateBuffer.CurrentLength, count);
             StateBuffer.Take(buffer, offset, sbLength);
             offset += sbLength;
             length -= sbLength;

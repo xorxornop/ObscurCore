@@ -16,7 +16,8 @@
 namespace ObscurCore.Cryptography.KeyAgreement
 {
     /// <summary>
-    ///     Named elliptic curves from SEC2 (Standards for Efficient Cryptography 2)
+    ///     Named elliptic curves over F(<sub>p</sub>) and F(<sub>2</sub>m) from SEC2 (Standards for Efficient Cryptography 2). 
+    ///     Also known as NIST curves.
     /// </summary>
     /// <remarks>
     ///     The discerning user may wish to think twice about employing these curves,
@@ -27,97 +28,118 @@ namespace ObscurCore.Cryptography.KeyAgreement
     {
         None,
 
+        /// <summary>
+        ///     160-bit curve over F(<sub>p</sub>)
+        /// </summary>
         Secp160r1,
 
+        /// <summary>
+        ///     160-bit curve over F(<sub>p</sub>) (revised from <see cref="Secp160r1"/>)
+        /// </summary>
         Secp160r2,
 
         /// <summary>
-        ///     192-bit Koblitz curve over F(p)
+        ///     192-bit Koblitz curve over F(<sub>p</sub>)
         /// </summary>
         Secp192k1,
 
         /// <summary>
-        ///     192-bit curve over F(p)
+        ///     192-bit curve over F(<sub>p</sub>)
         /// </summary>
         Secp192r1,
 
         /// <summary>
-        ///     224-bit Koblitz curve over F(p)
+        ///     224-bit Koblitz curve over F(<sub>p</sub>)
         /// </summary>
         Secp224k1,
 
         /// <summary>
-        ///     224-bit curve over F(p)
+        ///     224-bit curve over F(<sub>p</sub>)
         /// </summary>
         Secp224r1,
 
-        Sect163r1,
-
-        Sect163r2,
-
-        Sect193r1,
-
-        Sect193r2,
-
         /// <summary>
-        ///     233-bit Koblitz curve over F(2m)
-        /// </summary>
-        Sect233k1,
-
-        /// <summary>
-        ///     233-bit curve over F(2m)
-        /// </summary>
-        Sect233r1,
-
-        Sect239k1,
-
-        /// <summary>
-        ///     224-bit Koblitz curve over F(p)
+        ///     256-bit Koblitz curve over F(<sub>p</sub>)
         /// </summary>
         Secp256k1,
 
         /// <summary>
-        ///     256-bit curve over F(p)
+        ///     256-bit curve over F(<sub>p</sub>)
         /// </summary>
         Secp256r1,
 
         /// <summary>
-        ///     283-bit Koblitz curve over F(2m)
-        /// </summary>
-        Sect283k1,
-
-        /// <summary>
-        ///     283-bit curve over F(2m)
-        /// </summary>
-        Sect283r1,
-
-        /// <summary>
-        ///     384-bit curve over F(p)
+        ///     384-bit curve over F(<sub>p</sub>)
         /// </summary>
         Secp384r1,
 
         /// <summary>
-        ///     409-bit Koblitz curve over F(2m)
-        /// </summary>
-        Sect409k1,
-
-        /// <summary>
-        ///     409-bit curve over F(2m)
-        /// </summary>
-        Sect409r1,
-
-        /// <summary>
-        ///     521-bit curve over F(p)
+        ///     521-bit curve over F(<sub>p</sub>)
         /// </summary>
         Secp521r1,
 
         /// <summary>
-        ///     571-bit Koblitz curve over F(2m)
+        ///     163-bit curve over F(<sub>2</sub>m)
+        /// </summary>
+        Sect163r1,
+
+        /// <summary>
+        ///     163-bit curve over F(<sub>2</sub>m) (revised from <see cref="Sect163r1"/>)
+        /// </summary>
+        Sect163r2,
+
+        /// <summary>
+        ///     193-bit curve over F(<sub>2</sub>m)
+        /// </summary>
+        Sect193r1,
+
+        /// <summary>
+        ///     193-bit curve over F(<sub>2</sub>m) (revised from <see cref="Sect193r1"/>)
+        /// </summary>
+        Sect193r2,
+
+        /// <summary>
+        ///     233-bit Koblitz curve over F(<sub>2</sub>m)
+        /// </summary>
+        Sect233k1,
+
+        /// <summary>
+        ///     233-bit curve over F(<sub>2</sub>m)
+        /// </summary>
+        Sect233r1,
+
+        /// <summary>
+        ///     239-bit Koblitz curve over F(<sub>2</sub>m)
+        /// </summary>
+        Sect239k1,
+
+        /// <summary>
+        ///     283-bit Koblitz curve over F(<sub>2</sub>m)
+        /// </summary>
+        Sect283k1,
+
+        /// <summary>
+        ///     283-bit curve over F(<sub>2</sub>m)
+        /// </summary>
+        Sect283r1,
+
+        /// <summary>
+        ///     409-bit Koblitz curve over F(<sub>2</sub>m)
+        /// </summary>
+        Sect409k1,
+
+        /// <summary>
+        ///     409-bit curve over F(<sub>2</sub>m)
+        /// </summary>
+        Sect409r1,
+
+        /// <summary>
+        ///     571-bit Koblitz curve over F(<sub>2</sub>m)
         /// </summary>
         Sect571k1,
 
         /// <summary>
-        ///     571-bit curve over F(2m)
+        ///     571-bit curve over F(<sub>2</sub>m)
         /// </summary>
         Sect571r1
     }

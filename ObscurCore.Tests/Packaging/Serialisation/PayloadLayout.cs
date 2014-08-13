@@ -26,7 +26,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
         public void Frameshift_Fixed () {
             var inputObj = new PayloadConfiguration() {
                 SchemeName = PayloadLayoutScheme.Frameshift.ToString(),
-                SchemeConfiguration = new PayloadSchemeConfiguration() {
+                SchemeConfiguration = new RangeConfiguration() {
 			            Minimum = FrameshiftPayloadMux.DefaultFixedPaddingLength,
 			            Maximum = FrameshiftPayloadMux.DefaultFixedPaddingLength
 			        }.SerialiseDto(),
@@ -48,7 +48,7 @@ namespace ObscurCore.Tests.Packaging.Serialisation
         public void Frameshift_Variable () {
             var inputObj = new PayloadConfiguration() {
                 SchemeName = PayloadLayoutScheme.Frameshift.ToString(),
-                SchemeConfiguration = new PayloadSchemeConfiguration() {
+                SchemeConfiguration = new RangeConfiguration() {
 			            Minimum = FrameshiftPayloadMux.MinimumPaddingLength,
 			            Maximum = FrameshiftPayloadMux.MaximumPaddingLength
 			        }.SerialiseDto(),
@@ -72,12 +72,12 @@ namespace ObscurCore.Tests.Packaging.Serialisation
 
             var inputObj = new PayloadConfiguration() {
                 SchemeName = PayloadLayoutScheme.Fabric.ToString(),
-                SchemeConfiguration = new PayloadSchemeConfiguration {
+                SchemeConfiguration = new RangeConfiguration {
 			            Minimum = FabricPayloadMux.DefaultFixedStripeLength,
 			            Maximum = FabricPayloadMux.DefaultFixedStripeLength
 			        }.SerialiseDto(),
                 PrngName = CsPseudorandomNumberGenerator.Sosemanuk.ToString(),
-				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
+                PrngConfiguration = CsPrngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto()
             };
 
@@ -94,12 +94,12 @@ namespace ObscurCore.Tests.Packaging.Serialisation
         public void Fabric_Variable () {
             var inputObj = new PayloadConfiguration() {                                        
                 SchemeName = PayloadLayoutScheme.Fabric.ToString(),
-                SchemeConfiguration = new PayloadSchemeConfiguration {
+                SchemeConfiguration = new RangeConfiguration {
 			            Minimum = FabricPayloadMux.MinimumStripeLength,
 			            Maximum = FabricPayloadMux.MaximumStripeLength
 			        }.SerialiseDto(),
                 PrngName = CsPseudorandomNumberGenerator.Salsa20.ToString(),
-				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(
+                PrngConfiguration = CsPrngFactory.CreateStreamCipherCsprngConfiguration(
                     CsPseudorandomNumberGenerator.Sosemanuk).SerialiseDto()
             };
 

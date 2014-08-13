@@ -92,7 +92,7 @@ namespace ObscurCore.Tests.Packaging
 #if INCLUDE_FABRIC
 		[Test]
 		public void UM1FabricPackage() {
-			UM1PackageTest("UM1FabricPackage", PayloadLayoutScheme.Fabric);
+            UM1PackageTest("UM1FabricPackage", IOTestBase.LargeBinaryFileList, PayloadLayoutScheme.Fabric);
 		}
 #endif
         [Test]

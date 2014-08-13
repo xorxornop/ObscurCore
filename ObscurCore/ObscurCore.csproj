@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>SecurityRules.ruleset</CodeAnalysisRuleSet>
@@ -33,7 +33,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
+    <DefineConstants>TRACE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -43,7 +43,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
     <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
-    <DefineConstants>TRACE;INCLUDE_UNSAFE;INCLUDE_IDEA;INCLUDE_SHA1</DefineConstants>
+    <DefineConstants>TRACE;INCLUDE_UNSAFE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
     <Optimize>true</Optimize>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -68,7 +68,7 @@
     </Reference>
     <Reference Include="LZ4PCL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\LZ4PCL\LZ4PCL.dll</HintPath>
+      <HintPath>lib\LZ4PCL\ReleaseWithUnsafe\LZ4PCL.dll</HintPath>
     </Reference>
     <Reference Include="ObscurCore.DTO.DtoSerialiser">
       <HintPath>..\ObscurCore.DTO\bin\Release\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
@@ -76,15 +76,18 @@
     <Reference Include="protobuf-net">
       <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>
     </Reference>
-    <Reference Include="RingByteBuffer, Version=1.2.5135.4782, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="RingByteBuffer, Version=1.3.5340.9170, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\RingByteBuffer\RingByteBuffer.dll</HintPath>
+      <HintPath>lib\RingByteBuffer\ReleaseWithUnsafe\RingByteBuffer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable">
       <HintPath>..\packages\Microsoft.Bcl.Immutable.1.1.22-beta\lib\portable-net45+win8+wpa81\System.Collections.Immutable.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics.Vectors">
+      <HintPath>..\packages\Microsoft.Bcl.Simd.1.0.2-beta\lib\portable-net45+win8\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Athena.cs" />
@@ -96,8 +99,10 @@
     <Compile Include="Cryptography\Authentication\Primitives\WhirlpoolDigest.cs" />
     <Compile Include="Cryptography\Ciphers\Block\BlockCipherModeBase.cs" />
     <Compile Include="Cryptography\Ciphers\CipherInformationStore.cs" />
+    <Compile Include="Cryptography\Ciphers\CipherStream.cs" />
     <Compile Include="Cryptography\Ciphers\Information\BlockCipherInformation.cs" />
     <Compile Include="Cryptography\Ciphers\Information\StreamCipherInformation.cs" />
+    <Compile Include="Cryptography\Ciphers\Stream\Primitives\NullEngine.cs" />
     <Compile Include="Cryptography\Entropy\CsprngInformationStore.cs" />
     <Compile Include="Cryptography\Entropy\CsRng.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\ReversedRandomWindowRng.cs" />
@@ -107,6 +112,7 @@
     <Compile Include="Cryptography\KeyAgreement\Information\TpbF2mEcNamedCurveInformation.cs" />
     <Compile Include="Cryptography\KeyDerivation\KdfInformationStore.cs" />
     <Compile Include="Cryptography\RotationExtensions.cs" />
+    <Compile Include="Cryptography\Signing\IDsa.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IStreamDecorator.cs" />
     <Compile Include="Packaging\ContentTreeNode.cs" />
@@ -278,7 +284,6 @@
     <Compile Include="Support\Strings.cs" />
     <Compile Include="Cryptography\Ciphers\Block\BlockCipherMode.cs" />
     <Compile Include="Cryptography\Ciphers\Block\BlockCipherPadding.cs" />
-    <Compile Include="Cryptography\Ciphers\CipherStream.cs" />
     <Compile Include="Cryptography\Authentication\MacStream.cs" />
     <Compile Include="Cryptography\Authentication\HashStream.cs" />
     <Compile Include="Cryptography\Ciphers\Block\BlockCipher.cs" />
@@ -407,7 +412,7 @@
     <Compile Include="PackageWriter.cs" />
     <Compile Include="PackageReader.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\EcJpakeSession.cs" />
-    <None Include="Cryptography\Signing\Primitives\EcDsaSigner.cs" />
+    <Compile Include="Cryptography\Signing\Primitives\EcDsaSigner.cs" />
     <Compile Include="Cryptography\KeyAgreement\KeyAgreementFactory.cs" />
     <Compile Include="Cryptography\KeyAgreement\KeypairFactory.cs" />
     <Compile Include="Cryptography\KeyDerivation\KeyStretchingUtility.cs" />

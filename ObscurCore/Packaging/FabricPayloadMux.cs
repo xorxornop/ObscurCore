@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.DTO;
 using RingByteBuffer;
 
@@ -46,14 +47,14 @@ namespace ObscurCore.Packaging
 
         private class MuxItemResourceContainer
         {
-            public MuxItemResourceContainer(DecoratingStream decorator, MacStream authenticator, int bufferCapacity)
+            public MuxItemResourceContainer(CipherStream encryptor, MacStream authenticator, int bufferCapacity)
             {
-                this.Decorator = decorator;
+                this.Encryptor = encryptor;
                 this.Authenticator = authenticator;
                 this.Buffer = new Lazy<RingBufferStream>(() => new RingBufferStream(bufferCapacity, false));
             }
 
-            public DecoratingStream Decorator { get; private set; }
+            public CipherStream Encryptor { get; private set; }
             public MacStream Authenticator { get; private set; }
             public Lazy<RingBufferStream> Buffer { get; private set; }
         }
@@ -70,8 +71,8 @@ namespace ObscurCore.Packaging
             IReadOnlyDictionary<Guid, byte[]> itemPreKeys, IPayloadConfiguration config)
             : base(writing, multiplexedStream, payloadItems, itemPreKeys, config)
         {
-            var fabricConfig =
-                StratCom.DeserialiseDataTransferObject<PayloadSchemeConfiguration>(config.SchemeConfiguration);
+            var fabricConfig = config.SchemeConfiguration.DeserialiseDto<RangeConfiguration>();
+
             if (fabricConfig.Minimum < MinimumStripeLength) {
                 throw new ArgumentOutOfRangeException("config",
                     "Minimum stripe length is set below specification minimum.");
@@ -94,11 +95,11 @@ namespace ObscurCore.Packaging
         /// <param name="item">Item to prepare resources for.</param>
         private MuxItemResourceContainer CreateEtMSchemeResources(PayloadItem item)
         {
-            DecoratingStream decorator;
+            CipherStream encryptor;
             MacStream authenticator;
-            CreateEtMDecorator(item, out decorator, out authenticator);
-            var container = new MuxItemResourceContainer(decorator, authenticator,
-                _maxStripe + decorator.BufferSizeRequirement);
+            CreateEtMDecorator(item, out encryptor, out authenticator);
+            var container = new MuxItemResourceContainer(encryptor, authenticator,
+                _maxStripe + encryptor.BufferSizeRequirement);
             return container;
         }
 
@@ -120,19 +121,24 @@ namespace ObscurCore.Packaging
                 }
             }
 
-            var itemDecorator = itemContainer.Decorator;
+            var itemEncryptor = itemContainer.Encryptor;
             var itemAuthenticator = itemContainer.Authenticator;
 
             var opLength = NextOperationLength();
 
             if (Writing) {
-                if (itemDecorator.BytesIn + opLength > item.ExternalLength) {
+                if (itemEncryptor.BytesIn + opLength < item.ExternalLength) {
+                    // Normal operation
+                    Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "ExecuteOperation",
+                        "Item multiplexing operation length", opLength));
+                    itemEncryptor.WriteExactlyFrom(item.StreamBinding, opLength);
+                } else {
                     // Final operation, or just prior to
                     if (itemContainer.Buffer.IsValueCreated == false) {
                         // Redirect final ciphertext to buffer to account for possible expansion
                         itemAuthenticator.ReassignBinding(itemContainer.Buffer.Value, reset: false, finish: false);
                     }
-                    var remaining = (int) (item.ExternalLength - itemDecorator.BytesIn);
+                    var remaining = (int)(item.ExternalLength - itemEncryptor.BytesIn);
                     if (remaining > 0) {
                         while (remaining > 0) {
                             var toRead = Math.Min(remaining, BufferSize);
@@ -140,36 +146,32 @@ namespace ObscurCore.Packaging
                             if (iterIn < toRead) {
                                 throw new EndOfStreamException();
                             }
-                            itemDecorator.Write(Buffer, 0, iterIn); // Writing into recently-lazy-inited buffer
+                            itemEncryptor.Write(Buffer, 0, iterIn); // Writing into recently-lazy-inited buffer
                             remaining -= iterIn;
                         }
-                        itemDecorator.Close();
+                        itemEncryptor.Close();
                     }
-                    var toWrite = (int) Math.Min(opLength, itemContainer.Buffer.Value.Length);
-                    itemContainer.Buffer.Value.ReadTo(PayloadStream, toWrite, true);
-                } else {
-                    Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "ExecuteOperation",
-                        "Item multiplexing operation length", opLength));
-                    itemDecorator.WriteExactlyFrom(item.StreamBinding, opLength);
+                    var toWrite = (int)Math.Min(opLength, itemContainer.Buffer.Value.Length);
+                    itemContainer.Buffer.Value.ReadTo(PayloadStream, toWrite);
                 }
             } else {
                 var finalOp = false;
-                if (itemDecorator.BytesIn + opLength > item.InternalLength) {
+                if (itemEncryptor.BytesIn + opLength > item.InternalLength) {
                     // Final operation
-                    opLength = item.InternalLength - itemDecorator.BytesIn;
+                    opLength = item.InternalLength - itemEncryptor.BytesIn;
                     finalOp = true;
                 }
                 Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "ExecuteOperation",
                     finalOp == true
                         ? "Final item demultiplexing operation length"
                         : "Item demultiplexing operation length", opLength));
-                itemDecorator.ReadExactlyTo(item.StreamBinding, opLength, finalOp);
+                itemEncryptor.ReadExactlyTo(item.StreamBinding, opLength, finalOp);
             }
 
-            if ((Writing && itemDecorator.BytesIn == item.ExternalLength && itemContainer.Buffer.Value.Length == 0) ||
-                (!Writing && itemDecorator.BytesIn == item.InternalLength)) {
+            if ((Writing && itemEncryptor.BytesIn == item.ExternalLength && itemContainer.Buffer.Value.Length == 0) ||
+                (!Writing && itemEncryptor.BytesIn == item.InternalLength)) {
                 // Now that we're finished we need to do some extra things, then clean up
-                FinishItem(item, itemDecorator, itemAuthenticator);
+                FinishItem(item, itemEncryptor, itemAuthenticator);
             }
         }
 

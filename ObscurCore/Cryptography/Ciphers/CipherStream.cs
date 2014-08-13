@@ -30,11 +30,11 @@ namespace ObscurCore.Cryptography.Ciphers
     {
         private const string UnknownFinaliseError =
             "An unknown type of error occured while transforming the final block of ciphertext.";
-        private const string WritingError = 
+        private const string WritingError =
             "Could not write transformed block bytes to output stream.";
-        private const string NotWritingError = 
+        private const string NotWritingError =
             "Stream is configured for encryption, and so may only be written to.";
-        private const string NotReadingError = 
+        private const string NotReadingError =
             "Stream is configured for decryption, and so may only be read from.";
 
         private readonly ICipherWrapper _cipher;
@@ -124,7 +124,7 @@ namespace ObscurCore.Cryptography.Ciphers
             _operationSize = _cipher.OperationSize;
             _operationBuffer = new byte[_operationSize];
             _tempBuffer = new byte[_operationSize * 2];
-            _outBuffer = new RingBuffer(_cipher.OperationSize << (encrypting ? 8 : 2));
+            _outBuffer = new SequentialRingBuffer(_cipher.OperationSize << (encrypting ? 8 : 2));
             // Shift left 8 upscales : 8 (64 bits) to 2048 [2kB], 16 (128) to 4096 [4kB], 32 (256) to 8192 [8kB]
             BufferSizeRequirement = _operationSize;
         }
@@ -192,10 +192,10 @@ namespace ObscurCore.Cryptography.Ciphers
                 _outBuffer.Put(_tempBuffer, 0, iterOut);
             }
 
-            while (totalOut + _outBuffer.Length < length) {
+            while (totalOut + _outBuffer.CurrentLength < length) {
                 // Prevent possible writebuffer overflow
                 if (_outBuffer.Spare < _operationSize) {
-                    iterOut = _outBuffer.Length;
+                    iterOut = _outBuffer.CurrentLength;
                     // Write out the processed data to the stream StreamBinding
                     _outBuffer.TakeTo(Binding, iterOut);
                     totalOut += iterOut;
@@ -215,7 +215,7 @@ namespace ObscurCore.Cryptography.Ciphers
             }
 
             // Write out the processed data to the stream StreamBinding
-            iterOut = (int) (length - totalOut);
+            iterOut = (int)(length - totalOut);
             if (iterOut > 0) {
                 _outBuffer.TakeTo(Binding, iterOut);
                 totalOut += iterOut;
@@ -271,7 +271,7 @@ namespace ObscurCore.Cryptography.Ciphers
 
                 // Prevent possible writebuffer overflow
                 if (_outBuffer.Spare < _operationSize) {
-                    iterOut = _outBuffer.Length;
+                    iterOut = _outBuffer.CurrentLength;
                     // Write out the processed data to the stream StreamBinding
                     _outBuffer.TakeTo(StreamBinding, iterOut);
                     totalOut += iterOut;
@@ -284,7 +284,7 @@ namespace ObscurCore.Cryptography.Ciphers
             _operationBufferOffset += remainder;
 
             // Write out the processed data to the stream StreamBinding
-            iterOut = _outBuffer.Length - _operationSize;
+            iterOut = _outBuffer.CurrentLength - _operationSize;
             if (iterOut > 0) {
                 //iterOut = _outBuffer.Length; 
                 _outBuffer.TakeTo(StreamBinding, iterOut);
@@ -314,7 +314,7 @@ namespace ObscurCore.Cryptography.Ciphers
                 _operationBufferOffset = 0;
             }
 
-            if (_outBuffer.Length > 0) {
+            if (_outBuffer.CurrentLength > 0) {
                 StreamBinding.WriteByte(_outBuffer.Take());
             }
         }
@@ -326,14 +326,14 @@ namespace ObscurCore.Cryptography.Ciphers
             if (Disposed) {
                 throw new ObjectDisposedException("Stream has been disposed.");
             }
-            if (Finished && _outBuffer.Length == 0) {
+            if (Finished && _outBuffer.CurrentLength == 0) {
                 return -1;
             }
             if (Writing) {
                 throw new InvalidOperationException(NotReadingError);
             }
 
-            if (_outBuffer.Length == 0) {
+            if (_outBuffer.CurrentLength == 0) {
                 int toRead = _operationSize - _operationBufferOffset;
                 int iterIn = StreamBinding.Read(_operationBuffer, 0, toRead);
                 BytesIn += iterIn;
@@ -375,7 +375,7 @@ namespace ObscurCore.Cryptography.Ciphers
             if (Disposed) {
                 throw new ObjectDisposedException("Stream has been disposed.");
             }
-            if (Finished && _outBuffer.Length == 0) {
+            if (Finished && _outBuffer.CurrentLength == 0) {
                 return 0;
             }
             if (Writing) {
@@ -391,8 +391,8 @@ namespace ObscurCore.Cryptography.Ciphers
             int totalIn = 0, totalOut = 0;
             int iterOut;
 
-            if (_outBuffer.Length > 0) {
-                iterOut = Math.Min(_outBuffer.Length, count);
+            if (_outBuffer.CurrentLength > 0) {
+                iterOut = Math.Min(_outBuffer.CurrentLength, count);
                 _outBuffer.Take(buffer, offset, iterOut);
                 totalOut += iterOut;
                 offset += iterOut;
@@ -555,7 +555,7 @@ namespace ObscurCore.Cryptography.Ciphers
             int iterIn, iterOut;
 
             // Write out any partial completed block(s)
-            int outBufferLength = _outBuffer.Length;
+            int outBufferLength = _outBuffer.CurrentLength;
             if (outBufferLength > 0) {
                 _outBuffer.TakeTo(destination, outBufferLength);
                 totalOut += outBufferLength;
@@ -581,8 +581,8 @@ namespace ObscurCore.Cryptography.Ciphers
             }
 
             long remainderLong;
-            var operations = (int) Math.DivRem(length, _operationSize, out remainderLong);
-            var remainder = (int) remainderLong;
+            var operations = (int)Math.DivRem(length, _operationSize, out remainderLong);
+            var remainder = (int)remainderLong;
             // ^ Can be changed back to long if needed.
             // Otherwise, though, we'll try to avoid pointless and costly repeated casts.
 
@@ -664,7 +664,7 @@ namespace ObscurCore.Cryptography.Ciphers
         private void FinishWriting()
         {
             // Write any partial but complete block(s)
-            int finalLength = _outBuffer.Length;
+            int finalLength = _outBuffer.CurrentLength;
             _outBuffer.TakeTo(Binding, finalLength);
             BytesOut += finalLength;
             try {
@@ -684,7 +684,7 @@ namespace ObscurCore.Cryptography.Ciphers
 
         private int FinishReading(byte[] input, int inputOffset, int length, byte[] output, int outputOffset)
         {
-            int finalByteQuantity = _outBuffer.Length;
+            int finalByteQuantity = _outBuffer.CurrentLength;
             _outBuffer.Take(output, outputOffset, finalByteQuantity);
             outputOffset += finalByteQuantity;
             try {

@@ -205,14 +205,14 @@ namespace ObscurCore.Cryptography.KeyConfirmation
             byte[] tag, byte[] message,
             int? outputSizeBytes = null)
         {
-            VerificationFunctionType functionType;
+            AuthenticationFunctionType functionType;
             try {
-                functionType = keyConfirmation.FunctionType.ToEnum<VerificationFunctionType>();
+                functionType = keyConfirmation.FunctionType.ToEnum<AuthenticationFunctionType>();
             } catch (EnumerationParsingException ex) {
                 throw new ConfigurationInvalidException("Verification function type is unsupported/unknown.", ex);
             }
 
-            if (functionType == VerificationFunctionType.None) {
+            if (functionType == AuthenticationFunctionType.None) {
                 throw new ConfigurationInvalidException("Verification function type cannot be None.");
             }
             if (String.IsNullOrEmpty(keyConfirmation.FunctionName)) {
@@ -223,7 +223,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 
             Func<byte[], byte[]> validator; // Used as an adaptor between different validation methods
             switch (functionType) {
-                case VerificationFunctionType.Kdf:
+                case AuthenticationFunctionType.Kdf:
                 {
                     if (outputSizeBytes == null) {
                         throw new ArgumentNullException("outputSizeBytes", "Cannot be null if KDF is being used.");
@@ -262,7 +262,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                     };
                     break;
                 }
-                case VerificationFunctionType.Mac:
+                case AuthenticationFunctionType.Mac:
                     MacFunction macFEnum;
                     try {
                         macFEnum = keyConfirmation.FunctionName.ToEnum<MacFunction>();

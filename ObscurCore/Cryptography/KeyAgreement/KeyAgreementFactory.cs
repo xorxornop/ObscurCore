@@ -25,7 +25,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
     public static class KeyAgreementFactory
     {
         /// <summary>
-        ///     Performs a Elliptic Curve Diffie-Hellman (ECDH) key agreement operation (scalar multiplication).
+        ///     Performs an Elliptic Curve Diffie-Hellman (ECDH) key agreement operation (scalar multiplication).
         /// </summary>
         /// <returns>The ECDH shared secret.</returns>
         /// <param name="publicKey">Public key.</param>
@@ -40,7 +40,8 @@ namespace ObscurCore.Cryptography.KeyAgreement
         }
 
         /// <summary>
-        ///     Performs a Elliptic Curve Diffie-Hellman key agreement (scalar multiplication), with cofactor multiplication (ECDHC).
+        ///     Performs an Elliptic Curve Diffie-Hellman key agreement operation (scalar multiplication), 
+        ///     with cofactor multiplication (ECDHC).
         /// </summary>
         /// <returns>The ECDHC shared secret.</returns>
         /// <param name="publicKey">Public key.</param>
@@ -55,7 +56,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
         }
 
         /// <summary>
-        ///     Calculates the shared secret in a Diffie-Hellman scheme.
+        ///     Performs an Elliptic Curve Diffie-Hellman (ECDH) key agreement operation (scalar multiplication).
         /// </summary>
         /// <param name="Q">Public component of an EC keypair.</param>
         /// <param name="d">Private component of an EC keypair.</param>
@@ -71,7 +72,8 @@ namespace ObscurCore.Cryptography.KeyAgreement
         }
 
         /// <summary>
-        ///     Calculates the shared secret in a Diffie-Hellman scheme with cofactor multiplication.
+        ///     Performs an Elliptic Curve Diffie-Hellman key agreement operation (scalar multiplication), 
+        ///     with cofactor multiplication (ECDHC).
         /// </summary>
         /// <param name="Q">Public component of an EC keypair.</param>
         /// <param name="d">Private component of an EC keypair.</param>
@@ -98,7 +100,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
                 publicKey = new ECPublicKeyParameters("ECDHC", point, domain);
             } catch (NotSupportedException) {
                 throw new NotSupportedException(
-                    "EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
+                    "EC curve specified is not in the collection of curves of the provider.");
             } catch (Exception) {
                 throw new ConfigurationInvalidException("Unspecified error occured in decoding EC key.");
             }
@@ -113,7 +115,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
                 privateKey = new ECPrivateKeyParameters("ECDHC", new BigInteger(ecKey.EncodedKey), domain);
             } catch (NotSupportedException) {
                 throw new NotSupportedException(
-                    "EC curve specified for UM1 agreement is not in the collection of curves of the provider.");
+                    "EC curve specified is not in the collection of curves of the provider.");
             } catch (Exception) {
                 throw new ConfigurationInvalidException("Unspecified error occured in decoding EC key.");
             }

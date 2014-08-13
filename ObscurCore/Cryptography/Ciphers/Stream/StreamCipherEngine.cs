@@ -128,7 +128,9 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
 
         /// <summary>
         ///      Encrypt/decrypt a single byte.
-        ///  </summary><param name="input">The byte to be processed.</param><returns>Result of processing the input byte.</returns>
+        ///  </summary>
+        /// <param name="input">The byte to be processed.</param>
+        /// <returns>Result of processing the input byte.</returns>
         public abstract byte ReturnByte(byte input);
 
         /// <summary>

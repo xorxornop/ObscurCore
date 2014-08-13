@@ -20,11 +20,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
+using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.DTO;
 using ObscurCore.Support.Random;
+using RingByteBuffer;
 
 namespace ObscurCore.Packaging
 {
@@ -93,9 +96,9 @@ namespace ObscurCore.Packaging
             bool skip = ItemSkipRegister != null && ItemSkipRegister.Contains(item.Identifier);
 
             if (skip == false) {
-                DecoratingStream itemDecorator;
+                CipherStream itemEncryptor;
                 MacStream itemAuthenticator;
-                CreateEtMDecorator(item, out itemDecorator, out itemAuthenticator);
+                CreateEtMDecorator(item, out itemEncryptor, out itemAuthenticator);
 
                 if (Writing) {
                     EmitHeader(itemAuthenticator);
@@ -107,19 +110,13 @@ namespace ObscurCore.Packaging
                     int iterIn;
                     do {
                         iterIn = item.StreamBinding.Read(Buffer, 0, BufferSize);
-                        itemDecorator.Write(Buffer, 0, iterIn);
+                        itemEncryptor.Write(Buffer, 0, iterIn);
                     } while (iterIn > 0);
                 } else {
-                    itemDecorator.ReadExactlyTo(item.StreamBinding, item.InternalLength, true);
+                    itemEncryptor.ReadExactlyTo(item.StreamBinding, item.InternalLength, true);
                 }
 
-                if (Writing) {
-                    EmitTrailer(itemAuthenticator);
-                } else {
-                    ConsumeTrailer(itemAuthenticator);
-                }
-
-                FinishItem(item, itemDecorator, itemAuthenticator);
+                FinishItem(item, itemEncryptor, itemAuthenticator);
 
                 // Close the source/destination
                 item.StreamBinding.Close();
@@ -147,6 +144,12 @@ namespace ObscurCore.Packaging
         protected override void FinishItem(PayloadItem item, DecoratingStream decorator, MacStream authenticator)
         {
             decorator.Close();
+
+            if (Writing) {
+                EmitTrailer(authenticator);
+            } else {
+                ConsumeTrailer(authenticator);
+            }
 
             // Length checks & commits
             if (Writing) {

@@ -15,18 +15,6 @@ namespace ObscurCore.Cryptography.Support
 		{
 		}
 
-        //[Obsolete("Use version with explicit 'algorithm' parameter")]
-        //public ECPrivateKeyParameters(
-        //    BigInteger			d,
-        //    DerObjectIdentifier publicKeyParamSet)
-        //    : base("ECGOST3410", true, publicKeyParamSet)
-        //{
-        //    if (d == null)
-        //        throw new ArgumentNullException("d");
-
-        //    this.d = d;
-        //}
-
 		public ECPrivateKeyParameters(
 			string				algorithm,
 			BigInteger			d,
@@ -38,18 +26,6 @@ namespace ObscurCore.Cryptography.Support
 
 			this.d = d;
 		}
-
-        //public ECPrivateKeyParameters(
-        //    string				algorithm,
-        //    BigInteger			d,
-        //    DerObjectIdentifier publicKeyParamSet)
-        //    : base(algorithm, true, publicKeyParamSet)
-        //{
-        //    if (d == null)
-        //        throw new ArgumentNullException("d");
-
-        //    this.d = d;
-        //}
 
 		public BigInteger D
 		{

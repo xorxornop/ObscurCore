@@ -6,7 +6,6 @@ namespace ObscurCore.Cryptography.Support
 		: KeyGenerationParameters
 	{
 		private readonly ECDomainParameters domainParams;
-//		private readonly DerObjectIdentifier publicKeyParamSet;
 
 		public ECKeyGenerationParameters(
 			ECDomainParameters	domainParameters,
@@ -16,22 +15,9 @@ namespace ObscurCore.Cryptography.Support
 			this.domainParams = domainParameters;
 		}
 
-//		public ECKeyGenerationParameters(
-//			DerObjectIdentifier	publicKeyParamSet,
-//			CsRng		random)
-//			: this(ECKeyParameters.LookupParameters(publicKeyParamSet), random)
-//		{
-//			this.publicKeyParamSet = publicKeyParamSet;
-//		}
-
 		public ECDomainParameters DomainParameters
 		{
 			get { return domainParams; }
 		}
-
-//		public DerObjectIdentifier PublicKeyParamSet
-//		{
-//			get { return publicKeyParamSet; }
-//		}
 	}
 }

@@ -22,10 +22,18 @@ using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.KeyAgreement
 {
+    /// <summary>
+    /// Factory objects for creating keypairs used for key agreements.
+    /// </summary>
     public static class KeypairFactory
     {
         internal static readonly ECMultiplier EcBasePointMultiplier = new FixedPointCombMultiplier();
 
+        /// <summary>
+        ///     Create a new elliptic curve keypair.
+        /// </summary>
+        /// <param name="curveName">Name of the elliptic curve to use as the basis.</param>
+        /// <returns>Elliptic curve keypair.</returns>
         public static EcKeypair GenerateEcKeypair(string curveName)
         {
             EcKeypair keypair;
@@ -58,13 +66,27 @@ namespace ObscurCore.Cryptography.KeyAgreement
             return keypair;
         }
 
-        internal static void GenerateEcKeypair(string curveName, out ECPoint Q, out BigInteger d)
+        /// <summary>
+        ///     Create a new elliptic curve keypair.
+        /// </summary>
+        /// <param name="curveName">Name of the elliptic curve to use as the basis.</param>
+        /// <param name="Q">Raw public key component.</param>
+        /// <param name="d">Raw private key component.</param>
+        /// <returns>Elliptic curve keypair.</returns>
+        public static void GenerateEcKeypair(string curveName, out ECPoint Q, out BigInteger d)
         {
-            ECDomainParameters domain = Athena.Cryptography.Curves[curveName].GetParameters();
+            ECDomainParameters domain = Athena.Cryptography.EllipticCurves[curveName].GetParameters();
             GenerateEcKeypair(domain, out Q, out d);
         }
 
-        internal static void GenerateEcKeypair(ECDomainParameters domain, out ECPoint Q, out BigInteger d)
+        /// <summary>
+        ///     Create a new elliptic curve keypair.
+        /// </summary>
+        /// <param name="domain">Elliptic curve to use as the basis.</param>
+        /// <param name="Q">Raw public key component.</param>
+        /// <param name="d">Raw private key component.</param>
+        /// <returns>Elliptic curve keypair.</returns>
+        public static void GenerateEcKeypair(ECDomainParameters domain, out ECPoint Q, out BigInteger d)
         {
             ECPoint g = domain.G;
             BigInteger n = domain.N;
@@ -89,6 +111,34 @@ namespace ObscurCore.Cryptography.KeyAgreement
             }
 
             Q = EcBasePointMultiplier.Multiply(g, d);
+        }
+
+        /// <summary>
+        ///     Get the public key corresponding to the private key <paramref name="d"/>.
+        /// </summary>
+        /// <param name="d">Private key.</param>
+        /// <param name="domain">Elliptic curve associated with <paramref name="d"/>.</param>
+        /// <returns>Public key as a raw EC point.</returns>
+        public static ECPoint GetCorrespondingPublicKey(
+            BigInteger d, ECDomainParameters domain)
+        {
+            ECPoint q = new FixedPointCombMultiplier().Multiply(domain.G, d);
+
+            return q;
+        }
+
+        /// <summary>
+        ///     Get the public key corresponding to the private key <paramref name="d"/>.
+        /// </summary>
+        /// <param name="privKey">Private key.</param>
+        /// <returns>Public key as a <see cref="ECPublicKeyParameters"/> object.</returns>
+        public static ECPublicKeyParameters GetCorrespondingPublicKey(
+            ECPrivateKeyParameters privKey)
+        {
+            ECDomainParameters ec = privKey.Parameters;
+            ECPoint q = EcBasePointMultiplier.Multiply(ec.G, privKey.D);
+
+            return new ECPublicKeyParameters(privKey.AlgorithmName, q, ec);
         }
     }
 }

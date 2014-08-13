@@ -1,4 +1,3 @@
-using System;
 using ObscurCore.Cryptography.Support;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives

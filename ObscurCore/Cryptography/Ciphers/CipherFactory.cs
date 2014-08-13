@@ -61,7 +61,11 @@ namespace ObscurCore.Cryptography.Ciphers
                 { StreamCipher.Salsa20, () => new Salsa20Engine() },
                 { StreamCipher.ChaCha, () => new ChaChaEngine() },
                 { StreamCipher.XSalsa20, () => new XSalsa20Engine() },
-                { StreamCipher.Sosemanuk, () => new SosemanukEngine() }
+                { StreamCipher.Sosemanuk, () => new SosemanukEngine() },
+                // Null engine - not actually a cipher - use ONLY for testing!
+#if DEBUG
+                { StreamCipher.None, () => new NullEngine() }
+#endif
             };
 
             // ######################################## BLOCK MODES ########################################
@@ -141,13 +145,15 @@ namespace ObscurCore.Cryptography.Ciphers
         /// <summary>
         ///     Instantiates and returns an implementation of the requested symmetric stream cipher.
         /// </summary>
-        /// <returns>A <see cref="StreamCipherEngine"/> cipher object implementing the relevant cipher algorithm.</returns>
+        /// <returns><see cref="StreamCipherEngine"/> object implementing the relevant cipher algorithm.</returns>
         public static StreamCipherEngine CreateStreamCipher(StreamCipher cipherEnum)
         {
+#if !DEBUG
             if (cipherEnum == StreamCipher.None) {
                 throw new ArgumentException("Cipher set to none.", "cipherEnum",
                     new InvalidOperationException("Cannot instantiate null stream cipher."));
             }
+#endif
             return EngineInstantiatorsStream[cipherEnum]();
         }
     }

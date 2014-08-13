@@ -616,7 +616,7 @@ namespace ObscurCore
             var newItem = new PayloadItem {
                 ExternalLength = externalLength,
                 Type = itemType,
-                RelativePath = relativePath,
+                Path = relativePath,
                 SymmetricCipher = skipCrypto ? null : CreateDefaultPayloadItemCipherConfiguration(),
                 Authentication = skipCrypto ? null : CreateDefaultPayloadItemAuthenticationConfiguration()
             };
@@ -657,7 +657,7 @@ namespace ObscurCore
             var newItem = new PayloadItem {
                 ExternalLength = externalLength,
                 Type = itemType,
-                RelativePath = relativePath,
+                Path = relativePath,
                 SymmetricCipher = CreateDefaultPayloadItemCipherConfiguration(),
                 Authentication = CreateDefaultPayloadItemAuthenticationConfiguration(),
                 KeyConfirmation = keyConfirmatConf,

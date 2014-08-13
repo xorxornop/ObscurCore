@@ -23,7 +23,7 @@ using ObscurCore.Cryptography.Support.Math.EllipticCurve.Endomorphism;
 namespace ObscurCore.Cryptography.KeyAgreement.Information
 {
     /// <summary>
-    ///     Information for a named elliptic curve over Fp
+    ///     Information for a named elliptic curve over F(<sub>p</sub>)
     ///     that uses a custom implementation for computations.
     /// </summary>
     public class CustomFpEcNamedCurveInformation : EllipticCurveInformation
@@ -32,7 +32,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Information
         protected readonly GlvTypeBParameters GlvParameters;
 
         /// <summary>
-        ///     Create a new instance of the custom-implementation Fp curve information class,
+        ///     Create a new instance of the custom-implementation F(<sub>p</sub>) curve information class,
         ///     CustomFpEcNamedCurveInformation.
         /// </summary>
         /// <param name="curve">Custom curve function.</param>

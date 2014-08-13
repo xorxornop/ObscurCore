@@ -1,17 +1,21 @@
-//
-//  Copyright 2014  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+#region License
+
+// 	Copyright 2013-2014 Matthew Ducker
+// 	
+// 	Licensed under the Apache License, Version 2.0 (the "License");
+// 	you may not use this file except in compliance with the License.
+// 	
+// 	You may obtain a copy of the License at
+// 		
+// 		http://www.apache.org/licenses/LICENSE-2.0
+// 	
+// 	Unless required by applicable law or agreed to in writing, software
+// 	distributed under the License is distributed on an "AS IS" BASIS,
+// 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// 	See the License for the specific language governing permissions and 
+// 	limitations under the License.
+
+#endregion
 
 using System;
 using ProtoBuf;
@@ -24,6 +28,9 @@ namespace ObscurCore.DTO
     [ProtoContract]
     public class Pbkdf2Configuration : IDataTransferObject, IEquatable<Pbkdf2Configuration>
     {
+        /// <summary>
+        ///     Create a configuration for PBKDF2 key derivations.
+        /// </summary>
         public Pbkdf2Configuration()
         {
             AlgorithmName = "HMACSHA256";
@@ -48,13 +55,7 @@ namespace ObscurCore.DTO
         [ProtoMember(2, IsRequired = true)]
         public int Iterations { get; set; }
 
-        /// <summary>
-        ///     Indicates whether the current object is equal to another object of the same type.
-        /// </summary>
-        /// <returns>
-        ///     true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
-        /// </returns>
-        /// <param name="other">An object to compare with this object.</param>
+        /// <inheritdoc />
         public bool Equals(Pbkdf2Configuration other)
         {
             if (ReferenceEquals(null, other)) {
@@ -66,6 +67,7 @@ namespace ObscurCore.DTO
             return String.Equals(AlgorithmName, other.AlgorithmName, StringComparison.OrdinalIgnoreCase) && Iterations == other.Iterations;
         }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) {
@@ -77,9 +79,10 @@ namespace ObscurCore.DTO
             if (obj.GetType() != GetType()) {
                 return false;
             }
-            return Equals((Pbkdf2Configuration) obj);
+            return Equals((Pbkdf2Configuration)obj);
         }
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked {

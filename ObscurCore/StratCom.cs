@@ -46,13 +46,15 @@ namespace ObscurCore
 
         static StratCom()
         {
-            var digestRng = new DigestCsRng(AuthenticatorFactory.CreateHashPrimitive(EntropyHashFunction));
+            var digest = AuthenticatorFactory.CreateHashPrimitive(EntropyHashFunction);
+
+            var digestRng = new DigestCsRng(digest);
             digestRng.AddSeedMaterial(((UInt64) DateTime.UtcNow.Ticks).ToLittleEndian());
 
             var seed = new byte[InitialSeedSize];
             new ThreadedSeedRng().NextBytes(seed, 0, InitialSeedSize / 2);
             var rrwRng = new ReversedRandomWindowRng(digestRng,
-                Athena.Cryptography.HashFunctions[EntropyHashFunction].OutputSize / 8);
+                Athena.Cryptography.HashFunctions[EntropyHashFunction].OutputSize.BitsToBytes());
             rrwRng.NextBytes(seed, InitialSeedSize / 2, InitialSeedSize / 2);
             rrwRng.AddSeedMaterial(seed);
             rrwRng.NextBytes(seed);
@@ -75,16 +77,16 @@ namespace ObscurCore
         ///     Adds entropy to the central entropy source, <see cref="EntropySupplier"/>, 
         ///     from a thread-based entropy collector.
         /// </summary>
-        public static void AddEntropy()
+        public static void AddEntropy(int? bytes = null)
         {
-            var seed = new byte[InitialSeedSize];
-            new ThreadedSeedRng().NextBytes(seed, 0, InitialSeedSize / 2);
+            var seed = new byte[bytes ?? InitialSeedSize];
+            new ThreadedSeedRng().NextBytes(seed, 0, seed.Length);
             EntropySupplier.AddSeedMaterial(seed);
         }
 
         /// <summary>
-        ///     Serialises a data transfer object (DTO) of type <typeparamref name="T"/> 
-        ///     into a <see cref="System.IO.Stream"/>, optionally with a Base128 length prefix.
+        ///     Serialises a data transfer object (DTO) of type <typeparamref name="T"/> into 
+        ///     an <paramref name="output"/> stream, optionally with a Base128 length prefix.
         /// </summary>
         /// <remarks>
         ///     Provides deserialisation capabilities for any object which derives from 
@@ -96,7 +98,7 @@ namespace ObscurCore
         /// <param name="output">The stream to write the serialised object to.</param>
         /// <param name="prefixLength">
         ///     If <c>true</c>, the object will be prefixed with its length in Base128 format. 
-        ///     Use when receiver does not know data length.
+        ///     Use when receiver does not know data length, e.g. networked communications.
         /// </param>
         public static void SerialiseDataTransferObject<T>(T obj, Stream output, bool prefixLength = false)
              where T : IDataTransferObject
@@ -114,8 +116,8 @@ namespace ObscurCore
         }
 
         /// <summary>
-        ///     Deserialises a data transfer object (DTO) of type <typeparamref name="T"/> from
-        ///     a <see cref="System.IO.Stream"/>.
+        ///     Deserialises a data transfer object (DTO) of type <typeparamref name="T"/> 
+        ///     from an <paramref name="input"/> stream.
         /// </summary>
         /// <remarks>
         ///     Provides deserialisation capabilities for any object which derives from 
@@ -123,12 +125,12 @@ namespace ObscurCore
         ///     attribute (e.g. those from ObscurCore.DTO namespace).
         /// </remarks>
         /// <typeparam name="T">Data transfer object.</typeparam>
-        /// <param name="objectStream">The stream to read the serialised object from.</param>
+        /// <param name="input">The stream to read the serialised object from.</param>
         /// <param name="lengthPrefixed">
         ///     If <c>true</c>, the object is prefixed with its length in Base128 format. 
-        ///     If <c>false</c>, the whole stream will be read.
+        ///     If <c>false</c>, the whole <paramref name="input"/> stream will be read.
         /// </param>
-        public static T DeserialiseDataTransferObject<T>(Stream objectStream, bool lengthPrefixed = false) 
+        public static T DeserialiseDataTransferObject<T>(Stream input, bool lengthPrefixed = false) 
             where T : IDataTransferObject
         {
             if (Serialiser.CanSerializeContractType(typeof (T)) == false) {
@@ -137,10 +139,10 @@ namespace ObscurCore
             }
             var outputObj = default(T);
             if (lengthPrefixed) {
-                outputObj = (T)Serialiser.DeserializeWithLengthPrefix(objectStream, outputObj, 
+                outputObj = (T)Serialiser.DeserializeWithLengthPrefix(input, outputObj, 
                     typeof(T), PrefixStyle.Base128, 0);
             } else {
-                outputObj = (T)Serialiser.Deserialize(objectStream, outputObj, typeof(T));
+                outputObj = (T)Serialiser.Deserialize(input, outputObj, typeof(T));
             }
             return outputObj;
         }

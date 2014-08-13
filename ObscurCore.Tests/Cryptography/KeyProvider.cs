@@ -32,13 +32,7 @@ namespace ObscurCore.Tests.Cryptography
 		public KeyProvider (KeyProvider other)
 		{
 			SymmetricKeys = other.SymmetricKeys.Reverse().ToList();
-
-			var ecKeypairs = new List<EcKeypair>();
-			foreach (var item in other.EcKeypairs) {
-				ecKeypairs.Add(KeypairFactory.GenerateEcKeypair(item.CurveName));
-			}
-
-			EcKeypairs = ecKeypairs;
+            EcKeypairs = other.EcKeypairs.Select(item => KeypairFactory.GenerateEcKeypair(item.CurveName)).ToList(); ;
 		}
 
 		public KeyProvider(int keysToMake = 5) {
@@ -46,11 +40,11 @@ namespace ObscurCore.Tests.Cryptography
 			var ecKeypairs = new List<EcKeypair>();
 
             for (int i = 0; i < keysToMake; i++) {
-                var newKey = new byte[16];
+                var newKey = new byte[128.BitsToBytes()];
                 StratCom.EntropySupplier.NextBytes(newKey);
                 symKeys.Add(newKey);
 
-				var curveName = Athena.Cryptography.Curves.Keys.ElementAt(StratCom.EntropySupplier.Next(Athena.Cryptography.Curves.Count));
+                var curveName = Athena.Cryptography.EllipticCurves.Keys.ElementAt(StratCom.EntropySupplier.Next(Athena.Cryptography.EllipticCurves.Count));
 				ecKeypairs.Add(KeypairFactory.GenerateEcKeypair(curveName));
             }
 

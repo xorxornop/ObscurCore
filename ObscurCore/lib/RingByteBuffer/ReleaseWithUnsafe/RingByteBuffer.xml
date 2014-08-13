@@ -1,0 +1,575 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RingByteBuffer</name>
+    </assembly>
+    <members>
+        <member name="T:RingByteBuffer.ConcurrentRingBuffer">
+            <summary>
+                <see cref="T:RingByteBuffer.RingBuffer"/> implementation allowing for concurrent (parallel) I/O.
+            </summary>
+            <remarks>
+                Concurrent I/O is handled by reading shared state, determining what shared state 
+                <emphasis>would be</emphasis> after the operation had terminated (if it were updating 
+                state as it proceeded, as is traditional), and then in a concurrency-safe manner, 
+                updating the state to this before actually operating on the ringbuffer contents.
+            
+                All further actions within the operation use only this derived local state. 
+                Although the buffer is shared, operations do not overlap because of this 
+                preemptive state synchronisation. Any operation called afterward observes the same state 
+                that would be observed as if the first operation had terminated, 
+                although in actuality it may not have yet.
+            </remarks>
+        </member>
+        <member name="T:RingByteBuffer.RingBuffer">
+            <summary>
+                Simple ring/cyclic data buffer ("ringbuffer").
+            </summary>
+            <remarks>
+                Makes efficient use of memory.
+                Ensure initialised capacity can hold typical use case requirement with some overflow tolerance.
+            </remarks>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.#ctor(System.Int32,System.Byte[],System.Boolean)">
+            <summary>
+                Initialises a new instance of a <see cref="T:RingByteBuffer.RingBuffer"/>.
+            </summary>
+            <param name="maximumCapacity">Maximum required storage capability of the ringbuffer.</param>
+            <param name="buffer">Data to initialise the ringbuffer with.</param>
+            <param name="allowOverwrite">If set to <c>true</c> overwrite will be allowed, otherwise <c>false</c>.</param>
+            <exception cref="T:System.ArgumentNullException">Supplied data array is null.</exception>
+            <exception cref="T:System.ArgumentException">
+                Capacity is less than 2 bytes, or <paramref name="buffer"/> length exceeds <paramref name="maximumCapacity"/>.
+            </exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.Put(System.Byte)">
+            <summary>
+                Puts the single byte <paramref name="input"/> in the ringbuffer.
+            </summary>
+            <param name="input">Byte to write to the ringbuffer.</param>
+            <exception cref="T:System.InvalidOperationException">Ringbuffer has too much in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.Put(System.Byte[])">
+            <summary>
+                Put the data in <paramref name="buffer"/> in its entirety into the ringbuffer.
+            </summary>
+            <param name="buffer">Buffer to take input bytes from.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Offset or count is negative.</exception>
+            <exception cref="T:System.InvalidOperationException">Ringbuffer has too much in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.Put(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+                Put <paramref name="count"/> bytes from <paramref name="buffer"/>, into the ringbuffer.
+            </summary>
+            <param name="buffer">Buffer to take input bytes from.</param>
+            <param name="offset">Offset in <paramref name="buffer"/> to take bytes from.</param>
+            <param name="count">Number of bytes to put into the ringbuffer.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Offset or count is negative.</exception>
+            <exception cref="T:System.InvalidOperationException">Ringbuffer has too much in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.PutFrom(System.IO.Stream,System.Int32)">
+            <summary>
+                Reads <paramref name="count"/> bytes from <paramref name="source"/>  
+                and puts them directly into the ringbuffer. 
+                Avoids overhead of unnecessary copying.
+            </summary>
+            <param name="source">Stream to read bytes from to put into the ringbuffer.</param>
+            <param name="count">Number of bytes to put into the ringbuffer.</param>
+            <returns>
+                Number of bytes actually put into the ringbuffer. 
+                If less than <paramref name="count"/>, end of <paramref name="source"/> was found.
+            </returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">Count is negative.</exception>
+            <exception cref="T:System.InvalidOperationException">Ringbuffer has too much in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.PutExactlyFrom(System.IO.Stream,System.Int32)">
+            <summary>
+                Reads <paramref name="count"/> bytes from <paramref name="source"/>  
+                and puts them directly into the ringbuffer. 
+                Avoids overhead of unnecessary copying.
+            </summary>
+            <param name="source">Stream to read bytes from to put into the ringbuffer.</param>
+            <param name="count">Number of bytes to put into the ringbuffer.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Count is negative.</exception>
+            <exception cref="T:System.InvalidOperationException">Ringbuffer has too much in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.PutFromAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+                Reads up to <paramref name="count"/> bytes from <paramref name="source"/> asynchronously 
+                and puts them directly into the ringbuffer. 
+                Avoids overhead of unnecessary copying.
+            </summary>
+            <param name="source">Stream to read bytes from to put into the ringbuffer.</param>
+            <param name="count">Number of bytes to put into the ringbuffer.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+            <returns>
+                Number of bytes actually put into the ringbuffer. 
+                If less than <paramref name="count"/>, end of <paramref name="source"/> was found.
+            </returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">Count is negative.</exception>
+            <exception cref="T:System.InvalidOperationException">Ringbuffer has too much in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.PutExactlyFromAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+                Reads <paramref name="count"/> bytes from <paramref name="source"/> asynchronously 
+                and puts them directly into the ringbuffer. 
+                Avoids overhead of unnecessary copying.
+            </summary>
+            <param name="source">Stream to read bytes from to put into the ringbuffer.</param>
+            <param name="count">Number of bytes to put into the ringbuffer.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Count is negative.</exception>
+            <exception cref="T:System.InvalidOperationException">Ringbuffer has too much in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.Take">
+            <summary>
+                Take a single byte from the ringbuffer.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Ringbuffer does not have enough in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.Take(System.Int32)">
+            <summary>
+                Takes <paramref name="count"/> bytes from the ringbuffer 
+                and returns a new buffer of them.
+            </summary>
+            <param name="count">Quantity of bytes to take.</param>
+            <returns>Data from the ringbuffer.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">Offset or count is negative.</exception>
+            <exception cref="T:System.ArgumentException">Ringbuffer does not have enough in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.Take(System.Byte[])">
+            <summary>
+                Takes bytes from the ringbuffer as necessary to fill <paramref name="buffer"/>.
+            </summary>
+            <param name="buffer">Buffer to fill with bytes taken from the ringbuffer.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Offset or count is negative.</exception>
+            <exception cref="T:System.ArgumentException">
+                Ringbuffer does not have enough in it, or the destination <paramref name="buffer"/> is too small.
+            </exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.Take(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+                Takes <paramref name="count"/> bytes from the ringbuffer and writes 
+                them to <paramref name="buffer"/>.
+            </summary>
+            <param name="buffer">Buffer to write bytes from the ringbuffer in.</param>
+            <param name="offset">Offset in <paramref name="buffer"/> to write the bytes from the ringbuffer to.</param>
+            <param name="count">Quantity of bytes to read into <paramref name="buffer"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Offset or count is negative.</exception>
+            <exception cref="T:System.ArgumentException">
+                Ringbuffer does not have enough in it, or the destination <paramref name="buffer"/> is too small.
+            </exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.TakeTo(System.IO.Stream,System.Int32)">
+            <summary>
+                Takes <paramref name="count"/> bytes directly from the 
+                ringbuffer and writes them into <paramref name="destination"/>. 
+                Avoids overhead of unnecessary copying.
+            </summary>
+            <param name="destination">Stream to write bytes to that are taken from the ringbuffer.</param>
+            <param name="count">Number of bytes to read into <paramref name="destination"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Count is negative.</exception>
+            <exception cref="T:System.ArgumentException">Ringbuffer does not have enough in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.TakeToAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+                Takes <paramref name="count"/> bytes directly from the 
+                ringbuffer and writes them into <paramref name="destination"/> asynchronously. 
+                Avoids overhead of unnecessary copying.
+            </summary>
+            <param name="destination">Stream to write bytes to that are taken from the ringbuffer.</param>
+            <param name="count">Number of bytes to read into <paramref name="destination"/>.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Count is negative.</exception>
+            <exception cref="T:System.ArgumentException">Ringbuffer does not have enough in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.Skip(System.Int32)">
+            <summary>
+                Skips/discards <paramref name="count"/> number of bytes from the ringbuffer.
+            </summary>
+            <remarks>
+                Skipped bytes are not actually discarded until overwritten, 
+                so if security is needed, use <see cref="M:RingByteBuffer.RingBuffer.Reset"/>.
+            </remarks>
+            <param name="count">Number of bytes to skip ahead.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Count is negative.</exception>
+            <exception cref="T:System.ArgumentException">Ringbuffer does not have enough in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.Reset">
+            <summary>
+                Resets the ringbuffer to an empty state, and sets every byte to zero.
+            </summary>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.ToArray">
+            <summary>
+                Emits the entire length of the buffer in use. Ringbuffer will be empty after use.
+            </summary>
+            <returns>Ringbuffer data.</returns>
+        </member>
+        <member name="M:RingByteBuffer.RingBuffer.CeilingNextPowerOfTwo(System.Int32)">
+            <summary>
+            Calculate the next power of 2, greater than or equal to x.
+            </summary>
+            <param name="x">Value to round up</param>
+            <returns>The next power of 2 from x inclusive</returns>
+        </member>
+        <member name="P:RingByteBuffer.RingBuffer.MaximumCapacity">
+            <summary>
+                Maximum data possible to be stored.
+            </summary>
+        </member>
+        <member name="P:RingByteBuffer.RingBuffer.CurrentLength">
+            <summary>
+                Length of data stored.
+            </summary>
+        </member>
+        <member name="P:RingByteBuffer.RingBuffer.Spare">
+            <summary>
+                Capacity not filled with data.
+            </summary>
+        </member>
+        <member name="P:RingByteBuffer.RingBuffer.Overwritable">
+            <summary>
+                Whether data is overwritable.
+            </summary>
+            <value><c>true</c> if overwritable; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.Put(System.Byte)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.Put(System.Byte[],System.Int32,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.PutFrom(System.IO.Stream,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.PutExactlyFrom(System.IO.Stream,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.PutFromAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.PutExactlyFromAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.PutAllocate(System.Int32@,System.Int32)">
+            <summary>
+                Allocates space in ringbuffer for a put operation.
+            </summary>
+            <param name="tailOffset">Reference to ringbuffer tail offset (end of live content).</param>
+            <param name="count">Number of bytes to take/read.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="count"/> is negative.</exception>
+            <exception cref="T:System.ArgumentException">Ringbuffer has too much in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.PutPublish(System.Int32,System.Int32)">
+            <summary>
+                Indicates that the buffer alteration made as part of a put operation has finished, 
+                so the content should be made available.
+            </summary>
+            <param name="tailOffset"></param>
+            <param name="count"></param>
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.Take">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.Take(System.Byte[],System.Int32,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.TakeTo(System.IO.Stream,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.TakeToAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.TakeInitial(System.Int32@,System.Int32)">
+            <summary>
+                Reads and updates shared buffer state for a take operation, 
+                and verifies validity of <paramref name="count"/> parameter value.
+            </summary>
+            <param name="headOffset">Reference to ringbuffer head offset (start of live content).</param>
+            <param name="count">Number of bytes to take/read.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="count"/> is negative.</exception>
+            <exception cref="T:System.ArgumentException">Ringbuffer does not have enough in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.TakePublish(System.Int32,System.Int32)">
+            <summary>
+                Indicates that the buffer alteration(s) made as part of a take operation have finished, 
+                so the content should be made available.
+            </summary>
+            <param name="headOffset">Ending offset for the take operation.</param>
+            <param name="count">Number of bytes taken.</param>
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.Skip(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.SkipLocal(System.Int32@,System.Int32)">
+            <summary>
+                Skips ringbuffer content by moving offset and substracting stored length. 
+                Must be called from within memory-safe context! 
+            </summary>
+            <remarks>
+                Does not perform error-checking on arguments - callee should do this.
+            </remarks>
+            <param name="headOffset">Reference to ringbuffer head offset (start of live content).</param>
+            <param name="count">Number of bytes to skip.</param>
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.Reset">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.ConcurrentRingBuffer.ToArray">
+            <summary>
+                Emits the entire length of the buffer in use. Ringbuffer will be empty after use.
+            </summary>
+            <returns>Ringbuffer data.</returns>
+        </member>
+        <member name="P:RingByteBuffer.ConcurrentRingBuffer.CurrentLength">
+            <summary>
+                Length of data stored.
+            </summary>
+        </member>
+        <member name="P:RingByteBuffer.ConcurrentRingBuffer.Spare">
+            <summary>
+                Capacity not filled with data.
+            </summary>
+        </member>
+        <member name="T:RingByteBuffer.CopyExtensions">
+            <summary>
+                Extension methods for copying byte arrays.
+            </summary>
+        </member>
+        <member name="M:RingByteBuffer.CopyExtensions.DeepCopy(System.Byte[])">
+            <summary>
+                Produce a deep copy (by value) of <paramref name="data"/> array.
+            </summary>
+            <param name="data">Array to produce a copy of.</param>
+            <returns>Copy of <paramref name="data"/> array.</returns>
+        </member>
+        <member name="M:RingByteBuffer.CopyExtensions.CopyBytes(System.Byte[],System.Int32,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+                Copy bytes from <paramref name="src"/> into <paramref name="dst"/>.
+            </summary>
+            <param name="src">The source byte array.</param>
+            <param name="srcOffset">
+                The offset in <paramref name="src"/> at which the source data begins.
+            </param>
+            <param name="length">The number of bytes to copy.</param>
+            <param name="dst">The destination byte array.</param>
+            <param name="dstOffset">
+                The offset in <paramref name="dst"/> at which to copy into.
+            </param>
+        </member>
+        <member name="M:RingByteBuffer.CopyExtensions.CopyMemory(System.Byte*,System.Byte*,System.Int32)">
+            <summary>
+                Copy data from <paramref name="src"/> into <paramref name="dst"/>.
+            </summary>
+            <param name="src">Pointer to source of data.</param>
+            <param name="dst">Pointer to destination for data.</param>
+            <param name="length">Length of data to copy in bytes.</param>
+        </member>
+        <member name="T:RingByteBuffer.RingBufferStream">
+            <summary>
+                Exposes a <see cref="T:RingByteBuffer.RingBuffer"/> as a Stream.
+                Provides buffer capability with standard stream interface.
+            </summary>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.#ctor(System.Int32,System.Boolean)">
+            <summary>
+                Initializes a new <see cref="T:RingByteBuffer.RingBufferStream"/>.
+            </summary>
+            <param name="capacity">Maximum required storage capability of the ringbuffer.</param>
+            <param name="allowOverwrite">If set to <c>true</c> allow overwrite.</param>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.Flush">
+            <summary>
+                Does nothing in this implementation.
+            </summary>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.ReadByte">
+            <summary>
+                Read a single byte from the ringbuffer.
+            </summary>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.Read(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+                Takes <paramref name="count" /> bytes from the ringbuffer and puts
+                them in <paramref name="buffer" />.
+            </summary>
+            <param name="buffer">Buffer to write bytes from the ringbuffer in.</param>
+            <param name="offset">Offset in <paramref name="buffer" /> to write the bytes from the ringbuffer to.</param>
+            <param name="count">Quantity of bytes to read into <paramref name="buffer" />.</param>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.Read(System.Byte[],System.Int32,System.Int32,System.Boolean)">
+            <summary>
+                Takes <paramref name="count" /> bytes from the ringbuffer and puts
+                them in <paramref name="buffer" />.
+            </summary>
+            <param name="buffer">Buffer to write bytes from the ringbuffer in.</param>
+            <param name="offset">Offset in <paramref name="buffer" /> to write the bytes from the ringbuffer to.</param>
+            <param name="count">Quantity of bytes to read into <paramref name="buffer" />.</param>
+            <param name="exact">
+                If set to <c>true</c>, returning less than <paramref name="count" /> bytes is unacceptable
+                (exception is thrown).
+            </param>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.ReadTo(System.IO.Stream,System.Int32)">
+            <summary>
+                Reads from the ringbuffer, and writes to <paramref name="destination" />.
+            </summary>
+            <param name="destination">Destination to write bytes to, after being read from the ringbuffer.</param>
+            <param name="count">Number of bytes to read/write.</param>
+            <returns>Number of bytes written (read from the buffer).</returns>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.ReadToAsync(System.IO.Stream,System.Int32)">
+            <summary>
+                Reads from the ringbuffer, and writes to <paramref name="destination" /> asynchronously.
+            </summary>
+            <param name="destination">Destination to write bytes to, after being read from the ringbuffer.</param>
+            <param name="count">Number of bytes to read/write.</param>
+            <returns>Number of bytes written (read from the ringbuffer).</returns>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.ReadToAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+                Reads from the ringbuffer, and writes to <paramref name="destination" /> asynchronously.
+            </summary>
+            <param name="destination">Destination to write bytes to, after being read from the ringbuffer.</param>
+            <param name="count">Number of bytes to read/write.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+            <returns>Number of bytes written (read from the ringbuffer).</returns>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.WriteByte(System.Byte)">
+            <summary>
+                Writes a single byte to the ringbuffer.
+            </summary>
+            <param name="value">Byte to write to the ringbuffer.</param>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.Write(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+                Write <paramref name="count" /> bytes from <paramref name="buffer" /> into the ringbuffer.
+            </summary>
+            <param name="buffer">Buffer to take input bytes from.</param>
+            <param name="offset">Offset in <paramref name="buffer" /> to take bytes from.</param>
+            <param name="count">Number of bytes to write into the ringbuffer.</param>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.WriteFrom(System.IO.Stream,System.Int32)">
+            <summary>
+                Reads <paramref name="count" /> bytes from <paramref name="source" />,
+                and writes to the ringbuffer.
+            </summary>
+            <param name="source">Source to take bytes from for writing.</param>
+            <param name="count">Number of bytes to read/write.</param>
+            <returns>Number of bytes written (read from the source).</returns>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.WriteFromAsync(System.IO.Stream,System.Int32)">
+            <summary>
+                Reads <paramref name="count" /> bytes from <paramref name="source" />
+                asynchronously, and writes to the ringbuffer.
+            </summary>
+            <param name="source">Source to take bytes from for writing.</param>
+            <param name="count">Number of bytes to read/write.</param>
+            <returns>Number of bytes written (read from the source).</returns>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.WriteFromAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+                Reads <paramref name="count" /> bytes from <paramref name="source" />
+                asynchronously, and writes to the ringbuffer.
+            </summary>
+            <param name="source">Source to take bytes from for writing.</param>
+            <param name="count">Number of bytes to read/write.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+            <returns>Number of bytes written (read from the source).</returns>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.Seek(System.Int64,System.IO.SeekOrigin)">
+            <summary>
+                Advances the stream a specified number of bytes.
+                It is not possible to revert this action.
+            </summary>
+            <param name="offset">Number of bytes to skip ahead.</param>
+            <param name="origin">
+                Use only values of <see cref="F:System.IO.SeekOrigin.Begin"/> or <see cref="F:System.IO.SeekOrigin.Current"/> (identical meaning).
+            </param>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.SetLength(System.Int64)">
+            <summary>
+                Shortens the contents of the ringbuffer (extension is not supported).
+            </summary>
+        </member>
+        <member name="M:RingByteBuffer.RingBufferStream.Dispose(System.Boolean)">
+            <inheritdoc />
+        </member>
+        <member name="P:RingByteBuffer.RingBufferStream.CanRead">
+            <inheritdoc />
+        </member>
+        <member name="P:RingByteBuffer.RingBufferStream.CanSeek">
+            <inheritdoc />
+        </member>
+        <member name="P:RingByteBuffer.RingBufferStream.CanWrite">
+            <inheritdoc />
+        </member>
+        <member name="P:RingByteBuffer.RingBufferStream.Length">
+            <inheritdoc />
+        </member>
+        <member name="P:RingByteBuffer.RingBufferStream.Capacity">
+            <summary>
+                Maximum storage capacity of the ringbuffer.
+            </summary>
+            <value>The maximum length of the ringbuffer.</value>
+        </member>
+        <member name="P:RingByteBuffer.RingBufferStream.Spare">
+            <summary>
+                Currently remaining capacity of ringbuffer.
+            </summary>
+            <value>The maximum length of data that can be written at the current capacity of the ringbuffer.</value>
+        </member>
+        <member name="P:RingByteBuffer.RingBufferStream.Position">
+            <summary>
+                Gets the position. Setting position not allowed.
+            </summary>
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.Put(System.Byte)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.Put(System.Byte[],System.Int32,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.PutFrom(System.IO.Stream,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.PutExactlyFrom(System.IO.Stream,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.PutFromAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.PutExactlyFromAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.PutInitial(System.Int32)">
+            <summary>
+                Verifies validity of <paramref name="count"/> parameter value.
+            </summary>
+            <param name="count">Number of bytes to put/write.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Count is negative.</exception>
+            <exception cref="T:System.ArgumentException">Ringbuffer has too much in it.</exception>
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.Take">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.Take(System.Byte[],System.Int32,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.TakeTo(System.IO.Stream,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.TakeToAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:RingByteBuffer.SequentialRingBuffer.TakeInitial(System.Int32)">
+            <summary>
+                Verifies validity of <paramref name="count"/> parameter value.
+            </summary>
+            <param name="count">Number of bytes to take/read.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Count is negative.</exception>
+            <exception cref="T:System.ArgumentException">Ringbuffer does not have enough data in it.</exception>
+        </member>
+    </members>
+</doc>

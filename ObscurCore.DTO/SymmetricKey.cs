@@ -1,23 +1,31 @@
-﻿//
-//  Copyright 2014  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+﻿#region License
+
+// 	Copyright 2013-2014 Matthew Ducker
+// 	
+// 	Licensed under the Apache License, Version 2.0 (the "License");
+// 	you may not use this file except in compliance with the License.
+// 	
+// 	You may obtain a copy of the License at
+// 		
+// 		http://www.apache.org/licenses/LICENSE-2.0
+// 	
+// 	Unless required by applicable law or agreed to in writing, software
+// 	distributed under the License is distributed on an "AS IS" BASIS,
+// 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// 	See the License for the specific language governing permissions and 
+// 	limitations under the License.
+
+#endregion
 
 using System;
 using ProtoBuf;
 
 namespace ObscurCore.DTO
 {
+    /// <summary>
+    ///     Key for use in symmetric cryptographic constructions such as ciphers, 
+    ///     MAC functions, and the like.
+    /// </summary>
     [ProtoContract]
     public class SymmetricKey : IPossessConfirmationCanary, IEquatable<SymmetricKey>
     {
@@ -39,17 +47,13 @@ namespace ObscurCore.DTO
         [ProtoMember(3, IsRequired = false)]
         public KeyContextAllowed AllowedContexts { get; set; }
 
-        public bool Equals(SymmetricKey other)
-        {
-            return Equals(other, true);
-        }
-
         /// <summary>
         ///     Data used for generating key confirmations.
         /// </summary>
         [ProtoMember(4, IsRequired = false)]
         public byte[] ConfirmationCanary { get; set; }
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked {
@@ -59,6 +63,13 @@ namespace ObscurCore.DTO
             }
         }
 
+        /// <inheritdoc />
+        public bool Equals(SymmetricKey other)
+        {
+            return Equals(other, true);
+        }
+
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) {
@@ -73,6 +84,7 @@ namespace ObscurCore.DTO
             return Equals((SymmetricKey) obj);
         }
 
+        /// <inheritdoc />
         public bool Equals(SymmetricKey other, bool constantTime)
         {
             if (ReferenceEquals(null, other)) {

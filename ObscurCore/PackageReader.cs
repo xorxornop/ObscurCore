@@ -197,7 +197,7 @@ namespace ObscurCore
         {
             var tree = new PayloadTree();
             foreach (var payloadItem in _manifest.PayloadItems) {
-                tree.AddItem(payloadItem, payloadItem.RelativePath);
+                tree.AddItem(payloadItem, payloadItem.Path);
             }
             return tree;
         } 
@@ -543,13 +543,13 @@ namespace ObscurCore
 
             foreach (PayloadItem item in _manifest.PayloadItems) {
                 if (item.Type != PayloadItemType.KeyAction &&
-                    item.RelativePath.Contains(Athena.Packaging.PathRelativeUp)) {
+                    item.Path.Contains(Athena.Packaging.PathRelativeUp)) {
                     throw new ConfigurationInvalidException("A payload item specifies a relative path outside that of the package root. "
                                                             + " This is a potentially dangerous condition.");
                 }
 
                 // First we correct the directory symbol to match local OS
-                string relativePath = item.RelativePath.Replace(Athena.Packaging.PathDirectorySeperator,
+                string relativePath = item.Path.Replace(Athena.Packaging.PathDirectorySeperator,
                     Path.DirectorySeparatorChar);
                 string absolutePath = Path.Combine(path, relativePath);
                 switch (item.Type) {
@@ -568,9 +568,11 @@ namespace ObscurCore
                 PayloadItem itemClosureVar = item;
                 item.SetStreamBinding(() => {
                     try {
-                        string directory = Path.GetDirectoryName(absolutePath);
+                        var directory = Path.GetDirectoryName(absolutePath);
                         Directory.CreateDirectory(directory);
-                        FileStream stream = File.Create(absolutePath);
+                        const int fileBufferSize = 81920; // 80 KB (Microsoft default)
+                        var stream = new FileStream(absolutePath, FileMode.Create, FileAccess.Write,
+                            FileShare.None, fileBufferSize, useAsync: true);
                         stream.SetLength(itemClosureVar.ExternalLength);
                         return stream;
                     } catch (ArgumentException e) {

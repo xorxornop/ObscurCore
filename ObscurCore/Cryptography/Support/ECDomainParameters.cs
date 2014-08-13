@@ -6,11 +6,11 @@ namespace ObscurCore.Cryptography.Support
 {
     public class ECDomainParameters
     {
-		internal ECCurve     curve;
-		internal byte[]      seed;
-		internal ECPoint     g;
-		internal BigInteger  n;
-		internal BigInteger  h;
+		private readonly ECCurve     _curve;
+        private readonly byte[] _seed;
+        private readonly ECPoint _g;
+        private readonly BigInteger _n;
+        private readonly BigInteger _h;
 
 		public ECDomainParameters(
 			ECCurve     curve,
@@ -45,36 +45,36 @@ namespace ObscurCore.Cryptography.Support
 			if (h == null)
 				throw new ArgumentNullException("h");
 
-			this.curve = curve;
-			this.g = g.Normalize();
-			this.n = n;
-			this.h = h;
-			this.seed = seed.DeepCopy();
+			this._curve = curve;
+			this._g = g.Normalize();
+			this._n = n;
+			this._h = h;
+			this._seed = seed.DeepCopy();
 		}
 
 		public ECCurve Curve
 		{
-			get { return curve; }
+			get { return _curve; }
 		}
 
 		public ECPoint G
 		{
-			get { return g; }
+			get { return _g; }
 		}
 
 		public BigInteger N
 		{
-			get { return n; }
+			get { return _n; }
 		}
 
 		public BigInteger H
 		{
-			get { return h; }
+			get { return _h; }
 		}
 
 		public byte[] GetSeed()
 		{
-			return seed.DeepCopy();
+			return _seed.DeepCopy();
 		}
 
 		public override bool Equals(
@@ -94,20 +94,20 @@ namespace ObscurCore.Cryptography.Support
 		protected bool Equals(
 			ECDomainParameters other)
 		{
-			return curve.Equals(other.curve)
-				&&	g.Equals(other.g)
-				&&	n.Equals(other.n)
-				&&	h.Equals(other.h)
-				&&	seed.SequenceEqualShortCircuiting(other.seed);
+			return _curve.Equals(other._curve)
+				&&	_g.Equals(other._g)
+				&&	_n.Equals(other._n)
+				&&	_h.Equals(other._h)
+				&&	_seed.SequenceEqualShortCircuiting(other._seed);
 		}
 
 		public override int GetHashCode()
 		{
-			return curve.GetHashCode()
-				^	g.GetHashCode()
-				^	n.GetHashCode()
-				^	h.GetHashCode()
-				^	seed.GetHashCodeExt();
+			return _curve.GetHashCode()
+				^	_g.GetHashCode()
+				^	_n.GetHashCode()
+				^	_h.GetHashCode()
+				^	_seed.GetHashCodeExt();
 		}
     }
 }
