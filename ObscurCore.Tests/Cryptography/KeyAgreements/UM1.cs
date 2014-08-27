@@ -226,7 +226,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		private static void DoUM1Exchange(ECTestKPStore keypair) {
 			var sw = System.Diagnostics.Stopwatch.StartNew ();
 
-			EcKeyConfiguration ephemeral;
+			EcKey ephemeral;
 			var initiatorSS = Um1Exchange.Initiate(keypair.Responder.ExportPublicKey(),
 				keypair.Initiator.GetPrivateKey(), out ephemeral);
 			var responderSS = Um1Exchange.Respond(keypair.Initiator.ExportPublicKey(), 

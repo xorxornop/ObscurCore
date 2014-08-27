@@ -110,7 +110,7 @@ namespace ObscurCore.DTO
         ///     Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
         /// </summary>
         [ProtoMember(7, IsRequired = true)]
-        public EcKeyConfiguration EphemeralKey { get; set; }
+        public EcKey EphemeralKey { get; set; }
 
         /// <inheritdoc />
         public Um1HybridManifestCryptographyConfiguration CloneSafely()

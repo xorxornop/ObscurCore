@@ -23,18 +23,29 @@ using ProtoBuf;
 namespace ObscurCore.DTO
 {
     /// <summary>
-    ///     Configuration of an elliptic curve key.
+    ///     An elliptic curve key.
     /// </summary>
     /// <seealso cref="EcKeypair"/>
     [ProtoContract]
-    public class EcKeyConfiguration : IDataTransferObject, IEquatable<EcKeyConfiguration>, IEcKeyConfiguration
+    public class EcKey : IEcKey, IDataTransferObject, IEquatable<EcKey>
     {
+        [ProtoIgnore]
+        protected bool Public;
+
         /// <summary>
         ///     If <c>true</c>, key is public component of a keypair. Otherwise, key is private component.
         /// </summary>
-        /// <seealso cref="EcKeypair"/>
         [ProtoMember(1, IsRequired = true)]
-        public bool PublicComponent { get; set; }
+        public bool PublicComponent
+        {
+            get { return Public; }
+            set {
+                if (value == false) {
+                    ConfirmationCanary = null;
+                }
+                Public = value;
+            }
+        }
 
         /// <summary>
         ///     Name of the curve provider. 
@@ -63,8 +74,19 @@ namespace ObscurCore.DTO
         [ProtoMember(5, IsRequired = false)]
         public byte[] AdditionalData { get; set; }
 
+        /// <summary>
+        ///     Data used for generating key confirmations. 
+        ///     Only applicable when <see cref="PublicComponent"/> is <c>true</c>.
+        /// </summary>
+        /// <remarks>
+        ///     Setting <see cref="PublicComponent"/> to <c>false</c> will remove the current value.
+        /// </remarks>
+        /// <seealso cref="AuthenticationFunctionConfiguration"/>
+        [ProtoMember(6, IsRequired = false)]
+        public byte[] ConfirmationCanary { get; set; }
+
         /// <inheritdoc />
-        public bool Equals(EcKeyConfiguration other)
+        public bool Equals(EcKey other)
         {
             if (ReferenceEquals(null, other)) {
                 return false;
@@ -91,7 +113,7 @@ namespace ObscurCore.DTO
             if (obj.GetType() != GetType()) {
                 return false;
             }
-            return Equals((EcKeyConfiguration) obj);
+            return Equals((EcKey) obj);
         }
 
         /// <inheritdoc />

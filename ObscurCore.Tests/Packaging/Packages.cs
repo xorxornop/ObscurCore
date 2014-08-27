@@ -32,10 +32,8 @@ namespace ObscurCore.Tests.Packaging
         {
             // Process of writing destroys preKey variable passed in for security
             // We must copy it to a local variable before reading the package back
-            var preKeyEnumerated = KeyProviders.Alice.SymmetricKeys.ElementAt(
+            var preKey = KeyProviders.Alice.SymmetricKeys.ElementAt(
                 StratCom.EntropySupplier.Next(KeyProviders.Alice.SymmetricKeys.Count()));
-            var preKey = new byte[preKeyEnumerated.Length];
-            Array.Copy(preKeyEnumerated, preKey, preKey.Length);
 
             var totalLen = IOTestBase.LargeBinaryFileList.Sum(file => file.Length);
             int expLen = (int)(totalLen * 1.1);

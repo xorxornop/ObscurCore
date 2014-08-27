@@ -41,8 +41,8 @@ namespace ObscurCore.Cryptography.Signing.Primitives
     public class EcDsaSigner : IDsa
     {
         protected static readonly ECMultiplier EcBasePointMultiplier = new FixedPointCombMultiplier();
-        private readonly EcKeyConfiguration _publicKey;
-        private readonly EcKeyConfiguration _privateKey;
+        private readonly EcKey _publicKey;
+        private readonly EcKey _privateKey;
         private ECDomainParameters _ecDomain;
 
         private readonly CsRng _random = StratCom.EntropySupplier;
@@ -58,7 +58,7 @@ namespace ObscurCore.Cryptography.Signing.Primitives
         /// <param name="entropy">
         ///     Supplier of random numbers (null for default <see cref="StratCom.EntropySupplier" />).
         /// </param>
-        public EcDsaSigner(bool forSigning, EcKeyConfiguration key, CsRng entropy = null)
+        public EcDsaSigner(bool forSigning, EcKey key, CsRng entropy = null)
         {
             if (key == null) {
                 throw new ArgumentNullException("key");
@@ -88,7 +88,7 @@ namespace ObscurCore.Cryptography.Signing.Primitives
         /// <param name="entropy">
         ///     Supplier of random numbers (null for default <see cref="StratCom.EntropySupplier" />).
         /// </param>
-        public EcDsaSigner(EcKeyConfiguration publicKey, EcKeyConfiguration privateKey, CsRng entropy = null)
+        public EcDsaSigner(EcKey publicKey, EcKey privateKey, CsRng entropy = null)
         {
             if (publicKey != null && privateKey != null) {
                 throw new ArgumentNullException();

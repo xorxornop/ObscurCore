@@ -62,22 +62,25 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EcKeyConfiguration.cs" />
+    <Compile Include="EcKey.cs" />
     <Compile Include="EcKeypair.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="IAuthenticationFunctionConfiguration.cs" />
     <Compile Include="ICipherConfiguration.cs" />
     <Compile Include="ICloneableSafely.cs" />
-    <Compile Include="IEcKeyConfiguration.cs" />
+    <Compile Include="IEcKey.cs" />
+    <Compile Include="IEcKeypair.cs" />
+    <Compile Include="IKeyPermissions.cs" />
     <Compile Include="IKeyDerivationConfiguration.cs" />
     <Compile Include="IManifest.cs" />
     <Compile Include="IManifestHeader.cs" />
     <Compile Include="IPayloadConfiguration.cs" />
     <Compile Include="IPayloadItem.cs" />
     <Compile Include="IPossessConfirmationCanary.cs" />
+    <Compile Include="ISymmetricKey.cs" />
     <Compile Include="IUm1HybridManifestCryptographyConfiguration.cs" />
-    <Compile Include="KeyContextAllowed.cs" />
-    <Compile Include="KeyUseAllowed.cs" />
+    <Compile Include="KeyUseContextPermission.cs" />
+    <Compile Include="KeyUsePermission.cs" />
     <Compile Include="RangeConfiguration.cs" />
     <Compile Include="SymmetricKey.cs" />
     <Compile Include="AuthenticationFunctionType.cs" />

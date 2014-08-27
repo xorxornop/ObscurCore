@@ -1,6 +1,6 @@
 ﻿#region License
 
-// 	Copyright 2013-2014 Matthew Ducker
+// 	Copyright 2014-2014 Matthew Ducker
 // 	
 // 	Licensed under the Apache License, Version 2.0 (the "License");
 // 	you may not use this file except in compliance with the License.
@@ -17,29 +17,22 @@
 
 #endregion
 
-using System;
-
 namespace ObscurCore.DTO
 {
     /// <summary>
-    ///     Uses allowed for a key (operational utility).
+    ///     An interface for a symmetric key.
     /// </summary>
-    [Flags]
-    public enum KeyUseAllowed
+    public interface ISymmetricKey : IKeyPermissions, IPossessConfirmationCanary
     {
         /// <summary>
-        ///     Key cannot be used.
+        ///     Key for use in encryption or authentication schemes etc. after further derivation.
         /// </summary>
-        None = 0x00,
+        byte[] Key { get; set; }
 
         /// <summary>
-        ///     Key can be used for encryption.
+        ///     Any additional data required for the <see cref="Key"/> 
+        ///     (for example, special formatting, if any).
         /// </summary>
-        Encryption = 0x01,
-
-        /// <summary>
-        ///     Key can be used for authentication.
-        /// </summary>
-        Authentication = 0x02
+        byte[] AdditionalData { get; set; }
     }
 }

@@ -57,7 +57,7 @@ namespace ObscurCore
         /// <param name="obj">The object to serialise.</param>
         /// <param name="prefixLength">
         ///     If <c>true</c>, the object will be prefixed with its length in Base128 format. 
-        ///     Use when receiver does not know data length.
+        ///     Use when recipient does not know data length.
         /// </param>
         /// <returns>The serialised DTO in a <see cref="System.IO.MemoryStream"/>.</returns>
         public static MemoryStream SerialiseDto<T>(this T obj, bool prefixLength)
@@ -82,7 +82,7 @@ namespace ObscurCore
         /// <param name="output">The stream to write the serialised object to.</param>
         /// <param name="prefixLength">
         ///     If <c>true</c>, the object will be prefixed with its length in Base128 format. 
-        ///     Use when receiver does not know data length.
+        ///     Use when recipient does not know data length.
         /// </param>
         public static void SerialiseDto<T>(this T obj, Stream output, bool prefixLength = true)
             where T : IDataTransferObject

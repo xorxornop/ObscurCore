@@ -30,7 +30,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
         /// <returns>The ECDH shared secret.</returns>
         /// <param name="publicKey">Public key.</param>
         /// <param name="privateKey">Private key.</param>
-        public static byte[] CalculateEcdhSecret(EcKeyConfiguration publicKey, EcKeyConfiguration privateKey)
+        public static byte[] CalculateEcdhSecret(EcKey publicKey, EcKey privateKey)
         {
             if (publicKey.CurveName.Equals(DjbCurve.Curve25519.ToString())) {
                 return Curve25519.CalculateSharedSecret(privateKey.EncodedKey, publicKey.EncodedKey);
@@ -46,7 +46,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
         /// <returns>The ECDHC shared secret.</returns>
         /// <param name="publicKey">Public key.</param>
         /// <param name="privateKey">Private key.</param>
-        public static byte[] CalculateEcdhcSecret(EcKeyConfiguration publicKey, EcKeyConfiguration privateKey)
+        public static byte[] CalculateEcdhcSecret(EcKey publicKey, EcKey privateKey)
         {
             if (publicKey.CurveName.Equals(DjbCurve.Curve25519.ToString())) {
                 return Curve25519.CalculateSharedSecret(privateKey.EncodedKey, publicKey.EncodedKey);
@@ -91,7 +91,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
             return P.AffineXCoord.ToBigInteger();
         }
 
-        internal static ECPublicKeyParameters DecodeToPublicKey(EcKeyConfiguration ecKey)
+        internal static ECPublicKeyParameters DecodeToPublicKey(EcKey ecKey)
         {
             ECPublicKeyParameters publicKey;
             try {
@@ -107,7 +107,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
             return publicKey;
         }
 
-        internal static ECPrivateKeyParameters DecodeToPrivateKey(EcKeyConfiguration ecKey)
+        internal static ECPrivateKeyParameters DecodeToPrivateKey(EcKey ecKey)
         {
             ECPrivateKeyParameters privateKey;
             try {

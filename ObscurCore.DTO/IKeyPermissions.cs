@@ -1,6 +1,6 @@
-﻿#region License
+#region License
 
-// 	Copyright 2013-2014 Matthew Ducker
+// 	Copyright 2014-2014 Matthew Ducker
 // 	
 // 	Licensed under the Apache License, Version 2.0 (the "License");
 // 	you may not use this file except in compliance with the License.
@@ -17,29 +17,18 @@
 
 #endregion
 
-using System;
-
 namespace ObscurCore.DTO
 {
-    /// <summary>
-    ///     Use contexts allowed for a key (operational environments).
-    /// </summary>
-    [Flags]
-    public enum KeyContextAllowed : byte
+    public interface IKeyPermissions 
     {
         /// <summary>
-        ///     Key cannot be used.
+        ///     Types of use for which the key is allowed (operations).
         /// </summary>
-        None = 0x00,
+        KeyUsePermission UsePermissions { get; set; }
 
         /// <summary>
-        ///     Key can be used in a manifest header.
+        ///     Use contexts for which the key is allowed (environment).
         /// </summary>
-        ManifestHeader = 0x01,
-
-        /// <summary>
-        ///     Key can be used in a payload item.
-        /// </summary>
-        PayloadItem = 0x02
+        KeyUseContextPermission ContextPermissions { get; set; }
     }
 }

@@ -23,34 +23,44 @@ using ProtoBuf;
 namespace ObscurCore.DTO
 {
     /// <summary>
-    ///     Key for use in symmetric cryptographic constructions such as ciphers, 
-    ///     MAC functions, and the like.
+    ///     A symmetric key.
     /// </summary>
+    /// <remarks>
+    ///     For use in cryptographic constructions such as symmetric ciphers, 
+    ///     MAC functions, and the like.
+    /// </remarks>
     [ProtoContract]
-    public class SymmetricKey : IPossessConfirmationCanary, IEquatable<SymmetricKey>
+    public class SymmetricKey : ISymmetricKey, IDataTransferObject, IEquatable<SymmetricKey>
     {
         /// <summary>
-        ///     Key for use in encryption or authentication schemes after key derivation.
+        ///     Key for use in encryption or authentication schemes etc. after further derivation.
         /// </summary>
         [ProtoMember(1, IsRequired = true)]
         public byte[] Key { get; set; }
 
         /// <summary>
-        ///     Types of use for which the key is allowed (operations).
+        ///     Any additional data required for the <see cref="Key"/> 
+        ///     (for example, special formatting, if any).
         /// </summary>
         [ProtoMember(2, IsRequired = false)]
-        public KeyUseAllowed AllowedUses { get; set; }
+        public byte[] AdditionalData { get; set; }
+
+        /// <summary>
+        ///     Types of use for which the key is allowed (operations).
+        /// </summary>
+        [ProtoMember(3, IsRequired = false)]
+        public KeyUsePermission UsePermissions { get; set; }
 
         /// <summary>
         ///     Use contexts for which the key is allowed (environment).
         /// </summary>
-        [ProtoMember(3, IsRequired = false)]
-        public KeyContextAllowed AllowedContexts { get; set; }
+        [ProtoMember(4, IsRequired = false)]
+        public KeyUseContextPermission ContextPermissions { get; set; }
 
         /// <summary>
         ///     Data used for generating key confirmations.
         /// </summary>
-        [ProtoMember(4, IsRequired = false)]
+        [ProtoMember(5, IsRequired = false)]
         public byte[] ConfirmationCanary { get; set; }
 
         /// <inheritdoc />

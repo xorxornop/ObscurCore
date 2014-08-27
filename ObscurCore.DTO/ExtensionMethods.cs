@@ -126,7 +126,17 @@ namespace ObscurCore.DTO
 
         public static bool SequenceEqualShortCircuiting<T>(this T[] a, T[] b) where T : struct
         {
-            int i = a.Length;
+            if (a == null && b == null) {
+                return true;
+            }
+
+            if (a == null) {
+                throw new ArgumentNullException("a");
+            } else if (b == null) {
+                throw new ArgumentNullException("b");
+            }
+
+            var i = a.Length;
             if (i != b.Length) {
                 return false;
             }
@@ -142,18 +152,31 @@ namespace ObscurCore.DTO
         /// <summary>
         ///     A constant time equals comparison - does not terminate early if
         ///     test will fail.
-        ///     Checks as far as a is in length.
+        ///     Checks as far as <paramref name="a"/> is in length.
         /// </summary>
-        /// <param name="a">Array to compare against</param>
-        /// <param name="b">Array to test for equality</param>
-        /// <returns>If arrays equal <c>true</c>, false otherwise.</returns>
+        /// <param name="a">Array to compare against.</param>
+        /// <param name="b">Array to test for equality.</param>
+        /// <returns>If <c>true</c>, array section tested is equal.</returns>
         public static bool SequenceEqualConstantTime(this byte[] a, byte[] b)
         {
             return a.SequenceEqualConstantTime(0, b, 0, a.Length);
         }
 
+        /// <summary>
+        ///     A constant time equals comparison - does not terminate early if
+        ///     test will fail.
+        /// </summary>
+        /// <param name="x">Array to compare against.</param>
+        /// <param name="xOffset">Index in <paramref name="x"/> to start comparison at.</param>
+        /// <param name="y">Array to test for equality.</param>
+        /// <param name="yOffset">Index in <paramref name="y"/> to start comparison at.</param>
+        /// <param name="length">Number of bytes to compare.</param>
+        /// <returns>If <c>true</c>, array section tested is equal.</returns>
         public static bool SequenceEqualConstantTime(this byte[] x, int xOffset, byte[] y, int yOffset, int length)
         {
+            if (x == null && y == null) {
+                return true;
+            }
             if (x == null) {
                 throw new ArgumentNullException("x");
             }

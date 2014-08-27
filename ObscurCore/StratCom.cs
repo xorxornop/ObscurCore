@@ -98,7 +98,7 @@ namespace ObscurCore
         /// <param name="output">The stream to write the serialised object to.</param>
         /// <param name="prefixLength">
         ///     If <c>true</c>, the object will be prefixed with its length in Base128 format. 
-        ///     Use when receiver does not know data length, e.g. networked communications.
+        ///     Use when recipient does not know data length, e.g. networked communications.
         /// </param>
         public static void SerialiseDataTransferObject<T>(T obj, Stream output, bool prefixLength = false)
              where T : IDataTransferObject

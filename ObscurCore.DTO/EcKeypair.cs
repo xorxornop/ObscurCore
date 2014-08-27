@@ -23,10 +23,13 @@ using ProtoBuf;
 namespace ObscurCore.DTO
 {
     /// <summary>
-    ///     Represents an elliptic curve keypair.
+    ///     An elliptic curve keypair.
     /// </summary>
+    /// <remarks>
+    ///     For use in cryptographic constructions such as EC-Diffie-Hellman or EC-DSA.
+    /// </remarks>
     [ProtoContract]
-    public class EcKeypair : IPossessConfirmationCanary
+    public class EcKeypair : IEcKeypair, IDataTransferObject, IEquatable<EcKeypair>
     {
         /// <summary>
         ///     Name of the curve provider. 
@@ -64,39 +67,53 @@ namespace ObscurCore.DTO
         public byte[] AdditionalData { get; set; }
 
         /// <summary>
+        ///     Types of use for which the key is allowed (operations).
+        /// </summary>
+        [ProtoMember(6, IsRequired = false)]
+        public KeyUsePermission UsePermissions { get; set; }
+
+        /// <summary>
+        ///     Use contexts for which the key is allowed (environment).
+        /// </summary>
+        [ProtoMember(7, IsRequired = false)]
+        public KeyUseContextPermission ContextPermissions { get; set; }
+
+        /// <summary>
         ///     Data used for generating key confirmations.
         /// </summary>
         /// <seealso cref="AuthenticationFunctionConfiguration"/>
-        [ProtoMember(6, IsRequired = false)]
+        [ProtoMember(8, IsRequired = false)]
         public byte[] ConfirmationCanary { get; set; }
 
         /// <summary>
         ///     Exports the public component of the keypair as a DTO.
         /// </summary>
-        /// <returns>Public key as <see cref="EcKeyConfiguration" /> DTO.</returns>
-        public EcKeyConfiguration ExportPublicKey()
+        /// <returns>Public key as <see cref="EcKey"/> DTO.</returns>
+        public EcKey ExportPublicKey()
         {
-            return new EcKeyConfiguration {
+            return new EcKey {
                 PublicComponent = true,
                 CurveProviderName = String.Copy(CurveProviderName),
                 CurveName = String.Copy(CurveName),
                 EncodedKey = EncodedPublicKey.DeepCopy(),
-                AdditionalData = AdditionalData.DeepCopy()
+                AdditionalData = AdditionalData.DeepCopy(),
+                ConfirmationCanary = ConfirmationCanary.DeepCopy()
             };
         }
 
         /// <summary>
         ///     Exports the private component of the keypair as a DTO object.
         /// </summary>
-        /// <returns>Private key as <see cref="EcKeyConfiguration" /> DTO.</returns>
-        public EcKeyConfiguration GetPrivateKey()
+        /// <returns>Private key as <see cref="EcKey"/> DTO.</returns>
+        public EcKey GetPrivateKey()
         {
-            return new EcKeyConfiguration {
+            return new EcKey {
                 PublicComponent = false,
                 CurveProviderName = String.Copy(CurveProviderName),
                 CurveName = String.Copy(CurveName),
                 EncodedKey = EncodedPrivateKey.DeepCopy(),
-                AdditionalData = AdditionalData.DeepCopy()
+                AdditionalData = AdditionalData.DeepCopy(),
+                ConfirmationCanary = null
             };
         }
 

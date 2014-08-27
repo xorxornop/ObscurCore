@@ -17,18 +17,29 @@
 
 #endregion
 
+using System;
+
 namespace ObscurCore.DTO
 {
     /// <summary>
-    ///     Interface to denote inclusion of a key confirmation canary (for key containers). 
-    ///     Enables use of the key for creating key confirmations, where allowed by that container.
+    ///     Use contexts allowed for a key (operational environments).
     /// </summary>
-    public interface IPossessConfirmationCanary
+    [Flags]
+    public enum KeyUseContextPermission : byte
     {
         /// <summary>
-        ///     Data used for generating key confirmations.
+        ///     Key cannot be used.
         /// </summary>
-        /// <seealso cref="AuthenticationFunctionConfiguration"/>
-        byte[] ConfirmationCanary { get; set; }
+        None = 0x00,
+
+        /// <summary>
+        ///     Key can be used in a manifest header.
+        /// </summary>
+        ManifestHeader = 0x01,
+
+        /// <summary>
+        ///     Key can be used in a payload item.
+        /// </summary>
+        PayloadItem = 0x02
     }
 }
