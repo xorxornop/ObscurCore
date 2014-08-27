@@ -197,7 +197,7 @@ namespace ObscurCore
         {
             var tree = new PayloadTree();
             foreach (var payloadItem in _manifest.PayloadItems) {
-                tree.AddItem(payloadItem, payloadItem.RelativePath);
+                tree.AddItem(payloadItem, payloadItem.Path);
             }
             return tree;
         } 
@@ -209,32 +209,44 @@ namespace ObscurCore
         /// <exception cref="AggregateException">
         ///     Consisting of ItemKeyMissingException, indicating items missing cryptographic keys.
         /// </exception>
-        private void ConfirmItemPreKeys(IEnumerable<byte[]> payloadKeysSymmetric = null)
+        private void ConfirmItemPreKeys(IEnumerable<SymmetricKey> payloadKeysSymmetric = null)
         {
-            List<byte[]> keys = payloadKeysSymmetric != null ? payloadKeysSymmetric.ToList() : new List<byte[]>();
-            var errorList = new List<PayloadItem>();
+            var keys = payloadKeysSymmetric != null ? payloadKeysSymmetric.ToList() : new List<SymmetricKey>();
+            var keylessItems = new List<PayloadItem>();
 
             IEnumerable<PayloadItem> itemsToConfirm = _manifest.PayloadItems.AsQueryExpr()
-                .Where(item => item.SymmetricCipherKey.IsNullOrZeroLength() || 
-                    item.AuthenticationKey.IsNullOrZeroLength()).Run();
+                .Where(item => 
+                    item.SymmetricCipherKey.IsNullOrZeroLength() || 
+                    item.AuthenticationKey.IsNullOrZeroLength())
+                .Run();
 
             Parallel.ForEach(itemsToConfirm, item => {
-                if (item.KeyConfirmation == null || item.KeyDerivation == null) {
-                    errorList.Add(item);
-                }
-                // We will derive the key from one supplied as a potential
-                byte[] preIKey = ConfirmationUtility.ConfirmSymmetricKey(item.KeyConfirmation,
-                    item.KeyConfirmationVerifiedOutput, keys);
-                if (preIKey.IsNullOrZeroLength()) {
-                    errorList.Add(item);
-                }
-                if (errorList.Count == 0 && _itemPreKeys.ContainsKey(item.Identifier) == false) {
-                    _itemPreKeys.Add(item.Identifier, preIKey);
+                if (item.KeyConfirmation != null && item.KeyDerivation != null) {
+                    // We will derive the key from one supplied as a potential
+                    SymmetricKey symmetricKey;
+                    try {
+                        symmetricKey = ConfirmationUtility.ConfirmKeyFromCanary(
+                            ((SymmetricManifestCryptographyConfiguration)_manifestCryptoConfig).KeyConfirmation,
+                            _manifestCryptoConfig.KeyConfirmationVerifiedOutput, keys);
+                    } catch (Exception e) {
+                        throw new KeyConfirmationException("Key confirmation failed in an unexpected way.", e);
+                    }
+                    if (symmetricKey != null) {
+                        if (symmetricKey.Key.IsNullOrZeroLength()) {
+                            throw new ArgumentException("Supplied symmetric key is null or zero-length.",
+                                "payloadKeysSymmetric");
+                        }
+                        _itemPreKeys.Add(item.Identifier, symmetricKey.Key);
+                    } else {
+                        keylessItems.Add(item);
+                    }
+                } else {
+                    keylessItems.Add(item);
                 }
             });
 
-            if (errorList.Count > 0) {
-                throw new AggregateException(errorList.Select(item => new ItemKeyMissingException(item)));
+            if (keylessItems.Count > 0) {
+                throw new AggregateException(keylessItems.Select(item => new ItemKeyMissingException(item)));
             }
         }
 
@@ -328,8 +340,12 @@ namespace ObscurCore
         /// <returns>Package manifest object.</returns>
         /// <exception cref="ArgumentException">Key provider absent or could not supply any keys.</exception>
         /// <exception cref="NotSupportedException">Manifest cryptography scheme unsupported/unknown or missing.</exception>
+        /// <exception cref="CryptoException">
+        ///     A cryptographic operation failed (additional data maybe available in <see cref="CryptoException.InnerException"/>).
+        /// </exception>
         /// <exception cref="KeyConfirmationException">
-        ///     Key confirmation failed to determine a key, or failed unexpectedly. InnerException may have details.
+        ///     Key confirmation failed to determine a key, or failed unexpectedly 
+        ///     (additional data maybe available in <see cref="KeyConfirmationException.InnerException"/>)
         /// </exception>
         /// <exception cref="InvalidDataException">
         ///     Deserialisation of manifest failed unexpectedly (manifest malformed, or incorrect key).
@@ -338,17 +354,19 @@ namespace ObscurCore
         private Manifest ReadManifest(IKeyProvider keyProvider, ManifestCryptographyScheme manifestScheme)
         {
             // Determine the pre-key for the package manifest decryption (different schemes use different approaches)
-            byte[] preMKey;
+            byte[] preMKey = null;
             switch (manifestScheme) {
                 case ManifestCryptographyScheme.SymmetricOnly:
+                {
                     if (keyProvider.SymmetricKeys.Any() == false) {
                         throw new ArgumentException("No symmetric keys available for decryption of this manifest.",
                             "keyProvider");
                     }
+                    SymmetricKey symmetricKey = null;
                     if (_manifestCryptoConfig.KeyConfirmation != null) {
                         try {
-                            preMKey = ConfirmationUtility.ConfirmSymmetricKey(
-                                ((SymmetricManifestCryptographyConfiguration) _manifestCryptoConfig).KeyConfirmation,
+                            symmetricKey = ConfirmationUtility.ConfirmKeyFromCanary(
+                                ((SymmetricManifestCryptographyConfiguration)_manifestCryptoConfig).KeyConfirmation,
                                 _manifestCryptoConfig.KeyConfirmationVerifiedOutput, keyProvider.SymmetricKeys);
                         } catch (Exception e) {
                             throw new KeyConfirmationException("Key confirmation failed in an unexpected way.", e);
@@ -361,22 +379,27 @@ namespace ObscurCore
                                 "keyProvider",
                                 new ConfigurationInvalidException("Package manifest includes no key confirmation data."));
                         }
-                        preMKey = keyProvider.SymmetricKeys.First();
+                        preMKey = keyProvider.SymmetricKeys.First().Key;
+                    }
+                    if (symmetricKey != null) {
+                        preMKey = symmetricKey.Key;
                     }
                     break;
+                } 
                 case ManifestCryptographyScheme.Um1Hybrid:
-                    // Identify matching public-private key pairs based on curve provider and curve name
-                    EcKeyConfiguration um1EphemeralKey =
+                {
+                    EcKey um1SenderKey;
+                    EcKeypair um1RecipientKeypair;
+                    EcKey um1EphemeralKey =
                         ((Um1HybridManifestCryptographyConfiguration) _manifestCryptoConfig).EphemeralKey;
-
                     if (_manifestCryptoConfig.KeyConfirmation != null) {
                         try {
-                            // Project the keypairs to only private keys
-                            IEnumerable<EcKeyConfiguration> um1ReceiverKeys =
-                                keyProvider.EcKeypairs.Select(keypair => keypair.GetPrivateKey());
-                            preMKey = ConfirmationUtility.ConfirmUm1HybridKey(_manifestCryptoConfig.KeyConfirmation,
+                            ConfirmationUtility.ConfirmKeyFromCanary(_manifestCryptoConfig.KeyConfirmation,
                                 _manifestCryptoConfig.KeyConfirmationVerifiedOutput,
-                                um1EphemeralKey, keyProvider.ForeignEcKeys, um1ReceiverKeys);
+                                keyProvider.ForeignEcKeys,
+                                um1EphemeralKey,
+                                keyProvider.EcKeypairs,
+                                out um1SenderKey, out um1RecipientKeypair);
                         } catch (Exception e) {
                             throw new KeyConfirmationException("Key confirmation failed in an unexpected way.", e);
                         }
@@ -386,22 +409,24 @@ namespace ObscurCore
                             throw new KeyConfirmationException(
                                 "Multiple EC keys have been provided where the package provides no key confirmation capability.");
                         }
-
-                        EcKeyConfiguration localKey = keyProvider.EcKeypairs.First().GetPrivateKey();
-                        EcKeyConfiguration foreignKey = keyProvider.ForeignEcKeys.First();
-                        try {
-                            preMKey = Um1Exchange.Respond(foreignKey, localKey, um1EphemeralKey);
-                        } catch (Exception e) {
-                            throw new CryptoException("Unexpected error in UM1 key agreement.", e);
-                        }
+                        um1SenderKey = keyProvider.ForeignEcKeys.First();
+                        um1RecipientKeypair = keyProvider.EcKeypairs.First();
+                    }
+                    // Perform the UM1 key agreement
+                    try {
+                        preMKey = Um1Exchange.Respond(um1SenderKey, um1RecipientKeypair.GetPrivateKey(),
+                                um1EphemeralKey);
+                    } catch (Exception e) {
+                        throw new CryptoException("Unexpected error in UM1 key agreement.", e);
                     }
                     break;
+                }
                 default:
                     throw new NotSupportedException(
                         String.Format("Manifest cryptography scheme \"{0}\" is unsupported/unknown.", manifestScheme));
             }
 
-            if (preMKey == null || preMKey.Length == 0) {
+            if (preMKey.IsNullOrZeroLength()) {
                 throw new KeyConfirmationException(String.Format(
                     "None of the keys provided to decrypt the manifest (cryptographic scheme: {0}) were confirmed as being able to do so.",
                     manifestScheme));
@@ -412,12 +437,20 @@ namespace ObscurCore
             // Derive working manifest encryption & authentication keys from the manifest pre-key
             byte[] workingManifestCipherKey, workingManifestMacKey;
             try {
-                KeyStretchingUtility.DeriveWorkingKeys(preMKey, _manifestCryptoConfig.SymmetricCipher.KeySizeBits.BitsToBytes(),
-                    _manifestCryptoConfig.Authentication.KeySizeBits.Value.BitsToBytes(), _manifestCryptoConfig.KeyDerivation,
+                int cipherKeySizeBytes = _manifestCryptoConfig.SymmetricCipher.KeySizeBits.BitsToBytes();
+                if (_manifestCryptoConfig.Authentication.KeySizeBits.HasValue == false) {
+                    throw new ConfigurationInvalidException("Manifest authentication key size is missing.");
+                }
+                int macKeySizeBytes = _manifestCryptoConfig.Authentication.KeySizeBits.Value.BitsToBytes();
+                // Derive working cipher and MAC keys from the pre-key
+                KeyStretchingUtility.DeriveWorkingKeys(
+                    preMKey, 
+                    cipherKeySizeBytes, macKeySizeBytes, 
+                    _manifestCryptoConfig.KeyDerivation,
                     out workingManifestCipherKey, out workingManifestMacKey);
             } catch (Exception e) {
                 throw new CryptoException("Unexpected error in manifest key derivation.", e);
-                // make a specialised exception to communicate the failure type
+                // TODO: make a specialised exception to communicate the failure type
             }
 
             // Clear the manifest pre-key
@@ -520,7 +553,7 @@ namespace ObscurCore
         /// <exception cref="ConfigurationInvalidException">Package item path includes a relative-up specifier (security risk).</exception>
         /// <exception cref="NotSupportedException">Package includes a KeyAction payload item type (not implemented).</exception>
         /// <exception cref="IOException">File already exists and overwrite is not allowed.</exception>
-        public void ReadToDirectory(string path, bool overwrite, IEnumerable<byte[]> payloadKeys = null)
+        public void ReadToDirectory(string path, bool overwrite, IEnumerable<SymmetricKey> payloadKeys = null)
         {
             if (path == null) {
                 throw new ArgumentNullException("path");
@@ -543,13 +576,13 @@ namespace ObscurCore
 
             foreach (PayloadItem item in _manifest.PayloadItems) {
                 if (item.Type != PayloadItemType.KeyAction &&
-                    item.RelativePath.Contains(Athena.Packaging.PathRelativeUp)) {
+                    item.Path.Contains(Athena.Packaging.PathRelativeUp)) {
                     throw new ConfigurationInvalidException("A payload item specifies a relative path outside that of the package root. "
                                                             + " This is a potentially dangerous condition.");
                 }
 
                 // First we correct the directory symbol to match local OS
-                string relativePath = item.RelativePath.Replace(Athena.Packaging.PathDirectorySeperator,
+                string relativePath = item.Path.Replace(Athena.Packaging.PathDirectorySeperator,
                     Path.DirectorySeparatorChar);
                 string absolutePath = Path.Combine(path, relativePath);
                 switch (item.Type) {
@@ -568,9 +601,11 @@ namespace ObscurCore
                 PayloadItem itemClosureVar = item;
                 item.SetStreamBinding(() => {
                     try {
-                        string directory = Path.GetDirectoryName(absolutePath);
+                        var directory = Path.GetDirectoryName(absolutePath);
                         Directory.CreateDirectory(directory);
-                        FileStream stream = File.Create(absolutePath);
+                        const int fileBufferSize = 81920; // 80 KB (Microsoft default)
+                        var stream = new FileStream(absolutePath, FileMode.Create, FileAccess.Write,
+                            FileShare.None, fileBufferSize, useAsync: true);
                         stream.SetLength(itemClosureVar.ExternalLength);
                         return stream;
                     } catch (ArgumentException e) {
@@ -596,7 +631,7 @@ namespace ObscurCore
         /// <exception cref="KeyConfirmationException">Key confirmation for payload items failed.</exception>
         /// <exception cref="ConfigurationInvalidException">Payload layout scheme malformed/missing.</exception>
         /// <exception cref="InvalidDataException">Package data structure malformed.</exception>
-        private void ReadPayload(IEnumerable<byte[]> payloadKeys = null)
+        private void ReadPayload(IEnumerable<SymmetricKey> payloadKeys = null)
         {
             if (_readingPayloadStreamOffset != 0 && _readingStream.Position != _readingPayloadStreamOffset) {
                 _readingStream.Seek(_readingPayloadStreamOffset, SeekOrigin.Begin);

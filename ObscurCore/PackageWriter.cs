@@ -76,7 +76,7 @@ namespace ObscurCore
         /// <param name="key">Cryptographic key known to the recipient to use for the manifest.</param>
         /// <param name="lowEntropy">Byte key supplied has low entropy (e.g. from a human password).</param>
         /// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-        public PackageWriter(byte[] key, bool lowEntropy, PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
+        public PackageWriter(SymmetricKey key, bool lowEntropy = false, PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
         {
             _manifest = new Manifest();
             _manifestHeaderCryptoScheme = ManifestCryptographyScheme.SymmetricOnly;
@@ -87,12 +87,30 @@ namespace ObscurCore
 
         /// <summary>
         ///     Create a new package using default symmetric-only encryption for security.
+        /// </summary>
+        /// <param name="key">Cryptographic key known to the recipient to use for the manifest.</param>
+        /// <param name="canary">Known value to use for confirming the <paramref name="key"/>.</param>
+        /// <param name="lowEntropy">Byte key supplied has low entropy (e.g. from a human password).</param>
+        /// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
+        public PackageWriter(byte[] key, byte[] canary, bool lowEntropy = false, PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
+        {
+            _manifest = new Manifest();
+            _manifestHeaderCryptoScheme = ManifestCryptographyScheme.SymmetricOnly;
+            SetManifestCryptoSymmetric(key, canary, lowEntropy);
+            PayloadLayout = layoutScheme;
+            ManifestCompression = true;
+        }
+
+        /// <summary>
+        ///     Create a new package using default symmetric-only encryption for security.
         ///     Key is used in UTF-8-encoded byte array form.
         /// </summary>
         /// <param name="key">Passphrase known to the recipient to use for the manifest.</param>
+        /// <param name="canary">Known value to use for confirming the <paramref name="key"/>.</param>
+        /// <param name="lowEntropy">Byte key supplied has low entropy (e.g. from a human password).</param>
         /// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-        public PackageWriter(string key, PayloadLayoutScheme layoutScheme = DefaultLayoutScheme) 
-            : this(Encoding.UTF8.GetBytes(key), true, layoutScheme)
+        public PackageWriter(string key, string canary, bool lowEntropy = true, PayloadLayoutScheme layoutScheme = DefaultLayoutScheme) 
+            : this(Encoding.UTF8.GetBytes(key), Encoding.UTF8.GetBytes(canary), lowEntropy, layoutScheme)
         {
         }
 
@@ -107,7 +125,8 @@ namespace ObscurCore
         {
             _manifest = new Manifest();
             _manifestHeaderCryptoScheme = ManifestCryptographyScheme.Um1Hybrid;
-            SetManifestCryptoUm1(sender.GetPrivateKey(), recipient.ExportPublicKey());
+
+            SetManifestCryptoUm1(sender, recipient.ExportPublicKey());
             PayloadLayout = layoutScheme;
         }
 
@@ -254,29 +273,50 @@ namespace ObscurCore
 
         /// <summary>
         ///     Set the manifest to use symmetric-only security.
+        /// </summary>
+        /// <param name="key">Key known to the recipient of the package.</param>
+        /// <param name="lowEntropy">Pre-key has low entropy, e.g. a human-memorisable passphrase.</param>
+        /// <exception cref="ArgumentException">Key is null or zero-length.</exception>
+        /// <exception cref="ArgumentNullException">Canary is null.</exception>
+        public void SetManifestCryptoSymmetric(SymmetricKey key, bool lowEntropy = false)
+        {
+            SetManifestCryptoSymmetric(key.Key, key.ConfirmationCanary, lowEntropy);
+        }
+
+        /// <summary>
+        ///     Set the manifest to use symmetric-only security.
         ///     Key is used in UTF-8 encoded byte array form.
         /// </summary>
         /// <param name="key">Passphrase known to the recipient of the package.</param>
-        /// <exception cref="ArgumentException">Key is null or zero-length.</exception>
-        public void SetManifestCryptoSymmetric(string key)
+        /// <param name="canary">Known value to use for confirming the <paramref name="key"/>.</param>
+        /// <exception cref="ArgumentException">Key or canary is null or zero-length.</exception>
+        public void SetManifestCryptoSymmetric(string key, string canary)
         {
             if (String.IsNullOrEmpty(key)) {
                 throw new ArgumentException("Key is null or zero-length (empty).", "key");
             }
+            if (String.IsNullOrEmpty(canary)) {
+                throw new ArgumentException("Canary is null or zero-length (empty).", "canary");
+            }
 
-            SetManifestCryptoSymmetric(Encoding.UTF8.GetBytes(key), true);
+            SetManifestCryptoSymmetric(Encoding.UTF8.GetBytes(key), Encoding.UTF8.GetBytes(canary), true);
         }
 
         /// <summary>
         ///     Set the manifest to use symmetric-only security.
         /// </summary>
         /// <param name="key">Key known to the recipient of the package.</param>
+        /// <param name="canary">Known value to use for confirming the <paramref name="key"/>.</param>
         /// <param name="lowEntropy">Pre-key has low entropy, e.g. a human-memorisable passphrase.</param>
         /// <exception cref="ArgumentException">Key is null or zero-length.</exception>
-        public void SetManifestCryptoSymmetric(byte[] key, bool lowEntropy)
+        /// <exception cref="ArgumentNullException">Canary is null.</exception>
+        public void SetManifestCryptoSymmetric(byte[] key, byte[] canary, bool lowEntropy)
         {
             if (key.IsNullOrZeroLength()) {
                 throw new ArgumentException("Key is null or zero-length.", "key");
+            }
+            if (canary == null) {
+                throw new ArgumentNullException("canary");
             }
 
             if (_writingPreManifestKey != null) {
@@ -298,13 +338,13 @@ namespace ObscurCore
                 : _manifestHeaderCryptoConfig.Authentication ?? CreateDefaultManifestAuthenticationConfiguration();
 
             KeyDerivationConfiguration derivationConfig = _manifestHeaderCryptoConfig == null
-                ? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8, lowEntropy)
+                ? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits.BitsToBytes(), lowEntropy)
                 : _manifestHeaderCryptoConfig.KeyDerivation ??
-                  CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8);
+                  CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits.BitsToBytes());
 
             byte[] keyConfirmationOutput;
             AuthenticationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration(
-                _writingPreManifestKey, out keyConfirmationOutput);
+                canary, out keyConfirmationOutput);
 
             _manifestHeaderCryptoConfig = new SymmetricManifestCryptographyConfiguration {
                 SymmetricCipher = cipherConfig,
@@ -319,24 +359,27 @@ namespace ObscurCore
         /// <summary>
         ///     Set manifest to use UM1-Hybrid cryptography.
         /// </summary>
-        /// <param name="senderKey">Key of the sender (private key).</param>
-        /// <param name="receiverKey">Key of the recipient (public key).</param>
-        public void SetManifestCryptoUm1(EcKeyConfiguration senderKey, EcKeyConfiguration receiverKey)
+        /// <param name="senderKeypair">Keypair of the sender.</param>
+        /// <param name="recipientKey">Key of the recipient (public key).</param>
+        public void SetManifestCryptoUm1(EcKeypair senderKeypair, EcKey recipientKey)
         {
-            if (senderKey == null) {
-                throw new ArgumentNullException("senderKey");
+            if (senderKeypair == null) {
+                throw new ArgumentNullException("senderKeypair");
             }
-            if (receiverKey == null) {
-                throw new ArgumentNullException("receiverKey");
+            if (recipientKey == null) {
+                throw new ArgumentNullException("recipientKey");
             }
 
-            if (senderKey.CurveName.Equals(receiverKey.CurveName) == false) {
+            if (senderKeypair.CurveName.Equals(recipientKey.CurveName) == false) {
                 throw new InvalidOperationException(
                     "Elliptic curve cryptographic mathematics requires public and private keys be in the same curve domain.");
             }
 
-            EcKeyConfiguration ephemeral;
-            _writingPreManifestKey = Um1Exchange.Initiate(receiverKey, senderKey, out ephemeral);
+            if (_writingPreManifestKey != null) {
+                _writingPreManifestKey.SecureWipe();
+            }
+            EcKey ephemeral;
+            _writingPreManifestKey = Um1Exchange.Initiate(recipientKey, senderKeypair.GetPrivateKey(), out ephemeral);
             Debug.Print(DebugUtility.CreateReportString("PackageWriter", "SetManifestCryptoUM1", "Manifest pre-key",
                 _writingPreManifestKey.ToHexString()));
 
@@ -349,13 +392,15 @@ namespace ObscurCore
                 : _manifestHeaderCryptoConfig.Authentication ?? CreateDefaultManifestAuthenticationConfiguration();
 
             KeyDerivationConfiguration derivationConfig = _manifestHeaderCryptoConfig == null
-                ? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8, false)
+                ? CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits.BitsToBytes(), false)
                 : _manifestHeaderCryptoConfig.KeyDerivation ??
-                  CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits / 8);
+                  CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits.BitsToBytes());
 
             byte[] keyConfirmationOutput;
             AuthenticationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration(
-                _writingPreManifestKey, out keyConfirmationOutput);
+                senderKeypair,
+                recipientKey, 
+                out keyConfirmationOutput);
 
             _manifestHeaderCryptoConfig = new Um1HybridManifestCryptographyConfiguration {
                 SymmetricCipher = cipherConfig,
@@ -471,15 +516,43 @@ namespace ObscurCore
         ///     Creates a default manifest key confirmation configuration.
         /// </summary>
         /// <remarks>Default configuration uses HMAC-SHA3-256 (HMAC-Keccak-256).</remarks>
+        /// <param name="canary">Canary (associated with a key) to generate confirmation configuration for.</param>
+        /// <param name="verifiedOutput">Output of verification function.</param>
+        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(byte[] canary,
+            out byte[] verifiedOutput)
+        {
+            AuthenticationFunctionConfiguration config =
+                ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak256);
+            // Using HMAC (key can be any length)
+            verifiedOutput = ConfirmationUtility.GenerateVerifiedOutput(config, canary);
+
+            return config;
+        }
+
+        /// <summary>
+        ///     Creates a default manifest key confirmation configuration.
+        /// </summary>
+        /// <remarks>Default configuration uses HMAC-SHA3-256 (HMAC-Keccak-256).</remarks>
         /// <param name="key">Key to generate confirmation configuration for.</param>
         /// <param name="verifiedOutput">Output of verification function.</param>
-        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(byte[] key,
+        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(SymmetricKey key,
             out byte[] verifiedOutput)
         {
             AuthenticationFunctionConfiguration config =
                 ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak256);
             // Using HMAC (key can be any length)
             verifiedOutput = ConfirmationUtility.GenerateVerifiedOutput(config, key);
+
+            return config;
+        }
+
+        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(EcKeypair senderKey, 
+            EcKey recipientKey, out byte[] verifiedOutput)
+        {
+            AuthenticationFunctionConfiguration config =
+                ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak256);
+            // Using HMAC (key can be any length)
+            verifiedOutput = ConfirmationUtility.GenerateVerifiedOutput(config, senderKey, recipientKey);
 
             return config;
         }
@@ -616,7 +689,7 @@ namespace ObscurCore
             var newItem = new PayloadItem {
                 ExternalLength = externalLength,
                 Type = itemType,
-                RelativePath = relativePath,
+                Path = relativePath,
                 SymmetricCipher = skipCrypto ? null : CreateDefaultPayloadItemCipherConfiguration(),
                 Authentication = skipCrypto ? null : CreateDefaultPayloadItemAuthenticationConfiguration()
             };
@@ -646,18 +719,18 @@ namespace ObscurCore
         ///     be used.
         /// </param>
         private static PayloadItem CreateItem(Func<Stream> itemData, PayloadItemType itemType, long externalLength,
-            string relativePath, byte[] preKey, bool lowEntropyKey = true)
+            string relativePath, SymmetricKey preKey, bool lowEntropyKey = true)
         {
             byte[] keyConfirmationVerifiedOutput;
             AuthenticationFunctionConfiguration keyConfirmatConf =
                 CreateDefaultPayloadItemKeyConfirmationConfiguration(preKey,
                     out keyConfirmationVerifiedOutput);
-            KeyDerivationConfiguration kdfConf = CreateDefaultPayloadItemKeyDerivation(preKey.Length, lowEntropyKey);
+            KeyDerivationConfiguration kdfConf = CreateDefaultPayloadItemKeyDerivation(preKey.Key.Length, lowEntropyKey);
 
             var newItem = new PayloadItem {
                 ExternalLength = externalLength,
                 Type = itemType,
-                RelativePath = relativePath,
+                Path = relativePath,
                 SymmetricCipher = CreateDefaultPayloadItemCipherConfiguration(),
                 Authentication = CreateDefaultPayloadItemAuthenticationConfiguration(),
                 KeyConfirmation = keyConfirmatConf,
@@ -696,7 +769,7 @@ namespace ObscurCore
         /// <param name="key">Key to generate confirmation configuration for.</param>
         /// <param name="verifiedOutput">Output of verification function.</param>
         private static AuthenticationFunctionConfiguration CreateDefaultPayloadItemKeyConfirmationConfiguration(
-            byte[] key, out byte[] verifiedOutput)
+            SymmetricKey key, out byte[] verifiedOutput)
         {
             AuthenticationFunctionConfiguration config =
                 ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak256);

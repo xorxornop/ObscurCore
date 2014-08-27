@@ -103,7 +103,7 @@ namespace ObscurCore.Tests.Packaging
 			if (!Directory.Exists (demuxPath)) Directory.CreateDirectory (demuxPath);
 	        foreach (var payloadItem in items) {
 	            PayloadItem item = payloadItem;
-	            payloadItem.SetStreamBinding(() => new FileStream(demuxPath + Path.DirectorySeparatorChar + item.RelativePath, FileMode.Create));
+	            payloadItem.SetStreamBinding(() => new FileStream(demuxPath + Path.DirectorySeparatorChar + item.Path, FileMode.Create));
 	        }
 
 	        ms.Seek(0, SeekOrigin.Begin);

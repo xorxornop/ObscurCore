@@ -1,7 +1,7 @@
-﻿using ObscurCore.Cryptography;
-using NUnit.Framework;
+﻿using ObscurCore.DTO;
 using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Stream;
+using NUnit.Framework;
 
 namespace ObscurCore.Tests.Cryptography.Ciphers
 {
@@ -14,7 +14,7 @@ namespace ObscurCore.Tests.Cryptography.Ciphers
 			Cipher = cipher;
 		}
 
-		protected override ObscurCore.DTO.CipherConfiguration GetCipherConfiguration (CipherTestCase testCase) {
+		protected override CipherConfiguration GetCipherConfiguration (CipherTestCase testCase) {
 			var config = CipherConfigurationFactory.CreateStreamCipherConfiguration (Cipher, testCase.Key.Length * 8);
 			config.InitialisationVector = testCase.IV;
 			return config;

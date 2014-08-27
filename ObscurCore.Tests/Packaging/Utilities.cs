@@ -21,7 +21,7 @@ namespace ObscurCore.Tests.Packaging
                 var t = fileInfo;
 				int authOutputSize;
 				var payloadItem = new PayloadItem {
-                    RelativePath = t.Name,
+                    Path = t.Name,
                     ExternalLength = t.Length,
                     Type = PayloadItemType.File,
 					SymmetricCipher = CipherConfigurationFactory.CreateStreamCipherConfiguration(StreamCipher.Sosemanuk),
@@ -48,7 +48,7 @@ namespace ObscurCore.Tests.Packaging
                 var t = fileInfo;
 				int authOutputSize;
 				var payloadItem = new PayloadItem {
-                    RelativePath = t.Name,
+                    Path = t.Name,
                     ExternalLength = t.Length,
                     Type = PayloadItemType.File,
                     SymmetricCipher = CipherConfigurationFactory.CreateBlockCipherConfiguration(BlockCipher.Serpent, 

@@ -1,17 +1,21 @@
-//
-//  Copyright 2013  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+#region License
+
+// 	Copyright 2013-2014 Matthew Ducker
+// 	
+// 	Licensed under the Apache License, Version 2.0 (the "License");
+// 	you may not use this file except in compliance with the License.
+// 	
+// 	You may obtain a copy of the License at
+// 		
+// 		http://www.apache.org/licenses/LICENSE-2.0
+// 	
+// 	Unless required by applicable law or agreed to in writing, software
+// 	distributed under the License is distributed on an "AS IS" BASIS,
+// 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// 	See the License for the specific language governing permissions and 
+// 	limitations under the License.
+
+#endregion
 
 using System;
 using ProtoBuf;
@@ -19,7 +23,7 @@ using ProtoBuf;
 namespace ObscurCore.DTO
 {
     /// <summary>
-    ///     Configuration for CipherStream [en/de]crypting streams.
+    ///     Configuration for a symmetric cipher.
     /// </summary>
     [ProtoContract]
     public class CipherConfiguration : ICipherConfiguration,
@@ -53,19 +57,9 @@ namespace ObscurCore.DTO
 
         #endregion
 
-        /// <summary>
-        ///     Mode of operation used in the cipher, where applicable (block ciphers).
-        /// </summary>
-        [ProtoMember(5, IsRequired = false)]
-        public string ModeName { get; set; }
+        
 
-        /// <summary>
-        ///     Indicates whether the current object is equal to another object of the same type.
-        /// </summary>
-        /// <returns>
-        ///     true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
-        /// </returns>
-        /// <param name="other">An object to compare with this object.</param>
+        /// <inheritdoc />
         public bool Equals(CipherConfiguration other)
         {
             if (ReferenceEquals(null, other)) {
@@ -88,19 +82,28 @@ namespace ObscurCore.DTO
         #region Block-cipher related
 
         /// <summary>
+        ///     Name of the mode of operation for the cipher, where applicable (block ciphers).
+        /// </summary>
+        [ProtoMember(5, IsRequired = false)]
+        public string ModeName { get; set; }
+
+        /// <summary>
         ///     Size of each block of data in bits.
         /// </summary>
         [ProtoMember(6)]
         public int? BlockSizeBits { get; set; }
 
         /// <summary>
-        ///     Scheme utillised to 'pad' blocks to full size where required (block ciphers in some modes).
+        ///     Name of a scheme for 'padding' blocks to full size, where applicable 
+        ///     (block ciphers in some modes of operation).
         /// </summary>
+        /// <seealso cref="ModeName"/>
         [ProtoMember(7, IsRequired = false)]
         public string PaddingName { get; set; }
 
         #endregion
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) {
@@ -115,13 +118,7 @@ namespace ObscurCore.DTO
             return Equals((CipherConfiguration) obj);
         }
 
-        /// <summary>
-        ///     Serves as a hash function for a particular type.
-        /// </summary>
-        /// <returns>
-        ///     A hash code for the current <see cref="T:System.Object" />.
-        /// </returns>
-        /// <filterpriority>2</filterpriority>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked {
@@ -136,21 +133,14 @@ namespace ObscurCore.DTO
             }
         }
 
-        /// <summary>
-        ///     Outputs a summary of the configuration.
-        /// </summary>
+        /// <inheritdoc />
         public override string ToString()
         {
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}",
                 Type, CipherName, KeySizeBits);
         }
 
-        /// <summary>
-        ///     Performs deep-copy of configuration. 
-        ///     Note: does NOT copy initialisation vector. 
-        ///     IV should be new for each cipher configuration.
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc />
         public CipherConfiguration CloneSafely()
         {
             return new CipherConfiguration {

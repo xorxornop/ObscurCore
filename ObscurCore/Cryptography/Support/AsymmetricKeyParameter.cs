@@ -3,7 +3,6 @@ using ObscurCore.Cryptography.Ciphers;
 namespace ObscurCore.Cryptography.Support
 {
     public class AsymmetricKeyParameter
-	//		: ICipherParameters
     {
         private readonly bool privateKey;
 

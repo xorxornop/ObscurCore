@@ -22,13 +22,13 @@ namespace ObscurCore
     /// </summary>
     public static class CopyExtensions
     {
-        private const int DeepCopyBufferBlockCopyThreshold = 16384;
+        private const int BufferBlockCopyThreshold = 1024;
 #if INCLUDE_UNSAFE
-        private const int DeepCopyUnmanagedThreshold = 64;
+        private const int UnmanagedThreshold = 128;
 #endif
 
         /// <summary>
-        /// Produce a deep copy (copied value by value) of <paramref name="data"/> array.
+        ///     Produce a deep copy (by value) of <paramref name="data"/> array.
         /// </summary>
         /// <param name="data">Array to produce a copy of.</param>
         /// <returns>Copy of <paramref name="data"/> array.</returns>
@@ -57,7 +57,7 @@ namespace ObscurCore
         public static void CopyBytes(this byte[] src, int srcOffset, byte[] dst, int dstOffset, int length)
         {
 #if INCLUDE_UNSAFE
-            if (length >= DeepCopyUnmanagedThreshold) {
+            if (length >= UnmanagedThreshold) {
                 if (srcOffset + length > src.Length || dstOffset + length > dst.Length) {
                     throw new ArgumentException(
                         "Either/both src or dst offset is incompatible with array length. Security risk in unsafe execution!");
@@ -71,7 +71,7 @@ namespace ObscurCore
                 }
             } else {
 #endif
-                if (length >= DeepCopyBufferBlockCopyThreshold) {
+                if (length >= BufferBlockCopyThreshold) {
                     Buffer.BlockCopy(src, srcOffset, dst, dstOffset, length);
                 } else {
                     Array.Copy(src, srcOffset, dst, dstOffset, length);
@@ -104,7 +104,7 @@ namespace ObscurCore
         public static void DeepCopy(this int[] src, int[] dst)
         {
 #if INCLUDE_UNSAFE
-            const int umLimit = DeepCopyUnmanagedThreshold / sizeof(int);
+            const int umLimit = UnmanagedThreshold / sizeof(int);
             if (src.Length >= umLimit) {
                 unsafe {
                     fixed (int* srcPtr = src) {
@@ -117,7 +117,7 @@ namespace ObscurCore
                 }
             } else {
 #endif
-                const int bcLimit = DeepCopyBufferBlockCopyThreshold / sizeof(int);
+                const int bcLimit = BufferBlockCopyThreshold / sizeof(int);
                 if (src.Length >= bcLimit)
                     Buffer.BlockCopy(src, 0, dst, 0, src.Length);
                 else
@@ -150,7 +150,7 @@ namespace ObscurCore
         public static void DeepCopy(this long[] src, long[] dst)
         {
 #if INCLUDE_UNSAFE
-            const int umLimit = DeepCopyUnmanagedThreshold / sizeof(long);
+            const int umLimit = UnmanagedThreshold / sizeof(long);
             if (src.Length >= umLimit) {
                 unsafe {
                     fixed (long* srcPtr = src) {
@@ -163,7 +163,7 @@ namespace ObscurCore
                 }
             } else {
 #endif
-                const int bcLimit = DeepCopyBufferBlockCopyThreshold / sizeof(long);
+                const int bcLimit = BufferBlockCopyThreshold / sizeof(long);
                 if (src.Length >= bcLimit)
                     Buffer.BlockCopy(src, 0, dst, 0, src.Length);
                 else
@@ -196,7 +196,7 @@ namespace ObscurCore
         public static void DeepCopy(this ulong[] src, ulong[] dst)
         {
 #if INCLUDE_UNSAFE
-            const int umLimit = DeepCopyUnmanagedThreshold / sizeof(ulong);
+            const int umLimit = UnmanagedThreshold / sizeof(ulong);
             if (src.Length >= umLimit) {
                 unsafe {
                     fixed (ulong* srcPtr = src) {
@@ -209,7 +209,7 @@ namespace ObscurCore
                 }
             } else {
 #endif
-                const int bcLimit = DeepCopyBufferBlockCopyThreshold / sizeof(ulong);
+                const int bcLimit = BufferBlockCopyThreshold / sizeof(ulong);
                 if (src.Length >= bcLimit)
                     Buffer.BlockCopy(src, 0, dst, 0, src.Length);
                 else

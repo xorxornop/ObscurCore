@@ -29,29 +29,31 @@ namespace ObscurCore.Tests.Cryptography
     /// </summary>
     public class KeyProvider : IKeyProvider
     {
-		public KeyProvider (KeyProvider other)
-		{
-			SymmetricKeys = other.SymmetricKeys.Reverse().ToList();
-
-			var ecKeypairs = new List<EcKeypair>();
-			foreach (var item in other.EcKeypairs) {
-				ecKeypairs.Add(KeypairFactory.GenerateEcKeypair(item.CurveName));
-			}
-
-			EcKeypairs = ecKeypairs;
-		}
+		
 
 		public KeyProvider(int keysToMake = 5) {
-            var symKeys = new List<byte[]>();
+            var symKeys = new List<SymmetricKey>();
 			var ecKeypairs = new List<EcKeypair>();
 
             for (int i = 0; i < keysToMake; i++) {
-                var newKey = new byte[16];
-                StratCom.EntropySupplier.NextBytes(newKey);
-                symKeys.Add(newKey);
-
-				var curveName = Athena.Cryptography.Curves.Keys.ElementAt(StratCom.EntropySupplier.Next(Athena.Cryptography.Curves.Count));
-				ecKeypairs.Add(KeypairFactory.GenerateEcKeypair(curveName));
+                // Symmetric key
+                var newSymKey = new byte[128.BitsToBytes()];
+                var newSymCanary = new byte[128.BitsToBytes()];
+                StratCom.EntropySupplier.NextBytes(newSymKey);
+                StratCom.EntropySupplier.NextBytes(newSymCanary);
+                symKeys.Add(new SymmetricKey {
+                    Key = newSymKey,
+                    ConfirmationCanary = newSymCanary,
+                    UsePermissions = KeyUsePermission.Encryption | KeyUsePermission.Authentication,
+                    ContextPermissions = KeyUseContextPermission.ManifestHeader | KeyUseContextPermission.PayloadItem
+                });
+                // EC key
+                var curveName = Athena.Cryptography.EllipticCurves.Keys.ElementAt(StratCom.EntropySupplier.Next(Athena.Cryptography.EllipticCurves.Count));
+                var newEcKey = KeypairFactory.GenerateEcKeypair(curveName);
+                var newEcCanary = new byte[128.BitsToBytes()];
+                StratCom.EntropySupplier.NextBytes(newEcCanary);
+                newEcKey.ConfirmationCanary = newEcCanary;
+				ecKeypairs.Add(newEcKey);
             }
 
             SymmetricKeys = symKeys;
@@ -59,9 +61,26 @@ namespace ObscurCore.Tests.Cryptography
         }
 
         /// <summary>
+        ///     Create a key provider with keys based off an existing key provider, 
+        ///     aimed at a sender-recipient relationship.
+        /// </summary>
+        /// <param name="other">Existing key provider to use as a basis for interoperability.</param>
+        public KeyProvider(KeyProvider other)
+        {
+            SymmetricKeys = other.SymmetricKeys.Reverse().ToList();
+            EcKeypairs = other.EcKeypairs.Select(item => {
+                var newEcKeypair = KeypairFactory.GenerateEcKeypair(item.CurveName);
+                var newEcCanary = new byte[128.BitsToBytes()];
+                StratCom.EntropySupplier.NextBytes(newEcCanary);
+                newEcKeypair.ConfirmationCanary = newEcCanary;
+                return newEcKeypair;
+            }).ToList(); ;
+        }
+
+        /// <summary>
         /// Symmetric key(s) that the local user owns.
         /// </summary>
-		public IEnumerable<byte[]> SymmetricKeys { get; set; }
+		public IEnumerable<SymmetricKey> SymmetricKeys { get; set; }
 
         /// <summary>
         /// Elliptic curve key(s) that the local user owns.
@@ -71,6 +90,6 @@ namespace ObscurCore.Tests.Cryptography
         /// <summary>
         /// Elliptic curve public key(s) of foreign entities.
         /// </summary>
-		public IEnumerable<EcKeyConfiguration> ForeignEcKeys { get; set; }
+		public IEnumerable<EcKey> ForeignEcKeys { get; set; }
     }
 }

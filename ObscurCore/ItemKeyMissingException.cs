@@ -15,7 +15,7 @@ namespace ObscurCore
 
         public ItemKeyMissingException (PayloadItem item) : base 
             (String.Format("A cryptographic key for item GUID {0} and relative path \"{1}\" could not be found.", 
-                item.Identifier.ToString(), item.RelativePath))
+                item.Identifier.ToString(), item.Path))
         {}
     }
 }

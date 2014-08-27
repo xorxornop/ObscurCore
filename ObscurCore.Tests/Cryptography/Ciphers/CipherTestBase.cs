@@ -210,6 +210,7 @@ namespace ObscurCore.Tests.Cryptography
 			using (var cs = new CipherStream(msCiphertext, false, config, key, false)) {
 				sw.Start();
 				cs.CopyTo(msOutputPlaintext, GetBufferSize());
+
 			}
 			sw.Stop();
 			var decryptionElapsed = sw.Elapsed;

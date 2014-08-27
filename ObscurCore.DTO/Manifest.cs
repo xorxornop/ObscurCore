@@ -1,17 +1,21 @@
-//
-//  Copyright 2013  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+#region License
+
+// 	Copyright 2013-2014 Matthew Ducker
+// 	
+// 	Licensed under the Apache License, Version 2.0 (the "License");
+// 	you may not use this file except in compliance with the License.
+// 	
+// 	You may obtain a copy of the License at
+// 		
+// 		http://www.apache.org/licenses/LICENSE-2.0
+// 	
+// 	Unless required by applicable law or agreed to in writing, software
+// 	distributed under the License is distributed on an "AS IS" BASIS,
+// 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// 	See the License for the specific language governing permissions and 
+// 	limitations under the License.
+
+#endregion
 
 using System;
 using System.Collections.Generic;
@@ -20,13 +24,13 @@ using ProtoBuf;
 namespace ObscurCore.DTO
 {
     /// <summary>
-    ///     Manifest of package - payload configuration, contents, etc.
+    ///     Manifest for a package - payload configuration, contents, etc.
     /// </summary>
     [ProtoContract]
     public sealed class Manifest : IManifest, IDataTransferObject, IEquatable<Manifest>
     {
         /// <summary>
-        ///     Initializes a new instance of the <see cref="T:ObscurCore.DTO.Manifest" /> class.
+        ///     Creates a new package manifest.
         /// </summary>
         public Manifest()
         {
@@ -34,13 +38,7 @@ namespace ObscurCore.DTO
             PayloadConfiguration = new PayloadConfiguration();
         }
 
-        /// <summary>
-        ///     Indicates whether the current object is equal to another object of the same type.
-        /// </summary>
-        /// <returns>
-        ///     true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
-        /// </returns>
-        /// <param name="other">An object to compare with this object.</param>
+        /// <inheritdoc />
         public bool Equals(Manifest other)
         {
             if (ReferenceEquals(null, other)) {
@@ -67,11 +65,12 @@ namespace ObscurCore.DTO
         public List<PayloadItem> PayloadItems { get; private set; }
 
         /// <summary>
-        ///     Configuration of the payload packaging.
+        ///     Configuration of the payload (how payload items are laid out).
         /// </summary>
         [ProtoMember(2, IsRequired = true)]
         public PayloadConfiguration PayloadConfiguration { get; set; }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) {
@@ -83,13 +82,7 @@ namespace ObscurCore.DTO
             return obj.GetType() == GetType() && Equals((Manifest) obj);
         }
 
-        /// <summary>
-        ///     Serves as a hash function for a particular type.
-        /// </summary>
-        /// <returns>
-        ///     A hash code for the current <see cref="T:System.Object" />.
-        /// </returns>
-        /// <filterpriority>2</filterpriority>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked {
@@ -98,27 +91,5 @@ namespace ObscurCore.DTO
                 return hashCode;
             }
         }
-    }
-
-    public interface IManifest
-    {
-        /// <summary>
-        ///     Sequence of payload item descriptors. Order must be preserved for data integrity.
-        /// </summary>
-        /// <remarks>
-        ///     This may be a file system path or other schema. If used for file system, path seperator is '/' .
-        ///     Path may be omitted, and use this only for item naming.
-        ///     <para>
-        ///         WARNING: Ordering of this list of items MUST be maintained!
-        ///         Failure to ensure this will result in most probably total, non-recoverable loss of package contents at
-        ///         unpackaging stage.
-        ///     </para>
-        /// </remarks>
-        List<PayloadItem> PayloadItems { get; }
-
-        /// <summary>
-        ///     Configuration of the payload packaging.
-        /// </summary>
-        PayloadConfiguration PayloadConfiguration { get; }
     }
 }

@@ -1,17 +1,21 @@
-//
-//  Copyright 2013  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+#region License
+
+// 	Copyright 2013-2014 Matthew Ducker
+// 	
+// 	Licensed under the Apache License, Version 2.0 (the "License");
+// 	you may not use this file except in compliance with the License.
+// 	
+// 	You may obtain a copy of the License at
+// 		
+// 		http://www.apache.org/licenses/LICENSE-2.0
+// 	
+// 	Unless required by applicable law or agreed to in writing, software
+// 	distributed under the License is distributed on an "AS IS" BASIS,
+// 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// 	See the License for the specific language governing permissions and 
+// 	limitations under the License.
+
+#endregion
 
 using System;
 using System.Linq;
@@ -20,13 +24,12 @@ using ProtoBuf;
 namespace ObscurCore.DTO
 {
     /// <summary>
-    ///     Dual-use configuration for verification of data integrity
-    ///     (e.g. hash functions) and authenticity (e.g. HMAC functions).
-    ///     Used for key confirmation and data integrity checks, etc.
+    ///     Configuration of a function or scheme used for checking the authenticity 
+    ///     (e.g. MAC functions) and/or integrity (e.g. hash functions) of data.
     /// </summary>
     [ProtoContract]
-    public class AuthenticationFunctionConfiguration : IAuthenticationFunctionConfiguration, IDataTransferObject, 
-        ICloneableSafely<AuthenticationFunctionConfiguration>, IEquatable<AuthenticationFunctionConfiguration>
+    public class AuthenticationFunctionConfiguration : IDataTransferObject, 
+        ICloneableSafely<AuthenticationFunctionConfiguration>, IEquatable<AuthenticationFunctionConfiguration>, IAuthenticationFunctionConfiguration
     {
         /// <summary>
         ///     Category/type of the function primitive, e.g. Digest, MAC, or KDF.
@@ -72,13 +75,7 @@ namespace ObscurCore.DTO
         [ProtoMember(7, IsRequired = false)]
         public byte[] AdditionalData { get; set; }
 
-        /// <summary>
-        ///     Indicates whether the current object is equal to another object of the same type.
-        /// </summary>
-        /// <returns>
-        ///     true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
-        /// </returns>
-        /// <param name="other">An object to compare with this object.</param>
+        /// <inheritdoc />
         public bool Equals(AuthenticationFunctionConfiguration other)
         {
             if (ReferenceEquals(null, other)) {
@@ -93,6 +90,7 @@ namespace ObscurCore.DTO
                 Salt.SequenceEqual(other.Salt) : AdditionalData == null || AdditionalData.SequenceEqualShortCircuiting(other.AdditionalData);
         }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) {
@@ -107,13 +105,7 @@ namespace ObscurCore.DTO
             return Equals((AuthenticationFunctionConfiguration) obj);
         }
 
-        /// <summary>
-        ///     Serves as a hash function for a particular type.
-        /// </summary>
-        /// <returns>
-        ///     A hash code for the current <see cref="T:System.Object" />.
-        /// </returns>
-        /// <filterpriority>2</filterpriority>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked {
@@ -128,6 +120,7 @@ namespace ObscurCore.DTO
             }
         }
 
+        /// <inheritdoc />
         public AuthenticationFunctionConfiguration CloneSafely()
         {
             return new AuthenticationFunctionConfiguration {

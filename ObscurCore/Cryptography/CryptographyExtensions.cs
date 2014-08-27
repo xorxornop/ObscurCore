@@ -48,6 +48,9 @@ namespace ObscurCore.Cryptography
         /// <returns>If <c>true</c>, array section tested is equal.</returns>
         public static bool SequenceEqualConstantTime(this byte[] x, int xOffset, byte[] y, int yOffset, int length)
         {
+            if (x == null && y == null) {
+                return true;
+            }
             if (x == null) {
                 throw new ArgumentNullException("x");
             }
@@ -98,17 +101,26 @@ namespace ObscurCore.Cryptography
             if (length <= 0) {
                 throw new ArgumentException("Length is not positive.", "length");
             }
+            if (a == null) {
+                throw new ArgumentNullException("a");
+            }
             if (aOff < 0) {
                 throw new ArgumentOutOfRangeException("aOff", "aOff must be 0 or positive.");
             }
             if (aOff + length > a.Length) {
                 throw new ArgumentException("Insufficient length.", "a");
             }
+            if (b == null) {
+                throw new ArgumentNullException("b");
+            }
             if (bOff < 0) {
                 throw new ArgumentOutOfRangeException("bOff", "bOff must be 0 or positive.");
             }
             if (bOff + length > b.Length) {
                 throw new ArgumentException("Insufficient length.", "b");
+            }
+            if (output == null) {
+                throw new ArgumentNullException("output");
             }
             if (outputOff < 0) {
                 throw new ArgumentOutOfRangeException("outputOff", "outputOff must be 0 or positive.");

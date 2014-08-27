@@ -68,9 +68,9 @@ namespace ObscurCore.Packaging
         /// Create decorator streams implementing the Encrypt-then-MAC scheme (CipherStream bound to a MacStream).
         /// </summary>
         /// <param name="item"></param>
-        /// <param name="decorator"></param>
+        /// <param name="encryptor"></param>
         /// <param name="authenticator"></param>
-        protected void CreateEtMDecorator(PayloadItem item, out DecoratingStream decorator, out MacStream authenticator)
+        protected void CreateEtMDecorator(PayloadItem item, out CipherStream encryptor, out MacStream authenticator)
         {
             byte[] encryptionKey, authenticationKey;
             if (item.SymmetricCipherKey.IsNullOrZeroLength() == false && item.AuthenticationKey.IsNullOrZeroLength() == false) {
@@ -91,7 +91,7 @@ namespace ObscurCore.Packaging
 
             authenticator = new MacStream(PayloadStream, Writing, item.Authentication,
                 authenticationKey, closeOnDispose: false);
-            decorator = new CipherStream(authenticator, Writing, item.SymmetricCipher,
+            encryptor = new CipherStream(authenticator, Writing, item.SymmetricCipher,
                 encryptionKey, closeOnDispose: false);
         }
 

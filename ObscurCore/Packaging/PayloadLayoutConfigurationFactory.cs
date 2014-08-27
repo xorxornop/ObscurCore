@@ -41,7 +41,7 @@ namespace ObscurCore.Packaging
 				break;
 			case PayloadLayoutScheme.Frameshift:
 				// Padding length is variable by default.
-			    var frameshiftConfig = new PayloadSchemeConfiguration {
+			    var frameshiftConfig = new RangeConfiguration {
 			            Minimum = FrameshiftPayloadMux.MinimumPaddingLength,
 			            Maximum = FrameshiftPayloadMux.MaximumPaddingLength
 			        };
@@ -50,7 +50,7 @@ namespace ObscurCore.Packaging
 #if INCLUDE_FABRIC
             case PayloadLayoutScheme.Fabric:
 				// Stripe length is variable by default.
-				var fabricConfig = new PayloadSchemeConfiguration {
+				var fabricConfig = new RangeConfiguration {
 			            Minimum = FabricPayloadMux.MinimumStripeLength,
 			            Maximum = FabricPayloadMux.MaximumStripeLength
 			        };
@@ -66,7 +66,7 @@ namespace ObscurCore.Packaging
 			var fixedSize = paddingSize == null ? FrameshiftPayloadMux.DefaultFixedPaddingLength : paddingSize.Value;
             var config = new PayloadConfiguration {
                 SchemeName = PayloadLayoutScheme.Frameshift.ToString(),
-                SchemeConfiguration = new PayloadSchemeConfiguration {
+                SchemeConfiguration = new RangeConfiguration {
 			            Minimum = fixedSize,
 			            Maximum = fixedSize,
 			        }.SerialiseDto(),
@@ -82,7 +82,7 @@ namespace ObscurCore.Packaging
         {
             var config = new PayloadConfiguration {
                 SchemeName = PayloadLayoutScheme.Frameshift.ToString(),
-                SchemeConfiguration = new PayloadSchemeConfiguration {
+                SchemeConfiguration = new RangeConfiguration {
 			            Minimum = (minPadding == null ? FrameshiftPayloadMux.MinimumPaddingLength : minPadding.Value),
 			            Maximum = (maxPadding == null ? FrameshiftPayloadMux.MaximumPaddingLength : maxPadding.Value)
 			        }.SerialiseDto(),
@@ -97,12 +97,12 @@ namespace ObscurCore.Packaging
 	        var fixedSize = stripeSize == null ? FabricPayloadMux.DefaultFixedStripeLength : stripeSize.Value;
             var config = new PayloadConfiguration {
                 SchemeName = PayloadLayoutScheme.Frameshift.ToString(),
-                SchemeConfiguration = new PayloadSchemeConfiguration {
+                SchemeConfiguration = new RangeConfiguration {
 			            Minimum = fixedSize,
 			            Maximum = fixedSize,
 			        }.SerialiseDto(),
 				PrngName = csprngEnum.ToString(),
-				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
+                PrngConfiguration = CsPrngFactory.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
 			};
 		    return config;
 		}
@@ -112,12 +112,12 @@ namespace ObscurCore.Packaging
         {
             var config = new PayloadConfiguration {
                 SchemeName = PayloadLayoutScheme.Fabric.ToString(),
-                SchemeConfiguration = new PayloadSchemeConfiguration() {
+                SchemeConfiguration = new RangeConfiguration() {
 			            Minimum = (minStripe == null ? FabricPayloadMux.MinimumStripeLength : minStripe.Value),
 			            Maximum = (maxStripe == null ? FabricPayloadMux.MaximumStripeLength : maxStripe.Value)
 			        }.SerialiseDto(),
 				PrngName = csprngEnum.ToString(),
-				PrngConfiguration = CsprngFactory.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
+                PrngConfiguration = CsPrngFactory.CreateStreamCipherCsprngConfiguration(csprngEnum).SerialiseDto()
 			};
             return config;
 	    }

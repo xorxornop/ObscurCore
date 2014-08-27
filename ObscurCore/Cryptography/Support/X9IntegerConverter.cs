@@ -4,13 +4,9 @@ using ObscurCore.Cryptography.Support.Math.EllipticCurve;
 
 namespace ObscurCore.Cryptography.Support
 {
-    public sealed class X9IntegerConverter
+    public static class X9IntegerConverter
     {
-		private X9IntegerConverter()
-		{
-		}
-
-		public static int GetByteLength(
+        public static int GetByteLength(
             ECFieldElement fe)
         {
 			return (fe.FieldSize + 7) / 8;

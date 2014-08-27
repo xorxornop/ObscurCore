@@ -68,7 +68,7 @@ namespace ObscurCore.Packaging
             : base(writing, multiplexedStream, payloadItems, itemPreKeys, config)
         {
             var frameshiftConfig =
-                config.SchemeConfiguration.DeserialiseDto<PayloadSchemeConfiguration>();
+                config.SchemeConfiguration.DeserialiseDto<RangeConfiguration>();
             if (frameshiftConfig.Minimum < MinimumPaddingLength) {
                 throw new ArgumentOutOfRangeException("config",
                     "Minimum padding length is set below specification minimum.");

@@ -19,8 +19,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
-using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.DTO;
 
@@ -33,22 +33,43 @@ namespace ObscurCore.Cryptography.KeyConfirmation
     {
         internal static readonly byte[] TagConstantBytes = Encoding.UTF8.GetBytes("OBSCURCORE_KC");
 
+        
+
         /// <summary>
-        ///     Generate a verified output of a function given the correct key, to be used as a key confirmation.
+        ///     Generate a verified output of a function given the correct key, to be used as a key confirmation. 
+        ///     Uses confirmation canary.
         /// </summary>
         /// <param name="configuration">Configuration of the verification function.</param>
         /// <param name="key">Key to generate a confirmation output verification for.</param>
         /// <returns>Output of the verification function, given the correct key.</returns>
         /// <exception cref="ArgumentException">Key is null or zero-length.</exception>
-        public static byte[] GenerateVerifiedOutput(AuthenticationFunctionConfiguration configuration, byte[] key)
+        /// <seealso cref="SymmetricKey"/>
+        /// <seealso cref="EcKeypair"/>
+        /// <seealso cref="IPossessConfirmationCanary"/>
+        public static byte[] GenerateVerifiedOutput(AuthenticationFunctionConfiguration configuration, SymmetricKey key)
         {
-            if (key.IsNullOrZeroLength()) {
-                throw new ArgumentException("Key is null or zero-length.", "key");
+            return GenerateVerifiedOutput(configuration, key.ConfirmationCanary);
+        }
+
+        /// <summary>
+        ///     Generate a verified output of a function given the correct canary, to be used as a key confirmation.
+        /// </summary>
+        /// <param name="configuration">Configuration of the verification function.</param>
+        /// <param name="canary">Confirmation canary to generate a confirmation output verification for.</param>
+        /// <returns>Output of the verification function, given the correct canary.</returns>
+        /// <exception cref="ArgumentException">Key is null or zero-length.</exception>
+        /// <seealso cref="SymmetricKey"/>
+        /// <seealso cref="EcKeypair"/>
+        /// <seealso cref="IPossessConfirmationCanary"/>
+        public static byte[] GenerateVerifiedOutput(AuthenticationFunctionConfiguration configuration, byte[] canary)
+        {
+            if (canary.IsNullOrZeroLength()) {
+                throw new ArgumentException("Canary is null or zero-length.", "canary");
             }
 
-            Func<byte[], byte[]> validator = GetValidator(configuration, TagConstantBytes, 
+            Func<byte[], byte[]> validator = GetValidator(configuration, TagConstantBytes,
                 configuration.SerialiseDto());
-            byte[] verifiedOutput = validator(key);
+            byte[] verifiedOutput = validator(canary);
 
             Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "GenerateVerifiedOutput",
                 "Verified output",
@@ -58,112 +79,47 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         }
 
         /// <summary>
-        ///     Determines which (if any) key is valid from a set of potential keys.
-        ///     Where appropriate, computes confirmations in parallel.
+        ///     Generate a verified output of a function given the correct key, to be used as a key confirmation. 
+        ///     Uses confirmation canary.
         /// </summary>
-        /// <param name="keyConfirmation">Key confirmation configuration.</param>
-        /// <param name="verifiedOutput">Output of verification function, given the correct key.</param>
-        /// <param name="ephemeralKey">Ephemeral key in the agreement.</param>
-        /// <param name="senderKeys">Set of potential sender keys.</param>
-        /// <param name="receiverKeys">Set of potential receiver keys.</param>
-        /// <returns>Valid key, or null if none are validated as being correct.</returns>
-        /// <exception cref="ArgumentNullException">Any of the supplied parameters are null.</exception>
-        /// <exception cref="ArgumentException">
-        ///     Curve provider and/or name of all key components do not match,
-        ///     or either/both of the sender/receiver enumerations are of zero length.
-        /// </exception>
-        /// <exception cref="ConfigurationInvalidException">
-        ///     Confirmation configuration has an invalid element.
-        /// </exception>
-        public static byte[] ConfirmUm1HybridKey(AuthenticationFunctionConfiguration keyConfirmation,
-            byte[] verifiedOutput,
-            EcKeyConfiguration ephemeralKey, IEnumerable<EcKeyConfiguration> senderKeys,
-            IEnumerable<EcKeyConfiguration> receiverKeys)
-        {
-            if (keyConfirmation == null) {
-                throw new ArgumentNullException("keyConfirmation", "No configuration supplied.");
-            }
-            if (ephemeralKey == null) {
-                throw new ArgumentNullException("ephemeralKey", "No ephemeral key supplied.");
-            }
-            if (senderKeys == null) {
-                throw new ArgumentNullException("senderKeys", "No potential sender keys supplied.");
-            }
-            if (receiverKeys == null) {
-                throw new ArgumentNullException("receiverKeys", "No potential receiver keys supplied.");
-            }
+        /// <param name="configuration">Configuration of the verification function.</param>
+        /// <param name="senderKeypair">Sender keypair to generate a confirmation output verification for.</param>
+        /// <param name="recipientKey">Recipient key to generate a confirmation output verification for.</param>
+        /// <returns>Output of the verification function, given the correct key.</returns>
+        /// <exception cref="ArgumentException">Key is null or zero-length.</exception>
+        /// <seealso cref="SymmetricKey"/>
+        /// <seealso cref="EcKeypair"/>
+        /// <seealso cref="IPossessConfirmationCanary"/>
+        public static byte[] GenerateVerifiedOutput(AuthenticationFunctionConfiguration configuration, EcKeypair senderKeypair, EcKey recipientKey) {
+            Func<byte[], byte[]> validator = GetValidator(configuration, TagConstantBytes,
+                configuration.SerialiseDto());
 
-            // We can determine which, if any, of the provided keys are capable of decrypting the manifest
-            List<EcKeyConfiguration> viableSenderKeys =
-                senderKeys.Where(key => key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
-                                        key.CurveName.Equals(ephemeralKey.CurveName)).ToList();
-            if (viableSenderKeys.Count == 0) {
-                throw new ArgumentException(
-                    "No viable sender keys found - curve provider and/or curve name do not match ephemeral key.",
-                    "senderKeys");
-            }
+            byte[] canary = XorCanaryBytes(senderKeypair.ConfirmationCanary, recipientKey.ConfirmationCanary);
+            byte[] verifiedOutput = validator(canary);
 
-            List<EcKeyConfiguration> viableReceiverKeys =
-                receiverKeys.Where(key => key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
-                                          key.CurveName.Equals(ephemeralKey.CurveName)).ToList();
-            if (viableReceiverKeys.Count == 0) {
-                throw new ArgumentException(
-                    "No viable receiver keys found - curve provider and/or curve name do not match ephemeral key.",
-                    "receiverKeys");
-            }
+            Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "GenerateVerifiedOutput",
+                "Verified output",
+                verifiedOutput.ToHexString()));
 
-            Func<byte[], byte[]> validator = GetValidator(keyConfirmation, TagConstantBytes,
-                keyConfirmation.SerialiseDto(), verifiedOutput.Length);
-            var um1SecretFunc = new Func<EcKeyConfiguration, EcKeyConfiguration, byte[]>((pubKey, privKey) =>
-                Um1Exchange.Respond(pubKey, privKey, ephemeralKey));
-
-            byte[] preKey = null;
-
-            // See which mode (by-sender / by-recipient) is better to run in parallel
-            if (viableSenderKeys.Count > viableReceiverKeys.Count) {
-                Parallel.ForEach(viableSenderKeys, (sKey, state) => {
-                    foreach (EcKeyConfiguration rKey in viableReceiverKeys) {
-                        byte[] ss = um1SecretFunc(sKey, rKey);
-                        byte[] validationOut = validator(ss);
-                        if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
-                            preKey = ss;
-                            state.Stop();
-                        }
-                    }
-                });
-            } else {
-                Parallel.ForEach(viableReceiverKeys, (rKey, state) => {
-                    foreach (EcKeyConfiguration sKey in viableSenderKeys) {
-                        byte[] ss = um1SecretFunc(sKey, rKey);
-                        byte[] validationOut = validator(ss);
-                        if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
-                            preKey = ss;
-                            state.Stop();
-                        }
-                    }
-                });
-            }
-
-            Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "ConfirmUM1HybridKey", "Key output",
-                preKey != null ? preKey.ToHexString() : "[null]"));
-            return preKey;
+            return verifiedOutput;
         }
 
         /// <summary>
-        ///     Determines which (if any) key is valid from a set of potential keys.
-        ///     Where appropriate, computes confirmations in parallel.
+        ///     Determines which (if any) key is valid from a set of potential keys. 
         /// </summary>
+        /// <remarks>
+        ///     Where appropriate, computes confirmations in parallel.
+        /// </remarks>
         /// <param name="keyConfirmation">Key confirmation configuration.</param>
         /// <param name="verifiedOutput">Known/verified output of the function if correct key is input.</param>
-        /// <param name="potentialKeys">Set of potential keys.</param>
-        /// <exception cref="ArgumentNullException">Key confirmation configuration or verified output is null.</exception>
+        /// <param name="potentialKeys">Set of potential keys used by the sender.</param>
+        /// <exception cref="ArgumentNullException">Key confirmation configuration, verified output, or potential keys is null.</exception>
         /// <exception cref="ConfigurationInvalidException">
         ///     Some aspect of configuration invalid - detailed inside exception message.
         /// </exception>
         /// <returns>Valid key, or null if none are validated as being correct.</returns>
-        public static byte[] ConfirmSymmetricKey(AuthenticationFunctionConfiguration keyConfirmation,
-            byte[] verifiedOutput,
-            IEnumerable<byte[]> potentialKeys)
+        public static SymmetricKey ConfirmKeyFromCanary(AuthenticationFunctionConfiguration keyConfirmation,
+            byte[] verifiedOutput, IEnumerable<SymmetricKey> potentialKeys)
         {
             if (keyConfirmation == null) {
                 throw new ArgumentNullException("keyConfirmation", "No configuration supplied.");
@@ -171,12 +127,14 @@ namespace ObscurCore.Cryptography.KeyConfirmation
             if (potentialKeys == null) {
                 throw new ArgumentNullException("potentialKeys", "No potential keys supplied.");
             }
+
             Func<byte[], byte[]> validator = GetValidator(keyConfirmation, TagConstantBytes,
                 keyConfirmation.SerialiseDto(), verifiedOutput.Length);
-            byte[] preKey = null;
 
-            Parallel.ForEach(potentialKeys, (key, state) => {
-                byte[] validationOut = validator(key);
+            SymmetricKey preKey = null;
+            Parallel.ForEach(potentialKeys, (key, state) =>
+            {
+                byte[] validationOut = validator(key.ConfirmationCanary);
                 if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
                     preKey = key;
                     // Terminate all other validation function instances - we have found the key
@@ -184,9 +142,115 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                 }
             });
 
-            Debug.Print(DebugUtility.CreateReportString("ConfirmationUtility", "ConfirmSymmetricKey", "Key output",
-                preKey != null ? preKey.ToHexString() : "[null]"));
             return preKey;
+        }
+
+        /// <summary>
+        ///     Determines which (if any) key is valid from a set of potential keys. 
+        /// </summary>
+        /// <remarks>
+        ///     Where appropriate, computes confirmations in parallel.
+        /// </remarks>
+        /// <param name="keyConfirmation">Key confirmation configuration.</param>
+        /// <param name="verifiedOutput">Known/verified output of the function if correct key is input.</param>
+        /// <param name="potentialSenderKeys">Set of potential public keys used by the sender.</param>
+        /// <param name="ephemeralKey"></param>
+        /// <param name="potentialRecipientKeys">Keys used by the recipient that the sender may have used.</param>
+        /// <param name="senderKey">Output of the public key associated with the private key used by the sender.</param>
+        /// <param name="recipientKeypair">Output of the keypair that contains the public key used by the sender.</param>
+        /// <exception cref="ArgumentNullException">Some input argument is null.</exception>
+        /// <exception cref="ConfigurationInvalidException">
+        ///     Some aspect of configuration invalid - detailed inside exception message.
+        /// </exception>
+        /// <returns>Valid key, or null if none are validated as being correct.</returns>
+        public static void ConfirmKeyFromCanary(AuthenticationFunctionConfiguration keyConfirmation,
+            byte[] verifiedOutput, IEnumerable<EcKey> potentialSenderKeys, EcKey ephemeralKey,
+            IEnumerable<EcKeypair> potentialRecipientKeys, out EcKey senderKey, out EcKeypair recipientKeypair)
+        {
+            if (keyConfirmation == null) {
+                throw new ArgumentNullException("keyConfirmation", "No configuration supplied.");
+            }
+            if (ephemeralKey == null) {
+                throw new ArgumentNullException("ephemeralKey", "No ephemeral key supplied.");
+            }
+            if (potentialSenderKeys == null) {
+                throw new ArgumentNullException("potentialSenderKeys", "No potential sender keys supplied.");
+            }
+            if (ephemeralKey == null) {
+                throw new ArgumentNullException("ephemeralKey", "No ephemeral key supplied.");
+            }
+            if (potentialRecipientKeys == null) {
+                throw new ArgumentNullException("potentialRecipientKeys", "No potential recipient keys supplied.");
+            }
+
+            // We can determine which, if any, of the provided keys are capable of decrypting the manifest
+            var viableSenderKeys = potentialSenderKeys.Where(key => 
+                key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) && 
+                key.CurveName.Equals(ephemeralKey.CurveName)).ToArray();
+            if (viableSenderKeys.Length == 0) {
+                throw new ArgumentException(
+                    "No viable sender keys found - curve provider and/or curve name do not match ephemeral key.",
+                    "potentialSenderKeys");
+            }
+
+            var viableRecipientKeypairs = potentialRecipientKeys.Where(key =>
+                key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
+                key.CurveName.Equals(ephemeralKey.CurveName)).ToArray();
+            if (viableRecipientKeypairs.Length == 0) {
+                throw new ArgumentException(
+                    "No viable recipient keys found - curve provider and/or curve name do not match ephemeral key.",
+                    "potentialRecipientKeys");
+            }
+
+            Func<byte[], byte[]> validator = GetValidator(keyConfirmation, TagConstantBytes,
+                keyConfirmation.SerialiseDto(), verifiedOutput.Length);
+
+            // Temporary variables to store output in (can't access 'out' parameters inside anonymous method body)
+            EcKey oSK = null;
+            EcKeypair oRKP = null;
+            // See which mode (by-sender / by-recipient) is better to run in parallel
+            if (viableRecipientKeypairs.Length > viableSenderKeys.Length) {
+                Parallel.ForEach(viableRecipientKeypairs, (rKeypair, state) => {
+                    foreach (EcKey sKey in viableSenderKeys) {
+                        byte[] canary = XorCanaryBytes(sKey.ConfirmationCanary, rKeypair.ConfirmationCanary);
+                        byte[] validationOut = validator(canary);
+                        if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
+                            oSK = sKey;
+                            oRKP = rKeypair;
+                            state.Stop();
+                        }
+                    }
+                });
+            } else {
+                Parallel.ForEach(viableSenderKeys, (sKey, state) => {
+                    foreach (var rKeypair in viableRecipientKeypairs) {
+                        byte[] canary = XorCanaryBytes(sKey.ConfirmationCanary, rKeypair.ConfirmationCanary);
+                        byte[] validationOut = validator(canary);
+                        if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
+                            oSK = sKey;
+                            oRKP = rKeypair;
+                            state.Stop();
+                        }
+                    }
+                });
+            }
+
+            // Assign the outputs to the 'out' parameters
+            senderKey = oSK;
+            recipientKeypair = oRKP;
+        }
+
+        internal static byte[] XorCanaryBytes(byte[] c0, byte[] c1) {
+            int c0Length = c0.Length, c1Length = c1.Length;
+            int combinedLength = Math.Max(c0.Length, c1.Length);
+            byte[] combined = new byte[combinedLength];
+            if (c0Length > combinedLength) {
+                Array.Copy(c0, combinedLength, combined, combinedLength, combinedLength - c0Length);
+            } else if (c1Length > combinedLength) {
+                Array.Copy(c1, combinedLength, combined, combinedLength, combinedLength - c1Length);
+            }
+            c0.XorInternal(0, c1, 0, combined, 0, Math.Min(c0Length, c1Length));
+            return combined;
         }
 
         /// <summary>
@@ -205,14 +269,14 @@ namespace ObscurCore.Cryptography.KeyConfirmation
             byte[] tag, byte[] message,
             int? outputSizeBytes = null)
         {
-            VerificationFunctionType functionType;
+            AuthenticationFunctionType functionType;
             try {
-                functionType = keyConfirmation.FunctionType.ToEnum<VerificationFunctionType>();
+                functionType = keyConfirmation.FunctionType.ToEnum<AuthenticationFunctionType>();
             } catch (EnumerationParsingException ex) {
                 throw new ConfigurationInvalidException("Verification function type is unsupported/unknown.", ex);
             }
 
-            if (functionType == VerificationFunctionType.None) {
+            if (functionType == AuthenticationFunctionType.None) {
                 throw new ConfigurationInvalidException("Verification function type cannot be None.");
             }
             if (String.IsNullOrEmpty(keyConfirmation.FunctionName)) {
@@ -223,7 +287,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 
             Func<byte[], byte[]> validator; // Used as an adaptor between different validation methods
             switch (functionType) {
-                case VerificationFunctionType.Kdf:
+                case AuthenticationFunctionType.Kdf:
                 {
                     if (outputSizeBytes == null) {
                         throw new ArgumentNullException("outputSizeBytes", "Cannot be null if KDF is being used.");
@@ -262,7 +326,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                     };
                     break;
                 }
-                case VerificationFunctionType.Mac:
+                case AuthenticationFunctionType.Mac:
                     MacFunction macFEnum;
                     try {
                         macFEnum = keyConfirmation.FunctionName.ToEnum<MacFunction>();

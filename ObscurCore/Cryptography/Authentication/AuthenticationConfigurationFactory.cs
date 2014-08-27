@@ -135,7 +135,7 @@ namespace ObscurCore.Cryptography.Authentication
 
 		private static AuthenticationFunctionConfiguration CreateAuthConf(string functionName, int keySizeBits, int outputSizeBits, byte[] functionConfig, byte[] nonce) {
 			var config = new AuthenticationFunctionConfiguration {
-				FunctionType = VerificationFunctionType.Mac.ToString(),
+				FunctionType = AuthenticationFunctionType.Mac.ToString(),
 				FunctionName = functionName,
 				FunctionConfiguration = functionConfig,
 				KeySizeBits = keySizeBits,

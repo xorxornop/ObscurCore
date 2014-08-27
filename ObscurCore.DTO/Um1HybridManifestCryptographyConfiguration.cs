@@ -1,17 +1,21 @@
-//
-//  Copyright 2013  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+#region License
+
+// 	Copyright 2013-2014 Matthew Ducker
+// 	
+// 	Licensed under the Apache License, Version 2.0 (the "License");
+// 	you may not use this file except in compliance with the License.
+// 	
+// 	You may obtain a copy of the License at
+// 		
+// 		http://www.apache.org/licenses/LICENSE-2.0
+// 	
+// 	Unless required by applicable law or agreed to in writing, software
+// 	distributed under the License is distributed on an "AS IS" BASIS,
+// 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// 	See the License for the specific language governing permissions and 
+// 	limitations under the License.
+
+#endregion
 
 using System;
 using ProtoBuf;
@@ -19,7 +23,7 @@ using ProtoBuf;
 namespace ObscurCore.DTO
 {
     /// <summary>
-    ///     Configuration for a UM1-Hybrid cryptographic scheme.
+    ///     Configuration for an instance of the UM1-Hybrid cryptographic scheme.
     /// </summary>
     [ProtoContract]
     public class Um1HybridManifestCryptographyConfiguration : IUm1HybridManifestCryptographyConfiguration,
@@ -28,6 +32,8 @@ namespace ObscurCore.DTO
         ICloneableSafely<Um1HybridManifestCryptographyConfiguration>, 
         IEquatable<Um1HybridManifestCryptographyConfiguration>
     {
+
+        /// <inheritdoc />
         public Um1HybridManifestCryptographyConfiguration CreateAuthenticatibleClone()
         {
             return new Um1HybridManifestCryptographyConfiguration {
@@ -41,6 +47,7 @@ namespace ObscurCore.DTO
             };
         }
 
+        /// <inheritdoc />
         public bool Equals(Um1HybridManifestCryptographyConfiguration other)
         {
             if (ReferenceEquals(null, other)) {
@@ -68,13 +75,14 @@ namespace ObscurCore.DTO
         public CipherConfiguration SymmetricCipher { get; set; }
 
         /// <summary>
-        ///     Configuration for the authentication of the manifest and cipher configuration.
+        ///     Configuration of the function/scheme used in authentication of the manifest. 
+        ///     Note: this must be of a MAC type.
         /// </summary>
         [ProtoMember(2, IsRequired = true)]
         public AuthenticationFunctionConfiguration Authentication { get; set; }
 
         /// <summary>
-        ///     Output of the authentication scheme given correct input data.
+        ///     Output of the <see cref="Authentication"/> scheme, given the correct input and key.
         /// </summary>
         [ProtoMember(3, IsRequired = true)]
         public byte[] AuthenticationVerifiedOutput { get; set; }
@@ -87,13 +95,13 @@ namespace ObscurCore.DTO
         public AuthenticationFunctionConfiguration KeyConfirmation { get; set; }
 
         /// <summary>
-        ///     Output of the key confirmation scheme given correct input data.
+        ///     Output of the <see cref="KeyConfirmation"/> scheme, given the correct key.
         /// </summary>
         [ProtoMember(5, IsRequired = false)]
         public byte[] KeyConfirmationVerifiedOutput { get; set; }
 
         /// <summary>
-        ///     Configuration for the scheme used to derive a key from the shared secret.
+        ///     Configuration for the scheme used to derive cipher and authentication keys from the shared secret.
         /// </summary>
         [ProtoMember(6, IsRequired = true)]
         public KeyDerivationConfiguration KeyDerivation { get; set; }
@@ -102,8 +110,9 @@ namespace ObscurCore.DTO
         ///     Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
         /// </summary>
         [ProtoMember(7, IsRequired = true)]
-        public EcKeyConfiguration EphemeralKey { get; set; }
+        public EcKey EphemeralKey { get; set; }
 
+        /// <inheritdoc />
         public Um1HybridManifestCryptographyConfiguration CloneSafely()
         {
             return new Um1HybridManifestCryptographyConfiguration {
@@ -117,6 +126,7 @@ namespace ObscurCore.DTO
             };
         }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) {
@@ -131,6 +141,7 @@ namespace ObscurCore.DTO
             return Equals((Um1HybridManifestCryptographyConfiguration) obj);
         }
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked {

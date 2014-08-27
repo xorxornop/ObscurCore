@@ -1,17 +1,21 @@
-//
-//  Copyright 2013  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+#region License
+
+// 	Copyright 2013-2014 Matthew Ducker
+// 	
+// 	Licensed under the Apache License, Version 2.0 (the "License");
+// 	you may not use this file except in compliance with the License.
+// 	
+// 	You may obtain a copy of the License at
+// 		
+// 		http://www.apache.org/licenses/LICENSE-2.0
+// 	
+// 	Unless required by applicable law or agreed to in writing, software
+// 	distributed under the License is distributed on an "AS IS" BASIS,
+// 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// 	See the License for the specific language governing permissions and 
+// 	limitations under the License.
+
+#endregion
 
 using System;
 using System.IO;
@@ -20,100 +24,36 @@ using ProtoBuf;
 namespace ObscurCore.DTO
 {
     /// <summary>
-    ///     Description of an item in the payload.
+    ///     Item in the payload of a package.
     /// </summary>
+    /// <remarks>
+    ///     More accurately, a description of the item: what and where it is. 
+    ///     It is to an item what a <see cref="ManifestHeader"/> is to a <see cref="Manifest"/>, 
+    ///     with the exception that a manifest header directly precedes a manifest in logical data 
+    ///     layout, whereas the same is not true here.
+    /// </remarks>
     [ProtoContract]
-    public sealed class PayloadItem : IPayloadItem, IStreamBinding, IDataTransferObject,
+    public sealed class PayloadItem : IPayloadItem, IDataTransferObject,
         IAuthenticatibleClonable<PayloadItem>, IEquatable<PayloadItem>
     {
-        [ProtoIgnore] private Lazy<Stream> _stream;
+        private Lazy<Stream> _stream;
 
+        /// <summary>
+        ///     Create a new payload item.
+        /// </summary>
         public PayloadItem()
         {
             Identifier = Guid.NewGuid();
         }
 
-        internal PayloadItem(out Guid identifier) : this()
-        {
-            identifier = Identifier;
-        }
-
-        internal PayloadItem(Func<Stream> streamBinder, out Guid identifier) : this(out identifier)
+        internal PayloadItem(Func<Stream> streamBinder)
         {
             SetStreamBinding(streamBinder);
-        }
-
-        public PayloadItem CreateAuthenticatibleClone()
-        {
-            return new PayloadItem {
-                Type = Type,
-                RelativePath = RelativePath,
-                ExternalLength = ExternalLength,
-                InternalLength = InternalLength,
-                SymmetricCipher = SymmetricCipher,
-                SymmetricCipherKey = SymmetricCipherKey,
-                Authentication = Authentication,
-                AuthenticationKey = AuthenticationKey,
-                AuthenticationVerifiedOutput = null,
-                KeyConfirmation = KeyConfirmation,
-                KeyConfirmationVerifiedOutput = KeyConfirmationVerifiedOutput,
-                KeyDerivation = KeyDerivation
-            };
-        }
-
-        public PayloadItem CloneSafely()
-        {
-            return new PayloadItem {
-                Type = Type,
-                RelativePath = String.Copy(this.RelativePath),
-                ExternalLength = ExternalLength,
-                InternalLength = InternalLength,
-                SymmetricCipher = this.SymmetricCipher.CloneSafely(),
-                SymmetricCipherKey = null,
-                Authentication = Authentication.CloneSafely(),
-                AuthenticationKey = null,
-                AuthenticationVerifiedOutput = null,
-                KeyConfirmation = KeyConfirmation.CloneSafely(),
-                KeyConfirmationVerifiedOutput = null,
-                KeyDerivation = KeyDerivation.CloneSafely()
-            };
-        }
-
-        public bool Equals(PayloadItem other)
-        {
-            if (ReferenceEquals(null, other)) {
-                return false;
-            }
-            if (ReferenceEquals(this, other)) {
-                return true;
-            }
-            return
-                Type.Equals(other.Type) &&
-                String.Equals(RelativePath, other.RelativePath, Type != PayloadItemType.KeyAction
-                    ? StringComparison.OrdinalIgnoreCase
-                    : StringComparison.Ordinal) &&
-                InternalLength == other.InternalLength && ExternalLength == other.ExternalLength &&
-                SymmetricCipher.Equals(other.SymmetricCipher) &&
-                Authentication.Equals(other.Authentication) &&
-                (AuthenticationKey == null
-                    ? other.AuthenticationKey == null
-                    : AuthenticationKey.SequenceEqualShortCircuiting(other.AuthenticationKey)) &&
-                AuthenticationVerifiedOutput.SequenceEqualShortCircuiting(other.AuthenticationVerifiedOutput) &&
-                (KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) &&
-                (KeyConfirmationVerifiedOutput == null
-                    ? other.KeyConfirmationVerifiedOutput == null
-                    : KeyConfirmationVerifiedOutput.SequenceEqualShortCircuiting(other.KeyConfirmationVerifiedOutput)) &&
-                KeyDerivation == null
-                    ? other.KeyDerivation == null
-                    : KeyDerivation.Equals((other.KeyDerivation));
         }
 
         /// <summary>
         ///     Identifier used for stream binding.
         /// </summary>
-        /// <remarks>
-        ///     Strictly for library internal use only. Do not export this information outside the system.
-        /// </remarks>
         [ProtoIgnore]
         public Guid Identifier { get; private set; }
 
@@ -128,20 +68,19 @@ namespace ObscurCore.DTO
         }
 
         /// <summary>
-        ///     Item handling behaviour category.
-        ///     Key actions should be handled differently from the others.
+        ///     Item type. Used for indicating how an item should be handled.
         /// </summary>
         [ProtoMember(1, IsRequired = true)]
         public PayloadItemType Type { get; set; }
 
         /// <summary>
-        ///     Path of the stored data. 'Path' syntax may correspond to a key-value collection, filesystem, or other hierarchal
-        ///     schema.
-        ///     Syntax uses '/' to seperate stores/directories. Item names may or may not have extensions (if
-        ///     files/binary-data-type).
+        ///     Path and/or name of the stored data.
         /// </summary>
+        /// <remarks>
+        ///     Path syntax may correspond to a filesystem, key-value collection, or the like.
+        /// </remarks>
         [ProtoMember(2, IsRequired = true)]
-        public string RelativePath { get; set; }
+        public string Path { get; set; }
 
         /// <summary>
         ///     Length of the item outside of the payload, unmodified, as it was before inclusion.
@@ -157,43 +96,47 @@ namespace ObscurCore.DTO
         public long InternalLength { get; set; }
 
         /// <summary>
-        /// The name of the format that the content is stored as.
+        ///     Name of the format that the content is stored as.
         /// </summary>
         [ProtoMember(5, IsRequired = true)]
         public string FormatName { get; set; }
 
+        /// <summary>
+        ///     Data for the format of the content, where applicable 
+        ///     (not sufficiently described by <see cref="FormatName"/>).
+        /// </summary>
         [ProtoMember(6, IsRequired = true)]
         public byte[] FormatData { get; set; }
 
         /// <summary>
-        ///     SymmetricCipher configuration for this payload item.
+        ///     Configuration of the cipher used for the encryption of the payload item.
         /// </summary>
         [ProtoMember(7, IsRequired = true)]
         public CipherConfiguration SymmetricCipher { get; set; }
 
         /// <summary>
-        ///     Ephemeral cryptographic key for encryption of the payload item.
-        ///     Required if <see cref="PayloadItem.KeyDerivation" /> is not present.
+        ///     Ephemeral key for encryption of the payload item.
+        ///     Required if <see cref="KeyDerivation" /> is not present.
         /// </summary>
         [ProtoMember(8, IsRequired = false)]
         public byte[] SymmetricCipherKey { get; set; }
 
         /// <summary>
-        ///     Authentication configuration for the payload item.
-        ///     Must be of a MAC type.
+        ///     Configuration for the authentication of the payload item.
+        ///     Note: this must be of a MAC type.
         /// </summary>
         [ProtoMember(9, IsRequired = true)]
         public AuthenticationFunctionConfiguration Authentication { get; set; }
 
         /// <summary>
-        ///     Cryptographic key for authentication of the payload item.
-        ///     Required if <see cref="PayloadItem.KeyDerivation" /> is not present.
+        ///     Ephemeral key for authentication of the payload item.
+        ///     Required if <see cref="KeyDerivation"/> is not present.
         /// </summary>
         [ProtoMember(10, IsRequired = false)]
         public byte[] AuthenticationKey { get; set; }
 
         /// <summary>
-        ///     Output of the authentication scheme given correct input data.
+        ///     Output of the <see cref="Authentication"/> scheme, given the correct input and key.
         /// </summary>
         [ProtoMember(11, IsRequired = true)]
         public byte[] AuthenticationVerifiedOutput { get; set; }
@@ -202,22 +145,22 @@ namespace ObscurCore.DTO
         ///     Key confirmation configuration for this payload item.
         ///     Used to validate the existence and validity of keying material
         ///     at the respondent's side without disclosing the key itself.
-        ///     Required if <see cref="PayloadItem.SymmetricCipherKey" /> and <see cref="PayloadItem.AuthenticationKey" /> are not
+        ///     Required if <see cref="SymmetricCipherKey" /> and <see cref="AuthenticationKey" /> are not
         ///     present.
         /// </summary>
         [ProtoMember(12, IsRequired = false)]
         public AuthenticationFunctionConfiguration KeyConfirmation { get; set; }
 
         /// <summary>
-        ///     Output of the key confirmation scheme given the correct key.
+        ///     Output of the <see cref="KeyConfirmation"/> scheme, given the correct key.
         /// </summary>
         [ProtoMember(13, IsRequired = false)]
         public byte[] KeyConfirmationVerifiedOutput { get; set; }
 
         /// <summary>
         ///     Key derivation configuration for this payload item.
-        ///     Used to derive cipher and authentication keys from a single pre-established key.
-        ///     Required if <see cref="PayloadItem.SymmetricCipherKey" /> and <see cref="PayloadItem.AuthenticationKey" /> are not
+        ///     Used to derive cipher and authentication keys from a single key.
+        ///     Required if <see cref="SymmetricCipherKey" /> and <see cref="AuthenticationKey" /> are not
         ///     present.
         /// </summary>
         [ProtoMember(14, IsRequired = false)]
@@ -248,7 +191,7 @@ namespace ObscurCore.DTO
 
         /// <summary>
         ///     State of <see cref="StreamBinding" /> - whether it has a lazy binding (can be activated),
-        ///     or none at all (activation is impossible; null reference).
+        ///     or none at all (activation is impossible: null reference).
         /// </summary>
         [ProtoIgnore]
         public bool StreamHasBinding
@@ -256,11 +199,17 @@ namespace ObscurCore.DTO
             get { return _stream != null; }
         }
 
+        /// <summary>
+        ///     Assigns a function that returns a <see cref="Stream"/> 
+        ///     associated with this item.
+        /// </summary>
+        /// <param name="streamBinding"></param>
         public void SetStreamBinding(Func<Stream> streamBinding)
         {
             _stream = new Lazy<Stream>(streamBinding);
         }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) {
@@ -275,23 +224,92 @@ namespace ObscurCore.DTO
             return Equals((PayloadItem) obj);
         }
 
+        /// <inheritdoc />
+        public bool Equals(PayloadItem other)
+        {
+            if (ReferenceEquals(null, other)) {
+                return false;
+            }
+            if (ReferenceEquals(this, other)) {
+                return true;
+            }
+            return
+                Type.Equals(other.Type) &&
+                String.Equals(Path, other.Path, Type != PayloadItemType.KeyAction
+                    ? StringComparison.OrdinalIgnoreCase
+                    : StringComparison.Ordinal) &&
+                InternalLength == other.InternalLength && ExternalLength == other.ExternalLength &&
+                SymmetricCipher.Equals(other.SymmetricCipher) &&
+                Authentication.Equals(other.Authentication) &&
+                (AuthenticationKey == null
+                    ? other.AuthenticationKey == null
+                    : AuthenticationKey.SequenceEqualShortCircuiting(other.AuthenticationKey)) &&
+                AuthenticationVerifiedOutput.SequenceEqualShortCircuiting(other.AuthenticationVerifiedOutput) &&
+                (KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) &&
+                (KeyConfirmationVerifiedOutput == null
+                    ? other.KeyConfirmationVerifiedOutput == null
+                    : KeyConfirmationVerifiedOutput.SequenceEqualShortCircuiting(other.KeyConfirmationVerifiedOutput)) &&
+                KeyDerivation == null
+                    ? other.KeyDerivation == null
+                    : KeyDerivation.Equals((other.KeyDerivation));
+        }
+
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked {
                 int hashCode = Type.GetHashCode();
-                hashCode = (hashCode * 397) ^ RelativePath.GetHashCode();
-                hashCode = (hashCode * 397) ^ InternalLength.GetHashCode();
-                hashCode = (hashCode * 397) ^ ExternalLength.GetHashCode();
-                hashCode = (hashCode * 397) ^ SymmetricCipher.GetHashCode();
-                hashCode = (hashCode * 397) ^ Authentication.GetHashCode();
-                hashCode = (hashCode * 397) ^ (AuthenticationKey != null ? AuthenticationKey.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ AuthenticationVerifiedOutput.GetHashCode();
-                hashCode = (hashCode * 397) ^ (KeyConfirmation != null ? KeyConfirmation.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^
-                           (KeyConfirmationVerifiedOutput != null ? KeyConfirmationVerifiedOutput.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (KeyDerivation != null ? KeyDerivation.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ Path.GetHashCode();
+                //hashCode = (hashCode * 397) ^ InternalLength.GetHashCode();
+                //hashCode = (hashCode * 397) ^ ExternalLength.GetHashCode();
+                //hashCode = (hashCode * 397) ^ SymmetricCipher.GetHashCode();
+                //hashCode = (hashCode * 397) ^ Authentication.GetHashCode();
+                //hashCode = (hashCode * 397) ^ (AuthenticationKey != null ? AuthenticationKey.GetHashCode() : 0);
+                //hashCode = (hashCode * 397) ^ AuthenticationVerifiedOutput.GetHashCode();
+                //hashCode = (hashCode * 397) ^ (KeyConfirmation != null ? KeyConfirmation.GetHashCode() : 0);
+                //hashCode = (hashCode * 397) ^
+                //           (KeyConfirmationVerifiedOutput != null ? KeyConfirmationVerifiedOutput.GetHashCode() : 0);
+                //hashCode = (hashCode * 397) ^ (KeyDerivation != null ? KeyDerivation.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        /// <inheritdoc />
+        public PayloadItem CreateAuthenticatibleClone()
+        {
+            return new PayloadItem {
+                Type = Type,
+                Path = Path,
+                ExternalLength = ExternalLength,
+                InternalLength = InternalLength,
+                SymmetricCipher = SymmetricCipher,
+                SymmetricCipherKey = SymmetricCipherKey,
+                Authentication = Authentication,
+                AuthenticationKey = AuthenticationKey,
+                AuthenticationVerifiedOutput = null,
+                KeyConfirmation = KeyConfirmation,
+                KeyConfirmationVerifiedOutput = KeyConfirmationVerifiedOutput,
+                KeyDerivation = KeyDerivation
+            };
+        }
+
+        /// <inheritdoc />
+        public PayloadItem CloneSafely()
+        {
+            return new PayloadItem {
+                Type = Type,
+                Path = String.Copy(this.Path),
+                ExternalLength = ExternalLength,
+                InternalLength = InternalLength,
+                SymmetricCipher = this.SymmetricCipher.CloneSafely(),
+                SymmetricCipherKey = null,
+                Authentication = Authentication.CloneSafely(),
+                AuthenticationKey = null,
+                AuthenticationVerifiedOutput = null,
+                KeyConfirmation = KeyConfirmation.CloneSafely(),
+                KeyConfirmationVerifiedOutput = null,
+                KeyDerivation = KeyDerivation.CloneSafely()
+            };
         }
     }
 }

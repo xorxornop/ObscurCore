@@ -11,7 +11,6 @@ namespace ObscurCore.Cryptography.Support
 
 		private readonly string algorithm;
 		private readonly ECDomainParameters parameters;
-//		private readonly DerObjectIdentifier publicKeyParamSet;
 
 		protected ECKeyParameters(
 			string				algorithm,
@@ -28,22 +27,6 @@ namespace ObscurCore.Cryptography.Support
 			this.parameters = parameters;
 		}
 
-//		protected ECKeyParameters(
-//			string				algorithm,
-//			bool				isPrivate,
-//			DerObjectIdentifier	publicKeyParamSet)
-//			: base(isPrivate)
-//		{
-//			if (algorithm == null)
-//				throw new ArgumentNullException("algorithm");
-//			if (publicKeyParamSet == null)
-//				throw new ArgumentNullException("publicKeyParamSet");
-//
-//			this.algorithm = VerifyAlgorithmName(algorithm);
-//			this.parameters = LookupParameters(publicKeyParamSet);
-//			this.publicKeyParamSet = publicKeyParamSet;
-//		}
-
 		public string AlgorithmName
 		{
 			get { return algorithm; }
@@ -53,11 +36,6 @@ namespace ObscurCore.Cryptography.Support
 		{
 			get { return parameters; }
 		}
-
-//		public DerObjectIdentifier PublicKeyParamSet
-//		{
-//			get { return publicKeyParamSet; }
-//		}
 
 		public override bool Equals(
 			object obj)
@@ -84,17 +62,6 @@ namespace ObscurCore.Cryptography.Support
 			return parameters.GetHashCode() ^ base.GetHashCode();
 		}
 
-//		internal ECKeyGenerationParameters CreateKeyGenerationParameters(
-//			CsRng random)
-//		{
-//			if (publicKeyParamSet != null)
-//			{
-//				return new ECKeyGenerationParameters(publicKeyParamSet, random);
-//			}
-//
-//			return new ECKeyGenerationParameters(parameters, random);
-//		}
-//
 		internal static string VerifyAlgorithmName(string algorithm)
 		{
 			string upper = algorithm.ToUpper();
@@ -102,28 +69,5 @@ namespace ObscurCore.Cryptography.Support
 				throw new ArgumentException("unrecognised algorithm: " + algorithm, "algorithm");
 			return upper;
 		}
-//
-//		internal static ECDomainParameters LookupParameters(
-//			DerObjectIdentifier publicKeyParamSet)
-//		{
-//			if (publicKeyParamSet == null)
-//				throw new ArgumentNullException("publicKeyParamSet");
-//
-//			ECDomainParameters p = ECGost3410NamedCurves.GetByOid(publicKeyParamSet);
-//
-//			if (p == null)
-//			{
-//				X9ECParameters x9 = ECKeyPairGenerator.FindECCurveByOid(publicKeyParamSet);
-//
-//				if (x9 == null)
-//				{
-//					throw new ArgumentException("OID is not a valid public key parameter set", "publicKeyParamSet");
-//				}
-//
-//				p = new ECDomainParameters(x9.Curve, x9.G, x9.N, x9.H, x9.GetSeed());
-//			}
-//
-//			return p;
-//		}
 	}
 }

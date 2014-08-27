@@ -21,7 +21,7 @@ using ObscurCore.Cryptography.Support.Math.EllipticCurve;
 namespace ObscurCore.Cryptography.KeyAgreement.Information
 {
     /// <summary>
-    ///     Information for a named elliptic curve over Fp.
+    ///     Information for a named elliptic curve over F(<sub>p</sub>).
     /// </summary>
     public class FpEcNamedCurveInformation : EllipticCurveInformation
     {

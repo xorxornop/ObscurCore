@@ -15,18 +15,6 @@ namespace ObscurCore.Cryptography.Support
 		{
 		}
 
-        //[Obsolete("Use version with explicit 'algorithm' parameter")]
-        //public ECPublicKeyParameters(
-        //    ECPoint				q,
-        //    DerObjectIdentifier publicKeyParamSet)
-        //    : base("ECGOST3410", false, publicKeyParamSet)
-        //{
-        //    if (q == null)
-        //        throw new ArgumentNullException("q");
-
-        //    this.q = q;
-        //}
-
 		public ECPublicKeyParameters(
 			string				algorithm,
 			ECPoint				q,
@@ -38,18 +26,6 @@ namespace ObscurCore.Cryptography.Support
 
 			this.q = q;
 		}
-
-        //public ECPublicKeyParameters(
-        //    string				algorithm,
-        //    ECPoint				q,
-        //    DerObjectIdentifier publicKeyParamSet)
-        //    : base(algorithm, false, publicKeyParamSet)
-        //{
-        //    if (q == null)
-        //        throw new ArgumentNullException("q");
-
-        //    this.q = q;
-        //}
 
 		public ECPoint Q
         {

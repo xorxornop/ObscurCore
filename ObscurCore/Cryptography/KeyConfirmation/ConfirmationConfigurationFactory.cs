@@ -19,13 +19,16 @@ using ObscurCore.DTO;
 
 namespace ObscurCore.Cryptography.KeyConfirmation
 {
+    /// <summary>
+    ///     Factory class for making configurations for key confirmations.
+    /// </summary>
     public static class ConfirmationConfigurationFactory
     {
         /// <summary>
         /// Creates a configuration for key confirmation using a MAC construction. 
         /// </summary>
         /// <param name="macFunctionEnum">Hash function to use as basis of HMAC construction.</param>
-        /// <returns>A key confirmation as a <see cref="AuthenticationFunctionConfiguration"/>.</returns>
+        /// <returns>A key confirmation configuration as a <see cref="AuthenticationFunctionConfiguration"/>.</returns>
         public static AuthenticationFunctionConfiguration GenerateConfiguration(MacFunction macFunctionEnum)
         {
             int outputSize;
@@ -38,7 +41,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// Creates a configuration for key confirmation using an HMAC construction. 
         /// </summary>
         /// <param name="hashFunctionEnum">Hash function to use as basis of HMAC construction.</param>
-        /// <returns>A key confirmation as a <see cref="AuthenticationFunctionConfiguration"/>.</returns>
+        /// <returns>A key confirmation configuration as a <see cref="AuthenticationFunctionConfiguration"/>.</returns>
         public static AuthenticationFunctionConfiguration GenerateConfiguration(HashFunction hashFunctionEnum)
         {
             int outputSize;
@@ -51,7 +54,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// Creates a configuration for key confirmation using an CMAC/OMAC1 construction. 
         /// </summary>
         /// <param name="cipherEnum">Block cipher to use as basis of CMAC construction.</param>
-        /// <returns>A key confirmation as a <see cref="AuthenticationFunctionConfiguration"/>.</returns>
+        /// <returns>A key confirmation configuration as a <see cref="AuthenticationFunctionConfiguration"/>.</returns>
         public static AuthenticationFunctionConfiguration GenerateConfiguration(BlockCipher cipherEnum)
         {
             int outputSize;

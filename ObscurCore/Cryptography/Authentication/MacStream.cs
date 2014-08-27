@@ -71,7 +71,7 @@ namespace ObscurCore.Cryptography.Authentication
         public MacStream(Stream binding, bool writing, IAuthenticationFunctionConfiguration config, byte[] key,
             bool closeOnDispose = true) : base(binding, writing, closeOnDispose)
         {
-            if (config.FunctionType.ToEnum<VerificationFunctionType>() != VerificationFunctionType.Mac) {
+            if (config.FunctionType.ToEnum<AuthenticationFunctionType>() != AuthenticationFunctionType.Mac) {
                 throw new ConfigurationInvalidException("Configuration specifies function type other than MAC.");
             }
 

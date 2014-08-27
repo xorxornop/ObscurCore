@@ -27,7 +27,7 @@ namespace ObscurCore.Cryptography
         /// <summary>
         ///     Symmetric key(s) that the local user owns.
         /// </summary>
-        IEnumerable<byte[]> SymmetricKeys { get; }
+        IEnumerable<SymmetricKey> SymmetricKeys { get; }
 
         /// <summary>
         ///     Elliptic curve key(s) that the local user owns.
@@ -37,6 +37,6 @@ namespace ObscurCore.Cryptography
         /// <summary>
         ///     Elliptic curve public key(s) of foreign entities.
         /// </summary>
-        IEnumerable<EcKeyConfiguration> ForeignEcKeys { get; }
+        IEnumerable<EcKey> ForeignEcKeys { get; }
     }
 }
