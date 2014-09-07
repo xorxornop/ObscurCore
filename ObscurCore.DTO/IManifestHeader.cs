@@ -31,16 +31,6 @@ namespace ObscurCore.DTO
         int FormatVersion { get; }
 
         /// <summary>
-        ///     Whether to use fast LZ4 compression to reduce the size of the manifest.
-        /// </summary>
-        CompressionScheme Compression { get; }
-
-        /// <summary>
-        ///     Compression to use to reduce the size of the manifest.
-        /// </summary>
-        byte[] CompressionConfiguration { get; }
-
-        /// <summary>
         ///     Name of the cryptographic scheme used to secure the Manifest.
         /// </summary>
         string CryptographySchemeName { get; }

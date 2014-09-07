@@ -62,7 +62,6 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CompressionScheme.cs" />
     <Compile Include="ECKey.cs" />
     <Compile Include="ECKeypair.cs" />
     <Compile Include="ExtensionMethods.cs" />

@@ -82,7 +82,6 @@ namespace ObscurCore
             _manifestHeaderCryptoScheme = ManifestCryptographyScheme.SymmetricOnly;
             SetManifestCryptoSymmetric(key, lowEntropy);
             PayloadLayout = layoutScheme;
-            ManifestCompression = CompressionScheme.LZ4;
         }
 
         /// <summary>
@@ -98,7 +97,6 @@ namespace ObscurCore
             _manifestHeaderCryptoScheme = ManifestCryptographyScheme.SymmetricOnly;
             SetManifestCryptoSymmetric(key, canary, lowEntropy);
             PayloadLayout = layoutScheme;
-            ManifestCompression = CompressionScheme.LZ4;
         }
 
         /// <summary>
@@ -153,8 +151,6 @@ namespace ObscurCore
         {
             get { return _formatVersion; }
         }
-
-        public CompressionScheme ManifestCompression { get; set; }
 
         /// <summary>
         ///     Cryptographic scheme used for the manifest.
@@ -921,20 +917,7 @@ namespace ObscurCore
                     using (var encryptor = new CipherStream(authenticator, true, _manifestHeaderCryptoConfig.SymmetricCipher,
                         workingManifestCipherKey, false)) 
                     {
-                        switch (ManifestCompression) {
-                            case CompressionScheme.None:
-                                _manifest.SerialiseDto(encryptor, prefixLength: false);
-                                break;
-                            case CompressionScheme.LZ4:
-                                using (var compressor = new LZ4Stream(encryptor, CompressionMode.Compress)) {
-                                    _manifest.SerialiseDto(compressor, prefixLength: false);
-                                }
-                                break;
-                            default:
-                                throw new NotSupportedException(
-                                    String.Format("Cannot use compression scheme \"{0}\" for manifest compression.",
-                                        ManifestCompression));
-                        }
+                        _manifest.SerialiseDto(encryptor, prefixLength: false);
                     }
                     UInt32 lengthUint = (UInt32)authenticator.BytesOut;
                     byte[] lengthPrefix = lengthUint.ToLittleEndian();
@@ -965,8 +948,7 @@ namespace ObscurCore
                 // Combine manifest header information (in seperate pieces until now) into a completed DTO
                 var mh = new ManifestHeader {
                     FormatVersion = _formatVersion,
-                    CryptographySchemeName = _manifestHeaderCryptoScheme.ToString(),
-                    Compression = this.ManifestCompression
+                    CryptographySchemeName = _manifestHeaderCryptoScheme.ToString()
                 };
                 Debug.Assert(manifestMac != null, "'manifestMac' is null. It should have been set when 'authenticator' was closed.");
                 switch (ManifestCryptoScheme) {
