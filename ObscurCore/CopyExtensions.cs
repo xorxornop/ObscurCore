@@ -128,6 +128,69 @@ namespace ObscurCore
         }
 
         /// <summary>
+        ///     Copy values from <paramref name="src"/> array into <paramref name="dst"/> array.
+        /// </summary>
+        /// <param name="src">Array to copy from.</param>
+        /// <param name="dst">Array to copy into.</param>
+        public static void DeepCopy(this uint[] src, uint[] dst)
+        {
+#if INCLUDE_UNSAFE
+            const int umLimit = UnmanagedThreshold / sizeof(uint);
+            if (src.Length >= umLimit) {
+                unsafe {
+                    fixed (uint* srcPtr = src) {
+                        fixed (uint* dstPtr = dst) {
+                            var srcBP = (byte*)srcPtr;
+                            var dstBP = (byte*)dstPtr;
+                            CopyMemory(srcBP, dstBP, src.Length * sizeof(uint));
+                        }
+                    }
+                }
+            } else {
+#endif
+                const int bcLimit = BufferBlockCopyThreshold / sizeof(uint);
+                if (src.Length >= bcLimit)
+                    Buffer.BlockCopy(src, 0, dst, 0, src.Length);
+                else
+                    Array.Copy(src, 0, dst, 0, src.Length);
+#if INCLUDE_UNSAFE
+            }
+#endif
+        }
+
+        /// <summary>
+        ///     Copy values from <paramref name="src"/> array into <paramref name="dst"/> array.
+        /// </summary>
+        /// <param name="src">Array to copy from.</param>
+        /// <param name="dst">Array to copy into.</param>
+        internal static void DeepCopyInternal(uint[] src, int srcOff, uint[] dst, int dstOff, int length)
+        {
+#if INCLUDE_UNSAFE
+            const int umLimit = UnmanagedThreshold / sizeof(uint);
+            if (src.Length >= umLimit) {
+                unsafe {
+                    fixed (uint* srcPtr = src) {
+                        fixed (uint* dstPtr = dst) {
+                            var srcBP = (byte*)(srcPtr + srcOff);
+                            var dstBP = (byte*)(dstPtr + dstOff);
+                            CopyMemory(srcBP, dstBP, length);
+                        }
+                    }
+                }
+            } else {
+#endif
+                const int bcLimit = BufferBlockCopyThreshold / sizeof(uint);
+                if (src.Length >= bcLimit)
+                    Buffer.BlockCopy(src, srcOff, dst, dstOff, length);
+                else
+                    Array.Copy(src, srcOff, dst, dstOff, length);
+#if INCLUDE_UNSAFE
+            }
+#endif
+        }
+
+
+        /// <summary>
         /// Produce a deep copy (copied value by value) of <paramref name="data"/> array.
         /// </summary>
         /// <param name="data">Array to produce a copy of.</param>
@@ -228,35 +291,47 @@ namespace ObscurCore
         /// <param name="length">Length of data to copy in bytes.</param>
         internal static unsafe void CopyMemory(byte* src, byte* dst, int length)
         {
-            while (length >= 16) {
-                *(ulong*)dst = *(ulong*)src;
-                dst += 8;
-                src += 8;
-                *(ulong*)dst = *(ulong*)src;
-                dst += 8;
-                src += 8;
-                length -= 16;
+            if (StratCom.PlatformWordSize == sizeof(uint)) {
+                while (length >= sizeof(uint) * 2) {
+                    *(uint*)dst = *(uint*)src;
+                    dst += sizeof(uint);
+                    src += sizeof(uint);
+                    *(uint*)dst = *(uint*)src;
+                    dst += sizeof(uint);
+                    src += sizeof(uint);
+                    length -= sizeof(uint) * 2;
+                }
+            } else if (StratCom.PlatformWordSize == sizeof(ulong)) {
+                while (length >= sizeof(ulong) * 2) {
+                    *(ulong*)dst = *(ulong*)src;
+                    dst += sizeof(ulong);
+                    src += sizeof(ulong);
+                    *(ulong*)dst = *(ulong*)src;
+                    dst += sizeof(ulong);
+                    src += sizeof(ulong);
+                    length -= sizeof(ulong) * 2;
+                }
+
+                if (length >= sizeof(ulong)) {
+                    *(ulong*)dst = *(ulong*)src;
+                    dst += sizeof(ulong);
+                    src += sizeof(ulong);
+                    length -= sizeof(ulong);
+                }
             }
 
-            if (length >= 8) {
-                *(ulong*)dst = *(ulong*)src;
-                dst += 8;
-                src += 8;
-                length -= 8;
-            }
-
-            if (length >= 4) {
+            if (length >= sizeof(uint)) {
                 *(uint*)dst = *(uint*)src;
-                dst += 4;
-                src += 4;
-                length -= 4;
+                dst += sizeof(uint);
+                src += sizeof(uint);
+                length -= sizeof(uint);
             }
 
-            if (length >= 2) {
+            if (length >= sizeof(ushort)) {
                 *(ushort*)dst = *(ushort*)src;
-                dst += 2;
-                src += 2;
-                length -= 2;
+                dst += sizeof(ushort);
+                src += sizeof(ushort);
+                length -= sizeof(ushort);
             }
 
             if (length != 0) {

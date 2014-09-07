@@ -141,10 +141,18 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             unsafe {
                 fixed (byte* inPtr = input) {
                     fixed (byte* outPtr = output) {
-                        for (var i = 0; i < blocks; i++) {
-                            ProcessStride(inPtr + inOff + (StrideSize * i),
-                                outPtr + outOff + (StrideSize * i));
-                            AdvanceCounter();
+                        fixed (uint* esPtr = EngineState) {
+                            uint* inPtrUint = (uint*)(inPtr + inOff);
+                            uint* outPtrUint = (uint*)(outPtr + outOff);
+                            for (var i = 0; i < blocks; i++) {
+                                SalsaStrideUnsafe(
+                                    Rounds, 
+                                    esPtr, 
+                                    inPtrUint, outPtrUint);
+                                AdvanceCounter();
+                                inPtrUint += EngineStateSize;
+                                outPtrUint += EngineStateSize;
+                            }
                         }
                     }
                 }
@@ -255,14 +263,82 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 #if INCLUDE_UNSAFE
         protected unsafe void ProcessStride(byte* input, byte* output)
         {
-            SalsaCoreNoChecks(Rounds, EngineState, X);
-            int ops = X.Length;
-
-            var inPtr = (uint*)input;
-            var outPtr = (uint*)output;
-            for (var i = 0; i < ops; i++) {
-                outPtr[i] = inPtr[i] ^ X[i];
+            fixed (uint* esPtr = EngineState) {
+                SalsaStrideUnsafe(Rounds, esPtr, (uint*)input, (uint*)output);
             }
+        }
+
+        internal unsafe static void SalsaStrideUnsafe(int rounds, uint* state, uint* input, uint* output)
+        {
+            uint x00 = state[0];
+            uint x01 = state[1];
+            uint x02 = state[2];
+            uint x03 = state[3];
+            uint x04 = state[4];
+            uint x05 = state[5];
+            uint x06 = state[6];
+            uint x07 = state[7];
+            uint x08 = state[8];
+            uint x09 = state[9];
+            uint x10 = state[10];
+            uint x11 = state[11];
+            uint x12 = state[12];
+            uint x13 = state[13];
+            uint x14 = state[14];
+            uint x15 = state[15];
+
+            for (int i = rounds; i > 0; i -= 2) {
+                x04 ^= R((x00 + x12), 7);
+                x08 ^= R((x04 + x00), 9);
+                x12 ^= R((x08 + x04), 13);
+                x00 ^= R((x12 + x08), 18);
+                x09 ^= R((x05 + x01), 7);
+                x13 ^= R((x09 + x05), 9);
+                x01 ^= R((x13 + x09), 13);
+                x05 ^= R((x01 + x13), 18);
+                x14 ^= R((x10 + x06), 7);
+                x02 ^= R((x14 + x10), 9);
+                x06 ^= R((x02 + x14), 13);
+                x10 ^= R((x06 + x02), 18);
+                x03 ^= R((x15 + x11), 7);
+                x07 ^= R((x03 + x15), 9);
+                x11 ^= R((x07 + x03), 13);
+                x15 ^= R((x11 + x07), 18);
+
+                x01 ^= R((x00 + x03), 7);
+                x02 ^= R((x01 + x00), 9);
+                x03 ^= R((x02 + x01), 13);
+                x00 ^= R((x03 + x02), 18);
+                x06 ^= R((x05 + x04), 7);
+                x07 ^= R((x06 + x05), 9);
+                x04 ^= R((x07 + x06), 13);
+                x05 ^= R((x04 + x07), 18);
+                x11 ^= R((x10 + x09), 7);
+                x08 ^= R((x11 + x10), 9);
+                x09 ^= R((x08 + x11), 13);
+                x10 ^= R((x09 + x08), 18);
+                x12 ^= R((x15 + x14), 7);
+                x13 ^= R((x12 + x15), 9);
+                x14 ^= R((x13 + x12), 13);
+                x15 ^= R((x14 + x13), 18);
+            }
+
+            output[0] = (x00 + state[0]) ^ input[0];
+            output[1] = (x01 + state[1]) ^ input[1];
+            output[2] = (x02 + state[2]) ^ input[2];
+            output[3] = (x03 + state[3]) ^ input[3];
+            output[4] = (x04 + state[4]) ^ input[4];
+            output[5] = (x05 + state[5]) ^ input[5];
+            output[6] = (x06 + state[6]) ^ input[6];
+            output[7] = (x07 + state[7]) ^ input[7];
+            output[8] = (x08 + state[8]) ^ input[8];
+            output[9] = (x09 + state[9]) ^ input[9];
+            output[10] = (x10 + state[10]) ^ input[10];
+            output[11] = (x11 + state[11]) ^ input[11];
+            output[12] = (x12 + state[12]) ^ input[12];
+            output[13] = (x13 + state[13]) ^ input[13];
+            output[14] = (x14 + state[14]) ^ input[14];
+            output[15] = (x15 + state[15]) ^ input[15];
         }
 #endif
 
@@ -359,6 +435,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             x[15] = x15 + input[15];
         }
 
+
+
         protected internal static void HSalsa20(byte[] output, int outputOffset, byte[] key, byte[] nonce)
         {
             var block = XSalsa20Engine.PrepareHSalsaBlock(key, nonce);
@@ -373,6 +451,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             Pack.UInt32_To_LE(block[8], output, outputOffset + 24);
             Pack.UInt32_To_LE(block[9], output, outputOffset + 28);
         }
+
+
 
         protected internal static void HSalsa(int rounds, uint[] input, int inOff, uint[] x, int xOff)
         {
@@ -450,6 +530,81 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             x[xOff + 14] = x14;
             x[xOff + 15] = x15;
         }
+
+#if INCLUDE_UNSAFE
+        protected internal unsafe static void HSalsaNoChecks(int rounds, uint* input, int inOff, uint* x, int xOff)
+        {
+            uint x00 = input[inOff + 0];
+            uint x01 = input[inOff + 1];
+            uint x02 = input[inOff + 2];
+            uint x03 = input[inOff + 3];
+            uint x04 = input[inOff + 4];
+            uint x05 = input[inOff + 5];
+            uint x06 = input[inOff + 6];
+            uint x07 = input[inOff + 7];
+            uint x08 = input[inOff + 8];
+            uint x09 = input[inOff + 9];
+            uint x10 = input[inOff + 10];
+            uint x11 = input[inOff + 11];
+            uint x12 = input[inOff + 12];
+            uint x13 = input[inOff + 13];
+            uint x14 = input[inOff + 14];
+            uint x15 = input[inOff + 15];
+
+            for (int i = rounds; i > 0; i -= 2) {
+                x04 ^= R((x00 + x12), 7);
+                x08 ^= R((x04 + x00), 9);
+                x12 ^= R((x08 + x04), 13);
+                x00 ^= R((x12 + x08), 18);
+                x09 ^= R((x05 + x01), 7);
+                x13 ^= R((x09 + x05), 9);
+                x01 ^= R((x13 + x09), 13);
+                x05 ^= R((x01 + x13), 18);
+                x14 ^= R((x10 + x06), 7);
+                x02 ^= R((x14 + x10), 9);
+                x06 ^= R((x02 + x14), 13);
+                x10 ^= R((x06 + x02), 18);
+                x03 ^= R((x15 + x11), 7);
+                x07 ^= R((x03 + x15), 9);
+                x11 ^= R((x07 + x03), 13);
+                x15 ^= R((x11 + x07), 18);
+
+                x01 ^= R((x00 + x03), 7);
+                x02 ^= R((x01 + x00), 9);
+                x03 ^= R((x02 + x01), 13);
+                x00 ^= R((x03 + x02), 18);
+                x06 ^= R((x05 + x04), 7);
+                x07 ^= R((x06 + x05), 9);
+                x04 ^= R((x07 + x06), 13);
+                x05 ^= R((x04 + x07), 18);
+                x11 ^= R((x10 + x09), 7);
+                x08 ^= R((x11 + x10), 9);
+                x09 ^= R((x08 + x11), 13);
+                x10 ^= R((x09 + x08), 18);
+                x12 ^= R((x15 + x14), 7);
+                x13 ^= R((x12 + x15), 9);
+                x14 ^= R((x13 + x12), 13);
+                x15 ^= R((x14 + x13), 18);
+            }
+
+            x[xOff + 0] = x00;
+            x[xOff + 1] = x01;
+            x[xOff + 2] = x02;
+            x[xOff + 3] = x03;
+            x[xOff + 4] = x04;
+            x[xOff + 5] = x05;
+            x[xOff + 6] = x06;
+            x[xOff + 7] = x07;
+            x[xOff + 8] = x08;
+            x[xOff + 9] = x09;
+            x[xOff + 10] = x10;
+            x[xOff + 11] = x11;
+            x[xOff + 12] = x12;
+            x[xOff + 13] = x13;
+            x[xOff + 14] = x14;
+            x[xOff + 15] = x15;
+        }
+#endif
 
         /*		*
 		 * Rotate left

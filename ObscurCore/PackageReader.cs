@@ -455,7 +455,9 @@ namespace ObscurCore
             // Clear the manifest pre-key
             preMKey.SecureWipe();
 
-            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest working key",
+            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest MAC working key",
+                workingManifestMacKey.ToHexString()));
+            Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest", "Manifest cipher working key",
                 workingManifestCipherKey.ToHexString()));
             Debug.Print(DebugUtility.CreateReportString("PackageReader", "ReadManifest",
                 "Manifest length prefix offset (absolute)",

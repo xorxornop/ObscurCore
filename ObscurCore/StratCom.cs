@@ -15,7 +15,6 @@
 
 using System;
 using System.IO;
-using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Entropy.Primitives;
@@ -43,6 +42,9 @@ namespace ObscurCore
         public static readonly CsRng EntropySupplier;
 
         private static readonly DtoSerialiser Serialiser = new DtoSerialiser();
+
+        internal static readonly int PlatformWordSize = IntPtr.Size;
+        internal static readonly int PlatformWordSizeBits = PlatformWordSize * 8;
 
         static StratCom()
         {
