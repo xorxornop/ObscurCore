@@ -55,7 +55,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             ECKey Q_static_V = recipientPublicKey;
             ECKey d_static_U = senderPrivateKey;
 
-            ECKeypair kp_ephemeral_U = KeypairFactory.GenerateEcKeypair(senderPrivateKey.CurveName);
+            ECKeypair kp_ephemeral_U = KeypairFactory.GenerateECKeypair(senderPrivateKey.CurveName);
             ECKey Q_ephemeral_U = kp_ephemeral_U.ExportPublicKey();
             ECKey d_ephemeral_U = kp_ephemeral_U.GetPrivateKey();
 
@@ -85,7 +85,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 
             ECPoint QeV;
             BigInteger deU;
-            KeypairFactory.GenerateEcKeypair(recipientPublicKey.Parameters, out QeV, out deU);
+            KeypairFactory.GenerateECKeypair(recipientPublicKey.Parameters, out QeV, out deU);
 
             var Q_ephemeral_V = new ECPublicKeyParameters("ECDHC", QeV, recipientPublicKey.Parameters);
             var d_ephemeral_U = new ECPrivateKeyParameters("ECDHC", deU, recipientPublicKey.Parameters);

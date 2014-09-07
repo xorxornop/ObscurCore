@@ -45,7 +45,7 @@ namespace ObscurCore
         private const PayloadLayoutScheme DefaultLayoutScheme = PayloadLayoutScheme.Frameshift;
         private const string MCryptoNotDefined = "Manifest cryptographic scheme not defined.";
 
-        private static byte[] MPlaceholderBytes = new byte[1024];
+        private static readonly byte[] MPlaceholderBytes = new byte[1024];
 
         #region Instance variables
 

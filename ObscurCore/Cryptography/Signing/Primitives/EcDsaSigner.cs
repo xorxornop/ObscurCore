@@ -109,7 +109,7 @@ namespace ObscurCore.Cryptography.Signing.Primitives
                 _random = random ?? StratCom.EntropySupplier;
             }
 
-            SetupEcDomain();
+            SetupECDomain();
         }
 
         /// <summary>
@@ -145,15 +145,15 @@ namespace ObscurCore.Cryptography.Signing.Primitives
             if (_kCalculator.IsDeterministic == false) {
                 _random = random ?? StratCom.EntropySupplier;
             }
-            SetupEcDomain();
+            SetupECDomain();
         }
 
-        private void SetupEcDomain()
+        private void SetupECDomain()
         {
             string curveName = _publicKey != null ? _publicKey.CurveName : _privateKey.CurveName;
-            EllipticCurveInformation curveInfo;
+            EcCurveInformation curveInfo;
             try {
-                curveInfo = EllipticCurveInformationStore.GetEcCurveData(curveName);
+                curveInfo = EcInformationStore.GetECCurveData(curveName);
             } catch (Exception e) {
                 throw new ConfigurationInvalidException("Curve cannot be used in ECDSA.", e);
             }

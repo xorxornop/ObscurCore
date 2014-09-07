@@ -33,7 +33,7 @@ Now that that's out of the way:
 
 ## ObscurCore Packaging System ##
 
-**Please note that this part of the API is subject to change on its way to a stable release. I'll try to minimise this, but the fact remains. Now it has reached v0.9, it should change very little.**
+**Please note that this part of the API is subject to change on its way to a stable release. I'll try to minimise this, but the fact remains.**
 
 *****
 
@@ -88,7 +88,7 @@ The collection of items in the package is termed the "payload". There is a choic
 
 +	Simple
 +	Frameshift
-+	Fabric _[disabled in build until intermittent issues fixed - sorry!]_
++	Fabric
 
 Simple just concatenates them together in varied (or sequential) order.
 Frameshift does the same but inserts variable (or fixed) lengths of bytes before and after each item.
@@ -117,7 +117,6 @@ In future: packages will include the capability to communicate new keys (of any 
 
 
 
-
 ## Functionality exposed through streams ##
 
 **Note:** the parameter closeOnDispose controls closing behaviour for bound streams. If you test these methods using a MemoryStream, and this parameter is set to true (by default or explicitly), the stream will be closed, and your data will consequently be missing, and you will be sad and/or confused.
@@ -142,7 +141,6 @@ These block ciphers are supported:
 +	AES
 +	Blowfish
 +	Camellia
-+	CAST-5 and 6 _[disabled; optionally included by compiler ifdef]_
 +	IDEA
 +	NOEKEON
 +	RC-6
@@ -262,7 +260,7 @@ Elliptic curves provided are from the Brainpool Consortium, SEC2 (secp and sect 
 
 Creating keys:
 
-	var keypair = KeypairFactory.GenerateEcKeypair(DjbCurve.Curve25519.ToString());
+	var keypair = KeypairFactory.GenerateECKeypair(DjbCurve.Curve25519.ToString());
 
 Calculating shared secret:
 
@@ -273,8 +271,8 @@ ECDH:
 UM1:
 
     EcKeyConfiguration ephemeral;
-    byte[] initiatorSS = Um1Exchange.Initiate(senderKeypair.ExportPublicKey(), senderKeypair.GetPrivateKey(), out ephemeral);
-	byte[] responderSS = Um1Exchange.Respond(receiverKeypair.ExportPublicKey(), receiverKeypair.GetPrivateKey(), ephemeral);
+    byte[] initiatorSS = UM1Exchange.Initiate(senderKeypair.ExportPublicKey(), senderKeypair.GetPrivateKey(), out ephemeral);
+	byte[] responderSS = UM1Exchange.Respond(receiverKeypair.ExportPublicKey(), receiverKeypair.GetPrivateKey(), ephemeral);
 
 
 There is also J-PAKE password-based key agreement implemented, but with elliptic curve cryptography rather than the usual finite fields (e.g. like RSA) cryptography, making it a LOT faster, and other benefits.
@@ -282,16 +280,14 @@ There is also J-PAKE password-based key agreement implemented, but with elliptic
 Creating a session:
 
 	var hashPrimitive = AuthenticatorFactory.CreateHashPrimitive(HashFunction.Keccak256);
-	var curveData = NamedEllipticCurves.GetEcCurveData(Sec2EllipticCurve.Secp256r1.ToString());
-	var session = new EcJpakeSession(participantId, password, curveData.GetParameters(), digest: hashPrimitive, StratCom.EntropyProvider);
+	var curveData = EllipticCurveInformationStore.GetEcCurveData(Sec2EllipticCurve.Secp256r1.ToString());
+	var session = new ECJpakeSession(participantId, password, curveData.GetParameters(), digest: hashPrimitive, StratCom.EntropyProvider);
 
 (read documentation for more...)
 
 ### Signatures ###
 
-No concrete implementation is yet in place - sorry! ECDSA is being added - the preferred example of this is Ed25519.
-DSA proper (using RSA) will most likely not be added due to concerns with security and efficiency.
-Watch this space.
+ECDSA is available, including Ed25519.
 
 *****
 

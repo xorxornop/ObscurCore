@@ -24,22 +24,22 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 			var curves = Enum.GetNames (typeof(BrainpoolEllipticCurve));
 			for (var i = 1; i < curves.Length; i++) {
 				_ecKeypairs.Add (curves [i], new ECTestKPStore {
-					Initiator = KeypairFactory.GenerateEcKeypair(curves[i]),
-					Responder = KeypairFactory.GenerateEcKeypair(curves[i])
+					Initiator = KeypairFactory.GenerateECKeypair(curves[i]),
+					Responder = KeypairFactory.GenerateECKeypair(curves[i])
 				});
 			}
 
             curves = Enum.GetNames (typeof(Sec2EllipticCurve));
             for (var i = 1; i < curves.Length; i++) {
 				_ecKeypairs.Add (curves [i], new ECTestKPStore {
-					Initiator = KeypairFactory.GenerateEcKeypair(curves[i]),
-					Responder = KeypairFactory.GenerateEcKeypair(curves[i])
+					Initiator = KeypairFactory.GenerateECKeypair(curves[i]),
+					Responder = KeypairFactory.GenerateECKeypair(curves[i])
 				});
 			}
 
 			_ecKeypairs.Add (DjbCurve.Curve25519.ToString(), new ECTestKPStore {
-				Initiator = KeypairFactory.GenerateEcKeypair(DjbCurve.Curve25519.ToString()),
-				Responder = KeypairFactory.GenerateEcKeypair(DjbCurve.Curve25519.ToString())
+				Initiator = KeypairFactory.GenerateECKeypair(DjbCurve.Curve25519.ToString()),
+				Responder = KeypairFactory.GenerateECKeypair(DjbCurve.Curve25519.ToString())
 			});
 		}
 
