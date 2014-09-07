@@ -49,7 +49,7 @@ namespace ObscurCore.Tests.Cryptography
                 });
                 // EC key
                 var curveName = Athena.Cryptography.EllipticCurves.Keys.ElementAt(StratCom.EntropySupplier.Next(Athena.Cryptography.EllipticCurves.Count));
-                var newEcKey = KeypairFactory.GenerateEcKeypair(curveName);
+                var newEcKey = KeypairFactory.GenerateECKeypair(curveName);
                 var newEcCanary = new byte[128.BitsToBytes()];
                 StratCom.EntropySupplier.NextBytes(newEcCanary);
                 newEcKey.ConfirmationCanary = newEcCanary;
@@ -69,7 +69,7 @@ namespace ObscurCore.Tests.Cryptography
         {
             SymmetricKeys = other.SymmetricKeys.Reverse().ToList();
             EcKeypairs = other.EcKeypairs.Select(item => {
-                var newEcKeypair = KeypairFactory.GenerateEcKeypair(item.CurveName);
+                var newEcKeypair = KeypairFactory.GenerateECKeypair(item.CurveName);
                 var newEcCanary = new byte[128.BitsToBytes()];
                 StratCom.EntropySupplier.NextBytes(newEcCanary);
                 newEcKeypair.ConfirmationCanary = newEcCanary;

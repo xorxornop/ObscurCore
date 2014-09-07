@@ -122,7 +122,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 
 		private static void TestEcJPake(string curveName, HashFunction hashFunction) {
 			const string password = "green eggs and ham";
-			var ecParams = EllipticCurveInformationStore.GetEcCurveData(curveName).GetParameters();
+			var ecParams = EcInformationStore.GetECCurveData(curveName).GetParameters();
 			var digest = AuthenticatorFactory.CreateHashPrimitive(hashFunction);
 
 			var alice = new ECJpakeSession("ObscurCore_P0", password, ecParams, digest, StratCom.EntropySupplier);

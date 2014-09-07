@@ -399,7 +399,7 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP521R1Point.cs" />
     <Compile Include="Cryptography\KeyAgreement\Information\PpbF2mEcNamedCurveInformation.cs" />
     <Compile Include="IPrimitiveInformation.cs" />
-    <Compile Include="Cryptography\KeyAgreement\EllipticCurveInformationStore.cs" />
+    <Compile Include="Cryptography\KeyAgreement\EcInformationStore.cs" />
     <Compile Include="Cryptography\KeyAgreement\DjbCurve.cs" />
     <None Include="Cryptography\Ciphers\CipherKeyFactory.cs" />
     <Compile Include="PackageWriter.cs" />

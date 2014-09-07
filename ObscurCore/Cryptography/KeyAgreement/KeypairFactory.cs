@@ -1,17 +1,21 @@
-﻿//
-//  Copyright 2014  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+﻿#region License
+
+// 	Copyright 2013-2014 Matthew Ducker
+// 	
+// 	Licensed under the Apache License, Version 2.0 (the "License");
+// 	you may not use this file except in compliance with the License.
+// 	
+// 	You may obtain a copy of the License at
+// 		
+// 		http://www.apache.org/licenses/LICENSE-2.0
+// 	
+// 	Unless required by applicable law or agreed to in writing, software
+// 	distributed under the License is distributed on an "AS IS" BASIS,
+// 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// 	See the License for the specific language governing permissions and 
+// 	limitations under the License.
+
+#endregion
 
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.Support;
@@ -23,7 +27,7 @@ using ObscurCore.DTO;
 namespace ObscurCore.Cryptography.KeyAgreement
 {
     /// <summary>
-    /// Factory objects for creating keypairs used for key agreements.
+    ///     Factory objects for creating keypairs used for key agreements.
     /// </summary>
     public static class KeypairFactory
     {
@@ -34,7 +38,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
         /// </summary>
         /// <param name="curveName">Name of the elliptic curve to use as the basis.</param>
         /// <returns>Elliptic curve keypair.</returns>
-        public static ECKeypair GenerateEcKeypair(string curveName)
+        public static ECKeypair GenerateECKeypair(string curveName)
         {
             ECKeypair keypair;
 
@@ -53,10 +57,10 @@ namespace ObscurCore.Cryptography.KeyAgreement
             } else {
                 ECPoint Q;
                 BigInteger d;
-                GenerateEcKeypair(curveName, out Q, out d);
+                GenerateECKeypair(curveName, out Q, out d);
 
                 keypair = new ECKeypair {
-                    CurveProviderName = EllipticCurveInformationStore.GetProvider(curveName),
+                    CurveProviderName = EcInformationStore.GetProvider(curveName),
                     CurveName = curveName,
                     EncodedPublicKey = Q.GetEncoded(),
                     EncodedPrivateKey = d.ToByteArray()
@@ -73,10 +77,10 @@ namespace ObscurCore.Cryptography.KeyAgreement
         /// <param name="Q">Raw public key component.</param>
         /// <param name="d">Raw private key component.</param>
         /// <returns>Elliptic curve keypair.</returns>
-        public static void GenerateEcKeypair(string curveName, out ECPoint Q, out BigInteger d)
+        public static void GenerateECKeypair(string curveName, out ECPoint Q, out BigInteger d)
         {
             ECDomainParameters domain = Athena.Cryptography.EllipticCurves[curveName].GetParameters();
-            GenerateEcKeypair(domain, out Q, out d);
+            GenerateECKeypair(domain, out Q, out d);
         }
 
         /// <summary>
@@ -86,17 +90,18 @@ namespace ObscurCore.Cryptography.KeyAgreement
         /// <param name="Q">Raw public key component.</param>
         /// <param name="d">Raw private key component.</param>
         /// <returns>Elliptic curve keypair.</returns>
-        public static void GenerateEcKeypair(ECDomainParameters domain, out ECPoint Q, out BigInteger d)
+        public static void GenerateECKeypair(ECDomainParameters domain, out ECPoint Q, out BigInteger d)
         {
             ECPoint g = domain.G;
             BigInteger n = domain.N;
             int minWeight = n.BitLength >> 2;
 
-            for (; ; ) {
+            for (;;) {
                 d = new BigInteger(n.BitLength, StratCom.EntropySupplier);
 
-                if (d.CompareTo(BigInteger.Two) < 0 || d.CompareTo(n) >= 0)
+                if (d.CompareTo(BigInteger.Two) < 0 || d.CompareTo(n) >= 0) {
                     continue;
+                }
 
                 /*
                  * Require a minimum weight of the NAF representation, since low-weight primes may be
@@ -104,8 +109,9 @@ namespace ObscurCore.Cryptography.KeyAgreement
                  * 
                  * See "The number field sieve for integers of low weight", Oliver Schirokauer.
                  */
-                if (WNafUtilities.GetNafWeight(d) < minWeight)
+                if (WNafUtilities.GetNafWeight(d) < minWeight) {
                     continue;
+                }
 
                 break;
             }
@@ -114,10 +120,10 @@ namespace ObscurCore.Cryptography.KeyAgreement
         }
 
         /// <summary>
-        ///     Get the public key corresponding to the private key <paramref name="d"/>.
+        ///     Get the public key corresponding to the private key <paramref name="d" />.
         /// </summary>
         /// <param name="d">Private key.</param>
-        /// <param name="domain">Elliptic curve associated with <paramref name="d"/>.</param>
+        /// <param name="domain">Elliptic curve associated with <paramref name="d" />.</param>
         /// <returns>Public key as a raw EC point.</returns>
         public static ECPoint GetCorrespondingPublicKey(
             BigInteger d, ECDomainParameters domain)
@@ -128,10 +134,10 @@ namespace ObscurCore.Cryptography.KeyAgreement
         }
 
         /// <summary>
-        ///     Get the public key corresponding to the private key <paramref name="d"/>.
+        ///     Get the public key corresponding to the private key <paramref name="d" />.
         /// </summary>
         /// <param name="privKey">Private key.</param>
-        /// <returns>Public key as a <see cref="ECPublicKeyParameters"/> object.</returns>
+        /// <returns>Public key as a <see cref="ECPublicKeyParameters" /> object.</returns>
         public static ECPublicKeyParameters GetCorrespondingPublicKey(
             ECPrivateKeyParameters privKey)
         {

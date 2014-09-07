@@ -92,9 +92,9 @@ namespace ObscurCore
             /// <summary>
             ///     Information about named elliptic curves.
             /// </summary>
-            public static IReadOnlyDictionary<string, EllipticCurveInformation> EllipticCurves
+            public static IReadOnlyDictionary<string, EcCurveInformation> EllipticCurves
             {
-                get { return EllipticCurveInformationStore.CurveDictionary; }
+                get { return EcInformationStore.CurveDictionary; }
             }
 
             /// <summary>
