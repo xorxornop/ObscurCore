@@ -82,9 +82,6 @@
       <HintPath>..\packages\Microsoft.Bcl.Immutable.1.1.22-beta\lib\portable-net45+win8+wpa81\System.Collections.Immutable.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
-    <Reference Include="System.Numerics.Vectors">
-      <HintPath>..\packages\Microsoft.Bcl.Simd.1.0.2-beta\lib\portable-net45+win8\System.Numerics.Vectors.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Athena.cs" />

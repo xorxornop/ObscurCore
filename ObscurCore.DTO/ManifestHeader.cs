@@ -38,7 +38,7 @@ namespace ObscurCore.DTO
         /// <summary>
         ///     Name of the cryptographic scheme used to secure the Manifest.
         /// </summary>
-        [ProtoMember(4, IsRequired = true)]
+        [ProtoMember(2, IsRequired = true)]
         public string CryptographySchemeName { get; set; }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace ObscurCore.DTO
         /// <remarks>
         ///     Format of the configuration is that of the consuming type.
         /// </remarks>
-        [ProtoMember(5, IsRequired = false)]
+        [ProtoMember(3, IsRequired = false)]
         public byte[] CryptographySchemeConfiguration { get; set; }
 
         /// <inheritdoc />
