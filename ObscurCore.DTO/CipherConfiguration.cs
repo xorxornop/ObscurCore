@@ -57,8 +57,6 @@ namespace ObscurCore.DTO
 
         #endregion
 
-        
-
         /// <inheritdoc />
         public bool Equals(CipherConfiguration other)
         {
@@ -144,13 +142,13 @@ namespace ObscurCore.DTO
         public CipherConfiguration CloneSafely()
         {
             return new CipherConfiguration {
-                Type = this.Type,
-                CipherName = String.Copy(this.CipherName),
-                KeySizeBits = this.KeySizeBits,
+                Type = Type,
+                CipherName = String.Copy(CipherName),
+                KeySizeBits = KeySizeBits,
                 InitialisationVector = null,
-                ModeName = (this.ModeName != null ? String.Copy(this.ModeName) : null),
-                BlockSizeBits = this.BlockSizeBits,
-                PaddingName = (this.PaddingName != null ? String.Copy(this.PaddingName) : null)
+                ModeName = (ModeName != null ? String.Copy(ModeName) : null),
+                BlockSizeBits = BlockSizeBits,
+                PaddingName = (PaddingName != null ? String.Copy(PaddingName) : null)
             };
         }
     }

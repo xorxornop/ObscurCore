@@ -62,14 +62,15 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EcKey.cs" />
-    <Compile Include="EcKeypair.cs" />
+    <Compile Include="CompressionScheme.cs" />
+    <Compile Include="ECKey.cs" />
+    <Compile Include="ECKeypair.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="IAuthenticationFunctionConfiguration.cs" />
     <Compile Include="ICipherConfiguration.cs" />
     <Compile Include="ICloneableSafely.cs" />
-    <Compile Include="IEcKey.cs" />
-    <Compile Include="IEcKeypair.cs" />
+    <Compile Include="IECKey.cs" />
+    <Compile Include="IECKeypair.cs" />
     <Compile Include="IKeyPermissions.cs" />
     <Compile Include="IKeyDerivationConfiguration.cs" />
     <Compile Include="IManifest.cs" />
@@ -100,8 +101,8 @@
     <Compile Include="CipherType.cs" />
     <Compile Include="SymmetricManifestCryptographyConfiguration.cs" />
     <Compile Include="AuthenticationFunctionConfiguration.cs" />
-    <Compile Include="EcJpakeRound1.cs" />
-    <Compile Include="EcJpakeRound2.cs" />
+    <Compile Include="ECJpakeRound1.cs" />
+    <Compile Include="ECJpakeRound2.cs" />
     <Compile Include="JpakeRound3.cs" />
     <None Include="AxolotlState.cs" />
     <None Include="AxolotlExchange.cs" />
@@ -112,7 +113,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(ProjectDir)lib\protobuf-net\precompiler\precompile.exe" "$(TargetPath)" -o:"$(TargetDir)$(TargetName).DtoSerialiser.dll" -t:$(ProjectName).DtoSerialiser
+    <PostBuildEvent>"$(ProjectDir)lib\protobuf-net\precompiler\precompile.exe" "$(TargetPath)" -o:"$(ProjectDir)bin\Serialiser\$(TargetName).DtoSerialiser.dll" -t:$(ProjectName).DtoSerialiser
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

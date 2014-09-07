@@ -25,37 +25,39 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 	public class JPake
 	{
 		[Test]
-		public void Brainpool256t1_Blake2B256() {
+		public void BrainpoolP256t1_Blake2B256() 
+        {
 			TestEcJPake (BrainpoolEllipticCurve.BrainpoolP256t1.ToString (), HashFunction.Blake2B256);
 		}
 
         [Test]
-        public void Brainpool256t1_Keccak256()
+        public void BrainpoolP256t1_Keccak256()
         {
             TestEcJPake(BrainpoolEllipticCurve.BrainpoolP256t1.ToString(), HashFunction.Keccak256);
         }
 
+        [Test]
+        public void BrainpoolP384t1_Blake2B384()
+        {
+            TestEcJPake(BrainpoolEllipticCurve.BrainpoolP384t1.ToString(), HashFunction.Blake2B384);
+        }
+
+        [Test]
+        public void BrainpoolP384t1_Keccak384()
+        {
+            TestEcJPake(BrainpoolEllipticCurve.BrainpoolP384t1.ToString(), HashFunction.Keccak384);
+        }
+
 		[Test]
-		public void Brainpool512t1_Blake2B512() {
+        public void BrainpoolP512t1_Blake2B512()
+        {
 			TestEcJPake (BrainpoolEllipticCurve.BrainpoolP512t1.ToString (), HashFunction.Blake2B512);
 		}
 
         [Test]
-        public void Brainpool512t1_Keccak512()
+        public void BrainpoolP512t1_Keccak512()
         {
             TestEcJPake(BrainpoolEllipticCurve.BrainpoolP512t1.ToString(), HashFunction.Keccak512);
-        }
-
-        [Test]
-        public void Secp192r1_Ripemd160()
-        {
-            TestEcJPake(Sec2EllipticCurve.Secp192r1.ToString(), HashFunction.Ripemd160);
-        }
-
-        [Test]
-        public void Secp192k1_Ripemd160()
-        {
-            TestEcJPake(Sec2EllipticCurve.Secp192k1.ToString(), HashFunction.Ripemd160);
         }
 
         [Test]
@@ -71,44 +73,15 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         }
 
         [Test]
-        public void Secp224r1_Keccak224()
-        {
-            TestEcJPake(Sec2EllipticCurve.Secp224r1.ToString(), HashFunction.Keccak224);
-        }
-
-        [Test]
-        public void Secp224k1_Keccak224()
-        {
-            TestEcJPake(Sec2EllipticCurve.Secp224k1.ToString(), HashFunction.Keccak224);
-        }
-
-        [Test]
-        public void Secp256r1_Blake2B256() {
-            TestEcJPake(Sec2EllipticCurve.Secp256r1.ToString(), HashFunction.Blake2B256);
-        }
-
-        [Test]
         public void Secp256k1_Blake2B256()
         {
             TestEcJPake(Sec2EllipticCurve.Secp256k1.ToString(), HashFunction.Blake2B256);
         }
 
         [Test]
-        public void Secp256r1_Keccak256()
-        {
-            TestEcJPake(Sec2EllipticCurve.Secp256r1.ToString(), HashFunction.Keccak256);
-        }
-
-        [Test]
         public void Secp256k1_Keccak256()
         {
             TestEcJPake(Sec2EllipticCurve.Secp256k1.ToString(), HashFunction.Keccak256);
-        }
-
-        [Test]
-        public void Secp256r1_Sha256()
-        {
-            TestEcJPake(Sec2EllipticCurve.Secp256r1.ToString(), HashFunction.Sha256);
         }
 
         [Test]
@@ -130,7 +103,8 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
         }
 
         [Test]
-        public void Secp521r1_Blake2B512() {
+        public void Secp521r1_Blake2B512() 
+        {
             TestEcJPake(Sec2EllipticCurve.Secp521r1.ToString(), HashFunction.Blake2B512);
         }
 
@@ -148,43 +122,36 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 
 		private static void TestEcJPake(string curveName, HashFunction hashFunction) {
 			const string password = "green eggs and ham";
-			var ecParams = EllipticCurveInformationStore.GetEcCurveData (curveName).GetParameters();
-			var digest = AuthenticatorFactory.CreateHashPrimitive (hashFunction);
+			var ecParams = EllipticCurveInformationStore.GetEcCurveData(curveName).GetParameters();
+			var digest = AuthenticatorFactory.CreateHashPrimitive(hashFunction);
 
-			var alice = new EcJpakeSession ("ObscurCore_P0", password, ecParams, digest, StratCom.EntropySupplier);
-			var bob = new EcJpakeSession ("ObscurCore_P1", password, ecParams, digest, StratCom.EntropySupplier);
+			var alice = new ECJpakeSession("ObscurCore_P0", password, ecParams, digest, StratCom.EntropySupplier);
+			var bob = new ECJpakeSession("ObscurCore_P1", password, ecParams, digest, StratCom.EntropySupplier);
 
-			var sw = System.Diagnostics.Stopwatch.StartNew ();
+			var sw = System.Diagnostics.Stopwatch.StartNew();
 
-			var aliceR1 = alice.CreateRound1ToSend ();
-			var bobR1 = bob.CreateRound1ToSend ();
-
-			alice.ValidateRound1Received (bobR1);
-			bob.ValidateRound1Received (aliceR1);
-
-			var aliceR2 = alice.CreateRound2ToSend ();
-			var bobR2 = bob.CreateRound2ToSend ();
-
-			alice.ValidateRound2Received (bobR2);
-			bob.ValidateRound2Received (aliceR2);
-
-			var aliceR3 = alice.CreateRound3ToSend ();
-			var bobR3 = bob.CreateRound3ToSend ();
-
-			byte[] aliceKey, bobKey;
-
+            // Round 1
+			var aliceR1 = alice.CreateRound1ToSend();
+			var bobR1 = bob.CreateRound1ToSend();
+			alice.ValidateRound1Received(bobR1);
+			bob.ValidateRound1Received(aliceR1);
+            // Round 2
+			var aliceR2 = alice.CreateRound2ToSend();
+			var bobR2 = bob.CreateRound2ToSend();
+			alice.ValidateRound2Received(bobR2);
+			bob.ValidateRound2Received(aliceR2);
+            // Round 3 (key confirmation)
+            byte[] aliceKey, bobKey;
+			var aliceR3 = alice.CreateRound3ToSend();
+			var bobR3 = bob.CreateRound3ToSend();
 			alice.ValidateRound3Received(bobR3, out aliceKey);
-			bob.ValidateRound3Received (aliceR3, out bobKey);
+			bob.ValidateRound3Received(aliceR3, out bobKey);
 
-			sw.Stop ();
+			sw.Stop();
 
-			Assert.IsTrue (aliceKey.SequenceEqualShortCircuiting (bobKey), "Keys produced ARE NOT equal! Protocol implementation is broken.");
+			Assert.IsTrue(aliceKey.SequenceEqualShortCircuiting(bobKey), "Keys produced ARE NOT equal! Protocol implementation is broken.");
 
-			Assert.Pass ("{0} ms.\nKey = {1}", sw.ElapsedMilliseconds, aliceKey.ToHexString ());
+			Assert.Pass("{0} ms.\nKey = {1}", sw.ElapsedMilliseconds, aliceKey.ToHexString());
 		}
-
-
-
 	}
 }
-

@@ -36,12 +36,26 @@ namespace ObscurCore.DTO
         SymmetricOnly,
 
         /// <summary>
+        ///     ECDH-hybrid PKC scheme is used to derive a shared key. Not used: reserved for use.
+        /// </summary>
+        /// <remarks>
+        ///     Uses elliptic curve Diffie-Hellman public key scheme to generate a shared secret - 
+        ///     sender and recipient derive an identical value from their public and private keys.
+        /// </remarks>
+        EcHybrid,
+
+        /// <summary>
         ///     Unified Model 1-pass EC-hybrid PKC scheme is used to derive a shared key.
         /// </summary>
         /// <remarks>
         ///     Uses UM1 public key scheme to generate a shared secret - sender and recipient
         ///     derive an identical value from their public and private keys, and an ephemeral,
         ///     one-time public key.
+        ///     <para>
+        ///         UM1 uses two invocations of a elliptic curve Diffie-Hellman scheme to provide 
+        ///         unilateral forward secrecy. This is accomplished through the use of a ephemeral 
+        ///         sender keypair used in conjunction with the longer-term sender public keypair.
+        ///     </para>
         /// </remarks>
         Um1Hybrid
     }

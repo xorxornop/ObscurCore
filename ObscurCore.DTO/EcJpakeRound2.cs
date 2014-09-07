@@ -27,7 +27,7 @@ namespace ObscurCore.DTO
     ///     Constitutes a zero-knowledge proof.
     /// </summary>
     [ProtoContract]
-    public class EcJpakeRound2 : IDataTransferObject
+    public class ECJpakeRound2 : IDataTransferObject
     {
         /// <summary>
         ///     Participant that generated this round's values.
@@ -68,11 +68,11 @@ namespace ObscurCore.DTO
             if (obj.GetType() != GetType()) {
                 return false;
             }
-            return Equals((EcJpakeRound2) obj);
+            return Equals((ECJpakeRound2) obj);
         }
 
         /// <inheritdoc />
-        public bool Equals(EcJpakeRound2 other)
+        public bool Equals(ECJpakeRound2 other)
         {
             if (ReferenceEquals(null, other)) {
                 return false;

@@ -60,6 +60,6 @@ namespace ObscurCore.DTO
         /// <summary>
         ///     Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
         /// </summary>
-        EcKey EphemeralKey { get; set; }
+        ECKey EphemeralKey { get; set; }
     }
 }

@@ -35,42 +35,41 @@ namespace ObscurCore.DTO
         ///     Category/type of the function primitive, e.g. Digest, MAC, or KDF.
         /// </summary>
         [ProtoMember(1, IsRequired = true)]
-        public string FunctionType { get; set; }
+        public AuthenticationFunctionType FunctionType { get; set; }
 
         /// <summary>
-        ///     Name of the function used to verify some data (e.g. a key, a payload item, etc.).
-        ///     This may be a key derivation function, MAC function, hash function, etc.
+        ///     Name of the function used to authenticate/verify some data (e.g. a key, a payload item, etc.).
+        ///     This may be a hash function, MAC function, key derivation function, etc.
         /// </summary>
         [ProtoMember(2, IsRequired = true)]
         public string FunctionName { get; set; }
 
         /// <summary>
-        ///     Configuration for the verification function, where applicable.
+        ///     Configuration for the authentication function, where applicable.
         /// </summary>
-        /// <remarks>Format of the configuration is that of the consuming type.</remarks>
         [ProtoMember(3, IsRequired = false)]
         public byte[] FunctionConfiguration { get; set; }
 
         /// <summary>
-        ///     Size of the key in bits for the verification function, where applicable.
+        ///     Size of the key in bits for the authentication function, where applicable.
         /// </summary>
         [ProtoMember(4, IsRequired = false)]
         public int? KeySizeBits { get; set; }
 
         /// <summary>
-        ///     Salt for the verification function, where applicable.
+        ///     Nonce/initialisation vector for the authentication function, where applicable.
         /// </summary>
         [ProtoMember(5, IsRequired = false)]
         public byte[] Nonce { get; set; }
 
         /// <summary>
-        ///     Salt for the verification function, where applicable.
+        ///     Salt for the authentication function, where applicable.
         /// </summary>
         [ProtoMember(6, IsRequired = false)]
         public byte[] Salt { get; set; }
 
         /// <summary>
-        ///     Additional data for the verification function, where applicable.
+        ///     Additional data for the authentication function, where applicable.
         /// </summary>
         [ProtoMember(7, IsRequired = false)]
         public byte[] AdditionalData { get; set; }

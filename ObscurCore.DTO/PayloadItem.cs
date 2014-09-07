@@ -258,8 +258,9 @@ namespace ObscurCore.DTO
         public override int GetHashCode()
         {
             unchecked {
-                int hashCode = Type.GetHashCode();
-                hashCode = (hashCode * 397) ^ Path.GetHashCode();
+                int hashCode = Identifier.GetHashCode();
+                //hashCode = (hashCode * 397) ^ Type.GetHashCode();
+                //hashCode = (hashCode * 397) ^ Path.GetHashCode();
                 //hashCode = (hashCode * 397) ^ InternalLength.GetHashCode();
                 //hashCode = (hashCode * 397) ^ ExternalLength.GetHashCode();
                 //hashCode = (hashCode * 397) ^ SymmetricCipher.GetHashCode();
@@ -267,8 +268,7 @@ namespace ObscurCore.DTO
                 //hashCode = (hashCode * 397) ^ (AuthenticationKey != null ? AuthenticationKey.GetHashCode() : 0);
                 //hashCode = (hashCode * 397) ^ AuthenticationVerifiedOutput.GetHashCode();
                 //hashCode = (hashCode * 397) ^ (KeyConfirmation != null ? KeyConfirmation.GetHashCode() : 0);
-                //hashCode = (hashCode * 397) ^
-                //           (KeyConfirmationVerifiedOutput != null ? KeyConfirmationVerifiedOutput.GetHashCode() : 0);
+                //hashCode = (hashCode * 397) ^ (KeyConfirmationVerifiedOutput != null ? KeyConfirmationVerifiedOutput.GetHashCode() : 0);
                 //hashCode = (hashCode * 397) ^ (KeyDerivation != null ? KeyDerivation.GetHashCode() : 0);
                 return hashCode;
             }
@@ -298,10 +298,10 @@ namespace ObscurCore.DTO
         {
             return new PayloadItem {
                 Type = Type,
-                Path = String.Copy(this.Path),
+                Path = String.Copy(Path),
                 ExternalLength = ExternalLength,
                 InternalLength = InternalLength,
-                SymmetricCipher = this.SymmetricCipher.CloneSafely(),
+                SymmetricCipher = SymmetricCipher.CloneSafely(),
                 SymmetricCipherKey = null,
                 Authentication = Authentication.CloneSafely(),
                 AuthenticationKey = null,

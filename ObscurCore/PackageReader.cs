@@ -388,9 +388,9 @@ namespace ObscurCore
                 } 
                 case ManifestCryptographyScheme.Um1Hybrid:
                 {
-                    EcKey um1SenderKey;
-                    EcKeypair um1RecipientKeypair;
-                    EcKey um1EphemeralKey =
+                    ECKey um1SenderKey;
+                    ECKeypair um1RecipientKeypair;
+                    ECKey um1EphemeralKey =
                         ((Um1HybridManifestCryptographyConfiguration) _manifestCryptoConfig).EphemeralKey;
                     if (_manifestCryptoConfig.KeyConfirmation != null) {
                         try {
@@ -521,11 +521,17 @@ namespace ObscurCore
                 decryptedManifestStream.Seek(0, SeekOrigin.Begin);
 
                 Stream serialisedManifestStream;
-                if (_manifestHeader.UseCompression) {
-                    // Expose serialised manifest through decompressing decorator
-                    serialisedManifestStream = new LZ4Stream(decryptedManifestStream, CompressionMode.Decompress);
-                } else {
-                    serialisedManifestStream = decryptedManifestStream;
+                switch (_manifestHeader.Compression) {
+                    case CompressionScheme.None: 
+                        serialisedManifestStream = decryptedManifestStream;
+                        break;
+                    case CompressionScheme.LZ4:
+                        // Expose serialised manifest through decompressing decorator
+                        serialisedManifestStream = new LZ4Stream(decryptedManifestStream, CompressionMode.Decompress);
+                        break;
+                    default:
+                        throw new NotSupportedException(
+                            String.Format("Manifest compression scheme \"{0}\" is unsupported/unknown.", _manifestHeader.Compression));
                 }
 
                 try {
@@ -575,10 +581,9 @@ namespace ObscurCore
             }
 
             foreach (PayloadItem item in _manifest.PayloadItems) {
-                if (item.Type != PayloadItemType.KeyAction &&
-                    item.Path.Contains(Athena.Packaging.PathRelativeUp)) {
-                    throw new ConfigurationInvalidException("A payload item specifies a relative path outside that of the package root. "
-                                                            + " This is a potentially dangerous condition.");
+                if (item.Type != PayloadItemType.KeyAction && item.Path.Contains(Athena.Packaging.PathRelativeUp)) {
+                    throw new ConfigurationInvalidException("A payload item specifies a relative path outside that of the package root. " + 
+                        "This is a potentially dangerous condition.");
                 }
 
                 // First we correct the directory symbol to match local OS

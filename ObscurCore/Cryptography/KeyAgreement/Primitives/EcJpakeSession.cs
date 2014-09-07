@@ -32,7 +32,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
     ///     Implementation of Password Authenticated Key Exchange by Juggling (J-PAKE)
     ///     passphrase-authenticated key agreement protocol with elliptic curve math.
     /// </summary>
-    public sealed class EcJpakeSession : IDisposable
+    public sealed class ECJpakeSession : IDisposable
     {
         #region Fields
 
@@ -88,7 +88,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <param name="group">Elliptic curve group/domain (must be over F(<sub>p</sub>).</param>
         /// <param name="digest">Digest/hash function.</param>
         /// <param name="random">Random data generator/source.</param>
-        public EcJpakeSession(string participantId, string passphrase, ECDomainParameters group, IDigest digest,
+        public ECJpakeSession(string participantId, string passphrase, ECDomainParameters group, IDigest digest,
             CsRng random)
         {
             if (String.IsNullOrEmpty(participantId)) {
@@ -179,8 +179,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <param name="round2Created">Round 2 created/sent.</param>
         /// <param name="round2Received">Round 2 received.</param>
         /// <param name="round3Created">Round 3 created/sent.</param>
-        public void RestoreState(byte[] x2, EcJpakeRound1 round1Created, EcJpakeRound1 round1Received = null,
-            EcJpakeRound2 round2Created = null, EcJpakeRound2 round2Received = null, JpakeRound3 round3Created = null)
+        public void RestoreState(byte[] x2, ECJpakeRound1 round1Created, ECJpakeRound1 round1Received = null,
+            ECJpakeRound2 round2Created = null, ECJpakeRound2 round2Received = null, JpakeRound3 round3Created = null)
         {
             if (ProtocolState != State.Initialised) {
                 throw new InvalidOperationException("Cannot restore state of already-active protocol session!");
@@ -249,7 +249,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <summary>
         ///     Creates a round 1 (zero-knowledge proof) DTO to send to the partner participant.
         /// </summary>
-        public EcJpakeRound1 CreateRound1ToSend()
+        public ECJpakeRound1 CreateRound1ToSend()
         {
             if (ProtocolState >= State.Round1Created) {
                 throw new InvalidOperationException("Round1 payload already created for " + ParticipantId);
@@ -266,7 +266,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             CreateZeroKnowledgeProof(_domain.G, x1, _gx1, ParticipantId, out V1, out r1);
             CreateZeroKnowledgeProof(_domain.G, _x2, _gx2, ParticipantId, out V2, out r2);
 
-            var dto = new EcJpakeRound1 {
+            var dto = new ECJpakeRound1 {
                 ParticipantId = ParticipantId,
                 GX1 = _gx1.GetEncoded(),
                 X1V = V1.GetEncoded(),
@@ -284,7 +284,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         ///     Validates the round 1 (zero-knowledge proof) DTO received from the partner participant.
         /// </summary>
         /// <param name="round1Received">Round 1 DTO received from partner participant.</param>
-        public void ValidateRound1Received(EcJpakeRound1 round1Received)
+        public void ValidateRound1Received(ECJpakeRound1 round1Received)
         {
             if (ProtocolState >= State.Round1Validated) {
                 throw new InvalidOperationException("Validation already attempted for round 1 payload for "
@@ -323,7 +323,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <exception cref="InvalidOperationException">
         ///     Prior round (1) has not been completed yet, or method may have been called more than once.
         /// </exception>
-        public EcJpakeRound2 CreateRound2ToSend()
+        public ECJpakeRound2 CreateRound2ToSend()
         {
             if (ProtocolState >= State.Round2Created) {
                 throw new InvalidOperationException("Round 2 payload already created for " + ParticipantId);
@@ -343,7 +343,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             BigInteger X2sR;
             CreateZeroKnowledgeProof(GA, x2s1, A, ParticipantId, out X2sV, out X2sR);
 
-            var dto = new EcJpakeRound2 {
+            var dto = new ECJpakeRound2 {
                 ParticipantId = ParticipantId,
                 A = A.GetEncoded(),
                 X2sV = X2sV.GetEncoded(),
@@ -364,7 +364,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <exception cref="CryptoException">
         ///     Verification of zero-knowledge proof failed. Possible attempted impersonation / MiTM.
         /// </exception>
-        public void ValidateRound2Received(EcJpakeRound2 round2Received)
+        public void ValidateRound2Received(ECJpakeRound2 round2Received)
         {
             if (ProtocolState >= State.Round2Validated) {
                 throw new InvalidOperationException("Validation already attempted for round 2 payload for " +

@@ -1,6 +1,6 @@
 #region License
 
-// 	Copyright 2013-2014 Matthew Ducker
+// 	Copyright 2014-2014 Matthew Ducker
 // 	
 // 	Licensed under the Apache License, Version 2.0 (the "License");
 // 	you may not use this file except in compliance with the License.
@@ -22,32 +22,19 @@ using ProtoBuf;
 namespace ObscurCore.DTO
 {
     /// <summary>
-    ///     Possible distinct types of payload item that can/should be
-    ///     handled differently by an application/program.
+    ///     Compression schemes for reducing the size of data.
     /// </summary>
     [ProtoContract]
-    public enum PayloadItemType : byte
+    public enum CompressionScheme
     {
         /// <summary>
-        ///     Binary data conforming with the ObscurCore filesystem schema.
+        ///     No compression to be applied.
         /// </summary>
-        File,
+        None,
 
         /// <summary>
-        ///     Text data capable of conforming with the ObscurCore filesystem schema
-        ///     (treated as a text-type <see cref="File" />).
+        ///     Compression to be applied using LZ4 algorithm.
         /// </summary>
-        Message,
-
-        /// <summary>
-        ///     Value within some key-value system, that should not be treated as either a
-        ///     <see cref="File" /> or <see cref="Message" />.
-        /// </summary>
-        Value,
-
-        /// <summary>
-        ///     Action to perform with an enclosed/encapsulated key.
-        /// </summary>
-        KeyAction
+        LZ4
     }
 }

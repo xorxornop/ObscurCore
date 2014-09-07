@@ -19,6 +19,9 @@
 
 namespace ObscurCore.DTO
 {
+    /// <summary>
+    ///     Interface for data describing how and where a cryptographic key can be used.
+    /// </summary>
     public interface IKeyPermissions 
     {
         /// <summary>

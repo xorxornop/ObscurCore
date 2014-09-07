@@ -68,17 +68,18 @@
     </Reference>
     <Reference Include="LZ4PCL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\LZ4PCL\ReleaseWithUnsafe\LZ4PCL.dll</HintPath>
+      <HintPath>..\packages\LZ4PCL.1.0.0\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\LZ4PCL.dll</HintPath>
     </Reference>
-    <Reference Include="ObscurCore.DTO.DtoSerialiser">
-      <HintPath>..\ObscurCore.DTO\bin\Release\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
+    <Reference Include="ObscurCore.DTO.DtoSerialiser, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ObscurCore.DTO\bin\Serialiser\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>
     </Reference>
-    <Reference Include="RingByteBuffer, Version=1.3.5340.9170, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="RingByteBuffer, Version=1.4.5361.6420, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\RingByteBuffer\ReleaseWithUnsafe\RingByteBuffer.dll</HintPath>
+      <HintPath>..\packages\RingBuffer.1.4.0\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\RingByteBuffer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable">
@@ -113,6 +114,9 @@
     <Compile Include="Cryptography\KeyDerivation\KdfInformationStore.cs" />
     <Compile Include="Cryptography\RotationExtensions.cs" />
     <Compile Include="Cryptography\Signing\IDsa.cs" />
+    <Compile Include="Cryptography\Signing\Primitives\HmacDsaKCalculator.cs" />
+    <Compile Include="Cryptography\Signing\Primitives\IDsaKCalculator.cs" />
+    <Compile Include="Cryptography\Signing\Primitives\RandomDsaKCalculator.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IStreamDecorator.cs" />
     <Compile Include="Packaging\ContentTreeNode.cs" />
@@ -354,10 +358,6 @@
     <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\sqrtm1.cs" />
     <None Include="Cryptography\Signing\Primitives\Ed25519.cs" />
     <None Include="Cryptography\KeyAgreement\Primitives\MontgomeryCurve25519.cs" />
-    <Compile Include="Cryptography\Support\Array8.cs" />
-    <Compile Include="Cryptography\Support\Array16.cs" />
-    <Compile Include="Cryptography\Support\Array32.cs" />
-    <Compile Include="Cryptography\Support\Array64.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\AbstractECMultiplier.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\DoubleAddMultiplier.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\MixedNafR2LMultiplier.cs" />
@@ -411,8 +411,8 @@
     <None Include="Cryptography\Ciphers\CipherKeyFactory.cs" />
     <Compile Include="PackageWriter.cs" />
     <Compile Include="PackageReader.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Primitives\EcJpakeSession.cs" />
-    <Compile Include="Cryptography\Signing\Primitives\EcDsaSigner.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Primitives\ECJpakeSession.cs" />
+    <Compile Include="Cryptography\Signing\Primitives\ECDsaSigner.cs" />
     <Compile Include="Cryptography\KeyAgreement\KeyAgreementFactory.cs" />
     <Compile Include="Cryptography\KeyAgreement\KeypairFactory.cs" />
     <Compile Include="Cryptography\KeyDerivation\KeyStretchingUtility.cs" />

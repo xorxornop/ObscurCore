@@ -32,11 +32,11 @@ namespace ObscurCore.Cryptography
         /// <summary>
         ///     Elliptic curve key(s) that the local user owns.
         /// </summary>
-        IEnumerable<EcKeypair> EcKeypairs { get; }
+        IEnumerable<ECKeypair> EcKeypairs { get; }
 
         /// <summary>
         ///     Elliptic curve public key(s) of foreign entities.
         /// </summary>
-        IEnumerable<EcKey> ForeignEcKeys { get; }
+        IEnumerable<ECKey> ForeignEcKeys { get; }
     }
 }

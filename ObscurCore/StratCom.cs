@@ -32,7 +32,7 @@ namespace ObscurCore
     public static class StratCom
     {
         private const HashFunction EntropyHashFunction = HashFunction.Blake2B512;
-        private const int InitialSeedSize = 64; // bytes (512 bits)
+        private const int InitialSeedSize = 128; // bytes (1024 bits)
 
         /// <summary>
         ///     Primary cryptographically-secure random number generator.
@@ -94,11 +94,12 @@ namespace ObscurCore
         ///     attribute (e.g. those from ObscurCore.DTO namespace).
         /// </remarks>
         /// <typeparam name="T">The type of object to serialise.</typeparam>
-        /// <param name="obj">The object to serialise.</param>
-        /// <param name="output">The stream to write the serialised object to.</param>
+        /// <param name="obj">The <typeparamref name="T"/> to serialise.</param>
+        /// <param name="output">The stream to write the serialised <typeparamref name="T"/> to.</param>
         /// <param name="prefixLength">
-        ///     If <c>true</c>, the object will be prefixed with its length in Base128 format. 
-        ///     Use when recipient does not know data length, e.g. networked communications.
+        ///     If <c>true</c>, the serialised object will be prefixed with its length in Base128 format. 
+        ///     Use when recipient does not know data length, e.g. networked communications, or streams 
+        ///     with multiple serialised objects.
         /// </param>
         public static void SerialiseDataTransferObject<T>(T obj, Stream output, bool prefixLength = false)
              where T : IDataTransferObject
@@ -122,12 +123,12 @@ namespace ObscurCore
         /// <remarks>
         ///     Provides deserialisation capabilities for any object which derives from 
         ///     <see cref="IDataTransferObject"/> and that has a <see cref="ProtoContractAttribute"/> 
-        ///     attribute (e.g. those from ObscurCore.DTO namespace).
+        ///     attribute (e.g. those from <see cref="ObscurCore.DTO"/> namespace).
         /// </remarks>
         /// <typeparam name="T">Data transfer object.</typeparam>
-        /// <param name="input">The stream to read the serialised object from.</param>
+        /// <param name="input">The stream to read the serialised <typeparamref name="T"/> from.</param>
         /// <param name="lengthPrefixed">
-        ///     If <c>true</c>, the object is prefixed with its length in Base128 format. 
+        ///     If <c>true</c>, the serialised object is prefixed with its length in Base128 format. 
         ///     If <c>false</c>, the whole <paramref name="input"/> stream will be read.
         /// </param>
         public static T DeserialiseDataTransferObject<T>(Stream input, bool lengthPrefixed = false) 

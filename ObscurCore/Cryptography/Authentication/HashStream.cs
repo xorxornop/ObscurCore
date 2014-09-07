@@ -49,7 +49,7 @@ namespace ObscurCore.Cryptography.Authentication
         public HashStream(Stream binding, bool writing, IAuthenticationFunctionConfiguration config,
             bool closeOnDispose = true) : base(binding, writing, closeOnDispose)
         {
-            if (config.FunctionType.ToEnum<AuthenticationFunctionType>() != AuthenticationFunctionType.Mac) {
+            if (config.FunctionType != AuthenticationFunctionType.Mac) {
                 throw new ConfigurationInvalidException("Configuration specifies function type other than MAC.");
             }
 
