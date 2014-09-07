@@ -312,5 +312,33 @@ namespace ObscurCore
             }
             return true;
         }
+
+        /// <summary>
+        ///     Fill <paramref name="array"/> with <paramref name="value"/>.
+        /// </summary>
+        /// <typeparam name="T">Type of <paramref name="array"/> and <paramref name="value"/>.</typeparam>
+        /// <param name="array">Array to fill with <paramref name="value"/>.</param>
+        /// <param name="value">Value to fill <paramref name="array"/> with.</param>
+        public static void FillArray<T>(this T[] array, T value) where T : struct
+        {
+            FillArray(array, value, 0, array.Length);
+        }
+
+        /// <summary>
+        ///     Fill <paramref name="array"/> from <paramref name="offset"/> with 
+        ///     <paramref name="length"/> repeats of <paramref name="value"/>.
+        /// </summary>
+        /// <typeparam name="T">Type of <paramref name="array"/> and <paramref name="value"/>.</typeparam>
+        /// <param name="array">Array to fill with <paramref name="value"/>.</param>
+        /// <param name="value">Value to fill <paramref name="array"/> with.</param>
+        /// <param name="offset">Offset in <paramref name="array"/> to fill from.</param>
+        /// <param name="length">Repeats of <paramref name="value"/> to write.</param>
+        public static void FillArray<T>(this T[] array, T value, int offset, int length) where T : struct
+        {
+            int endOffset = offset + length;
+            for (int i = offset; i < endOffset; i++) {
+                array[i] = value;
+            }
+        }
     }
 }

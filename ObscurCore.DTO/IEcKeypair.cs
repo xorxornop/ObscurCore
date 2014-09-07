@@ -22,7 +22,7 @@ namespace ObscurCore.DTO
     /// <summary>
     ///     An interface for an elliptic curve keypair.
     /// </summary>
-    public interface IEcKeypair : IKeyPermissions, IPossessConfirmationCanary
+    public interface IECKeypair : IKeyPermissions, IPossessConfirmationCanary
     {
         /// <summary>
         ///     Name of the curve provider. 

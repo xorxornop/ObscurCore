@@ -12,8 +12,6 @@ This work is built heavily on top of theirs, and likely would not have been poss
 
 Also a big thanks to **Marc Gravell** for his excellent [protobuf-net](https://code.google.com/p/protobuf-net/) and its associated serialisation assembly precompiler. It is used extensively throughout (especially for the packaging features) and provides great flexibility and performance.
 
-And finally, to [LZ4 for .NET](https://lz4net.codeplex.com/). It is used, optionally, for compression of package manifests, where it has excellent speed.
-
 
 ## Why use this? ##
 
@@ -301,7 +299,7 @@ Watch this space.
 
 CipherStream **encrypts only when being written to**, and **decrypts only when being read from**. The other core stream types (for example, the HashStream) do not enforce directionality like this.
 
-ObscurCore uses stream decorators for I/O, so anything that is derived from the abstract Stream class of the .NET BCL can be plugged into the constructor of an ObscurCore *SymmetricCryptoStream/HashStream/MacStream*. This means in practice pretty much anything, since pretty much anything can be serialised to a byte array.
+ObscurCore uses stream decorators for I/O, so anything that is derived from the abstract Stream class of the .NET BCL can be plugged into the constructor of an ObscurCore *CipherStream/HashStream/MacStream*. This means in practice pretty much anything, since pretty much anything can be serialised to a byte array.
 
 Please note that ObscurCore's main stream classes **close on dispose by default**. The reason for this is to ensure the stream that it's bound to gets closed. Most (all?) of the .NET BCL streams are the same, the difference here is that you get a choice, because you may only want to finish the cipher operation but retain the underlying bound stream(s).
 

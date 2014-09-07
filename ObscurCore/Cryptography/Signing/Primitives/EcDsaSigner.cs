@@ -38,27 +38,56 @@ namespace ObscurCore.Cryptography.Signing.Primitives
     ///     Public Key Cryptography for the Financial Services Industry,
     ///     The Elliptic Curve Digital Signature Algorithm (ECDSA), November 16, 2005) .
     /// </remarks>
-    public class EcDsaSigner : IDsa
+    public class ECDsaSigner : IDsa
     {
         protected static readonly ECMultiplier EcBasePointMultiplier = new FixedPointCombMultiplier();
-        private readonly EcKey _publicKey;
-        private readonly EcKey _privateKey;
+
+        private readonly ECKey _publicKey;
+        private readonly ECKey _privateKey;
         private ECDomainParameters _ecDomain;
 
-        private readonly CsRng _random = StratCom.EntropySupplier;
+        protected readonly IDsaKCalculator _kCalculator;
+        private readonly CsRng _random;
 
         /// <summary>
-        ///     Initialise for either ECDSA signature generation or ECDSA signature verification.
+        ///     Initialise for ECDSA signature generation.
+        /// </summary>
+        /// <param name="privateKey">
+        ///     Private EC key used for signing (verification performed with corresponding public key).
+        /// </param>
+        /// <param name="random">
+        ///     Supplier of random numbers (null for default is <see cref="StratCom.EntropySupplier"/>). 
+        ///     Not used if <paramref name="kCalculator"/> is deterministic.
+        /// </param>
+        /// <param name="kCalculator">Calculator utility for generating k value in signature generation.</param>
+        /// <seealso cref="HmacDsaKCalculator"/>
+        public ECDsaSigner(ECKey privateKey, CsRng random = null, IDsaKCalculator kCalculator = null)
+        {
+            if (privateKey.PublicComponent) {
+                throw new ArgumentException("EC private key required for signing.");
+            }
+
+            _privateKey = privateKey;
+            _kCalculator = kCalculator ?? new RandomDsaKCalculator();
+            if (_kCalculator.IsDeterministic == false) {
+                _random = random ?? StratCom.EntropySupplier;
+            }
+        }
+
+        /// <summary>
+        ///     Initialise for (either) ECDSA signature generation or verification.
         /// </summary>
         /// <param name="forSigning">
         ///     If <c>true</c>, the instance will be used for signing.
         ///     If <c>false</c>, it will be used for verification.
         /// </param>
         /// <param name="key">Individual EC key.</param>
-        /// <param name="entropy">
-        ///     Supplier of random numbers (null for default <see cref="StratCom.EntropySupplier" />).
+        /// <param name="random">
+        ///     Supplier of random numbers (null for default is <see cref="StratCom.EntropySupplier"/>).
         /// </param>
-        public EcDsaSigner(bool forSigning, EcKey key, CsRng entropy = null)
+        /// <param name="kCalculator">Calculator utility for generating k value in signature generation.</param>
+        /// <seealso cref="HmacDsaKCalculator"/>
+        public ECDsaSigner(bool forSigning, ECKey key, CsRng random = null, IDsaKCalculator kCalculator = null)
         {
             if (key == null) {
                 throw new ArgumentNullException("key");
@@ -75,20 +104,25 @@ namespace ObscurCore.Cryptography.Signing.Primitives
                 }
             }
 
-            _random = entropy ?? StratCom.EntropySupplier;
+            _kCalculator = kCalculator ?? new RandomDsaKCalculator();
+            if (forSigning && _kCalculator.IsDeterministic == false) {
+                _random = random ?? StratCom.EntropySupplier;
+            }
 
             SetupEcDomain();
         }
 
         /// <summary>
-        ///     Initialise for ECDSA signature generation and ECDSA signature verification.
+        ///     Initialise for ECDSA signature generation and verification.
         /// </summary>
         /// <param name="publicKey">Public EC key (used for verifying) Null if not required.</param>
         /// <param name="privateKey">Private EC key (used for signing). Null if not required.</param>
-        /// <param name="entropy">
-        ///     Supplier of random numbers (null for default <see cref="StratCom.EntropySupplier" />).
+        /// <param name="random">
+        ///     Supplier of random numbers (null for default is <see cref="StratCom.EntropySupplier"/>).
         /// </param>
-        public EcDsaSigner(EcKey publicKey, EcKey privateKey, CsRng entropy = null)
+        /// <param name="kCalculator">Calculator utility for generating k value in signature generation.</param>
+        /// <seealso cref="HmacDsaKCalculator"/>
+        public ECDsaSigner(ECKey publicKey, ECKey privateKey, CsRng random = null, IDsaKCalculator kCalculator = null)
         {
             if (publicKey != null && privateKey != null) {
                 throw new ArgumentNullException();
@@ -107,6 +141,10 @@ namespace ObscurCore.Cryptography.Signing.Primitives
 
             _publicKey = publicKey;
             _privateKey = privateKey;
+            _kCalculator = kCalculator ?? new RandomDsaKCalculator();
+            if (_kCalculator.IsDeterministic == false) {
+                _random = random ?? StratCom.EntropySupplier;
+            }
             SetupEcDomain();
         }
 
@@ -147,22 +185,23 @@ namespace ObscurCore.Cryptography.Signing.Primitives
             BigInteger e = CalculateE(n, message);
             var d = new BigInteger(_privateKey.EncodedKey);
 
+            if (_kCalculator.IsDeterministic) {
+                _kCalculator.Init(n, d, message);
+            } else {
+                _kCalculator.Init(n, _random);
+            }
+
             // 5.3.2
             // Generate s
             do {
                 BigInteger k;
                 // Generate r
                 do {
-                    do {
-                        k = new BigInteger(n.BitLength, _random);
-                    } while (k.SignValue == 0 || k.CompareTo(n) >= 0);
-
+                    k = _kCalculator.NextK();
                     ECPoint p = EcBasePointMultiplier.Multiply(_ecDomain.G, k).Normalize();
-
                     // 5.3.3
                     r = p.AffineXCoord.ToBigInteger().Mod(n);
                 } while (r.SignValue == 0);
-
                 s = k.ModInverse(n).Multiply(e.Add(d.Multiply(r))).Mod(n);
             } while (s.SignValue == 0);
         }
@@ -170,7 +209,7 @@ namespace ObscurCore.Cryptography.Signing.Primitives
         /// <inheritdoc />
         /// <returns>
         ///     <c>true</c> if the values <paramref name="r" /> and <paramref name="s" />
-        ///     represent a valid DSA signature. Otherwise, <c>false</c>.
+        ///     represent a valid ECDSA signature. Otherwise, <c>false</c>.
         /// </returns>
         public bool VerifySignature(
             byte[] message,

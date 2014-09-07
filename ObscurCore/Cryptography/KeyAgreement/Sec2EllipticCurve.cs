@@ -22,59 +22,63 @@ namespace ObscurCore.Cryptography.KeyAgreement
     /// <remarks>
     ///     The discerning user may wish to think twice about employing these curves,
     ///     particularly of the Koblitz form, due to security disclosures. They are
-    ///     included for completeness and commonality.
+    ///     included for commonality and completeness. 
+    ///     Some curves are preferred over others; refer to the individual curves for further information.
     /// </remarks>
     public enum Sec2EllipticCurve
     {
         None,
 
         /// <summary>
-        ///     160-bit curve over F(<sub>p</sub>)
+        ///     160-bit prime field curve over F(<sub>p</sub>)
         /// </summary>
         Secp160r1,
 
         /// <summary>
-        ///     160-bit curve over F(<sub>p</sub>) (revised from <see cref="Secp160r1"/>)
+        ///     160-bit prime field curve over F(<sub>p</sub>) (revised from <see cref="Secp160r1"/>)
         /// </summary>
         Secp160r2,
 
         /// <summary>
-        ///     192-bit Koblitz curve over F(<sub>p</sub>)
+        ///     192-bit prime field Koblitz curve over F(<sub>p</sub>)
         /// </summary>
         Secp192k1,
 
         /// <summary>
-        ///     192-bit curve over F(<sub>p</sub>)
+        ///     192-bit prime field curve over F(<sub>p</sub>)
         /// </summary>
         Secp192r1,
 
         /// <summary>
-        ///     224-bit Koblitz curve over F(<sub>p</sub>)
+        ///     224-bit prime field Koblitz curve over F(<sub>p</sub>)
         /// </summary>
         Secp224k1,
 
         /// <summary>
-        ///     224-bit curve over F(<sub>p</sub>)
+        ///     224-bit prime field curve over F(<sub>p</sub>)
         /// </summary>
         Secp224r1,
 
         /// <summary>
-        ///     256-bit Koblitz curve over F(<sub>p</sub>)
+        ///     256-bit prime field Koblitz curve over F(<sub>p</sub>)
         /// </summary>
+        /// <remarks>
+        ///     Recommended over the other NIST curves.
+        /// </remarks>
         Secp256k1,
 
         /// <summary>
-        ///     256-bit curve over F(<sub>p</sub>)
+        ///     NIST P-256. 256-bit prime field curve over F(<sub>p</sub>).
         /// </summary>
         Secp256r1,
 
         /// <summary>
-        ///     384-bit curve over F(<sub>p</sub>)
+        ///     NIST P-384. 384-bit prime field curve over F(<sub>p</sub>).
         /// </summary>
         Secp384r1,
 
         /// <summary>
-        ///     521-bit curve over F(<sub>p</sub>)
+        ///     NIST P-521. 521-bit prime field curve over F(<sub>p</sub>).
         /// </summary>
         Secp521r1,
 

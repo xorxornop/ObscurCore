@@ -15,8 +15,8 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		
 		private class ECTestKPStore
 		{
-			public EcKeypair Initiator { get; set; }
-			public EcKeypair Responder { get; set; }
+			public ECKeypair Initiator { get; set; }
+			public ECKeypair Responder { get; set; }
 		}
 		
 		[TestFixtureSetUp]
@@ -226,7 +226,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		private static void DoUM1Exchange(ECTestKPStore keypair) {
 			var sw = System.Diagnostics.Stopwatch.StartNew ();
 
-			EcKey ephemeral;
+			ECKey ephemeral;
 			var initiatorSS = Um1Exchange.Initiate(keypair.Responder.ExportPublicKey(),
 				keypair.Initiator.GetPrivateKey(), out ephemeral);
 			var responderSS = Um1Exchange.Respond(keypair.Initiator.ExportPublicKey(), 

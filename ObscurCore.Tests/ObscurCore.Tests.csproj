@@ -44,8 +44,9 @@
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="ObscurCore.DTO.DtoSerialiser">
-      <HintPath>..\ObscurCore.DTO\bin\Release\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
+    <Reference Include="ObscurCore.DTO.DtoSerialiser, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ObscurCore.DTO\bin\Serialiser\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>

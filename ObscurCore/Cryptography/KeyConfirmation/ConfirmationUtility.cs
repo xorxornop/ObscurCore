@@ -19,7 +19,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ObscurCore.Cryptography;
+using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.DTO;
@@ -31,9 +31,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
     /// </summary>
     public static class ConfirmationUtility
     {
-        internal static readonly byte[] TagConstantBytes = Encoding.UTF8.GetBytes("OBSCURCORE_KC");
-
-        
+        internal static readonly byte[] TagConstantBytes = Encoding.UTF8.GetBytes("OBSCURCORE_KC_V1");
 
         /// <summary>
         ///     Generate a verified output of a function given the correct key, to be used as a key confirmation. 
@@ -44,7 +42,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// <returns>Output of the verification function, given the correct key.</returns>
         /// <exception cref="ArgumentException">Key is null or zero-length.</exception>
         /// <seealso cref="SymmetricKey"/>
-        /// <seealso cref="EcKeypair"/>
+        /// <seealso cref="ECKeypair"/>
         /// <seealso cref="IPossessConfirmationCanary"/>
         public static byte[] GenerateVerifiedOutput(AuthenticationFunctionConfiguration configuration, SymmetricKey key)
         {
@@ -59,7 +57,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// <returns>Output of the verification function, given the correct canary.</returns>
         /// <exception cref="ArgumentException">Key is null or zero-length.</exception>
         /// <seealso cref="SymmetricKey"/>
-        /// <seealso cref="EcKeypair"/>
+        /// <seealso cref="ECKeypair"/>
         /// <seealso cref="IPossessConfirmationCanary"/>
         public static byte[] GenerateVerifiedOutput(AuthenticationFunctionConfiguration configuration, byte[] canary)
         {
@@ -88,9 +86,9 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// <returns>Output of the verification function, given the correct key.</returns>
         /// <exception cref="ArgumentException">Key is null or zero-length.</exception>
         /// <seealso cref="SymmetricKey"/>
-        /// <seealso cref="EcKeypair"/>
+        /// <seealso cref="ECKeypair"/>
         /// <seealso cref="IPossessConfirmationCanary"/>
-        public static byte[] GenerateVerifiedOutput(AuthenticationFunctionConfiguration configuration, EcKeypair senderKeypair, EcKey recipientKey) {
+        public static byte[] GenerateVerifiedOutput(AuthenticationFunctionConfiguration configuration, ECKeypair senderKeypair, ECKey recipientKey) {
             Func<byte[], byte[]> validator = GetValidator(configuration, TagConstantBytes,
                 configuration.SerialiseDto());
 
@@ -164,8 +162,8 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// </exception>
         /// <returns>Valid key, or null if none are validated as being correct.</returns>
         public static void ConfirmKeyFromCanary(AuthenticationFunctionConfiguration keyConfirmation,
-            byte[] verifiedOutput, IEnumerable<EcKey> potentialSenderKeys, EcKey ephemeralKey,
-            IEnumerable<EcKeypair> potentialRecipientKeys, out EcKey senderKey, out EcKeypair recipientKeypair)
+            byte[] verifiedOutput, IEnumerable<ECKey> potentialSenderKeys, ECKey ephemeralKey,
+            IEnumerable<ECKeypair> potentialRecipientKeys, out ECKey senderKey, out ECKeypair recipientKeypair)
         {
             if (keyConfirmation == null) {
                 throw new ArgumentNullException("keyConfirmation", "No configuration supplied.");
@@ -184,18 +182,18 @@ namespace ObscurCore.Cryptography.KeyConfirmation
             }
 
             // We can determine which, if any, of the provided keys are capable of decrypting the manifest
-            var viableSenderKeys = potentialSenderKeys.Where(key => 
+            var viableSenderKeys = potentialSenderKeys.AsQueryExpr().Where(key => 
                 key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) && 
-                key.CurveName.Equals(ephemeralKey.CurveName)).ToArray();
+                key.CurveName.Equals(ephemeralKey.CurveName)).Run().ToArray();
             if (viableSenderKeys.Length == 0) {
                 throw new ArgumentException(
                     "No viable sender keys found - curve provider and/or curve name do not match ephemeral key.",
                     "potentialSenderKeys");
             }
 
-            var viableRecipientKeypairs = potentialRecipientKeys.Where(key =>
+            var viableRecipientKeypairs = potentialRecipientKeys.AsQueryExpr().Where(key =>
                 key.CurveProviderName.Equals(ephemeralKey.CurveProviderName) &&
-                key.CurveName.Equals(ephemeralKey.CurveName)).ToArray();
+                key.CurveName.Equals(ephemeralKey.CurveName)).Run().ToArray();
             if (viableRecipientKeypairs.Length == 0) {
                 throw new ArgumentException(
                     "No viable recipient keys found - curve provider and/or curve name do not match ephemeral key.",
@@ -206,12 +204,12 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                 keyConfirmation.SerialiseDto(), verifiedOutput.Length);
 
             // Temporary variables to store output in (can't access 'out' parameters inside anonymous method body)
-            EcKey oSK = null;
-            EcKeypair oRKP = null;
+            ECKey oSK = null;
+            ECKeypair oRKP = null;
             // See which mode (by-sender / by-recipient) is better to run in parallel
             if (viableRecipientKeypairs.Length > viableSenderKeys.Length) {
                 Parallel.ForEach(viableRecipientKeypairs, (rKeypair, state) => {
-                    foreach (EcKey sKey in viableSenderKeys) {
+                    foreach (ECKey sKey in viableSenderKeys) {
                         byte[] canary = XorCanaryBytes(sKey.ConfirmationCanary, rKeypair.ConfirmationCanary);
                         byte[] validationOut = validator(canary);
                         if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
@@ -245,9 +243,9 @@ namespace ObscurCore.Cryptography.KeyConfirmation
             int combinedLength = Math.Max(c0.Length, c1.Length);
             byte[] combined = new byte[combinedLength];
             if (c0Length > combinedLength) {
-                Array.Copy(c0, combinedLength, combined, combinedLength, combinedLength - c0Length);
+                c0.CopyBytes(combinedLength, combined, combinedLength, combinedLength - c0Length);
             } else if (c1Length > combinedLength) {
-                Array.Copy(c1, combinedLength, combined, combinedLength, combinedLength - c1Length);
+                c1.CopyBytes(combinedLength, combined, combinedLength, combinedLength - c1Length);
             }
             c0.XorInternal(0, c1, 0, combined, 0, Math.Min(c0Length, c1Length));
             return combined;
@@ -255,7 +253,7 @@ namespace ObscurCore.Cryptography.KeyConfirmation
 
         /// <summary>
         ///     Gets a validation function that returns the output of a configured verification method.
-        ///     Input: salt || tag || AD || message
+        ///     Input: <c>tag || salt || AD || message</c>
         /// </summary>
         /// <returns>Callable validation function.</returns>
         /// <param name="keyConfirmation">Key confirmation configuration defining validation method to be employed.</param>
@@ -266,21 +264,15 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         ///     Some aspect of configuration invalid - detailed inside exception message.
         /// </exception>
         internal static Func<byte[], byte[]> GetValidator(IAuthenticationFunctionConfiguration keyConfirmation,
-            byte[] tag, byte[] message,
-            int? outputSizeBytes = null)
+            byte[] tag, byte[] message, int? outputSizeBytes = null)
         {
-            AuthenticationFunctionType functionType;
-            try {
-                functionType = keyConfirmation.FunctionType.ToEnum<AuthenticationFunctionType>();
-            } catch (EnumerationParsingException ex) {
-                throw new ConfigurationInvalidException("Verification function type is unsupported/unknown.", ex);
-            }
+            AuthenticationFunctionType functionType = keyConfirmation.FunctionType;
 
             if (functionType == AuthenticationFunctionType.None) {
-                throw new ConfigurationInvalidException("Verification function type cannot be None.");
+                throw new ConfigurationInvalidException("Authentication function type cannot be None.");
             }
             if (String.IsNullOrEmpty(keyConfirmation.FunctionName)) {
-                throw new ConfigurationInvalidException("Verification function name cannot be null or empty.");
+                throw new ConfigurationInvalidException("Authentication function name cannot be null or empty.");
             }
 
             const string lengthIncompatibleString = "Expected length incompatible with function specified.";
@@ -299,29 +291,32 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                         throw new ConfigurationInvalidException("Key derivation function is unsupported/unknown.", ex);
                     }
 
-                    validator = key => {
-                        int saltSize = keyConfirmation.Salt.Length +
-                                       (keyConfirmation.AdditionalData != null
-                                           ? keyConfirmation.AdditionalData.Length
-                                           : 0) + (tag != null ? tag.Length : 0) +
-                                       (message != null ? message.Length : 0);
+                    validator = key => 
+                    {
+                        int superSaltSize = keyConfirmation.Salt.Length + 
+                            (keyConfirmation.AdditionalData != null ? keyConfirmation.AdditionalData.Length : 0) + 
+                            (tag != null ? tag.Length : 0) + 
+                            (message != null ? message.Length : 0);
+                        
+                        var superSalt = new byte[superSaltSize];
+                        tag.CopyBytes(0, superSalt, 0, tag.Length);
+                        int index = tag.Length;
 
-                        int index = keyConfirmation.Salt.Length;
-                        var input = new byte[saltSize];
-                        keyConfirmation.Salt.CopyBytes(0, input, 0, index);
-                        if (tag.IsNullOrZeroLength() == false) {
-                            tag.CopyBytes(0, input, index, tag.Length);
+                        // Compose the rest of the input to the KDF (as a super-salt)
+                        if (keyConfirmation.Salt.IsNullOrZeroLength() == false) {
+                            keyConfirmation.Salt.CopyBytes(0, superSalt, index, keyConfirmation.Salt.Length);
+                            index += keyConfirmation.Salt.Length;
                         }
                         if (keyConfirmation.AdditionalData.IsNullOrZeroLength() == false) {
-                            keyConfirmation.AdditionalData.CopyBytes(0, input, index,
+                            keyConfirmation.AdditionalData.CopyBytes(0, superSalt, index,
                                 keyConfirmation.AdditionalData.Length);
                             index += keyConfirmation.AdditionalData.Length;
                         }
                         if (message.IsNullOrZeroLength() == false) {
-                            message.CopyBytes(0, input, index, message.Length);
+                            message.CopyBytes(0, superSalt, index, message.Length);
                         }
 
-                        return KdfFactory.DeriveKeyWithKdf(kdfEnum, key, input,
+                        return KdfFactory.DeriveKeyWithKdf(kdfEnum, key, superSalt,
                             outputSizeBytes.Value, keyConfirmation.FunctionConfiguration);
                     };
                     break;
@@ -334,15 +329,15 @@ namespace ObscurCore.Cryptography.KeyConfirmation
                         throw new ConfigurationInvalidException("MAC function is unsupported/unknown.", ex);
                     }
                     validator = key => {
-                        IMac macF = AuthenticatorFactory.CreateMacPrimitive(macFEnum, key, keyConfirmation.Salt,
+                        IMac macF = AuthenticatorFactory.CreateMacPrimitive(macFEnum, key, tag,
                             keyConfirmation.FunctionConfiguration, keyConfirmation.Nonce);
 
                         if (outputSizeBytes != null && outputSizeBytes != macF.MacSize) {
                             throw new ArgumentException(lengthIncompatibleString, "outputSizeBytes");
                         }
 
-                        if (tag.IsNullOrZeroLength() == false) {
-                            macF.BlockUpdate(tag, 0, tag.Length);
+                        if (keyConfirmation.Salt.IsNullOrZeroLength() == false) {
+                            macF.BlockUpdate(keyConfirmation.Salt, 0, keyConfirmation.Salt.Length);
                         }
                         if (keyConfirmation.AdditionalData.IsNullOrZeroLength() == false) {
                             macF.BlockUpdate(keyConfirmation.AdditionalData, 0, keyConfirmation.AdditionalData.Length);

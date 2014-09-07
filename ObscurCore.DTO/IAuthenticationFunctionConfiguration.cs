@@ -31,7 +31,7 @@ namespace ObscurCore.DTO
         ///     Category/type of the function primitive, e.g. Digest, MAC, or KDF.
         /// </summary>
         [ProtoMember(1, IsRequired = true)]
-        string FunctionType { get; set; }
+        AuthenticationFunctionType FunctionType { get; set; }
 
         /// <summary>
         ///     Name of the function used to verify some data (e.g. a key, a payload item, etc.).

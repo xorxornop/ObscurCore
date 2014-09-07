@@ -25,10 +25,16 @@ namespace ObscurCore.DTO
     /// <summary>
     ///     An elliptic curve key.
     /// </summary>
-    /// <seealso cref="EcKeypair"/>
+    /// <seealso cref="ECKeypair"/>
     [ProtoContract]
-    public class EcKey : IEcKey, IDataTransferObject, IEquatable<EcKey>
+    public class ECKey : IECKey, IDataTransferObject, IEquatable<ECKey>
     {
+        /// <summary>
+        ///     If <c>true</c>, key is public component of a keypair. Otherwise, key is private component.
+        /// </summary>
+        /// <remarks>
+        ///     Backing field for <see cref="PublicComponent"/>. 
+        ///     Not recommended to modify directly as it will bypass logic.</remarks>
         [ProtoIgnore]
         protected bool Public;
 
@@ -86,7 +92,7 @@ namespace ObscurCore.DTO
         public byte[] ConfirmationCanary { get; set; }
 
         /// <inheritdoc />
-        public bool Equals(EcKey other)
+        public bool Equals(ECKey other)
         {
             if (ReferenceEquals(null, other)) {
                 return false;
@@ -113,7 +119,7 @@ namespace ObscurCore.DTO
             if (obj.GetType() != GetType()) {
                 return false;
             }
-            return Equals((EcKey) obj);
+            return Equals((ECKey) obj);
         }
 
         /// <inheritdoc />

@@ -33,7 +33,7 @@ namespace ObscurCore.Tests.Cryptography
 
 		public KeyProvider(int keysToMake = 5) {
             var symKeys = new List<SymmetricKey>();
-			var ecKeypairs = new List<EcKeypair>();
+			var ecKeypairs = new List<ECKeypair>();
 
             for (int i = 0; i < keysToMake; i++) {
                 // Symmetric key
@@ -85,11 +85,11 @@ namespace ObscurCore.Tests.Cryptography
         /// <summary>
         /// Elliptic curve key(s) that the local user owns.
         /// </summary>
-		public IEnumerable<EcKeypair> EcKeypairs { get; set; }
+		public IEnumerable<ECKeypair> EcKeypairs { get; set; }
 
         /// <summary>
         /// Elliptic curve public key(s) of foreign entities.
         /// </summary>
-		public IEnumerable<EcKey> ForeignEcKeys { get; set; }
+		public IEnumerable<ECKey> ForeignEcKeys { get; set; }
     }
 }

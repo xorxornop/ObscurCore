@@ -34,9 +34,9 @@ namespace ObscurCore.Cryptography.KeyAgreement
         /// </summary>
         /// <param name="curveName">Name of the elliptic curve to use as the basis.</param>
         /// <returns>Elliptic curve keypair.</returns>
-        public static EcKeypair GenerateEcKeypair(string curveName)
+        public static ECKeypair GenerateEcKeypair(string curveName)
         {
-            EcKeypair keypair;
+            ECKeypair keypair;
 
             if (curveName.Equals(DjbCurve.Curve25519.ToString())) {
                 var privEntropy = new byte[32];
@@ -44,7 +44,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
                 byte[] privateKey = Curve25519.CreatePrivateKey(privEntropy);
                 byte[] publicKey = Curve25519.CreatePublicKey(privateKey);
 
-                keypair = new EcKeypair {
+                keypair = new ECKeypair {
                     CurveProviderName = "DJB",
                     CurveName = DjbCurve.Curve25519.ToString(),
                     EncodedPublicKey = publicKey,
@@ -55,7 +55,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
                 BigInteger d;
                 GenerateEcKeypair(curveName, out Q, out d);
 
-                keypair = new EcKeypair {
+                keypair = new ECKeypair {
                     CurveProviderName = EllipticCurveInformationStore.GetProvider(curveName),
                     CurveName = curveName,
                     EncodedPublicKey = Q.GetEncoded(),

@@ -14,7 +14,6 @@
 //    limitations under the License.
 
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Text;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Authentication.Information;
@@ -38,12 +37,12 @@ namespace ObscurCore
     public static class Athena
     {
         /// <summary>
-        /// Cryptographic primitive information provider.
+        ///     Cryptographic primitive information provider.
         /// </summary>
         public static class Cryptography
         {
             /// <summary>
-            /// Information about block cipher primitives.
+            ///     Information about block cipher primitives.
             /// </summary>
             public static IReadOnlyDictionary<BlockCipher, BlockCipherInformation> BlockCiphers
             {
@@ -51,7 +50,7 @@ namespace ObscurCore
             }
 
             /// <summary>
-            /// Information about stream cipher primitives.
+            ///     Information about stream cipher primitives.
             /// </summary>
             public static IReadOnlyDictionary<StreamCipher, StreamCipherInformation> StreamCiphers
             {
@@ -59,7 +58,7 @@ namespace ObscurCore
             }
 
             /// <summary>
-            /// Information about block cipher modes of operation.
+            ///     Information about block cipher modes of operation.
             /// </summary>
             public static IReadOnlyDictionary<BlockCipherMode, BlockCipherModeInformation> BlockCipherModes
             {
@@ -67,7 +66,7 @@ namespace ObscurCore
             }
 
             /// <summary>
-            /// Information about block cipher padding schemes.
+            ///     Information about block cipher padding schemes.
             /// </summary>
             public static IReadOnlyDictionary<BlockCipherPadding, BlockCipherPaddingInformation> BlockCipherPaddings
             {
@@ -75,7 +74,7 @@ namespace ObscurCore
             }
 
             /// <summary>
-            /// Information about hash/digest primitives.
+            ///     Information about hash/digest authentication primitives.
             /// </summary>
             public static IReadOnlyDictionary<HashFunction, HashFunctionInformation> HashFunctions
             {
@@ -83,7 +82,7 @@ namespace ObscurCore
             }
 
             /// <summary>
-            /// Information about MAC/authentication primitives.
+            ///     Information about MAC authentication primitives.
             /// </summary>
             public static IReadOnlyDictionary<MacFunction, MacFunctionInformation> MacFunctions
             {
@@ -91,7 +90,7 @@ namespace ObscurCore
             }
 
             /// <summary>
-            /// Information about named elliptic curves.
+            ///     Information about named elliptic curves.
             /// </summary>
             public static IReadOnlyDictionary<string, EllipticCurveInformation> EllipticCurves
             {
@@ -99,7 +98,7 @@ namespace ObscurCore
             }
 
             /// <summary>
-            /// Information about key derivation functions.
+            ///     Information about key derivation functions.
             /// </summary>
             public static IReadOnlyDictionary<KeyDerivationFunction, KdfInformation> KeyDerivationFunctions
             {
@@ -116,21 +115,36 @@ namespace ObscurCore
         }
 
         /// <summary>
-        /// Packaging system information provider.
+        ///     Packaging system information provider.
         /// </summary>
         public static class Packaging
         {
             /// <summary>
-            ///     Version of operational scheme and DTO objects that code includes support for.
+            ///     Version of package schema (and so, DTO objects) 
+            ///     that code includes support for.
             /// </summary>
             public const int PackageFormatVersion = 1;
 
+            /// <summary>
+            ///     Character that denotes a forward traversal (deeper) step in the 
+            ///     path tree from the current position in the package filesystem schema.
+            /// </summary>
             public const char PathDirectorySeperator = '/';
+
+            /// <summary>
+            ///     Character sequence that can prefix a <see cref="PathDirectorySeperator"/> to reverse 
+            ///     the direction of tree traversal from the current position in the package filesystem schema.
+            /// </summary>
             public static readonly string PathRelativeUp = "..";
+
+            /// <summary>
+            ///     Character sequence that denotes a reverse traversal (shallower) step in the 
+            ///     path tree from the current position in the package filesystem schema.
+            /// </summary>
             public static readonly string PathRelativeUpSeperator = PathRelativeUp + PathDirectorySeperator;
 
             /// <summary>
-            /// Get the header byte sequence used to denote the start of an ObscurCore package.
+            ///     Get the header byte sequence used to denote the start of an ObscurCore package.
             /// </summary>
             /// <returns>Header tag as byte array.</returns>
             public static byte[] GetPackageHeaderTag()
@@ -139,7 +153,7 @@ namespace ObscurCore
             }
 
             /// <summary>
-            /// Get the trailer byte sequence used to denote the end of an ObscurCore package.
+            ///     Get the trailer byte sequence used to denote the end of an ObscurCore package.
             /// </summary>
             /// <returns>Trailer tag as byte array.</returns>
             public static byte[] GetPackageTrailerTag()

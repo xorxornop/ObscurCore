@@ -22,8 +22,8 @@ namespace ObscurCore.DTO
     /// <summary>
     ///     An interface for an elliptic curve key.
     /// </summary>
-    /// <seealso cref="IEcKeypair"/>
-    public interface IEcKey 
+    /// <seealso cref="IECKeypair"/>
+    public interface IECKey 
     {
         /// <summary>
         ///     If <c>true</c>, key is public component of a keypair. Otherwise, key is private component.

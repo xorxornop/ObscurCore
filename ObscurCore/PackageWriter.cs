@@ -1,17 +1,21 @@
-//
-//  Copyright 2014  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+#region License
+
+// 	Copyright 2014-2014 Matthew Ducker
+// 	
+// 	Licensed under the Apache License, Version 2.0 (the "License");
+// 	you may not use this file except in compliance with the License.
+// 	
+// 	You may obtain a copy of the License at
+// 		
+// 		http://www.apache.org/licenses/LICENSE-2.0
+// 	
+// 	Unless required by applicable law or agreed to in writing, software
+// 	distributed under the License is distributed on an "AS IS" BASIS,
+// 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// 	See the License for the specific language governing permissions and 
+// 	limitations under the License.
+
+#endregion
 
 using System;
 using System.Collections.Generic;
@@ -19,7 +23,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using LZ4PCL;
 using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
@@ -42,6 +45,8 @@ namespace ObscurCore
         private const PayloadLayoutScheme DefaultLayoutScheme = PayloadLayoutScheme.Frameshift;
         private const string MCryptoNotDefined = "Manifest cryptographic scheme not defined.";
 
+        private static byte[] MPlaceholderBytes = new byte[1024];
+
         #region Instance variables
 
         private readonly Dictionary<Guid, byte[]> _itemPreKeys = new Dictionary<Guid, byte[]>();
@@ -51,7 +56,7 @@ namespace ObscurCore
         /// <summary>
         ///     Configuration of the manifest cipher. Must be serialised into ManifestHeader when writing package.
         /// </summary>
-        private IManifestCryptographySchemeConfiguration _manifestHeaderCryptoConfig = null;
+        private IManifestCryptographySchemeConfiguration _manifestHeaderCryptoConfig;
 
         private ManifestCryptographyScheme _manifestHeaderCryptoScheme = ManifestCryptographyScheme.None;
 
@@ -76,29 +81,29 @@ namespace ObscurCore
         /// <param name="key">Cryptographic key known to the recipient to use for the manifest.</param>
         /// <param name="lowEntropy">Byte key supplied has low entropy (e.g. from a human password).</param>
         /// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-        public PackageWriter(SymmetricKey key, bool lowEntropy = false, PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
+        public PackageWriter(SymmetricKey key, bool lowEntropy = false,
+            PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
         {
             _manifest = new Manifest();
             _manifestHeaderCryptoScheme = ManifestCryptographyScheme.SymmetricOnly;
             SetManifestCryptoSymmetric(key, lowEntropy);
             PayloadLayout = layoutScheme;
-            ManifestCompression = true;
         }
 
         /// <summary>
         ///     Create a new package using default symmetric-only encryption for security.
         /// </summary>
         /// <param name="key">Cryptographic key known to the recipient to use for the manifest.</param>
-        /// <param name="canary">Known value to use for confirming the <paramref name="key"/>.</param>
+        /// <param name="canary">Known value to use for confirming the <paramref name="key" />.</param>
         /// <param name="lowEntropy">Byte key supplied has low entropy (e.g. from a human password).</param>
         /// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-        public PackageWriter(byte[] key, byte[] canary, bool lowEntropy = false, PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
+        public PackageWriter(byte[] key, byte[] canary, bool lowEntropy = false,
+            PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
         {
             _manifest = new Manifest();
             _manifestHeaderCryptoScheme = ManifestCryptographyScheme.SymmetricOnly;
             SetManifestCryptoSymmetric(key, canary, lowEntropy);
             PayloadLayout = layoutScheme;
-            ManifestCompression = true;
         }
 
         /// <summary>
@@ -106,13 +111,12 @@ namespace ObscurCore
         ///     Key is used in UTF-8-encoded byte array form.
         /// </summary>
         /// <param name="key">Passphrase known to the recipient to use for the manifest.</param>
-        /// <param name="canary">Known value to use for confirming the <paramref name="key"/>.</param>
+        /// <param name="canary">Known value to use for confirming the <paramref name="key" />.</param>
         /// <param name="lowEntropy">Byte key supplied has low entropy (e.g. from a human password).</param>
         /// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-        public PackageWriter(string key, string canary, bool lowEntropy = true, PayloadLayoutScheme layoutScheme = DefaultLayoutScheme) 
-            : this(Encoding.UTF8.GetBytes(key), Encoding.UTF8.GetBytes(canary), lowEntropy, layoutScheme)
-        {
-        }
+        public PackageWriter(string key, string canary, bool lowEntropy = true,
+            PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
+            : this(Encoding.UTF8.GetBytes(key), Encoding.UTF8.GetBytes(canary), lowEntropy, layoutScheme) {}
 
         /// <summary>
         ///     Create a new package using UM1-hybrid cryptography for security.
@@ -120,7 +124,7 @@ namespace ObscurCore
         /// <param name="sender">Elliptic curve key of the sender (private key).</param>
         /// <param name="recipient">Elliptic curve key of the recipient (public key).</param>
         /// <param name="layoutScheme">Scheme to use for the layout of items in the payload.</param>
-        public PackageWriter(EcKeypair sender, EcKeypair recipient,
+        public PackageWriter(ECKeypair sender, ECKeypair recipient,
             PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
         {
             _manifest = new Manifest();
@@ -153,8 +157,6 @@ namespace ObscurCore
         {
             get { return _formatVersion; }
         }
-
-        public bool ManifestCompression { get; set; }
 
         /// <summary>
         ///     Cryptographic scheme used for the manifest.
@@ -288,7 +290,7 @@ namespace ObscurCore
         ///     Key is used in UTF-8 encoded byte array form.
         /// </summary>
         /// <param name="key">Passphrase known to the recipient of the package.</param>
-        /// <param name="canary">Known value to use for confirming the <paramref name="key"/>.</param>
+        /// <param name="canary">Known value to use for confirming the <paramref name="key" />.</param>
         /// <exception cref="ArgumentException">Key or canary is null or zero-length.</exception>
         public void SetManifestCryptoSymmetric(string key, string canary)
         {
@@ -306,7 +308,7 @@ namespace ObscurCore
         ///     Set the manifest to use symmetric-only security.
         /// </summary>
         /// <param name="key">Key known to the recipient of the package.</param>
-        /// <param name="canary">Known value to use for confirming the <paramref name="key"/>.</param>
+        /// <param name="canary">Known value to use for confirming the <paramref name="key" />.</param>
         /// <param name="lowEntropy">Pre-key has low entropy, e.g. a human-memorisable passphrase.</param>
         /// <exception cref="ArgumentException">Key is null or zero-length.</exception>
         /// <exception cref="ArgumentNullException">Canary is null.</exception>
@@ -343,8 +345,9 @@ namespace ObscurCore
                   CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits.BitsToBytes());
 
             byte[] keyConfirmationOutput;
-            AuthenticationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration(
-                canary, out keyConfirmationOutput);
+            AuthenticationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration
+                (
+                    canary, out keyConfirmationOutput);
 
             _manifestHeaderCryptoConfig = new SymmetricManifestCryptographyConfiguration {
                 SymmetricCipher = cipherConfig,
@@ -361,7 +364,7 @@ namespace ObscurCore
         /// </summary>
         /// <param name="senderKeypair">Keypair of the sender.</param>
         /// <param name="recipientKey">Key of the recipient (public key).</param>
-        public void SetManifestCryptoUm1(EcKeypair senderKeypair, EcKey recipientKey)
+        public void SetManifestCryptoUm1(ECKeypair senderKeypair, ECKey recipientKey)
         {
             if (senderKeypair == null) {
                 throw new ArgumentNullException("senderKeypair");
@@ -378,7 +381,7 @@ namespace ObscurCore
             if (_writingPreManifestKey != null) {
                 _writingPreManifestKey.SecureWipe();
             }
-            EcKey ephemeral;
+            ECKey ephemeral;
             _writingPreManifestKey = Um1Exchange.Initiate(recipientKey, senderKeypair.GetPrivateKey(), out ephemeral);
             Debug.Print(DebugUtility.CreateReportString("PackageWriter", "SetManifestCryptoUM1", "Manifest pre-key",
                 _writingPreManifestKey.ToHexString()));
@@ -397,10 +400,11 @@ namespace ObscurCore
                   CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits.BitsToBytes());
 
             byte[] keyConfirmationOutput;
-            AuthenticationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration(
-                senderKeypair,
-                recipientKey, 
-                out keyConfirmationOutput);
+            AuthenticationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration
+                (
+                    senderKeypair,
+                    recipientKey,
+                    out keyConfirmationOutput);
 
             _manifestHeaderCryptoConfig = new Um1HybridManifestCryptographyConfiguration {
                 SymmetricCipher = cipherConfig,
@@ -518,7 +522,8 @@ namespace ObscurCore
         /// <remarks>Default configuration uses HMAC-SHA3-256 (HMAC-Keccak-256).</remarks>
         /// <param name="canary">Canary (associated with a key) to generate confirmation configuration for.</param>
         /// <param name="verifiedOutput">Output of verification function.</param>
-        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(byte[] canary,
+        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(
+            byte[] canary,
             out byte[] verifiedOutput)
         {
             AuthenticationFunctionConfiguration config =
@@ -535,7 +540,8 @@ namespace ObscurCore
         /// <remarks>Default configuration uses HMAC-SHA3-256 (HMAC-Keccak-256).</remarks>
         /// <param name="key">Key to generate confirmation configuration for.</param>
         /// <param name="verifiedOutput">Output of verification function.</param>
-        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(SymmetricKey key,
+        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(
+            SymmetricKey key,
             out byte[] verifiedOutput)
         {
             AuthenticationFunctionConfiguration config =
@@ -546,8 +552,9 @@ namespace ObscurCore
             return config;
         }
 
-        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(EcKeypair senderKey, 
-            EcKey recipientKey, out byte[] verifiedOutput)
+        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(
+            ECKeypair senderKey,
+            ECKey recipientKey, out byte[] verifiedOutput)
         {
             AuthenticationFunctionConfiguration config =
                 ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak256);
@@ -676,7 +683,7 @@ namespace ObscurCore
         /// </summary>
         /// <returns>A payload item as a <see cref="PayloadItem" /> 'data transfer object'.</returns>
         /// <param name="itemData">Function supplying a stream of the item data.</param>
-        /// <param name="itemType">Type of the item (as <see cref="PayloadItemType"/>).</param>
+        /// <param name="itemType">Type of the item (as <see cref="PayloadItemType" />).</param>
         /// <param name="externalLength">External length (outside the payload) of the item.</param>
         /// <param name="relativePath">Relative path of the item.</param>
         /// <param name="skipCrypto">
@@ -710,7 +717,7 @@ namespace ObscurCore
         /// </summary>
         /// <returns>A payload item as a <see cref="ObscurCore.DTO.PayloadItem" /> 'data transfer object'.</returns>
         /// <param name="itemData">Function supplying a stream of the item data.</param>
-        /// <param name="itemType">Type of the item (as <see cref="PayloadItemType"/>).</param>
+        /// <param name="itemType">Type of the item (as <see cref="PayloadItemType" />).</param>
         /// <param name="externalLength">External length (outside the payload) of the item.</param>
         /// <param name="relativePath">Relative path of the item.</param>
         /// <param name="preKey">Key to be found on recipient's system and used as a basis for derivation.</param>
@@ -808,14 +815,13 @@ namespace ObscurCore
         /// </summary>
         /// <param name="outputStream">Stream which the package is to be written to.</param>
         /// <param name="closeOnComplete">Whether to close the destination stream upon completion of writing.</param>
-        /// <param name="tempOutputStream">Storage for temporary data written during the writing process. If null, to memory.</param>
         /// <exception cref="NotSupportedException">Unsupported manifest cryptographic scheme attempted to be used.</exception>
         /// <exception cref="InvalidOperationException">Package state incomplete, or attempted to write package twice.</exception>
         /// <exception cref="AggregateException">
         ///     Collection of however many items have no stream bindings (as <see cref="ItemStreamBindingAbsentException" />)
         ///     or keys (as <see cref="ItemStreamBindingAbsentException" />).
         /// </exception>
-        public void Write(Stream outputStream, bool closeOnComplete = true, Stream tempOutputStream = null)
+        public void Write(Stream outputStream, bool closeOnComplete = true)
         {
             // Sanity checks
             if (_writingComplete) {
@@ -838,12 +844,6 @@ namespace ObscurCore
             if (outputStream.CanWrite == false) {
                 throw new IOException("Cannot write to output stream.");
             }
-            if (tempOutputStream != null && tempOutputStream.CanWrite == false) {
-                throw new ArgumentException("Cannot write to temporary output stream.", "tempOutputStream");
-            }
-            if (tempOutputStream == Stream.Null) {
-                throw new ArgumentException("Stream is set to where bits go to die.", "tempOutputStream");
-            }
 
             // Check if any payload items are missing stream bindings or keys before proceeding
             IEnumerable<ItemStreamBindingAbsentException> streamBindingAbsentExceptions =
@@ -858,23 +858,13 @@ namespace ObscurCore
                            || payloadItem.AuthenticationKey.IsNullOrZeroLength())
                  select new ItemKeyMissingException(payloadItem)).Run();
 
-            IEnumerable<Exception> streamOrKeyExceptions =
-                streamBindingAbsentExceptions.Concat<Exception>(keyMissingExceptions);
-            if (streamOrKeyExceptions.Any()) {
+            Exception[] streamOrKeyExceptions =
+                streamBindingAbsentExceptions.Concat<Exception>(keyMissingExceptions).ToArray();
+            if (streamOrKeyExceptions.Length > 0) {
                 throw new AggregateException(streamOrKeyExceptions);
             }
 
-            if (tempOutputStream == null) {
-                // Default to writing to memory
-                int totalLen =
-                    _manifest.PayloadItems.AsQueryExpr().Aggregate(0, (i, item) => (int) item.ExternalLength).Run();
-                var expLen = (int) (totalLen * 1.1);
-                Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write",
-                    "Preallocated memory for payload (total -> allocated)", totalLen + " -> " + expLen));
-                tempOutputStream = new MemoryStream(expLen);
-            }
-
-            // Write the header tag
+            // Write the package header tag
             Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "[*PACKAGE START*] Offset",
                 outputStream.Position));
             byte[] headerTag = Athena.Packaging.GetPackageHeaderTag();
@@ -882,125 +872,61 @@ namespace ObscurCore
 
             /* Derive working manifest encryption & authentication keys from the manifest pre-key */
             byte[] workingManifestCipherKey, workingManifestMacKey;
-            Debug.Assert(_manifestHeaderCryptoConfig.Authentication.KeySizeBits != null,
-                "Manifest authentication key size should not be null");
-            KeyStretchingUtility.DeriveWorkingKeys(_writingPreManifestKey,
-                _manifestHeaderCryptoConfig.SymmetricCipher.KeySizeBits / 8,
-                _manifestHeaderCryptoConfig.Authentication.KeySizeBits.Value / 8,
-                _manifestHeaderCryptoConfig.KeyDerivation,
-                out workingManifestCipherKey, out workingManifestMacKey);
+            GetWorkingKeys(out workingManifestMacKey, out workingManifestCipherKey);
 
             Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest working key",
                 workingManifestCipherKey.ToHexString()));
 
-            // Write the payload to temporary storage (tempOutputStream)
-            PayloadLayoutScheme payloadScheme;
-            try {
-                payloadScheme = _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>();
-            } catch (Exception) {
-                throw new ConfigurationInvalidException(
-                    "Package payload schema specified is unsupported/unknown or missing.");
-            }
-            // Bind the multiplexer to the temp stream
-            PayloadMux mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer(payloadScheme, true, tempOutputStream,
-                _manifest.PayloadItems, _itemPreKeys, _manifest.PayloadConfiguration);
+            long manifestHeaderStartPosition = outputStream.Position;
+            Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest header offset (absolute)",
+                manifestHeaderStartPosition));
 
+            /* Determine the needed [manifest header + manifest] placeholder length */
+            int requiredPlaceholderLength = CalculateRequiredMHMPlaceholder();
+
+            // Write the required placeholder
+            int writtenPlaceholder = 0;
+            while (writtenPlaceholder < requiredPlaceholderLength) {
+                int toWrite = Math.Min(requiredPlaceholderLength - writtenPlaceholder, MPlaceholderBytes.Length);
+                outputStream.Write(MPlaceholderBytes, 0, toWrite);
+                writtenPlaceholder += toWrite;
+            }
+
+            var payloadStartPosition = outputStream.Position;
+            Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Payload offset (absolute)",
+                payloadStartPosition));
+
+            /* Write the payload */
             try {
+                var payloadScheme = _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>();
+                // Bind the multiplexer to the output stream
+                var mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer(payloadScheme, true, outputStream,
+                    _manifest.PayloadItems, _itemPreKeys, _manifest.PayloadConfiguration);
                 mux.Execute();
-            } catch (Exception) {
-                throw;
+            } catch (EnumerationParsingException e) {
+                throw new ConfigurationInvalidException(
+                    "Package payload schema specified is unsupported/unknown or missing.", e);
+            } catch (Exception e) {
+                throw new Exception("Payload multiplexing failed. More information in inner exception.", e);
             }
 
-            // Write the manifest in encrypted + authenticated form to memory at first, then to actual output
-            using (var manifestTemp = new MemoryStream()) {
-                byte[] manifestMac = null;
-                using (
-                var authenticator = new MacStream(manifestTemp, true, _manifestHeaderCryptoConfig.Authentication,
-                    out manifestMac, workingManifestMacKey, false)) 
-                {
-                    using (var encryptor = new CipherStream(authenticator, true, _manifestHeaderCryptoConfig.SymmetricCipher,
-                        workingManifestCipherKey, false)) 
-                    {
-                        if (ManifestCompression) {
-                            using (var compressor = new LZ4Stream(encryptor, CompressionMode.Compress)) {
-                                _manifest.SerialiseDto(compressor, prefixLength:false);
-                            }
-                        } else {
-                            _manifest.SerialiseDto(encryptor, prefixLength: false);
-                        }
-                    }
-                    authenticator.Update(((UInt32)authenticator.BytesOut).ToLittleEndian(), 0, sizeof(UInt32));
+            long payloadEndPosition = outputStream.Position;
 
-                    byte[] manifestCryptoDtoForAuth;
-                    switch (ManifestCryptoScheme) {
-                        case ManifestCryptographyScheme.SymmetricOnly:
-                            var symConfig = _manifestHeaderCryptoConfig as SymmetricManifestCryptographyConfiguration;
-                            Debug.Assert(symConfig != null, "'symConfig' is null - casting of '_manifestHeaderCryptoConfig' must have failed.");
-                            manifestCryptoDtoForAuth = symConfig.CreateAuthenticatibleClone().SerialiseDto();
-                            break;
-                        case ManifestCryptographyScheme.Um1Hybrid:
-                            var um1Config = _manifestHeaderCryptoConfig as Um1HybridManifestCryptographyConfiguration;
-                            Debug.Assert(um1Config != null, "um1Config is null - casting of '_manifestHeaderCryptoConfig' must have failed.");
-                            manifestCryptoDtoForAuth = um1Config.CreateAuthenticatibleClone().SerialiseDto();
-                            break;
-                        default:
-                            throw new NotSupportedException();
-                    }
-                    authenticator.Update(manifestCryptoDtoForAuth, 0, manifestCryptoDtoForAuth.Length);
-                }
+            /* 
+             * The manifest will now have all necessary information to write it into the placeholder location.
+             * ^ This information was generated by and written by the payload multiplexer.
+             * Write the manifest in encrypted + authenticated form to memory at first, then to actual output
+             */
+            outputStream.Seek(manifestHeaderStartPosition, SeekOrigin.Begin);
 
-                // Combine manifest header information (in seperate pieces until now) into a completed DTO
-                var mh = new ManifestHeader {
-                    FormatVersion = _formatVersion,
-                    CryptographySchemeName = _manifestHeaderCryptoScheme.ToString(),
-                    UseCompression = this.ManifestCompression
-                };
-                Debug.Assert(manifestMac != null, "'manifestMac' is null. It should have been set when 'authenticator' was closed.");
-                switch (ManifestCryptoScheme) {
-                    case ManifestCryptographyScheme.SymmetricOnly:
-                        var symConfig = (SymmetricManifestCryptographyConfiguration)_manifestHeaderCryptoConfig;
-                        symConfig.AuthenticationVerifiedOutput = manifestMac;
-                        mh.CryptographySchemeConfiguration = symConfig.SerialiseDto();
-                        break;
-                    case ManifestCryptographyScheme.Um1Hybrid:
-                        var um1Config = (Um1HybridManifestCryptographyConfiguration)_manifestHeaderCryptoConfig;
-                        um1Config.AuthenticationVerifiedOutput = manifestMac;
-                        mh.CryptographySchemeConfiguration = um1Config.SerialiseDto();
-                        break;
-                }
-
-                // Serialise and write ManifestHeader
-                Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest header offset",
-                    outputStream.Position));
-                mh.SerialiseDto(outputStream, prefixLength:true);
-
-                Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write",
-                    "Manifest length prefix offset (absolute)",
-                    outputStream.Position));
-                // Generate length prefix as 32b little-endian unsigned integer
-                byte[] manifestLengthHeaderLe = ((UInt32) manifestTemp.Length).ToLittleEndian();
-                Debug.Assert(manifestLengthHeaderLe.Length == sizeof (UInt32));
-                // Obfuscate the manifest length header by XORing it with the derived manifest MAC (authentication) key
-                manifestLengthHeaderLe.XorInPlaceInternal(0, workingManifestMacKey, 0, sizeof (UInt32));
-                // Write the now-obfuscated manifest length header
-                outputStream.Write(manifestLengthHeaderLe, 0, sizeof (UInt32));
-                Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest offset (absolute)",
-                    outputStream.Position));
-
-                // Write manifest!
-                manifestTemp.WriteTo(outputStream);
+            using (var mhmStream = GetManifest(workingManifestMacKey, workingManifestCipherKey)) {
+                mhmStream.WriteTo(outputStream);
             }
+            outputStream.Seek(payloadEndPosition, SeekOrigin.Begin);
 
             // Clear manifest keys from memory
-            Array.Clear(workingManifestCipherKey, 0, workingManifestCipherKey.Length);
-            Array.Clear(workingManifestMacKey, 0, workingManifestMacKey.Length);
-
-            // Write out payload currently in temporary storage to real output stream
-            Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Payload offset (absolute)",
-                outputStream.Position));
-            tempOutputStream.Seek(0, SeekOrigin.Begin);
-            tempOutputStream.CopyTo(outputStream);
-            tempOutputStream.Close();
+            workingManifestMacKey.SecureWipe();
+            workingManifestCipherKey.SecureWipe();
 
             // Write the trailer tag
             Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Trailer offset (absolute)",
@@ -1016,6 +942,189 @@ namespace ObscurCore
                 outputStream.Close();
             }
             _writingComplete = true;
+        }
+
+        /// <summary>
+        ///     Derives working MAC and cipher keys from the manifest pre-key using KDF key-stretching.
+        /// </summary>
+        /// <param name="workingManifestMacKey">Output auth/MAC key.</param>
+        /// <param name="workingManifestCipherKey">Output cipher key.</param>
+        private void GetWorkingKeys(out byte[] workingManifestMacKey, out byte[] workingManifestCipherKey)
+        {
+            Debug.Assert(_manifestHeaderCryptoConfig.Authentication.KeySizeBits != null,
+                "Manifest authentication key size should not be null");
+            KeyStretchingUtility.DeriveWorkingKeys(_writingPreManifestKey,
+                _manifestHeaderCryptoConfig.SymmetricCipher.KeySizeBits.BitsToBytes(),
+                _manifestHeaderCryptoConfig.Authentication.KeySizeBits.Value.BitsToBytes(),
+                _manifestHeaderCryptoConfig.KeyDerivation,
+                out workingManifestCipherKey, out workingManifestMacKey);
+        }
+
+        /// <summary>
+        ///     Calculate the required length for the manifest header + manifest placeholder (MH+M).
+        /// </summary>
+        /// <returns>Required length of the placeholder.</returns>
+        private int CalculateRequiredMHMPlaceholder()
+        {
+            var manifestMacEnum = _manifestHeaderCryptoConfig.Authentication.FunctionName.ToEnum<MacFunction>();
+            // TODO: Detect for corner cases such as HMAC/CMAC
+            // ... where Athena OutputSize.Value will be null (have to base on digest/cipher, respectively)
+            int manifestMacOutputSizeBytes = Athena.Cryptography.MacFunctions[manifestMacEnum].OutputSize.Value.BitsToBytes();
+            var mhTemp = GetManifestHeader(new byte[manifestMacOutputSizeBytes]);
+
+            int mhPlaceholderLength;
+            try {
+                var mhTempMS = mhTemp.SerialiseDto(true);
+                mhPlaceholderLength = (int)mhTempMS.Length;
+            } catch (Exception e) {
+                throw new Exception("Failed to generate manifest header authentication output placeholder prior to writing payload.", e);
+            }
+
+            try {
+                foreach (PayloadItem item in _manifest.PayloadItems) {
+                    // Insert item MAC output placeholder
+                    var itemMacEnum = item.Authentication.FunctionName.ToEnum<MacFunction>();
+                    // TODO: Detect for corner cases such as HMAC/CMAC
+                    // ... where Athena OutputSize.Value will be null (have to base on digest/cipher, respectively)
+                    int itemMacOutputSizeBytes = Athena.Cryptography.MacFunctions[itemMacEnum].OutputSize.Value.BitsToBytes();
+                    item.AuthenticationVerifiedOutput = new byte[itemMacOutputSizeBytes];
+                    // Don't have to put a placeholder for item internal length since the DTO field is fixed-size.
+                }
+            } catch (Exception e) {
+                throw new Exception("Failed to generate payload item authentication output placeholders prior to writing payload.", e);
+            }
+            int manifestPlaceholderLength;
+            try {
+                byte[] tempManifestBytes = _manifest.SerialiseDto();
+                manifestPlaceholderLength = sizeof(UInt32) + tempManifestBytes.Length; // inc. prefix
+            } catch (Exception e) {
+                throw new Exception(
+                    "Serialisation error when determining manifest placeholder length prior to writing payload.", e);
+            }
+
+            Debug.Print(DebugUtility.CreateReportString("PackageWriter", "CalculateRequiredMHMPlaceholder",
+                "Calculated manifest header length",
+                mhPlaceholderLength));
+
+            Debug.Print(DebugUtility.CreateReportString("PackageWriter", "CalculateRequiredMHMPlaceholder",
+                "Calculated manifest length",
+                manifestPlaceholderLength));
+
+            return mhPlaceholderLength + manifestPlaceholderLength;
+        }
+
+        /// <summary>
+        ///     Generates a <see cref="ManifestHeader"/> DTO object from current configuration.
+        /// </summary>
+        /// <param name="manifestAuthenticationOutput">
+        ///     Value to insert as authentication output. Depends on step of package creation.
+        /// </param>
+        private ManifestHeader GetManifestHeader(byte[] manifestAuthenticationOutput)
+        {
+            byte[] schemeConfig = null;
+
+            try {
+                switch (ManifestCryptoScheme) {
+                    case ManifestCryptographyScheme.SymmetricOnly:
+                        var symConfig = (SymmetricManifestCryptographyConfiguration)_manifestHeaderCryptoConfig;
+                        symConfig.AuthenticationVerifiedOutput = manifestAuthenticationOutput;
+                        schemeConfig = symConfig.SerialiseDto();
+                        break;
+                    case ManifestCryptographyScheme.Um1Hybrid:
+                        var um1Config = (Um1HybridManifestCryptographyConfiguration)_manifestHeaderCryptoConfig;
+                        um1Config.AuthenticationVerifiedOutput = manifestAuthenticationOutput;
+                        schemeConfig = um1Config.SerialiseDto();
+                        break;
+                }
+            } catch (Exception e) {
+                throw new Exception("Error while serialising manifest cryptography configuration for manifest header.", e);
+            }
+
+            Debug.Assert(schemeConfig != null, "schemeConfig == null");
+
+            return new ManifestHeader {
+                FormatVersion = _formatVersion,
+                CryptographySchemeName = _manifestHeaderCryptoScheme.ToString(),
+                CryptographySchemeConfiguration = schemeConfig
+            };
+        }
+
+        /// <summary>
+        ///     Generates and writes a <see cref="Manifest"/> DTO object to memory.
+        /// </summary>
+        /// <param name="workingMacKey">Key for authenticating the manifest.</param>
+        /// <param name="workingCipherKey">Key for encrypting the manifest.</param>
+        /// <returns></returns>
+        private MemoryStream GetManifest(byte[] workingMacKey, byte[] workingCipherKey)
+        {
+            var outputStream = new MemoryStream();
+            var manifestTemp = new MemoryStream();
+            byte[] manifestMac = null;
+            using (
+                var authenticator = new MacStream(manifestTemp, true, _manifestHeaderCryptoConfig.Authentication,
+                    out manifestMac, workingMacKey, false)) {
+                using (var encryptor = new CipherStream(authenticator, true,
+                    _manifestHeaderCryptoConfig.SymmetricCipher, workingCipherKey, false)) {
+                    _manifest.SerialiseDto(encryptor, false);
+                }
+                var lengthUint = (UInt32) authenticator.BytesOut;
+                byte[] lengthPrefix = lengthUint.ToLittleEndian();
+                authenticator.Update(lengthPrefix, 0, sizeof (UInt32));
+
+                byte[] manifestCryptoDtoForAuth;
+                switch (ManifestCryptoScheme) {
+                    case ManifestCryptographyScheme.SymmetricOnly:
+                    {
+                        var symConfig = _manifestHeaderCryptoConfig as SymmetricManifestCryptographyConfiguration;
+                        Debug.Assert(symConfig != null,
+                            "'symConfig' is null - casting of '_manifestHeaderCryptoConfig' must have failed.");
+                        manifestCryptoDtoForAuth = symConfig.CreateAuthenticatibleClone().SerialiseDto();
+                        break;
+                    }
+                    case ManifestCryptographyScheme.Um1Hybrid:
+                    {
+                        var um1Config = _manifestHeaderCryptoConfig as Um1HybridManifestCryptographyConfiguration;
+                        Debug.Assert(um1Config != null,
+                            "um1Config is null - casting of '_manifestHeaderCryptoConfig' must have failed.");
+                        manifestCryptoDtoForAuth = um1Config.CreateAuthenticatibleClone().SerialiseDto();
+                        break;
+                    }
+                    default:
+                        throw new NotSupportedException();
+                }
+                authenticator.Update(manifestCryptoDtoForAuth, 0, manifestCryptoDtoForAuth.Length);
+            }
+
+            Debug.Assert(manifestMac != null,
+                "'manifestMac' is null. It should have been set when 'authenticator' was closed."); 
+
+            // Serialise and write ManifestHeader
+            var mh = GetManifestHeader(manifestMac);
+            mh.SerialiseDto(outputStream, prefixLength: true);
+
+            /* Write length prefix */
+
+            // Generate length prefix as 32b little-endian unsigned integer
+            var manifestLengthPrefixUint = (UInt32) manifestTemp.Length;
+            byte[] manifestLengthPrefixLe = manifestLengthPrefixUint.ToLittleEndian();
+            Debug.Assert(manifestLengthPrefixLe.Length == sizeof (UInt32));
+            // Obfuscate the manifest length header by XORing it with the derived manifest MAC (authentication) key
+            manifestLengthPrefixLe.XorInPlaceInternal(0, workingMacKey, 0, sizeof (UInt32));
+            // Write the now-obfuscated manifest length header
+            outputStream.Write(manifestLengthPrefixLe, 0, sizeof (UInt32));
+
+            Debug.Print(DebugUtility.CreateReportString("PackageWriter", "GetManifest",
+                "Manifest header length",
+                outputStream.Position));
+
+            Debug.Print(DebugUtility.CreateReportString("PackageWriter", "GetManifest",
+                "Manifest length",
+                manifestTemp.Length));
+
+            // Write manifest
+            manifestTemp.WriteTo(outputStream);
+            outputStream.Seek(0, SeekOrigin.Begin);
+            return outputStream;
         }
     }
 }

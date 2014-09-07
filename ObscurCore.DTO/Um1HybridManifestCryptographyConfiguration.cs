@@ -110,7 +110,7 @@ namespace ObscurCore.DTO
         ///     Ephemeral key to be used in UM1 key exchange calculations to produce a shared secret.
         /// </summary>
         [ProtoMember(7, IsRequired = true)]
-        public EcKey EphemeralKey { get; set; }
+        public ECKey EphemeralKey { get; set; }
 
         /// <inheritdoc />
         public Um1HybridManifestCryptographyConfiguration CloneSafely()
@@ -145,13 +145,12 @@ namespace ObscurCore.DTO
         public override int GetHashCode()
         {
             unchecked {
-                int hashCode = (KeyConfirmation != null ? KeyConfirmation.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^
-                           (KeyConfirmationVerifiedOutput != null ? KeyConfirmationVerifiedOutput.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ KeyDerivation.GetHashCode();
-                hashCode = (hashCode * 397) ^ SymmetricCipher.GetHashCode();
+                int hashCode = SymmetricCipher.GetHashCode();
                 hashCode = (hashCode * 397) ^ Authentication.GetHashCode();
                 hashCode = (hashCode * 397) ^ AuthenticationVerifiedOutput.GetHashCode();
+                hashCode = (hashCode * 397) ^ (KeyConfirmation != null ? KeyConfirmation.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (KeyConfirmationVerifiedOutput != null ? KeyConfirmationVerifiedOutput.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ KeyDerivation.GetHashCode();
                 hashCode = (hashCode * 397) ^ EphemeralKey.GetHashCode();
                 return hashCode;
             }

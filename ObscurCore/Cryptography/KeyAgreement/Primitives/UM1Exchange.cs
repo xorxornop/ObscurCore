@@ -42,8 +42,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         ///     Ephemeral public key to send to the responder (V, receiver). Output to this
         ///     parameter.
         /// </param>
-        public static byte[] Initiate(EcKey recipientPublicKey, EcKey senderPrivateKey,
-            out EcKey ephemeralSenderPublicKey)
+        public static byte[] Initiate(ECKey recipientPublicKey, ECKey senderPrivateKey,
+            out ECKey ephemeralSenderPublicKey)
         {
             if (recipientPublicKey.PublicComponent == false) {
                 throw new ArgumentException("Recipient key is not public component.", "recipientPublicKey");
@@ -52,12 +52,12 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
                 throw new ArgumentException("Sender key not private component.", "senderPrivateKey");
             }
 
-            EcKey Q_static_V = recipientPublicKey;
-            EcKey d_static_U = senderPrivateKey;
+            ECKey Q_static_V = recipientPublicKey;
+            ECKey d_static_U = senderPrivateKey;
 
-            EcKeypair kp_ephemeral_U = KeypairFactory.GenerateEcKeypair(senderPrivateKey.CurveName);
-            EcKey Q_ephemeral_U = kp_ephemeral_U.ExportPublicKey();
-            EcKey d_ephemeral_U = kp_ephemeral_U.GetPrivateKey();
+            ECKeypair kp_ephemeral_U = KeypairFactory.GenerateEcKeypair(senderPrivateKey.CurveName);
+            ECKey Q_ephemeral_U = kp_ephemeral_U.ExportPublicKey();
+            ECKey d_ephemeral_U = kp_ephemeral_U.GetPrivateKey();
 
             // Calculate shared ephemeral secret 'Ze'
             byte[] Ze = KeyAgreementFactory.CalculateEcdhcSecret(Q_static_V, d_ephemeral_U);
@@ -117,8 +117,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <param name="senderPublicKey">Public key of the sender.</param>
         /// <param name="recipientPrivateKey">Private key of the receiver.</param>
         /// <param name='ephemeralSenderPublicKey'>Ephemeral public key supplied by the initiator (U, sender).</param>
-        public static byte[] Respond(EcKey senderPublicKey, EcKey recipientPrivateKey,
-            EcKey ephemeralSenderPublicKey)
+        public static byte[] Respond(ECKey senderPublicKey, ECKey recipientPrivateKey,
+            ECKey ephemeralSenderPublicKey)
         {
             if (senderPublicKey.PublicComponent == false) {
                 throw new ArgumentException("Sender key is not public component.", "senderPublicKey");
@@ -130,9 +130,9 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
                 throw new ArgumentException("Ephemeral sender key is not public component.", "ephemeralSenderPublicKey");
             }
 
-            EcKey Q_static_U = senderPublicKey;
-            EcKey d_static_V = recipientPrivateKey;
-            EcKey Q_ephemeral_U = ephemeralSenderPublicKey;
+            ECKey Q_static_U = senderPublicKey;
+            ECKey d_static_V = recipientPrivateKey;
+            ECKey Q_ephemeral_U = ephemeralSenderPublicKey;
 
             // Calculate shared ephemeral secret 'Ze'
             byte[] Ze = KeyAgreementFactory.CalculateEcdhcSecret(Q_ephemeral_U, d_static_V);

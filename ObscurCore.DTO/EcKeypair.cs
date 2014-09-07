@@ -26,10 +26,10 @@ namespace ObscurCore.DTO
     ///     An elliptic curve keypair.
     /// </summary>
     /// <remarks>
-    ///     For use in cryptographic constructions such as EC-Diffie-Hellman or EC-DSA.
+    ///     For use in cryptographic constructions such as ECDH or ECDSA.
     /// </remarks>
     [ProtoContract]
-    public class EcKeypair : IEcKeypair, IDataTransferObject, IEquatable<EcKeypair>
+    public class ECKeypair : IECKeypair, IDataTransferObject, IEquatable<ECKeypair>
     {
         /// <summary>
         ///     Name of the curve provider. 
@@ -88,10 +88,10 @@ namespace ObscurCore.DTO
         /// <summary>
         ///     Exports the public component of the keypair as a DTO.
         /// </summary>
-        /// <returns>Public key as <see cref="EcKey"/> DTO.</returns>
-        public EcKey ExportPublicKey()
+        /// <returns>Public key as <see cref="ECKey"/> DTO.</returns>
+        public ECKey ExportPublicKey()
         {
-            return new EcKey {
+            return new ECKey {
                 PublicComponent = true,
                 CurveProviderName = String.Copy(CurveProviderName),
                 CurveName = String.Copy(CurveName),
@@ -104,10 +104,10 @@ namespace ObscurCore.DTO
         /// <summary>
         ///     Exports the private component of the keypair as a DTO object.
         /// </summary>
-        /// <returns>Private key as <see cref="EcKey"/> DTO.</returns>
-        public EcKey GetPrivateKey()
+        /// <returns>Private key as <see cref="ECKey"/> DTO.</returns>
+        public ECKey GetPrivateKey()
         {
-            return new EcKey {
+            return new ECKey {
                 PublicComponent = false,
                 CurveProviderName = String.Copy(CurveProviderName),
                 CurveName = String.Copy(CurveName),
@@ -129,17 +129,17 @@ namespace ObscurCore.DTO
             if (obj.GetType() != GetType()) {
                 return false;
             }
-            return Equals((EcKeypair) obj);
+            return Equals((ECKeypair) obj);
         }
 
         /// <inheritdoc />
-        public bool Equals(EcKeypair other)
+        public bool Equals(ECKeypair other)
         {
             return Equals(other, true);
         }
 
         /// <inheritdoc />
-        public bool Equals(EcKeypair other, bool constantTime)
+        public bool Equals(ECKeypair other, bool constantTime)
         {
             if (ReferenceEquals(null, other)) {
                 return false;

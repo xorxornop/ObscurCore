@@ -17,12 +17,15 @@
 
 #endregion
 
+using ProtoBuf;
+
 namespace ObscurCore.DTO
 {
     /// <summary>
     ///     Possible distinct types of payload item that can/should be
     ///     handled differently by an application/program.
     /// </summary>
+    [ProtoContract]
     public enum PayloadItemType : byte
     {
         /// <summary>
