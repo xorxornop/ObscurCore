@@ -85,14 +85,14 @@ namespace ObscurCore.DTO
         /// <summary>
         ///     Length of the item outside of the payload, unmodified, as it was before inclusion.
         /// </summary>
-        [ProtoMember(3, IsRequired = true)]
+        [ProtoMember(3, IsRequired = true, DataFormat = DataFormat.FixedSize)]
         public long ExternalLength { get; set; }
 
         /// <summary>
         ///     Length of the item inside of the payload,
         ///     excluding any additional length imparted by the payload layout scheme, if any.
         /// </summary>
-        [ProtoMember(4, IsRequired = true)]
+        [ProtoMember(4, IsRequired = true, DataFormat = DataFormat.FixedSize)]
         public long InternalLength { get; set; }
 
         /// <summary>

@@ -36,18 +36,6 @@ namespace ObscurCore.DTO
         public int FormatVersion { get; set; }
 
         /// <summary>
-        ///     Compression to use to reduce the size of the manifest.
-        /// </summary>
-        [ProtoMember(2, IsRequired = false)]
-        public CompressionScheme Compression { get; set; }
-        
-        /// <summary>
-        ///     Configuration for the <see cref="Compression"/> scheme.
-        /// </summary>
-        [ProtoMember(3, IsRequired = false)]
-        public byte[] CompressionConfiguration { get; set; }
-
-        /// <summary>
         ///     Name of the cryptographic scheme used to secure the Manifest.
         /// </summary>
         [ProtoMember(4, IsRequired = true)]
@@ -86,8 +74,8 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(this, other)) {
                 return true;
             }
-            return FormatVersion == other.FormatVersion && Compression == other.Compression &&
-                   String.Equals(CryptographySchemeName, other.CryptographySchemeName,
+            return FormatVersion == other.FormatVersion && 
+                String.Equals(CryptographySchemeName, other.CryptographySchemeName,
                        StringComparison.OrdinalIgnoreCase) &&
                    (CryptographySchemeConfiguration == null
                        ? other.CryptographySchemeConfiguration == null
@@ -100,7 +88,6 @@ namespace ObscurCore.DTO
         {
             unchecked {
                 int hashCode = FormatVersion.GetHashCode();
-                hashCode = (hashCode * 397) ^ Compression.GetHashCode();
                 hashCode = (hashCode * 397) ^ CryptographySchemeName.ToLowerInvariant().GetHashCode();
                 hashCode = (hashCode * 397) ^ (CryptographySchemeConfiguration != null ? CryptographySchemeConfiguration.GetHashCode() : 0);
                 return hashCode;

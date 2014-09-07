@@ -19,7 +19,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using LZ4PCL;
 using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
@@ -520,22 +519,8 @@ namespace ObscurCore
                 }
                 decryptedManifestStream.Seek(0, SeekOrigin.Begin);
 
-                Stream serialisedManifestStream;
-                switch (_manifestHeader.Compression) {
-                    case CompressionScheme.None: 
-                        serialisedManifestStream = decryptedManifestStream;
-                        break;
-                    case CompressionScheme.LZ4:
-                        // Expose serialised manifest through decompressing decorator
-                        serialisedManifestStream = new LZ4Stream(decryptedManifestStream, CompressionMode.Decompress);
-                        break;
-                    default:
-                        throw new NotSupportedException(
-                            String.Format("Manifest compression scheme \"{0}\" is unsupported/unknown.", _manifestHeader.Compression));
-                }
-
                 try {
-                    manifest = serialisedManifestStream.DeserialiseDto<Manifest>(false);
+                    manifest = decryptedManifestStream.DeserialiseDto<Manifest>(false);
                 } catch (Exception e) {
                     throw new InvalidDataException("Manifest failed to deserialise.", e);
                 }
