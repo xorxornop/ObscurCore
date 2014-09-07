@@ -66,10 +66,6 @@
     <Reference Include="LinqOptimizer.CSharp">
       <HintPath>..\packages\LinqOptimizer.CSharp.0.6.3\lib\LinqOptimizer.CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="LZ4PCL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\LZ4PCL.1.0.0\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\LZ4PCL.dll</HintPath>
-    </Reference>
     <Reference Include="ObscurCore.DTO.DtoSerialiser, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ObscurCore.DTO\bin\Serialiser\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
