@@ -12,11 +12,10 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-using System;
 
 namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 {
-	public class Rabbit : StreamCipherTestBase
+    internal class Rabbit : StreamCipherTestBase
 	{
 //		private static readonly string MSG = "00000000000000000000000000000000" + 
 //		                                     "00000000000000000000000000000000" + 

@@ -13,11 +13,9 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using System;
-
 namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 {
-	public class ChaCha : StreamCipherTestBase
+    internal class ChaCha : StreamCipherTestBase
 	{
 //		private static readonly string MSG = 
 //			"00000000000000000000000000000000"

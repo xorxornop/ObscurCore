@@ -15,7 +15,7 @@
 
 namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 {
-	public class XSalsa20 : StreamCipherTestBase
+    internal class XSalsa20 : StreamCipherTestBase
 	{
 		public XSalsa20 () : base(ObscurCore.Cryptography.Ciphers.Stream.StreamCipher.XSalsa20)
 		{
