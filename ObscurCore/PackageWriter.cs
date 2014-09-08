@@ -874,7 +874,9 @@ namespace ObscurCore
             byte[] workingManifestCipherKey, workingManifestMacKey;
             GetWorkingKeys(out workingManifestMacKey, out workingManifestCipherKey);
 
-            Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest working key",
+            Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest MAC working key",
+                workingManifestMacKey.ToHexString()));
+            Debug.Print(DebugUtility.CreateReportString("PackageWriter", "Write", "Manifest cipher working key",
                 workingManifestCipherKey.ToHexString()));
 
             long manifestHeaderStartPosition = outputStream.Position;

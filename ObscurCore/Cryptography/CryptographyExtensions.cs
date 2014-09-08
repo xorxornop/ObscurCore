@@ -139,27 +139,16 @@ namespace ObscurCore.Cryptography
         {
 #if (INCLUDE_UNSAFE)
             if (length > XorUnmanagedLengthThreshold) {
-                int remainder;
-                var ulongOps = Math.DivRem(length, sizeof (ulong), out remainder);
                 unsafe {
                     fixed (byte* aPtr = a) {
                         fixed (byte* bPtr = b) {
-                            fixed (byte* outputPtr = output) {
-                                var aUlongPtr = (UInt64*) (aPtr + aOff);
-                                var bUlongPtr = (UInt64*) (bPtr + bOff);
-                                var outputUlongPtr = (UInt64*) (outputPtr + outputOff);
-                                for (var i = 0; i < ulongOps; i++) {
-                                    outputUlongPtr[i] = aUlongPtr[i] ^ bUlongPtr[i];
-                                }
+                            fixed (byte* outPtr = output) {
+                                XorMemory(aPtr + aOff, bPtr + bOff, outPtr + outputOff, length);
                             }
+                            
                         }
                     }
                 }
-                var increment = ulongOps * sizeof (UInt64);
-                aOff += increment;
-                bOff += increment;
-                outputOff += increment;
-                length = remainder;
             }
 #endif
 
@@ -201,23 +190,13 @@ namespace ObscurCore.Cryptography
         {
 #if (INCLUDE_UNSAFE)
             if (length > XorUnmanagedLengthThreshold) {
-                int remainder;
-                var ulongOps = Math.DivRem(length, sizeof (UInt64), out remainder);
                 unsafe {
                     fixed (byte* aPtr = a) {
                         fixed (byte* bPtr = b) {
-                            var aUlongPtr = (UInt64*) (aPtr + aOff);
-                            var bUlongPtr = (UInt64*) (bPtr + bOff);
-                            for (var i = 0; i < ulongOps; i++) {
-                                aUlongPtr[i] ^= bUlongPtr[i];
-                            }
+                            XorMemoryInPlace(aPtr + aOff, bPtr + bOff, length);
                         }
                     }
                 }
-                var increment = ulongOps * sizeof (UInt64);
-                aOff += increment;
-                bOff += increment;
-                length = remainder;
             }
 #endif
 
@@ -225,6 +204,114 @@ namespace ObscurCore.Cryptography
                 a[aOff + i] ^= b[bOff + i];
             }
         }
+
+#if INCLUDE_UNSAFE
+        internal static unsafe void XorMemory(byte* a, byte* b, byte* output, int length)
+        {
+            if (StratCom.PlatformWordSize == sizeof(ulong)) { // 64-bit
+                while (length >= sizeof(ulong) * 2) {
+                    *(ulong*)output = *(ulong*)a ^ *(ulong*)b;
+                    output += sizeof(ulong);
+                    a += sizeof(ulong);
+                    *(ulong*)output = *(ulong*)a ^ *(ulong*)b;
+                    output += sizeof(ulong);
+                    a += sizeof(ulong);
+                    length -= sizeof(ulong) * 2;
+                }
+
+                if (length >= sizeof(ulong)) {
+                    *(ulong*)output = *(ulong*)a ^ *(ulong*)b;
+                    output += sizeof(ulong);
+                    a += sizeof(ulong);
+                    length -= sizeof(ulong);
+                }
+            } else if (StratCom.PlatformWordSize == sizeof(uint)) { // 32-bit
+                while (length >= sizeof(uint) * 2) {
+                    *(uint*)output = *(uint*)a ^ *(uint*)b;
+                    output += sizeof(uint);
+                    a += sizeof(uint);
+                    *(uint*)output = *(uint*)a ^ *(uint*)b;
+                    output += sizeof(uint);
+                    a += sizeof(uint);
+                    length -= sizeof(uint) * 2;
+                }
+            }
+
+            if (length >= sizeof(uint)) {
+                *(uint*)output = *(uint*)a ^ *(uint*)b;
+                output += sizeof(uint);
+                a += sizeof(uint);
+                length -= sizeof(uint);
+            }
+
+            if (length >= sizeof(ushort)) {
+                *(ushort*)output = (ushort)(*(ushort*)a ^ *(ushort*)b);
+                output += sizeof(ushort);
+                a += sizeof(ushort);
+                length -= sizeof(ushort);
+            }
+
+            if (length != 0) {
+                *output = (byte)(*a ^ *b);
+            }
+        }
+
+        /// <summary>
+        ///      XOR the specified data in <paramref name="b"/> into <paramref name="a"/> in-place.
+        /// </summary>
+        /// <param name="a">Pointer to source of and destination for data.</param>
+        /// <param name="b">Pointer to source of data.</param>
+        /// <param name="length">Length of data to copy in bytes.</param>
+        internal static unsafe void XorMemoryInPlace(byte* a, byte* b, int length)
+        {
+            if (StratCom.PlatformWordSize == sizeof(ulong)) { // 64-bit
+                while (length >= sizeof(ulong) * 2) {
+                    *(ulong*)a ^= *(ulong*)b;
+                    a += sizeof(ulong);
+                    b += sizeof(ulong);
+                    *(ulong*)a ^= *(ulong*)b;
+                    a += sizeof(ulong);
+                    b += sizeof(ulong);
+                    length -= sizeof(ulong) * 2;
+                }
+
+                if (length >= sizeof(ulong)) {
+                    *(ulong*)a ^= *(ulong*)b;
+                    a += sizeof(ulong);
+                    b += sizeof(ulong);
+                    length -= sizeof(ulong);
+                }
+            } else if (StratCom.PlatformWordSize == sizeof (uint)) { // 32-bit
+                while (length >= sizeof (uint) * 2) {
+                    *(uint*) a ^= *(uint*) b;
+                    a += sizeof (uint);
+                    b += sizeof (uint);
+                    *(uint*) a ^= *(uint*) b;
+                    a += sizeof (uint);
+                    b += sizeof (uint);
+                    length -= sizeof (uint) * 2;
+                }
+            }
+
+            if (length >= sizeof(uint)) {
+                *(uint*)a ^= *(uint*)b;
+                a += sizeof(uint);
+                b += sizeof(uint);
+                length -= sizeof(uint);
+            }
+
+            if (length >= sizeof(ushort)) {
+                *(ushort*)a ^= *(ushort*)b;
+                a += sizeof(ushort);
+                b += sizeof(ushort);
+                length -= sizeof(ushort);
+            }
+
+            if (length != 0) {
+                *a ^= *b;
+            }
+        }
+#endif
 
 
         /// <summary>
@@ -276,7 +363,7 @@ namespace ObscurCore.Cryptography
 #if INCLUDE_UNSAFE
             unsafe {
                 fixed (byte* ptr = data) {
-                    InternalWipe(ptr, offset, count);
+                    InternalWipe(ptr + offset, count);
                 }
             }
 #else
@@ -285,7 +372,7 @@ namespace ObscurCore.Cryptography
         }
 
 #if INCLUDE_UNSAFE
-        internal static unsafe void InternalWipe(byte* src, int offset, int length)
+        internal static unsafe void InternalWipe(byte* src, int length)
         {
             while (length >= 16) {
                 *(UInt64*) src = default(UInt64);
