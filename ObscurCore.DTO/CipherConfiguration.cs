@@ -123,7 +123,7 @@ namespace ObscurCore.DTO
                 int hashCode = Type.GetHashCode();
                 hashCode = (hashCode * 397) ^ CipherName.ToLowerInvariant().GetHashCode();
                 hashCode = (hashCode * 397) ^ KeySizeBits;
-                hashCode = (hashCode * 397) ^ (InitialisationVector != null ? InitialisationVector.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (InitialisationVector != null ? InitialisationVector.GetHashCodeExt() : 0);
                 hashCode = (hashCode * 397) ^ (ModeName != null ? ModeName.ToLowerInvariant().GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (BlockSizeBits != null ? BlockSizeBits.Value : 0);
                 hashCode = (hashCode * 397) ^ (PaddingName != null ? PaddingName.ToLowerInvariant().GetHashCode() : 0);

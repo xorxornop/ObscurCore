@@ -80,8 +80,8 @@ namespace ObscurCore.DTO
         {
             unchecked {
                 int hashCode = CipherName.ToLowerInvariant().GetHashCode();
-                hashCode = (hashCode * 397) ^ (Key != null ? Key.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Nonce != null ? Nonce.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Key != null ? Key.GetHashCodeExt() : 0);
+                hashCode = (hashCode * 397) ^ (Nonce != null ? Nonce.GetHashCodeExt() : 0);
                 return hashCode;
             }
         }

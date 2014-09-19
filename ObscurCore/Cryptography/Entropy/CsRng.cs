@@ -1,6 +1,6 @@
 ﻿
 
-using ObscurCore.Support.Random;
+using ObscurCore.Support.Entropy;
 
 namespace ObscurCore.Cryptography.Entropy
 {

@@ -22,7 +22,7 @@ namespace ObscurCore.DTO
     /// <summary>
     ///     An interface for a symmetric key.
     /// </summary>
-    public interface ISymmetricKey : IKeyPermissions, IPossessConfirmationCanary
+    public interface ISymmetricKey : ISymmetricKeyPermissions, IPossessConfirmationCanary
     {
         /// <summary>
         ///     Key for use in encryption or authentication schemes etc. after further derivation.

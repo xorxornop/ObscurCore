@@ -21,7 +21,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
     /// <summary>
     /// SOSEMANUK stream cipher implementation.
     /// </summary>
-    public sealed class SosemanukEngine : StreamCipherEngine, ICsprngCompatible
+    public sealed class SosemanukEngine : StreamCipherEngine, ICsPrngCompatible
     {
 		private const int BufferLen = 80;
 

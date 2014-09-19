@@ -31,8 +31,6 @@ namespace ObscurCore.Cryptography.KeyAgreement
     /// </remarks>
     public enum Sec2EllipticCurve
     {
-        None,
-
         /// <summary>
         ///     160-bit prime field curve over F(<sub>p</sub>)
         /// </summary>

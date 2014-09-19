@@ -22,36 +22,36 @@ namespace ObscurCore.DTO
     /// <summary>
     ///     An interface for an elliptic curve keypair.
     /// </summary>
-    public interface IECKeypair : IKeyPermissions, IPossessConfirmationCanary
+    public interface IECKeypair : IAsymmetricKeyPermissions, IPossessConfirmationCanary
     {
         /// <summary>
         ///     Name of the curve provider. 
         ///     Used to look up relevant domain parameters to decode 
         ///     <see cref="EncodedPublicKey"/> and <see cref="EncodedPrivateKey"/>.
         /// </summary>
-        string CurveProviderName { get; set; }
+        string CurveProviderName { get; }
 
         /// <summary>
         ///     Name of the elliptic curve in the <see cref="CurveProviderName"/> provider's selection. 
         ///     Used to look up relevant domain parameters to decode 
         ///     <see cref="EncodedPublicKey"/> and <see cref="EncodedPrivateKey"/>.
         /// </summary>
-        string CurveName { get; set; }
+        string CurveName { get; }
 
         /// <summary>
         ///     Encoded form of the public key.
         /// </summary>
-        byte[] EncodedPublicKey { get; set; }
+        byte[] EncodedPublicKey { get; }
 
         /// <summary>
         ///     Encoded form of the private key.
         /// </summary>
-        byte[] EncodedPrivateKey { get; set; }
+        byte[] EncodedPrivateKey { get; }
 
         /// <summary>
         ///     Any additional data required for the <see cref="EncodedPublicKey"/> 
         ///     and <see cref="EncodedPrivateKey"/> (for example, special formatting, if any).
         /// </summary>
-        byte[] AdditionalData { get; set; }
+        byte[] AdditionalData { get; }
     }
 }

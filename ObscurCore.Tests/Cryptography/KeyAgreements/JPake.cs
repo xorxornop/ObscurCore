@@ -14,7 +14,7 @@
 //    limitations under the License.
 
 using NUnit.Framework;
-
+using ObscurCore.Cryptography.Information;
 using ObscurCore.Cryptography.KeyAgreement;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.Authentication;

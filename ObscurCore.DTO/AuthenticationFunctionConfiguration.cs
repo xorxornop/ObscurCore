@@ -86,7 +86,7 @@ namespace ObscurCore.DTO
             return String.Equals(FunctionName, other.FunctionName, StringComparison.OrdinalIgnoreCase) && 
                 FunctionConfiguration != null ? 
                 FunctionConfiguration.SequenceEqualShortCircuiting(other.FunctionConfiguration) : Salt != null ? 
-                Salt.SequenceEqual(other.Salt) : AdditionalData == null || AdditionalData.SequenceEqualShortCircuiting(other.AdditionalData);
+                Salt.SequenceEqualShortCircuiting(other.Salt) : AdditionalData == null || AdditionalData.SequenceEqualShortCircuiting(other.AdditionalData);
         }
 
         /// <inheritdoc />
@@ -109,12 +109,12 @@ namespace ObscurCore.DTO
         {
             unchecked {
                 int hashCode = FunctionType.GetHashCode();
-                hashCode = (hashCode * 397) ^ FunctionName.ToUpperInvariant().GetHashCode();
-                hashCode = (hashCode * 397) ^ (FunctionConfiguration != null ? FunctionConfiguration.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ FunctionName.ToLowerInvariant().GetHashCode();
+                hashCode = (hashCode * 397) ^ (FunctionConfiguration != null ? FunctionConfiguration.GetHashCodeExt() : 0);
                 hashCode = (hashCode * 397) ^ (KeySizeBits.HasValue ? KeySizeBits.Value.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Nonce != null ? Nonce.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Salt != null ? Salt.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (AdditionalData != null ? AdditionalData.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Nonce != null ? Nonce.GetHashCodeExt() : 0);
+                hashCode = (hashCode * 397) ^ (Salt != null ? Salt.GetHashCodeExt() : 0);
+                hashCode = (hashCode * 397) ^ (AdditionalData != null ? AdditionalData.GetHashCodeExt() : 0);
                 return hashCode;
             }
         }
@@ -123,10 +123,10 @@ namespace ObscurCore.DTO
         public AuthenticationFunctionConfiguration CloneSafely()
         {
             return new AuthenticationFunctionConfiguration {
-                FunctionType = this.FunctionType,
-                FunctionName = String.Copy(this.FunctionName),
-                FunctionConfiguration = this.FunctionConfiguration.DeepCopy(),
-                KeySizeBits = this.KeySizeBits,
+                FunctionType = FunctionType,
+                FunctionName = String.Copy(FunctionName),
+                FunctionConfiguration = FunctionConfiguration.DeepCopy(),
+                KeySizeBits = KeySizeBits,
                 Nonce = null,
                 Salt = null,
                 AdditionalData = null

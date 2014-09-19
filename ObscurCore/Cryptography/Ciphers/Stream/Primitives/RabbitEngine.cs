@@ -19,7 +19,7 @@ using ObscurCore.Cryptography.Support;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
-	public sealed class RabbitEngine : StreamCipherEngine, ICsprngCompatible
+	public sealed class RabbitEngine : StreamCipherEngine, ICsPrngCompatible
     {
 		private static uint[] A = new uint[] { 0x4D34D34D, 0xD34D34D3, 0x34D34D34, 0x4D34D34D, 
                                                0xD34D34D3, 0x34D34D34, 0x4D34D34D, 0xD34D34D3 };

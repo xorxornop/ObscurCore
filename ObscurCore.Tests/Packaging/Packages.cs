@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using ObscurCore.Cryptography.KeyAgreement;
+using ObscurCore.Packaging.Multiplexing;
 using ObscurCore.Tests.Cryptography;
 using ObscurCore.Packaging;
 
@@ -87,6 +89,13 @@ namespace ObscurCore.Tests.Packaging
         {
             UM1PackageTest("UM1FrameshiftSmallPackage", IOTestBase.SmallTextFileList, PayloadLayoutScheme.Frameshift);
         }
+
+        [Test]
+        public void UM1FrameshiftSmallPackagePrecomputedPayload()
+        {
+            UM1PackageTest("UM1FrameshiftSmallPackage", IOTestBase.SmallTextFileList, PayloadLayoutScheme.Frameshift, true);
+        }
+
 #if INCLUDE_FABRIC
 		[Test]
 		public void UM1FabricPackage() {
@@ -98,12 +107,12 @@ namespace ObscurCore.Tests.Packaging
         {
             UM1PackageTest("UM1FrameshiftDirectoryPackage", IOTestBase.LargeBinaryFilesSourceDirectory, PayloadLayoutScheme.Frameshift);
         }
-        private static void UM1PackageTest(string testName, List<FileInfo> data, PayloadLayoutScheme scheme)
+        private static void UM1PackageTest(string testName, List<FileInfo> data, PayloadLayoutScheme scheme, bool precomputed = false)
         {
             // Process of writing destroys sender and receiver key variables passed in for security
             // We must copy it to a local variable before reading the package back
-            var senderKeyEnumerated = KeyProviders.Alice.EcKeypairs.ElementAt(
-                StratCom.EntropySupplier.Next(KeyProviders.Alice.EcKeypairs.Count()));
+            int senderKeyIndex = StratCom.EntropySupplier.Next(KeyProviders.Alice.EcKeypairs.Count());
+            var senderKeyEnumerated = KeyProviders.Alice.EcKeypairs.ElementAt(senderKeyIndex);
             var receiverKeyEnumerated = KeyProviders.Bob.EcKeypairs.First(
                 keypair => keypair.CurveName.Equals(senderKeyEnumerated.CurveName));
 
@@ -114,9 +123,15 @@ namespace ObscurCore.Tests.Packaging
             using (var ms = new MemoryStream(expLen)) {
                 var sw = Stopwatch.StartNew();
                 var packageWriter = new PackageWriter(senderKeyEnumerated, receiverKeyEnumerated, scheme);
+
                 foreach (var file in data) {
                     packageWriter.AddFile(file.FullName);
                 }
+
+                if (scheme == PayloadLayoutScheme.Frameshift && precomputed) {
+                    packageWriter.SetPayloadConfiguration(PayloadLayoutConfigurationFactory.CreateFrameshiftPrecomputedVariable(data.Count));
+                }
+
                 packageWriter.Write(ms, false);
                 sw.Stop();
                 enc = sw.Elapsed;

@@ -17,10 +17,11 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
+using ObscurCore.Cryptography.Ciphers;
+using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Entropy.Primitives;
-using ObscurCore.Support.Random;
 
 namespace ObscurCore.Tests.Cryptography.Entropy
 {
@@ -29,10 +30,18 @@ namespace ObscurCore.Tests.Cryptography.Entropy
     {
 		private const int Iterations = 10000000; // 10,000,000 (10 million)
 
+        private static StreamCsPrng GetEngine(CsPseudorandomNumberGenerator cipher)
+        {
+            var config = CsPrngFactory.CreateStreamCipherCsprngConfiguration(cipher);
+            var engine = CipherFactory.CreateStreamCipher(config.CipherName.ToEnum<StreamCipher>());
+
+            return new StreamCsPrng(engine, config.Key, config.Nonce);
+        }
+
         [Test]
-        public void SOSEMANUK_Int32 () {
-            var generator = new StreamCsprng(new SosemanukEngine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
-                    CsPseudorandomNumberGenerator.Sosemanuk));
+        public void SOSEMANUK_Int32 ()
+        {
+            var generator = GetEngine(CsPseudorandomNumberGenerator.Sosemanuk);
             TimeSpan time;
             double average;
 
@@ -48,8 +57,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         [Test]
         public void SOSEMANUK_UInt32 () {
-            var generator = new StreamCsprng(new SosemanukEngine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
-                    CsPseudorandomNumberGenerator.Sosemanuk));
+            var generator = GetEngine(CsPseudorandomNumberGenerator.Sosemanuk);
             TimeSpan time;
             double average;
 
@@ -65,8 +73,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         [Test]
         public void Salsa20_Int32 () {
-			var generator = new StreamCsprng(new Salsa20Engine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
-                    CsPseudorandomNumberGenerator.Salsa20));
+            var generator = GetEngine(CsPseudorandomNumberGenerator.Salsa20);
             TimeSpan time;
             double average;
 
@@ -82,8 +89,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
 
         [Test]
         public void Salsa20_UInt32 () {
-            var generator = new StreamCsprng(new Salsa20Engine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
-                    CsPseudorandomNumberGenerator.Salsa20));
+            var generator = GetEngine(CsPseudorandomNumberGenerator.Salsa20);
             TimeSpan time;
             double average;
 
@@ -100,8 +106,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
         [Test]
         public void Rabbit_Int32()
         {
-            var generator = new StreamCsprng(new RabbitEngine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
-                    CsPseudorandomNumberGenerator.Rabbit));
+            var generator = GetEngine(CsPseudorandomNumberGenerator.Rabbit);
             TimeSpan time;
             double average;
 
@@ -118,8 +123,7 @@ namespace ObscurCore.Tests.Cryptography.Entropy
         [Test]
         public void Rabbit_UInt32()
         {
-            var generator = new StreamCsprng(new RabbitEngine(), CsPrngFactory.CreateStreamCipherCsprngConfiguration(
-                    CsPseudorandomNumberGenerator.Rabbit));
+            var generator = GetEngine(CsPseudorandomNumberGenerator.Rabbit);
             TimeSpan time;
             double average;
 

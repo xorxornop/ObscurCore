@@ -19,8 +19,9 @@
 
 using System;
 using ObscurCore.Cryptography.Entropy;
+using ObscurCore.Cryptography.Information;
+using ObscurCore.Cryptography.Information.EllipticCurve;
 using ObscurCore.Cryptography.KeyAgreement;
-using ObscurCore.Cryptography.KeyAgreement.Information;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve;

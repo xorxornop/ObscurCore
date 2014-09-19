@@ -26,16 +26,16 @@ namespace ObscurCore.Cryptography.KeyDerivation
 	public sealed class Pbkdf2Module : IKdfFunction
 	{
 		private readonly int _outputSize, _iterations;
-//	    private string _algorithm;
+	    private HashFunction _function;
 
         public const int DefaultIterations = 32768, MinimumIterations = 512, MaximumIterations = 1048576;
-		internal const string DefaultAlgorithm = "HMACSHA256";
+		internal const HashFunction DefaultFunction = HashFunction.Sha256;
 		
 		public Pbkdf2Module (int outputSize, byte[] config) {
 			_outputSize = outputSize;
 		    var configObj = config.DeserialiseDto<Pbkdf2Configuration>();
 		    _iterations = configObj.Iterations;
-//		    _algorithm = pbkdf2Config.AlgorithmName;
+		    _function = configObj.FunctionName.ToEnum<HashFunction>();
 		}
 		
 		#region IKDFModule implementation
@@ -61,8 +61,8 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		#endregion
 		
 		private static byte[] DeriveKey (byte[] key, byte[] salt, int outputSize, int iterations) {
-			var hmac = AuthenticatorFactory.CreateHmacPrimitive (HashFunction.Sha256, key, null);
-			return Pbkdf2.ComputeDerivedKey (hmac, salt, iterations, outputSize);
+			var hmac = AuthenticatorFactory.CreateHmacPrimitive(DefaultFunction, key, null);
+			return Pbkdf2.ComputeDerivedKey(hmac, salt, iterations, outputSize);
 		}
 		
 		public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, byte[] config) {
@@ -71,9 +71,8 @@ namespace ObscurCore.Cryptography.KeyDerivation
 		}
 
         public static byte[] DeriveKeyWithConfig(byte[] key, byte[] salt, int outputSize, Pbkdf2Configuration config) {
-			if(!config.AlgorithmName.Equals(DefaultAlgorithm)) throw new ArgumentException();
-			var hmac = AuthenticatorFactory.CreateHmacPrimitive (HashFunction.Sha256, key, null);
-			return Pbkdf2.ComputeDerivedKey (hmac, salt, config.Iterations, outputSize);
+			var hmac = AuthenticatorFactory.CreateHmacPrimitive(config.FunctionName.ToEnum<HashFunction>(), key, null);
+			return Pbkdf2.ComputeDerivedKey(hmac, salt, config.Iterations, outputSize);
 		}
 	}
 }

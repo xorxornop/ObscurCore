@@ -19,7 +19,7 @@ using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Entropy.Primitives;
 using ObscurCore.DTO;
-using ObscurCore.Support.Random;
+using ObscurCore.Support.Entropy;
 using ProtoBuf;
 
 namespace ObscurCore

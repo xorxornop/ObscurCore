@@ -24,8 +24,6 @@ namespace ObscurCore.Cryptography.KeyAgreement
     /// </summary>
     public enum BrainpoolEllipticCurve
     {
-        None,
-
         /// <summary>
         ///     160-bit prime field curve over F(<sub>p</sub>)
         /// </summary>

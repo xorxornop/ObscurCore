@@ -41,6 +41,8 @@
       </CustomCommands>
     </CustomCommands>
     <DocumentationFile>bin\Release\ObscurCore.DTO.XML</DocumentationFile>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
@@ -53,6 +55,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="protobuf-net">
@@ -62,15 +66,17 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsymmetricKeyUsePermission.cs" />
     <Compile Include="ECKey.cs" />
     <Compile Include="ECKeypair.cs" />
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="IAsymmetricKeyPermissions.cs" />
     <Compile Include="IAuthenticationFunctionConfiguration.cs" />
     <Compile Include="ICipherConfiguration.cs" />
     <Compile Include="ICloneableSafely.cs" />
     <Compile Include="IECKey.cs" />
     <Compile Include="IECKeypair.cs" />
-    <Compile Include="IKeyPermissions.cs" />
+    <Compile Include="ISymmetricKeyPermissions.cs" />
     <Compile Include="IKeyDerivationConfiguration.cs" />
     <Compile Include="IManifest.cs" />
     <Compile Include="IManifestHeader.cs" />
@@ -80,7 +86,8 @@
     <Compile Include="ISymmetricKey.cs" />
     <Compile Include="IUm1HybridManifestCryptographyConfiguration.cs" />
     <Compile Include="KeyUseContextPermission.cs" />
-    <Compile Include="KeyUsePermission.cs" />
+    <Compile Include="SymmetricKeyUsePermission.cs" />
+    <Compile Include="PayloadMuxEntropyScheme.cs" />
     <Compile Include="RangeConfiguration.cs" />
     <Compile Include="SymmetricKey.cs" />
     <Compile Include="AuthenticationFunctionType.cs" />

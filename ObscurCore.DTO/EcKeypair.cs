@@ -70,7 +70,7 @@ namespace ObscurCore.DTO
         ///     Types of use for which the key is allowed (operations).
         /// </summary>
         [ProtoMember(6, IsRequired = false)]
-        public KeyUsePermission UsePermissions { get; set; }
+        public AsymmetricKeyUsePermission UsePermissions { get; set; }
 
         /// <summary>
         ///     Use contexts for which the key is allowed (environment).
@@ -182,10 +182,10 @@ namespace ObscurCore.DTO
             unchecked {
                 int hashCode = CurveProviderName.ToLowerInvariant().GetHashCode();
                 hashCode = (hashCode * 397) ^ CurveName.ToLowerInvariant().GetHashCode();
-                hashCode = (hashCode * 397) ^ EncodedPublicKey.GetHashCode();
-                hashCode = (hashCode * 397) ^ (EncodedPrivateKey != null ? EncodedPrivateKey.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (AdditionalData != null ? AdditionalData.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (ConfirmationCanary != null ? ConfirmationCanary.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ EncodedPublicKey.GetHashCodeExt();
+                hashCode = (hashCode * 397) ^ (EncodedPrivateKey != null ? EncodedPrivateKey.GetHashCodeExt() : 0);
+                hashCode = (hashCode * 397) ^ (AdditionalData != null ? AdditionalData.GetHashCodeExt() : 0);
+                hashCode = (hashCode * 397) ^ (ConfirmationCanary != null ? ConfirmationCanary.GetHashCodeExt() : 0);
                 return hashCode;
             }
         }

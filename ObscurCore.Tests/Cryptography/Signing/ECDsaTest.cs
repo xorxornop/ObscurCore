@@ -1,27 +1,28 @@
 ﻿#region License
 
-// 	Copyright 2014-2014 Matthew Ducker
-// 	
-// 	Licensed under the Apache License, Version 2.0 (the "License");
-// 	you may not use this file except in compliance with the License.
-// 	
-// 	You may obtain a copy of the License at
-// 		
-// 		http://www.apache.org/licenses/LICENSE-2.0
-// 	
-// 	Unless required by applicable law or agreed to in writing, software
-// 	distributed under the License is distributed on an "AS IS" BASIS,
-// 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// 	See the License for the specific language governing permissions and 
-// 	limitations under the License.
+//  	Copyright 2013-2014 Matthew Ducker
+//  	
+//  	Licensed under the Apache License, Version 2.0 (the "License");
+//  	you may not use this file except in compliance with the License.
+//  	
+//  	You may obtain a copy of the License at
+//  		
+//  		http://www.apache.org/licenses/LICENSE-2.0
+//  	
+//  	Unless required by applicable law or agreed to in writing, software
+//  	distributed under the License is distributed on an "AS IS" BASIS,
+//  	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  	See the License for the specific language governing permissions and 
+//  	limitations under the License.
 
 #endregion
 
 using NUnit.Framework;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Authentication.Primitives;
+using ObscurCore.Cryptography.Information;
+using ObscurCore.Cryptography.Information.EllipticCurve;
 using ObscurCore.Cryptography.KeyAgreement;
-using ObscurCore.Cryptography.KeyAgreement.Information;
 using ObscurCore.Cryptography.Signing.Primitives;
 using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.DTO;
@@ -30,8 +31,9 @@ using ObscurCore.Support;
 namespace ObscurCore.Tests.Cryptography.Signing
 {
     /// <summary>
-    ///     Tests are taken from RFC 6979 - 
-    ///     "Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)".
+    ///     Tests are taken from RFC 6979 -
+    ///     "Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm
+    ///     (ECDSA)".
     /// </summary>
     internal class ECDsaTest
     {
@@ -302,23 +304,42 @@ namespace ObscurCore.Tests.Cryptography.Signing
 
             DoTestHMacDetECDsaSample(
                 new Sha512Digest(),
-                privKey, new BigInteger("1C26F40D940A7EAA0EB1E62991028057D91FEDA0366B606F6C434C361F04E545" +
-                                        "A6A51A435E26416F6838FFA260C617E798E946B57215284182BE55F29A355E60" +
-                                        "24FE32A47289CF0", 16),
+                privKey,
+                new BigInteger("1C26F40D940A7EAA0EB1E62991028057D91FEDA0366B606F6C434C361F04E545" +
+                               "A6A51A435E26416F6838FFA260C617E798E946B57215284182BE55F29A355E60" +
+                               "24FE32A47289CF0", 16),
                 new BigInteger("3691DE4369D921FE94EDDA67CB71FBBEC9A436787478063EB1CC778B3DCDC1C4" +
                                "162662752D28DEEDF6F32A269C82D1DB80C87CE4D3B662E03AC347806E3F19D1" +
                                "8D6D4DE7358DF7E", 16));
             DoTestHMacDetECDsaTest(
                 new Sha512Digest(),
-                privKey, new BigInteger("2AA1888EAB05F7B00B6A784C4F7081D2C833D50794D9FEAF6E22B8BE728A2A90" +
-                                        "BFCABDC803162020AA629718295A1489EE7ED0ECB8AAA197B9BDFC49D18DDD78" +
-                                        "FC85A48F9715544", 16),
+                privKey,
+                new BigInteger("2AA1888EAB05F7B00B6A784C4F7081D2C833D50794D9FEAF6E22B8BE728A2A90" +
+                               "BFCABDC803162020AA629718295A1489EE7ED0ECB8AAA197B9BDFC49D18DDD78" +
+                               "FC85A48F9715544", 16),
                 new BigInteger("0AA5371FE5CA671D6ED9665849C37F394FED85D51FEF72DA2B5F28EDFB2C6479" +
                                "CA63320C19596F5E1101988E2C619E302DD05112F47E8823040CE540CD3E90DC" +
                                "F41DBC461744EE9", 16));
         }
 
         #endregion
+
+        [Test]
+        public void DJB_Ed25519_SHA256()
+        {
+            byte[] data = TEST;
+
+            var digest = new Sha256Digest();
+            var m = new byte[digest.DigestSize];
+            digest.BlockUpdate(data, 0, data.Length);
+            digest.DoFinal(m, 0);
+
+            ECKeypair keypair = KeypairFactory.GenerateECKeypair(DjbCurve.Ed25519.ToString());
+            byte[] sig = Ed25519.Sign(m, keypair.EncodedPrivateKey);
+            bool good = Ed25519.Verify(sig, m, keypair.EncodedPublicKey);
+
+            Assert.IsTrue(good);
+        }
 
         private static ECKey GetPrivKey(EcCurveInformation curve, string encodedKey)
         {
