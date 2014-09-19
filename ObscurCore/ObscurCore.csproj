@@ -40,6 +40,8 @@
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\Release\ObscurCore.XML</DocumentationFile>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
     <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
@@ -51,6 +53,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\ReleaseWithUnsafe\ObscurCore.xml</DocumentationFile>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -100,19 +104,20 @@
     <Compile Include="Cryptography\Entropy\CsprngInformationStore.cs" />
     <Compile Include="Cryptography\Entropy\CsRng.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\ReversedRandomWindowRng.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Information\CustomFpEcNamedCurveInformation.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Information\EllipticCurveInformation.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Information\FpEcNamedCurveInformation.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Information\TpbF2mEcNamedCurveInformation.cs" />
+    <Compile Include="Cryptography\Information\EllipticCurve\CustomFpEcNamedCurveInformation.cs" />
+    <Compile Include="Cryptography\Information\EllipticCurve\DjbEcInformation.cs" />
+    <Compile Include="Cryptography\Information\EllipticCurve\EcCurveInformation.cs" />
+    <Compile Include="Cryptography\Information\EllipticCurve\FpEcNamedCurveInformation.cs" />
+    <Compile Include="Cryptography\Information\EllipticCurve\TpbF2mEcNamedCurveInformation.cs" />
     <Compile Include="Cryptography\KeyDerivation\KdfInformationStore.cs" />
     <Compile Include="Cryptography\RotationExtensions.cs" />
     <Compile Include="Cryptography\Signing\IDsa.cs" />
     <Compile Include="Cryptography\Signing\Primitives\HmacDsaKCalculator.cs" />
     <Compile Include="Cryptography\Signing\Primitives\IDsaKCalculator.cs" />
     <Compile Include="Cryptography\Signing\Primitives\RandomDsaKCalculator.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\sc_clamp.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IStreamDecorator.cs" />
-    <Compile Include="Packaging\ContentTreeNode.cs" />
     <Compile Include="Cryptography\Authentication\IDigest.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Blake2BDigest.cs" />
@@ -159,8 +164,8 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\ScaleXPointMap.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\ScaleYPointMap.cs" />
     <Compile Include="Cryptography\Support\Pack.cs" />
-    <Compile Include="Packaging\DirectoryTreeNode.cs" />
-    <Compile Include="ItemKeyMissingException.cs" />
+    <Compile Include="IStreamDecoratorPassthrough.cs" />
+    <Compile Include="Packaging\ItemKeyMissingException.cs" />
     <Compile Include="Cryptography\KeyAgreement\Sec2EllipticCurve.cs" />
     <Compile Include="Cryptography\Entropy\ICsprngCompatible.cs" />
     <Compile Include="Cryptography\Entropy\CsPseudorandomNumberGenerator.cs" />
@@ -179,9 +184,11 @@
     <Compile Include="Cryptography\Authentication\Information\HashFunctionInformation.cs" />
     <Compile Include="Cryptography\KeyDerivation\Information\KdfInformation.cs" />
     <Compile Include="Cryptography\Authentication\Information\MacFunctionInformation.cs" />
-    <Compile Include="ItemStreamBindingAbsentException.cs" />
-    <Compile Include="Packaging\FabricStripeMode.cs" />
-    <Compile Include="Packaging\FrameshiftPaddingMode.cs" />
+    <Compile Include="Packaging\ItemStreamBindingAbsentException.cs" />
+    <Compile Include="Packaging\Multiplexing\Entropy\CsprngMuxEntropySource.cs" />
+    <Compile Include="Packaging\Multiplexing\Entropy\StreamCipherCsprngMuxEntropySource.cs" />
+    <Compile Include="Packaging\Multiplexing\FabricStripeMode.cs" />
+    <Compile Include="Packaging\Multiplexing\FrameshiftPaddingMode.cs" />
     <Compile Include="Cryptography\Ciphers\Information\CipherInformation.cs" />
     <Compile Include="Cryptography\Ciphers\Information\BlockCipherModeInformation.cs" />
     <Compile Include="Cryptography\Ciphers\Information\BlockCipherPaddingInformation.cs" />
@@ -196,27 +203,32 @@
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\Salsa20Engine.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\SosemanukEngine.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\DigestCsRng.cs" />
-    <Compile Include="Cryptography\Entropy\Primitives\ReversedWindowRng.cs" />
+    <Compile Include="Cryptography\Entropy\Primitives\ReversedWindowCsRng.cs" />
+    <Compile Include="Packaging\Multiplexing\Entropy\IMuxEntropySource.cs" />
+    <Compile Include="Packaging\Multiplexing\Entropy\MuxEntropySourceFacade.cs" />
+    <Compile Include="Packaging\Parsing\ContentTreeNode.cs" />
+    <Compile Include="Packaging\Parsing\DirectoryTreeNode.cs" />
+    <Compile Include="Packaging\Parsing\PayloadTree.cs" />
+    <Compile Include="Packaging\Parsing\TreeNode.cs" />
+    <Compile Include="Packaging\Multiplexing\Entropy\PreallocatedMuxEntropySource.cs" />
     <Compile Include="SerialisationExtensions.cs" />
     <Compile Include="StreamExtensions.cs" />
-    <Compile Include="Support\Random\Rng.cs" />
-    <Compile Include="Support\Random\ThreadedSeedRng.cs" />
-    <Compile Include="Cryptography\Entropy\Primitives\StreamCsprng.cs" />
+    <Compile Include="Support\Entropy\Rng.cs" />
+    <Compile Include="Support\Entropy\ThreadedSeedRng.cs" />
+    <Compile Include="Cryptography\Entropy\Primitives\StreamCsPrng.cs" />
     <Compile Include="Cryptography\KeyAgreement\BrainpoolEllipticCurve.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Primitives\UM1Exchange.cs" />
+    <Compile Include="Cryptography\KeyAgreement\Primitives\Um1Exchange.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Helper.cs" />
     <Compile Include="DecoratingStream.cs" />
     <Compile Include="EventArgs.cs" />
-    <Compile Include="Support\Random\XorShift1204Star.cs" />
-    <Compile Include="Packaging\PayloadLayoutConfigurationFactory.cs" />
-    <Compile Include="Packaging\PayloadLayoutScheme.cs" />
-    <Compile Include="Packaging\FabricPayloadMux.cs" />
-    <Compile Include="Packaging\FrameshiftPayloadMux.cs" />
-    <Compile Include="Packaging\PayloadTree.cs" />
-    <Compile Include="Support\Random\PseudorandomNumberGenerator.cs" />
-    <Compile Include="Packaging\SimplePayloadMux.cs" />
+    <Compile Include="Support\Entropy\XorShift1204Star.cs" />
+    <Compile Include="Packaging\Multiplexing\PayloadLayoutConfigurationFactory.cs" />
+    <Compile Include="Packaging\Multiplexing\PayloadLayoutScheme.cs" />
+    <Compile Include="Packaging\Multiplexing\Primitives\FabricPayloadMux.cs" />
+    <Compile Include="Packaging\Multiplexing\Primitives\FrameshiftPayloadMux.cs" />
+    <Compile Include="Support\Entropy\PseudorandomNumberGenerator.cs" />
+    <Compile Include="Packaging\Multiplexing\Primitives\SimplePayloadMux.cs" />
     <Compile Include="Cryptography\Ciphers\Information\PaddingRequirement.cs" />
-    <Compile Include="Packaging\TreeNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StratCom.cs" />
     <Compile Include="Cryptography\Entropy\CsPrng.cs" />
@@ -247,7 +259,6 @@
     <Compile Include="Cryptography\KeyDerivation\ScryptModule.cs" />
     <Compile Include="Cryptography\KeyDerivation\Pbkdf2Module.cs" />
     <Compile Include="ConfigurationInvalidException.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Primitives\Curve25519HansWolff.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Poly1305Mac.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\StreamCipherWrapper.cs" />
     <Compile Include="Cryptography\Ciphers\Information\NoncePolicy.cs" />
@@ -256,7 +267,7 @@
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigest.cs" />
     <None Include="Cryptography\Authentication\MacSizeException.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Utility.cs" />
-    <Compile Include="Packaging\PayloadMux.cs" />
+    <Compile Include="Packaging\Multiplexing\PayloadMux.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Pbkdf2.cs" />
     <Compile Include="Cryptography\KeyDerivation\Primitives\Scrypt.cs" />
     <Compile Include="DataLengthException.cs" />
@@ -270,9 +281,9 @@
     <Compile Include="Support\BufferedDecoder.cs" />
     <Compile Include="Support\BufferedEncoder.cs" />
     <Compile Include="Support\ITranslator.cs" />
-    <Compile Include="Support\Random\Prng.cs" />
-    <Compile Include="Support\Random\XorShift128PlusPrng.cs" />
-    <Compile Include="Support\Random\XorShiftPrng.cs" />
+    <Compile Include="Support\Entropy\Prng.cs" />
+    <Compile Include="Support\Entropy\XorShift128PlusPrng.cs" />
+    <Compile Include="Support\Entropy\XorShiftPrng.cs" />
     <Compile Include="Support\UrlBase64.cs" />
     <Compile Include="Support\UrlBase64Encoder.cs" />
     <Compile Include="Support\Base64.cs" />
@@ -301,56 +312,55 @@
     <Compile Include="Cryptography\Support\Math\Field\IPolynomial.cs" />
     <Compile Include="Cryptography\Support\Math\Field\IPolynomialExtensionField.cs" />
     <Compile Include="Cryptography\Support\Math\Field\PrimeField.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\base.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\base2.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\d.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\d2.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_0.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_1.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_add.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_cmov.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_cswap.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_frombytes.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_invert.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_isnegative.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_isnonzero.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_mul.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_mul121666.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_neg.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_pow22523.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_sq.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_sq2.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_sub.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\fe_tobytes.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\FieldElement.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_add.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_double_scalarmult.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_frombytes.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_madd.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_msub.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_p1p1_to_p2.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_p1p1_to_p3.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_p2_0.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_p2_dbl.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_p3_0.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_p3_dbl.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_p3_to_cached.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_p3_to_p2.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_p3_tobytes.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_precomp_0.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_scalarmult_base.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_sub.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\ge_tobytes.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\GroupElement.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\keypair.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\open.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\sc_mul_add.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\sc_reduce.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\scalarmult.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\sign.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519Ref10\sqrtm1.cs" />
-    <None Include="Cryptography\Signing\Primitives\Ed25519.cs" />
-    <None Include="Cryptography\KeyAgreement\Primitives\MontgomeryCurve25519.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\base.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\base2.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\d.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\d2.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_0.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_1.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_add.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_cmov.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_cswap.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_frombytes.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_invert.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_isnegative.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_isnonzero.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_mul.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_mul121666.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_neg.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_pow22523.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_sq.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_sq2.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_sub.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\fe_tobytes.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\FieldElement.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_add.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_double_scalarmult.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_frombytes.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_madd.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_msub.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_p1p1_to_p2.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_p1p1_to_p3.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_p2_0.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_p2_dbl.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_p3_0.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_p3_dbl.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_p3_to_cached.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_p3_to_p2.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_p3_tobytes.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_precomp_0.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_scalarmult_base.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_sub.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\ge_tobytes.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\GroupElement.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\keypair.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\open.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\sc_mul_add.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\sc_reduce.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\scalarmult.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\sign.cs" />
+    <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\sqrtm1.cs" />
+    <Compile Include="Cryptography\Signing\Primitives\Ed25519.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\AbstractECMultiplier.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\DoubleAddMultiplier.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\MixedNafR2LMultiplier.cs" />
@@ -397,20 +407,20 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP521R1Field.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP521R1FieldElement.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\SEC\SecP521R1Point.cs" />
-    <Compile Include="Cryptography\KeyAgreement\Information\PpbF2mEcNamedCurveInformation.cs" />
+    <Compile Include="Cryptography\Information\EllipticCurve\PpbF2mEcNamedCurveInformation.cs" />
     <Compile Include="IPrimitiveInformation.cs" />
-    <Compile Include="Cryptography\KeyAgreement\EcInformationStore.cs" />
+    <Compile Include="Cryptography\Information\EcInformationStore.cs" />
     <Compile Include="Cryptography\KeyAgreement\DjbCurve.cs" />
     <None Include="Cryptography\Ciphers\CipherKeyFactory.cs" />
-    <Compile Include="PackageWriter.cs" />
-    <Compile Include="PackageReader.cs" />
+    <Compile Include="Packaging\PackageWriter.cs" />
+    <Compile Include="Packaging\PackageReader.cs" />
     <Compile Include="Cryptography\KeyAgreement\Primitives\ECJpakeSession.cs" />
     <Compile Include="Cryptography\Signing\Primitives\ECDsaSigner.cs" />
     <Compile Include="Cryptography\KeyAgreement\KeyAgreementFactory.cs" />
     <Compile Include="Cryptography\KeyAgreement\KeypairFactory.cs" />
     <Compile Include="Cryptography\KeyDerivation\KeyStretchingUtility.cs" />
     <Compile Include="Cryptography\IKeyProvider.cs" />
-    <Compile Include="Packaging\PayloadMultiplexerFactory.cs" />
+    <Compile Include="Packaging\Multiplexing\PayloadMultiplexerFactory.cs" />
     <Compile Include="Cryptography\Authentication\AuthenticatorFactory.cs" />
     <Compile Include="Cryptography\Ciphers\CipherFactory.cs" />
     <Compile Include="Cryptography\KeyDerivation\KdfFactory.cs" />
@@ -448,9 +458,7 @@
       <Name>ObscurCore.DTO</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Information\" />
-  </ItemGroup>
+  <ItemGroup />
   <ProjectExtensions>
     <MonoDevelop>
       <Properties>

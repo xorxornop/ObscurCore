@@ -14,7 +14,7 @@
 //    limitations under the License.
 
 using System;
-using ObscurCore.Support.Random;
+using ObscurCore.Support.Entropy;
 
 namespace ObscurCore.Cryptography.Entropy.Primitives
 {
@@ -27,41 +27,36 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
     /// </remarks>
     public sealed class ReversedRandomWindowRng : CsRng
     {
-        private readonly Rng _rng;
+        private readonly CsRng _csRng;
 
         private readonly int _maxWindowSize;
 
         public ReversedRandomWindowRng(
-            Rng rng,
+            CsRng csRng,
             int maxWindowSize)
         {
-            if (rng == null) {
-                throw new ArgumentNullException("rng");
+            if (csRng == null) {
+                throw new ArgumentNullException("csRng");
             }
             if (maxWindowSize < 2) {
                 throw new ArgumentException("Maximum window size must be at least 2", "maxWindowSize");
             }
 
-            _rng = rng;
+            _csRng = csRng;
             _maxWindowSize = maxWindowSize;
         }
 
-        public Rng BaseRng
+        public Rng BaseCsRng
         {
-            get { return _rng; }
+            get { return _csRng; }
         }
 
         /// <inheritdoc />
         public override void AddSeedMaterial(
             byte[] seed)
         {
-            var rng = _rng as CsRng;
-            if (rng != null) {
-                lock (this) {
-                    rng.AddSeedMaterial(seed);
-                }
-            } else {
-                throw new InvalidOperationException("CSRNG was initialised with RNG, not CSRNG. Cannot add seed material.");
+            lock (this) {
+                _csRng.AddSeedMaterial(seed);
             }
         }
 
@@ -72,10 +67,10 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             int count)
         {
             lock (this) {
-                _rng.NextBytes(buffer, offset, count);
+                _csRng.NextBytes(buffer, offset, count);
                 var maxWindow = Math.Min(count, _maxWindowSize);
-                var windowOffset = _rng.Next(maxWindow + 1);
-                var windowSize = _rng.Next(count - windowOffset);
+                var windowOffset = _csRng.Next(maxWindow + 1);
+                var windowSize = _csRng.Next(count - windowOffset);
                 Array.Reverse(buffer, offset + windowOffset, windowSize);
             }
         }

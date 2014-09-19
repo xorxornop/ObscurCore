@@ -13,21 +13,19 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-
-
 using NUnit.Framework;
-using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.DTO;
 
-namespace ObscurCore.Tests.Cryptography
+namespace ObscurCore.Tests.Cryptography.Ciphers
 {
-    public abstract class CipherTestBase : IOTestBase
+    internal abstract class CipherTestBase : IOTestBase
     {
 		private static Random Rng = new Random();
 		protected static byte[] CreateRandomByteArray (int lengthBits) {
@@ -233,7 +231,7 @@ namespace ObscurCore.Tests.Cryptography
 				encryptionElapsed.TotalMilliseconds, encSpeed, decryptionElapsed.TotalMilliseconds, decSpeed);
         }
 
-		protected static bool StreamsContentMatches (Stream a, Stream b, int length, out int failurePosition) {
+		protected static bool StreamsContentMatches (System.IO.Stream a, System.IO.Stream b, int length, out int failurePosition) {
 			for (var i = 0; i < length; i++) {
 			    if (a.ReadByte() == b.ReadByte()) continue;
 			    failurePosition = i;

@@ -15,15 +15,12 @@
 
 using System;
 using NUnit.Framework;
-using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.Cryptography.Ciphers.Block;
-using ObscurCore.Cryptography.Ciphers.Block.Modes;
-using ObscurCore.Cryptography.Ciphers.Block.Padding;
 
 namespace ObscurCore.Tests.Cryptography.Ciphers
 {
-	public abstract class BlockCipherTestBase : CipherTestBase
+	internal abstract class BlockCipherTestBase : CipherTestBase
 	{
 		protected BlockCipher Cipher;
 

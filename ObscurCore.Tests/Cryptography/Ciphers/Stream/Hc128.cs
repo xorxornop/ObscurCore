@@ -15,7 +15,7 @@
 
 namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 {
-	public class Hc128 : StreamCipherTestBase
+    internal class Hc128 : StreamCipherTestBase
 	{
 		private static readonly string MSG = "00000000000000000000000000000000" + 
 		                                     "00000000000000000000000000000000" + 

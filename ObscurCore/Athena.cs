@@ -23,8 +23,9 @@ using ObscurCore.Cryptography.Ciphers.Information;
 using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Entropy.Information;
+using ObscurCore.Cryptography.Information;
+using ObscurCore.Cryptography.Information.EllipticCurve;
 using ObscurCore.Cryptography.KeyAgreement;
-using ObscurCore.Cryptography.KeyAgreement.Information;
 using ObscurCore.Cryptography.KeyDerivation;
 using ObscurCore.Cryptography.KeyDerivation.Information;
 

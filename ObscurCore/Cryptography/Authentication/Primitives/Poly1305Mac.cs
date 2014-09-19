@@ -204,10 +204,21 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			int remainder;
 			var blocks = Math.DivRem (len, BLOCK_SIZE, out remainder);
 
+#if INCLUDE_UNSAFE
+            unsafe {
+                fixed (byte* blockPtr = input) {
+                    for (var i = 0; i < blocks; i++) {
+                        ProcessBlock(blockPtr + inOff, false);
+                        inOff += BLOCK_SIZE;
+                    }
+                }
+            }
+#else
 			for (var i = 0; i < blocks; i++) {
 				ProcessBlock (input, inOff, false);
 				inOff += BLOCK_SIZE;
 			}
+#endif
 
 			if (remainder > 0) {
 				Array.Copy (input, inOff, currentBlock, currentBlockOffset, remainder);
@@ -280,27 +291,53 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             currentBlock.SecureWipe();
 		}
 
-		private void ProcessBlock(byte[] block, int offset, bool padded) {
+#if INCLUDE_UNSAFE
+        private unsafe void ProcessBlock(byte* block, bool padded) {
             ulong t0;
             ulong t1;
             ulong t2;
             ulong t3;
-#if INCLUDE_UNSAFE
-		    unsafe {
-		        fixed (byte* inPtr = block) {
-                    ulong* inUlongPtr = (ulong*)(inPtr + offset);
-		            t0 = *inUlongPtr;
-                    t1 = *inUlongPtr + 1;
-                    t2 = *inUlongPtr + 2;
-                    t3 = *inUlongPtr + 3;
-		        }
-		    }
-#else
+
+            uint* blockUintPtr = (uint*)block;
+            t0 = blockUintPtr[0];
+            t1 = blockUintPtr[1];
+            t2 = blockUintPtr[2];
+            t3 = blockUintPtr[3];
+
+			h0 += (uint)(t0 & 0x3ffffffU);
+			h1 += (uint)((((t1 << 32) | t0) >> 26) & 0x3ffffff);
+			h2 += (uint)((((t2 << 32) | t1) >> 20) & 0x3ffffff);
+			h3 += (uint)((((t3 << 32) | t2) >> 14) & 0x3ffffff);
+			h4 += (uint)(t3 >> 8);
+
+			if (padded == false) h4 += (1 << 24);
+
+			ulong tp0 = mul32x32_64(h0,r0) + mul32x32_64(h1,s4) + mul32x32_64(h2,s3) + mul32x32_64(h3,s2) + mul32x32_64(h4,s1);
+			ulong tp1 = mul32x32_64(h0,r1) + mul32x32_64(h1,r0) + mul32x32_64(h2,s4) + mul32x32_64(h3,s3) + mul32x32_64(h4,s2);
+			ulong tp2 = mul32x32_64(h0,r2) + mul32x32_64(h1,r1) + mul32x32_64(h2,r0) + mul32x32_64(h3,s4) + mul32x32_64(h4,s3);
+			ulong tp3 = mul32x32_64(h0,r3) + mul32x32_64(h1,r2) + mul32x32_64(h2,r1) + mul32x32_64(h3,r0) + mul32x32_64(h4,s4);
+			ulong tp4 = mul32x32_64(h0,r4) + mul32x32_64(h1,r3) + mul32x32_64(h2,r2) + mul32x32_64(h3,r1) + mul32x32_64(h4,r0);
+
+			ulong b;
+			h0 = (uint)tp0 & 0x3ffffff; b = (tp0 >> 26);
+			tp1 += b; h1 = (uint)tp1 & 0x3ffffff; b = (tp1 >> 26);
+			tp2 += b; h2 = (uint)tp2 & 0x3ffffff; b = (tp2 >> 26);
+			tp3 += b; h3 = (uint)tp3 & 0x3ffffff; b = (tp3 >> 26);
+			tp4 += b; h4 = (uint)tp4 & 0x3ffffff; b = (tp4 >> 26);
+			h0 += (uint)(b * 5);
+		}
+#endif
+
+        private void ProcessBlock(byte[] block, int offset, bool padded) {
+            ulong t0;
+            ulong t1;
+            ulong t2;
+            ulong t3;
+
 			t0 = Pack.LE_To_UInt32(block, offset + 0);
 			t1 = Pack.LE_To_UInt32(block, offset + 4);
 			t2 = Pack.LE_To_UInt32(block, offset + 8);
 			t3 = Pack.LE_To_UInt32(block, offset + 12);
-#endif
 
 			h0 += (uint)(t0 & 0x3ffffffU);
 			h1 += (uint)((((t1 << 32) | t0) >> 26) & 0x3ffffff);

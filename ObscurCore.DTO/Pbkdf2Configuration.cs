@@ -26,24 +26,16 @@ namespace ObscurCore.DTO
     ///     Configuration for the PBKDF2 key derivation function.
     /// </summary>
     [ProtoContract]
-    public class Pbkdf2Configuration : IDataTransferObject, IEquatable<Pbkdf2Configuration>
+    public struct Pbkdf2Configuration : IDataTransferObject, IEquatable<Pbkdf2Configuration>
     {
         /// <summary>
-        ///     Create a configuration for PBKDF2 key derivations.
-        /// </summary>
-        public Pbkdf2Configuration()
-        {
-            AlgorithmName = "HMACSHA256";
-        }
-
-        /// <summary>
-        ///     HMAC algorithm to apply iteratively to derive a key.
+        ///     Hash/digest function to use within HMAC function.
         /// </summary>
         /// <remarks>
-        ///     Currently, only HMACSHA256 is supported.
+        ///     Default is HMAC-SHA256.
         /// </remarks>
         [ProtoMember(1, IsRequired = true)]
-        public string AlgorithmName { get; set; }
+        public string FunctionName { get; set; }
 
         /// <summary>
         ///     Number of times the algorithm will be run sequentially.
@@ -58,13 +50,7 @@ namespace ObscurCore.DTO
         /// <inheritdoc />
         public bool Equals(Pbkdf2Configuration other)
         {
-            if (ReferenceEquals(null, other)) {
-                return false;
-            }
-            if (ReferenceEquals(this, other)) {
-                return true;
-            }
-            return String.Equals(AlgorithmName, other.AlgorithmName, StringComparison.OrdinalIgnoreCase) && Iterations == other.Iterations;
+            return String.Equals(FunctionName, other.FunctionName) && Iterations == other.Iterations;
         }
 
         /// <inheritdoc />
@@ -72,9 +58,6 @@ namespace ObscurCore.DTO
         {
             if (ReferenceEquals(null, obj)) {
                 return false;
-            }
-            if (ReferenceEquals(this, obj)) {
-                return true;
             }
             if (obj.GetType() != GetType()) {
                 return false;
@@ -86,7 +69,7 @@ namespace ObscurCore.DTO
         public override int GetHashCode()
         {
             unchecked {
-                int hashCode = AlgorithmName.ToLowerInvariant().GetHashCode();
+                int hashCode = FunctionName.ToLowerInvariant().GetHashCode();
                 hashCode = (hashCode * 397) ^ Iterations.GetHashCode();
                 return hashCode;
             }

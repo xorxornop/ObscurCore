@@ -15,7 +15,7 @@
 
 namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 {
-	public class Salsa20 : StreamCipherTestBase
+    internal class Salsa20 : StreamCipherTestBase
 	{
 		private static readonly string MSG = 
 			  "00000000000000000000000000000000"

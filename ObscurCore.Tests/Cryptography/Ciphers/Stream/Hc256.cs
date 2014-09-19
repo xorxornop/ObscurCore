@@ -15,7 +15,7 @@
 
 namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 {
-	public class Hc256 : StreamCipherTestBase
+    internal class Hc256 : StreamCipherTestBase
 	{
 		private static readonly string DiscretePlaintext = "00000000000000000000000000000000" + 
 		                                                   "00000000000000000000000000000000" + 

@@ -15,7 +15,7 @@
 
 namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
 {
-	public class Sosemanuk : StreamCipherTestBase
+    internal class Sosemanuk : StreamCipherTestBase
 	{
 		private static readonly string DiscretePlaintext = "00000000000000000000000000000000" + 
 		                                                   "00000000000000000000000000000000" + 

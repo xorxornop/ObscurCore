@@ -95,9 +95,9 @@ namespace ObscurCore.DTO
         public override int GetHashCode()
         {
             unchecked {
-                int hashCode = Salt.GetHashCode();
+                int hashCode = Salt.GetHashCodeExt();
                 hashCode = (hashCode * 397) ^ FunctionName.ToLowerInvariant().GetHashCode();
-                hashCode = (hashCode * 397) ^ (FunctionConfiguration != null ? FunctionConfiguration.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (FunctionConfiguration != null ? FunctionConfiguration.GetHashCodeExt() : 0);
                 return hashCode;
             }
         }

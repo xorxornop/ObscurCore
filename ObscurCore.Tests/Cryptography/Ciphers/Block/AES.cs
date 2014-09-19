@@ -2,7 +2,7 @@ using ObscurCore.Cryptography.Ciphers.Block;
 
 namespace ObscurCore.Tests.Cryptography.Ciphers.Block
 {
-    public class AES : BlockCipherTestBase
+    internal class AES : BlockCipherTestBase
     {
 		public AES() : base(BlockCipher.Aes) { }
     }

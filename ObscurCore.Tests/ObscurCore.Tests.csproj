@@ -30,6 +30,8 @@
     <ConsolePause>false</ConsolePause>
     <DefineConstants>INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
     <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
@@ -39,6 +41,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="nunit.framework">
@@ -64,6 +68,7 @@
     <Compile Include="Cryptography\MACs\MACTests.cs" />
     <Compile Include="Cryptography\MACTestBase.cs" />
     <Compile Include="Cryptography\KeyProvider.cs" />
+    <Compile Include="Cryptography\Signing\ECDsaTest.cs" />
     <Compile Include="Packaging\Packages.cs" />
     <Compile Include="Packaging\Payload.cs" />
     <Compile Include="Packaging\Serialisation\CSPRNG.cs" />

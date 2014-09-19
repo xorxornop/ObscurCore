@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace ObscurCore.Tests.Cryptography.Ciphers
 {
-	public abstract class StreamCipherTestBase : CipherTestBase
+    internal abstract class StreamCipherTestBase : CipherTestBase
     {
 		protected StreamCipher Cipher;
 

@@ -129,8 +129,8 @@ namespace ObscurCore.DTO
                 int hashCode = PublicComponent.GetHashCode();
                 hashCode = (hashCode * 397) ^ CurveProviderName.ToLowerInvariant().GetHashCode();
                 hashCode = (hashCode * 397) ^ CurveName.ToLowerInvariant().GetHashCode();
-                hashCode = (hashCode * 397) ^ EncodedKey.GetHashCode();
-                hashCode = (hashCode * 397) ^ (AdditionalData != null ? AdditionalData.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ EncodedKey.GetHashCodeExt();
+                hashCode = (hashCode * 397) ^ (AdditionalData != null ? AdditionalData.GetHashCodeExt() : 0);
                 return hashCode;
             }
         }

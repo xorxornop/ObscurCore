@@ -30,25 +30,6 @@ namespace ObscurCore.DTO
     public sealed class PayloadConfiguration : IPayloadConfiguration,
         IDataTransferObject, IEquatable<PayloadConfiguration>
     {
-        /// <inheritdoc />
-        public bool Equals(PayloadConfiguration other)
-        {
-            if (ReferenceEquals(null, other)) {
-                return false;
-            }
-            if (ReferenceEquals(this, other)) {
-                return true;
-            }
-            return String.Equals(SchemeName, other.SchemeName, StringComparison.OrdinalIgnoreCase) &&
-                   (SchemeConfiguration == null
-                       ? other.SchemeConfiguration == null
-                       : SchemeConfiguration.SequenceEqualShortCircuiting(other.SchemeConfiguration)) &&
-                   String.Equals(PrngName, other.PrngName, StringComparison.OrdinalIgnoreCase) &&
-                   (PrngConfiguration == null
-                       ? other.PrngConfiguration == null
-                       : PrngConfiguration.SequenceEqualShortCircuiting(other.PrngConfiguration));
-        }
-
         /// <summary>
         ///     Name of the payload layout scheme, e.g. Frameshift.
         /// </summary>
@@ -62,23 +43,23 @@ namespace ObscurCore.DTO
         ///     Format of the configuration is that of the consuming type.
         /// </remarks>
         [ProtoMember(2, IsRequired = false)]
-        public byte[] SchemeConfiguration { get; set; }
+        public byte[] SchemeConfiguration { get; set; }      
 
         /// <summary>
-        ///     Name of the [CS]PRNG used for selecting the active stream,
-        ///     and other scheme-specific states.
+        ///     Entropy scheme for e.g. selecting the active stream,
+        ///     and other payload-scheme-specific states.
         /// </summary>
-        [ProtoMember(3, IsRequired = false)]
-        public string PrngName { get; set; }
+        [ProtoMember(3, IsRequired = true)]
+        public PayloadMuxEntropyScheme EntropyScheme { get; set; }
 
         /// <summary>
-        ///     Configuration for the primary [CS]PRNG.
+        ///     Configuration for the <see cref="EntropyScheme"/>.
         /// </summary>
         /// <remarks>
         ///     Format of the configuration is that of the consuming type.
         /// </remarks>
         [ProtoMember(4, IsRequired = false)]
-        public byte[] PrngConfiguration { get; set; }
+        public byte[] EntropySchemeData { get; set; }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
@@ -93,13 +74,32 @@ namespace ObscurCore.DTO
         }
 
         /// <inheritdoc />
+        public bool Equals(PayloadConfiguration other)
+        {
+            if (ReferenceEquals(null, other)) {
+                return false;
+            }
+            if (ReferenceEquals(this, other)) {
+                return true;
+            }
+            return String.Equals(SchemeName, other.SchemeName, StringComparison.OrdinalIgnoreCase) &&
+                   (SchemeConfiguration == null
+                       ? other.SchemeConfiguration == null
+                       : SchemeConfiguration.SequenceEqualShortCircuiting(other.SchemeConfiguration)) &&
+                   EntropyScheme == other.EntropyScheme &&
+                   (EntropySchemeData == null
+                       ? other.EntropySchemeData == null
+                       : EntropySchemeData.SequenceEqualShortCircuiting(other.EntropySchemeData));
+        }
+
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked {
                 int hashCode = SchemeName.ToLowerInvariant().GetHashCode();
-                hashCode = (hashCode * 397) ^ (SchemeConfiguration != null ? SchemeConfiguration.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (PrngName != null ? PrngName.ToLowerInvariant().GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (PrngConfiguration != null ? PrngConfiguration.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SchemeConfiguration != null ? SchemeConfiguration.GetHashCodeExt() : 0);
+                hashCode = (hashCode * 397) ^ EntropyScheme.GetHashCode();
+                hashCode = (hashCode * 397) ^ (EntropySchemeData != null ? EntropySchemeData.GetHashCodeExt() : 0);
                 return hashCode;
             }
         }

@@ -7,7 +7,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 	/// <summary>
 	/// Implementation of Daniel J. Bernstein's ChaCha stream cipher.
 	/// </summary>
-	public sealed class ChaChaEngine : StreamCipherEngine, ICsprngCompatible
+	public sealed class ChaChaEngine : StreamCipherEngine, ICsPrngCompatible
 	{
         /* Constants */
         private const int EngineStateSize = 16; // 16, 32 bit ints = 64 bytes

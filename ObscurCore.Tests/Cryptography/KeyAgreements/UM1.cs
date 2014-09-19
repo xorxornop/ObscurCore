@@ -22,7 +22,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 		[TestFixtureSetUp]
 		public void Init () {		
 			var curves = Enum.GetNames (typeof(BrainpoolEllipticCurve));
-			for (var i = 1; i < curves.Length; i++) {
+			for (var i = 0; i < curves.Length; i++) {
 				_ecKeypairs.Add (curves [i], new ECTestKPStore {
 					Initiator = KeypairFactory.GenerateECKeypair(curves[i]),
 					Responder = KeypairFactory.GenerateECKeypair(curves[i])
@@ -30,7 +30,7 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 			}
 
             curves = Enum.GetNames (typeof(Sec2EllipticCurve));
-            for (var i = 1; i < curves.Length; i++) {
+            for (var i = 0; i < curves.Length; i++) {
 				_ecKeypairs.Add (curves [i], new ECTestKPStore {
 					Initiator = KeypairFactory.GenerateECKeypair(curves[i]),
 					Responder = KeypairFactory.GenerateECKeypair(curves[i])
@@ -41,12 +41,23 @@ namespace ObscurCore.Tests.Cryptography.KeyAgreements
 				Initiator = KeypairFactory.GenerateECKeypair(DjbCurve.Curve25519.ToString()),
 				Responder = KeypairFactory.GenerateECKeypair(DjbCurve.Curve25519.ToString())
 			});
+
+            _ecKeypairs.Add(DjbCurve.Ed25519.ToString(), new ECTestKPStore {
+                Initiator = KeypairFactory.GenerateECKeypair(DjbCurve.Ed25519.ToString()),
+                Responder = KeypairFactory.GenerateECKeypair(DjbCurve.Ed25519.ToString())
+            });
 		}
 
 		[Test()]
 		public void UM1Exchange_Curve25519 () {
 			DoUM1Exchange(_ecKeypairs[DjbCurve.Curve25519.ToString()]);
 		}
+
+        [Test()]
+        public void UM1Exchange_Ed25519()
+        {
+            DoUM1Exchange(_ecKeypairs[DjbCurve.Ed25519.ToString()]);
+        }
 		
 		[Test()]
 		public void UM1Exchange_BrainpoolP160r1 () {

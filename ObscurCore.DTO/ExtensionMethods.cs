@@ -244,5 +244,27 @@ namespace ObscurCore.DTO
         {
             Array.Clear(data, offset, count);
         }
+
+        public static int GetHashCodeExt(this byte[] data)
+        {
+            return data.GetHashCodeExt(0, data.Length);
+        }
+
+        public static int GetHashCodeExt(this byte[] data, int off, int count)
+        {
+            if (data == null) {
+                return 0;
+            }
+
+            int i = off + count;
+            int hc = count + 1;
+
+            while (--i >= 0) {
+                hc *= 257;
+                hc ^= data[i];
+            }
+
+            return hc;
+        }
     }
 }

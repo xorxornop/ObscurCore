@@ -18,7 +18,9 @@
 #endregion
 
 using System;
+using ObscurCore.Cryptography.Information;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
+using ObscurCore.Cryptography.Signing.Primitives;
 using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve;
@@ -38,6 +40,8 @@ namespace ObscurCore.Cryptography.KeyAgreement
         {
             if (publicKey.CurveName.Equals(DjbCurve.Curve25519.ToString())) {
                 return Curve25519.CalculateSharedSecret(privateKey.EncodedKey, publicKey.EncodedKey);
+            } else if (publicKey.CurveName.Equals(DjbCurve.Ed25519.ToString())) {
+                return Ed25519.KeyExchange(publicKey.EncodedKey, privateKey.EncodedKey);
             }
             return
                 CalculateEcdhSecret(DecodeToPublicKey(publicKey), DecodeToPrivateKey(privateKey)).ToByteArrayUnsigned();
@@ -54,6 +58,8 @@ namespace ObscurCore.Cryptography.KeyAgreement
         {
             if (publicKey.CurveName.Equals(DjbCurve.Curve25519.ToString())) {
                 return Curve25519.CalculateSharedSecret(privateKey.EncodedKey, publicKey.EncodedKey);
+            } else if (publicKey.CurveName.Equals(DjbCurve.Ed25519.ToString())) {
+                return Ed25519.KeyExchange(publicKey.EncodedKey, privateKey.EncodedKey);
             }
             return
                 CalculateEcdhcSecret(DecodeToPublicKey(publicKey), DecodeToPrivateKey(privateKey)).ToByteArrayUnsigned();

@@ -31,8 +31,6 @@ namespace ObscurCore.Cryptography.KeyAgreement
     /// </remarks>
     public enum Sec2EllipticCurve
     {
-        None,
-
         /// <summary>
         ///     160-bit prime field curve over F(<sub>p</sub>)
         /// </summary>
@@ -59,7 +57,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
         Secp224k1,
 
         /// <summary>
-        ///     224-bit prime field curve over F(<sub>p</sub>)
+        ///     NIST P-224. 224-bit prime field curve over F(<sub>p</sub>)
         /// </summary>
         Secp224r1,
 
@@ -92,7 +90,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
         Sect163r1,
 
         /// <summary>
-        ///     163-bit curve over F(<sub>2</sub>m) (revised from <see cref="Sect163r1"/>)
+        ///     NIST B-163. 163-bit curve over F(<sub>2</sub>m) (revised from <see cref="Sect163r1"/>)
         /// </summary>
         Sect163r2,
 
@@ -107,12 +105,12 @@ namespace ObscurCore.Cryptography.KeyAgreement
         Sect193r2,
 
         /// <summary>
-        ///     233-bit Koblitz curve over F(<sub>2</sub>m)
+        ///     NIST K-233. 233-bit Koblitz curve over F(<sub>2</sub>m)
         /// </summary>
         Sect233k1,
 
         /// <summary>
-        ///     233-bit curve over F(<sub>2</sub>m)
+        ///     NIST B-233. 233-bit curve over F(<sub>2</sub>m)
         /// </summary>
         Sect233r1,
 
@@ -122,32 +120,32 @@ namespace ObscurCore.Cryptography.KeyAgreement
         Sect239k1,
 
         /// <summary>
-        ///     283-bit Koblitz curve over F(<sub>2</sub>m)
+        ///     NIST K-283. 283-bit Koblitz curve over F(<sub>2</sub>m)
         /// </summary>
         Sect283k1,
 
         /// <summary>
-        ///     283-bit curve over F(<sub>2</sub>m)
+        ///     NIST B-283. 283-bit curve over F(<sub>2</sub>m)
         /// </summary>
         Sect283r1,
 
         /// <summary>
-        ///     409-bit Koblitz curve over F(<sub>2</sub>m)
+        ///     NIST K-409. 409-bit Koblitz curve over F(<sub>2</sub>m)
         /// </summary>
         Sect409k1,
 
         /// <summary>
-        ///     409-bit curve over F(<sub>2</sub>m)
+        ///     NIST B-409. 409-bit curve over F(<sub>2</sub>m)
         /// </summary>
         Sect409r1,
 
         /// <summary>
-        ///     571-bit Koblitz curve over F(<sub>2</sub>m)
+        ///     NIST K-571. 571-bit Koblitz curve over F(<sub>2</sub>m)
         /// </summary>
         Sect571k1,
 
         /// <summary>
-        ///     571-bit curve over F(<sub>2</sub>m)
+        ///     NIST B-571. 571-bit curve over F(<sub>2</sub>m)
         /// </summary>
         Sect571r1
     }
