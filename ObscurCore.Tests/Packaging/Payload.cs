@@ -77,7 +77,7 @@ namespace ObscurCore.Tests.Packaging
 
 			var itemPreKeys = new Dictionary<Guid, byte[]> ();
 
-			var mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutScheme>(), true, ms, 
+			var mux = PayloadMuxFactory.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutScheme>(), true, ms, 
 				items, itemPreKeys, payloadConfig);
 			
 			Assert.DoesNotThrow (mux.Execute);
@@ -109,7 +109,7 @@ namespace ObscurCore.Tests.Packaging
 	        }
 
 	        ms.Seek(0, SeekOrigin.Begin);
-			mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutScheme>(), false, ms, 
+			mux = PayloadMuxFactory.CreatePayloadMultiplexer(payloadConfig.SchemeName.ToEnum<PayloadLayoutScheme>(), false, ms, 
 				items, itemPreKeys, payloadConfig);
 
             Assert.DoesNotThrow(mux.Execute);

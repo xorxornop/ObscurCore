@@ -37,14 +37,15 @@ namespace ObscurCore.Packaging.Multiplexing
     /// </remarks>
     public abstract class PayloadMux
     {
-        protected readonly bool[] ItemCompletionRegister;
-        protected readonly ICollection<Guid> ItemSkipRegister;
-        protected readonly Stream PayloadStream;
         protected readonly bool Writing;
-        protected int Index;
-        protected int ItemsCompleted;
-        protected IReadOnlyDictionary<Guid, byte[]> PayloadItemPreKeys;
+        protected int Index = -1;
+        protected int ItemsCompleted = 0;
+        protected readonly bool[] ItemCompletionRegister;
         protected IReadOnlyList<PayloadItem> PayloadItems;
+        protected readonly Stream PayloadStream;
+        
+        protected IReadOnlyDictionary<Guid, byte[]> PayloadItemPreKeys;
+        protected readonly ICollection<Guid> ItemSkipRegister;    
 
         protected PayloadMux(bool writing, Stream payloadStream, IReadOnlyList<PayloadItem> payloadItems,
                              IReadOnlyDictionary<Guid, byte[]> itemPreKeys, ICollection<Guid> skips = null)
@@ -71,9 +72,9 @@ namespace ObscurCore.Packaging.Multiplexing
         /// <summary>
         ///     Create decorator streams implementing the Encrypt-then-MAC scheme (CipherStream bound to a MacStream).
         /// </summary>
-        /// <param name="item"></param>
-        /// <param name="encryptor"></param>
-        /// <param name="authenticator"></param>
+        /// <param name="item">Item to create resources for.</param>
+        /// <param name="encryptor">Cipher stream (output).</param>
+        /// <param name="authenticator">MAC stream (output).</param>
         protected void CreateEtMDecorator(PayloadItem item, out CipherStream encryptor, out MacStream authenticator)
         {
             byte[] encryptionKey, authenticationKey;
@@ -105,14 +106,12 @@ namespace ObscurCore.Packaging.Multiplexing
         public void Execute()
         {
             while (ItemsCompleted < PayloadItems.Count) {
-                ExecuteOperation();
-                while (ItemsCompleted < PayloadItems.Count && ItemCompletionRegister[Index]) {
+                do {
                     NextSource();
-                    Debug.Print(DebugUtility.CreateReportString("PayloadMux", "Execute", "Generated index",
-                        Index));
-                }
+                } while (ItemsCompleted < PayloadItems.Count && ItemCompletionRegister[Index]);
                 Debug.Print(DebugUtility.CreateReportString("PayloadMux", "Execute", "Selected stream",
                     Index));
+                ExecuteOperation();             
             }
         }
 
@@ -121,7 +120,13 @@ namespace ObscurCore.Packaging.Multiplexing
         /// </summary>
         protected abstract void ExecuteOperation();
 
-        protected abstract void FinishItem(PayloadItem item, DecoratingStream decorator, MacStream authenticator);
+        /// <summary>
+        ///     Finish processing the current item.
+        /// </summary>
+        /// <param name="item">Payload item to finish.</param>
+        /// <param name="encryptor">Item encryptor/cipher.</param>
+        /// <param name="authenticator">Item authenticator/MAC.</param>
+        protected abstract void FinishItem(PayloadItem item, CipherStream encryptor, MacStream authenticator);
 
         /// <summary>
         ///     Determine the index of the next stream to use in an I/O operation
@@ -131,10 +136,11 @@ namespace ObscurCore.Packaging.Multiplexing
         /// <returns>The next stream index.</returns>
         protected virtual void NextSource()
         {
-            Index++;
-            if (Index == PayloadItems.Count) {
+            if (++Index == PayloadItems.Count) {
                 Index = 0;
             }
+            Debug.Print(DebugUtility.CreateReportString("PayloadMux", "NextSource", "Generated index",
+                Index));
         }
     }
 }

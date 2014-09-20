@@ -32,7 +32,7 @@ namespace ObscurCore.Packaging.Multiplexing.Entropy
         public PreallocatedMuxEntropySource(bool writing, byte[] preallocatedData)
         {
             _writing = writing;
-            _preallocatedStream = new MemoryStream(preallocatedData);
+            _preallocatedStream = new MemoryStream(preallocatedData, writable:false);
         }
 
         #region IMuxEntropySource Members

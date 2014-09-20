@@ -57,8 +57,6 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         /// </summary>
         protected MuxEntropySourceFacade EntropySource;
 
-        private PayloadConfiguration _payloadConfigDto;
-
         /// <summary>
         ///     Initializes a new instance of a payload multiplexer.
         /// </summary>
@@ -79,9 +77,6 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
             }
 
             EntropySource = new MuxEntropySourceFacade(writing, config);
-            _payloadConfigDto = config;
-
-            NextSource();
         }
 
         /// <summary>
@@ -100,7 +95,7 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
                 CipherStream itemEncryptor;
                 MacStream itemAuthenticator;
                 CreateEtMDecorator(item, out itemEncryptor, out itemAuthenticator);
-
+                
                 if (Writing) {
                     EmitHeader(itemAuthenticator);
                 } else {
@@ -118,21 +113,16 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
                 }
 
                 FinishItem(item, itemEncryptor, itemAuthenticator);
-
-                // Close the source/destination
-                item.StreamBinding.Close();
             } else {
+                // Skipping
                 long skipLength = GetHeaderLength() + item.InternalLength + GetTrailerLength();
                 PayloadStream.Seek(skipLength, SeekOrigin.Current);
+                // Mark the item as completed in the register
+                ItemCompletionRegister[Index] = true;
+                ItemsCompleted++;
+                Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "ExecuteOperation",
+                    "[*** SKIPPED ITEM", String.Format("{0} ({1}) ***]", Index, item.Identifier)));
             }
-
-            // Mark the item as completed in the register
-            ItemCompletionRegister[Index] = true;
-            ItemsCompleted++;
-
-            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "ExecuteOperation",
-                skip ? "[*** SKIPPED ITEM" : "[*** END OF ITEM",
-                String.Format("{0} ({1}) ***]", Index, item.Identifier)));
         }
 
         /// <summary>
@@ -140,32 +130,40 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         ///     and if writing, commit the authentication value to the payload item DTO.
         /// </summary>
         /// <param name="item">Payload item to finish.</param>
-        /// <param name="decorator">Item decorator.</param>
-        /// <param name="authenticator">Item authenticator.</param>
-        protected override void FinishItem(PayloadItem item, DecoratingStream decorator, MacStream authenticator)
+        /// <param name="encryptor">Item encryptor/cipher.</param>
+        /// <param name="authenticator">Item authenticator/MAC.</param>
+        protected override void FinishItem(PayloadItem item, CipherStream encryptor, MacStream authenticator)
         {
-            decorator.Close();
+            try {
+                encryptor.Close();
+            } catch (Exception e) {
+                throw new Exception("Unknown error when finalising/closing cipher.", e);
+            }
 
-            if (Writing) {
-                EmitTrailer(authenticator);
-            } else {
-                ConsumeTrailer(authenticator);
+            try {
+                if (Writing) {
+                    EmitTrailer(authenticator);
+                } else {
+                    ConsumeTrailer(authenticator);
+                }
+            } catch (Exception e) {
+                throw new Exception(String.Format("Unknown error when {0} item trailer.", Writing ? "emitting" : "consuming"), e);
             }
 
             // Length checks & commits
             if (Writing) {
                 // Check if pre-stated length matches what was actually written
-                if (item.ExternalLength > 0 && decorator.BytesIn != item.ExternalLength) {
+                if (item.ExternalLength > 0 && encryptor.BytesIn != item.ExternalLength) {
                     throw new InvalidDataException(
                         "Mismatch between stated item external length and actual input length.");
                 }
                 // Commit the determined internal length to item in payload manifest
-                item.InternalLength = decorator.BytesOut;
+                item.InternalLength = encryptor.BytesOut;
             } else {
-                if (decorator.BytesIn != item.InternalLength) {
+                if (encryptor.BytesIn != item.InternalLength) {
                     throw new InvalidOperationException("Probable decorator stack malfunction.");
                 }
-                if (decorator.BytesOut != item.ExternalLength) {
+                if (encryptor.BytesOut != item.ExternalLength) {
                     throw new InvalidDataException(
                         "Mismatch between stated item external length and actual output length.");
                 }
@@ -192,6 +190,16 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
                     throw new CiphertextAuthenticationException("Payload item not authenticated.");
                 }
             }
+
+            // Close the source/destination
+            item.StreamBinding.Close();
+
+            // Mark the item as completed in the register
+            ItemCompletionRegister[Index] = true;
+            ItemsCompleted++;
+
+            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "ExecuteOperation",
+                "[*** END OF ITEM", String.Format("{0} ({1}) ***]", Index, item.Identifier)));
         }
 
         /// <summary>
@@ -203,7 +211,7 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         protected override sealed void NextSource()
         {
             Index = EntropySource.NextPositive(0, PayloadItems.Count - 1);
-            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "NextSource", "Index",
+            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "NextSource", "Generated index",
                 Index));
         }
 

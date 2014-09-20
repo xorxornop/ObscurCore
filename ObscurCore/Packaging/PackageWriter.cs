@@ -902,7 +902,7 @@ namespace ObscurCore.Packaging
             try {
                 var payloadScheme = _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>();
                 // Bind the multiplexer to the output stream
-                PayloadMux mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer(payloadScheme, true, outputStream,
+                PayloadMux mux = PayloadMuxFactory.CreatePayloadMultiplexer(payloadScheme, true, outputStream,
                     _manifest.PayloadItems, _itemPreKeys, _manifest.PayloadConfiguration);
                 mux.Execute();
             } catch (EnumerationParsingException e) {

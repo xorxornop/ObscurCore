@@ -420,7 +420,7 @@
     <Compile Include="Cryptography\KeyAgreement\KeypairFactory.cs" />
     <Compile Include="Cryptography\KeyDerivation\KeyStretchingUtility.cs" />
     <Compile Include="Cryptography\IKeyProvider.cs" />
-    <Compile Include="Packaging\Multiplexing\PayloadMultiplexerFactory.cs" />
+    <Compile Include="Packaging\Multiplexing\PayloadMuxFactory.cs" />
     <Compile Include="Cryptography\Authentication\AuthenticatorFactory.cs" />
     <Compile Include="Cryptography\Ciphers\CipherFactory.cs" />
     <Compile Include="Cryptography\KeyDerivation\KdfFactory.cs" />

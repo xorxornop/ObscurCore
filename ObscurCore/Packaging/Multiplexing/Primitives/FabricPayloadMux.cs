@@ -17,8 +17,6 @@
 
 #endregion
 
-#define PRINT_DTO_LENGTH
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -54,7 +52,7 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         public const int DefaultFixedStripeLength = 512;
 
         /// <summary>
-        ///     Used for <see cref="PayloadMuxEntropyScheme.Preallocation"/> scheme. Size in bytes.
+        ///     Used for <see cref="PayloadMuxEntropyScheme.Preallocation" /> scheme. Size in bytes.
         /// </summary>
         internal const int StripeFieldMaximumSize = sizeof(UInt16);
 
@@ -116,109 +114,165 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         {
             PayloadItem item = PayloadItems[Index];
             Guid itemIdentifier = item.Identifier;
-            MuxItemResourceContainer itemContainer;
 
-            if (_activeItemResources.ContainsKey(itemIdentifier)) {
+            bool skip = ItemSkipRegister != null && ItemSkipRegister.Contains(itemIdentifier);
+
+            MuxItemResourceContainer itemContainer;
+            bool activeResource = _activeItemResources.ContainsKey(itemIdentifier);
+
+            if (activeResource) {
                 itemContainer = _activeItemResources[itemIdentifier];
             } else {
-                itemContainer = CreateEtMSchemeResources(item);
-                _activeItemResources.Add(itemIdentifier, itemContainer);
-                if (Writing) {
-                    EmitHeader(itemContainer.Authenticator);
+                if (skip == false) {
+                    itemContainer = CreateEtMSchemeResources(item);
+                    if (Writing) {
+                        EmitHeader(itemContainer.Authenticator);
+                    } else {
+                        ConsumeHeader(itemContainer.Authenticator);
+                    }
                 } else {
-                    ConsumeHeader(itemContainer.Authenticator);
+                    itemContainer = new MuxItemResourceContainer(null, null, null);
                 }
+                _activeItemResources.Add(itemIdentifier, itemContainer);
             }
 
-            CipherStream itemEncryptor = itemContainer.Encryptor;
-            MacStream itemAuthenticator = itemContainer.Authenticator;
+            int opLength = NextOperationLength();
 
-            long opLength = NextOperationLength();
+            if (skip == false) {
+                CipherStream itemEncryptor = itemContainer.Encryptor;
+                MacStream itemAuthenticator = itemContainer.Authenticator;
 
-            if (Writing) {
-                if (itemEncryptor.BytesIn + opLength < item.ExternalLength) {
-                    // Normal operation
-                    Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "ExecuteOperation",
-                        "Item multiplexing operation length", opLength));
-                    itemEncryptor.WriteExactlyFrom(item.StreamBinding, opLength);
-                } else {
-                    // Final operation, or just prior to
-                    if (itemContainer.Buffer.IsValueCreated == false) {
-                        // Redirect final ciphertext to buffer to account for possible expansion
-                        itemAuthenticator.ReassignBinding(itemContainer.Buffer.Value, false, finish: false);
-                    }
-                    var remaining = (int) (item.ExternalLength - itemEncryptor.BytesIn);
-                    if (remaining > 0) {
-                        while (remaining > 0) {
-                            int toRead = Math.Min(remaining, BufferSize);
-                            int iterIn = item.StreamBinding.Read(Buffer, 0, toRead);
-                            if (iterIn < toRead) {
-                                throw new EndOfStreamException();
-                            }
-                            itemEncryptor.Write(Buffer, 0, iterIn); // Writing into recently-lazy-inited buffer
-                            remaining -= iterIn;
+                if (Writing) {
+                    // Writing/multiplexing
+                    if (itemEncryptor.BytesIn + opLength < item.ExternalLength) {
+                        // Normal operation
+                        itemEncryptor.WriteExactlyFrom(item.StreamBinding, opLength);
+                    } else {
+                        // Final operation, or just prior to
+                        if (itemContainer.Buffer.IsValueCreated == false) {
+                            // Redirect final ciphertext to buffer to account for possible expansion
+                            itemAuthenticator.ReassignBinding(itemContainer.Buffer.Value, false, finish: false);
                         }
-                        itemEncryptor.Close();
+                        var remaining = (int) (item.ExternalLength - itemEncryptor.BytesIn);
+                        if (remaining > 0) {
+                            while (remaining > 0) {
+                                int toRead = Math.Min(remaining, BufferSize);
+                                int iterIn = item.StreamBinding.Read(Buffer, 0, toRead);
+                                if (iterIn < toRead) {
+                                    throw new EndOfStreamException();
+                                }
+                                itemEncryptor.Write(Buffer, 0, iterIn); // Writing into recently-lazy-inited buffer
+                                remaining -= iterIn;
+                            }
+                            itemEncryptor.Close();
+                        }
+                        var toWrite = (int) Math.Min(opLength, itemContainer.Buffer.Value.Length);
+                        Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "ExecuteOperation",
+                            "Multiplexing item: final stripe length", toWrite));
+
+                        itemContainer.Buffer.Value.ReadTo(PayloadStream, toWrite);
                     }
-                    var toWrite = (int) Math.Min(opLength, itemContainer.Buffer.Value.Length);
-                    itemContainer.Buffer.Value.ReadTo(PayloadStream, toWrite);
+                } else {
+                    // Reading/demultiplexing
+                    long readRemaining = item.InternalLength - itemEncryptor.BytesIn;
+                    bool finalOp = false;
+                    if (readRemaining <= opLength) {
+                        // Final operation
+                        opLength = (int) readRemaining;
+                        finalOp = true;
+                        Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "ExecuteOperation",
+                            "Demultiplexing item: final stripe length", opLength));
+                    }
+                    itemEncryptor.ReadExactlyTo(item.StreamBinding, opLength, finalOp);
+                }
+
+                if ((Writing && itemEncryptor.BytesIn >= item.ExternalLength && itemContainer.Buffer.Value.Length == 0) ||
+                    (Writing == false && itemEncryptor.BytesIn >= item.InternalLength)) {
+                    // Now that we're finished we need to do some extra things, then clean up
+                    FinishItem(item, itemEncryptor, itemAuthenticator);
                 }
             } else {
-                bool finalOp = false;
-                if (itemEncryptor.BytesIn + opLength > item.InternalLength) {
-                    // Final operation
-                    opLength = item.InternalLength - itemEncryptor.BytesIn;
-                    finalOp = true;
+                // Skipping
+                Debug.Assert(Writing == false, "Should not be skipping when writing!");
+                if (itemContainer.SkippedLength == 0) {
+                    // Start of item
+                    PayloadStream.Seek(opLength, SeekOrigin.Current);
+                    itemContainer.SkippedLength += opLength;
+                } else if (itemContainer.SkippedLength + opLength >= item.InternalLength) {
+                    int remainingToSkip = (int) (item.InternalLength - itemContainer.SkippedLength);
+                    itemContainer.SkippedLength += remainingToSkip;
+                    PayloadStream.Seek(remainingToSkip + GetTrailerLength(), SeekOrigin.Current);
+                    // "Finish" item
+                    _activeItemResources.Remove(item.Identifier);
+                    // Mark the item as completed in the register
+                    ItemCompletionRegister[Index] = true;
+                    ItemsCompleted++;
+                    Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "ExecuteOperation", "[*** SKIPPED ITEM",
+                        Index + " ***]"));
+                } else {
+                    PayloadStream.Seek(opLength, SeekOrigin.Current);
+                    itemContainer.SkippedLength += opLength;
                 }
-                Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "ExecuteOperation",
-                    finalOp
-                        ? "Final item demultiplexing operation length"
-                        : "Item demultiplexing operation length", opLength));
-                itemEncryptor.ReadExactlyTo(item.StreamBinding, opLength, finalOp);
-            }
-
-            if ((Writing && itemEncryptor.BytesIn == item.ExternalLength && itemContainer.Buffer.Value.Length == 0) ||
-                (Writing == false && itemEncryptor.BytesIn == item.InternalLength)) {
-                // Now that we're finished we need to do some extra things, then clean up
-                FinishItem(item, itemEncryptor, itemAuthenticator);
             }
         }
 
-        protected override void FinishItem(PayloadItem item, DecoratingStream decorator, MacStream authenticator)
+        /// <inheritdoc />
+        protected override void FinishItem(PayloadItem item, CipherStream encryptor, MacStream authenticator)
         {
             if (Writing) {
-                EmitTrailer(authenticator);
-                // Commit the MAC to item in payload manifest
-                item.AuthenticationVerifiedOutput = authenticator.Mac.DeepCopy();
+                if (item.ExternalLength > 0 && encryptor.BytesIn != item.ExternalLength) {
+                    throw new InvalidDataException("Length written is not equal to predefined item external length.");
+                }
+            } else {
+                if (encryptor.BytesIn != item.InternalLength) {
+                    throw new InvalidDataException("Length read is not equal to item internal length.");
+                }
+                if (encryptor.BytesOut != item.ExternalLength) {
+                    throw new InvalidDataException("Demultiplexed and decrypted length is not equal to specified item external length.");
+                }
+                encryptor.Close();
+            }
+
+            if (Writing) {
                 // Commit the determined internal length to item in payload manifest
-                item.InternalLength = decorator.BytesOut;
+                item.InternalLength = encryptor.BytesOut;
+                EmitTrailer(authenticator);
             } else {
                 ConsumeTrailer(authenticator);
-                // Verify the authenticity of the item ciphertext and configuration
-                if (authenticator.Mac.SequenceEqualConstantTime(item.AuthenticationVerifiedOutput) == false) {
-                    // Verification failed!1
-                    throw new CiphertextAuthenticationException("Payload item not authenticated.");
-                }
             }
 
             // Final stages of Encrypt-then-MAC authentication scheme
             PayloadItem itemDto = item.CreateAuthenticatibleClone();
             byte[] itemDtoAuthBytes = itemDto.SerialiseDto();
-#if PRINT_DTO_LENGTH
-            Debug.Print(DebugUtility.CreateReportString("SimplePayloadMux", "FinishItem", "Payload item DTO length",
+            Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "FinishItem", "Item DTO length",
                 itemDtoAuthBytes.Length));
-#endif
-            authenticator.Update(itemDtoAuthBytes, 0, itemDtoAuthBytes.Length);
-            authenticator.Close();
+
+            if (Writing) {
+                authenticator.Update(itemDtoAuthBytes, 0, itemDtoAuthBytes.Length);
+                authenticator.Close();
+                // Commit the MAC to item in payload manifest
+                item.AuthenticationVerifiedOutput = authenticator.Mac.DeepCopy();
+            } else {
+                authenticator.Update(itemDtoAuthBytes, 0, itemDtoAuthBytes.Length);
+                authenticator.Close();
+                // Verify the authenticity of the item ciphertext and configuration
+                if (authenticator.Mac.SequenceEqualConstantTime(item.AuthenticationVerifiedOutput) == false) {
+                    // Verification failed!
+                    throw new CiphertextAuthenticationException("Payload item not authenticated.");
+                }
+            }
+
+
+            // Release the item's resources (implicitly - no references remain)
+            _activeItemResources.Remove(item.Identifier);
 
             // Mark the item as completed in the register
             ItemCompletionRegister[Index] = true;
             ItemsCompleted++;
             // Close the source/destination
             item.StreamBinding.Close();
-            // Release the item's resources (implicitly - no references remain)
-            _activeItemResources.Remove(item.Identifier);
-            Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "ExecuteOperation", "[*** END OF ITEM",
+
+            Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "FinishItem", "[*** END OF ITEM",
                 Index + " ***]"));
         }
 
@@ -228,14 +282,12 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         ///     Otherwise, fixed length is returned.
         /// </summary>
         /// <returns>Operation length to perform.</returns>
-        private long NextOperationLength()
+        private int NextOperationLength()
         {
             int operationLength = _stripeMode == FabricStripeMode.VariableLength
-                    ? EntropySource.Next(_minStripe, _maxStripe)
-                    : _maxStripe;
-
-            Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "NextOperationLength",
-                "Stripe length",
+                ? EntropySource.Next(_minStripe, _maxStripe)
+                : _maxStripe;
+            Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "NextOperationLength", "Generated stripe length value",
                 operationLength));
             return operationLength;
         }
@@ -244,16 +296,21 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
 
         private class MuxItemResourceContainer
         {
-            public MuxItemResourceContainer(CipherStream encryptor, MacStream authenticator, int bufferCapacity)
+            public MuxItemResourceContainer(CipherStream encryptor, MacStream authenticator, int? bufferCapacity)
             {
-                this.Encryptor = encryptor;
-                this.Authenticator = authenticator;
-                this.Buffer = new Lazy<RingBufferStream>(() => new RingBufferStream(bufferCapacity, false));
+                Encryptor = encryptor;
+                Authenticator = authenticator;
+                if (bufferCapacity != null) {
+                    Buffer = new Lazy<RingBufferStream>(() => new RingBufferStream(bufferCapacity.Value, false));
+                } else {
+                    SkippedLength = 0;
+                }
             }
 
             public CipherStream Encryptor { get; private set; }
             public MacStream Authenticator { get; private set; }
             public Lazy<RingBufferStream> Buffer { get; private set; }
+            public long? SkippedLength { get; set; }
         }
 
         #endregion

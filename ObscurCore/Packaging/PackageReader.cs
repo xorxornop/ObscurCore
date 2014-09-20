@@ -664,7 +664,7 @@ namespace ObscurCore.Packaging
             PayloadMux mux;
             try {
                 var payloadScheme = _manifest.PayloadConfiguration.SchemeName.ToEnum<PayloadLayoutScheme>();
-                mux = PayloadMultiplexerFactory.CreatePayloadMultiplexer(payloadScheme, false, _readingStream,
+                mux = PayloadMuxFactory.CreatePayloadMultiplexer(payloadScheme, false, _readingStream,
                     _manifest.PayloadItems,
                     _itemPreKeys, _manifest.PayloadConfiguration);
             } catch (EnumerationParsingException e) {

@@ -48,14 +48,14 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         public const int DefaultFixedPaddingLength = 64;
 
         /// <summary>
-        ///     Used for <see cref="PayloadMuxEntropyScheme.Preallocation"/> scheme. Size in bytes.
+        ///     Used for <see cref="PayloadMuxEntropyScheme.Preallocation" /> scheme. Size in bytes.
         /// </summary>
         internal const int PaddingFieldMaximumSize = sizeof(UInt16);
 
         private readonly int _maxPadding;
         private readonly int _minPadding;
-        private readonly byte[] _paddingBuffer;
         private readonly FrameshiftPaddingMode _paddingMode;
+        private readonly byte[] _paddingBuffer;
 
         /// <summary>
         ///     Initializes a new instance of a stream multiplexer.
@@ -91,13 +91,12 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
             _paddingBuffer = new byte[_maxPadding];
         }
 
-        private int GetPaddingLength()
+        private int NextPaddingLength()
         {
             int paddingLength = (_paddingMode == FrameshiftPaddingMode.VariableLength)
                 ? EntropySource.NextPositive(_minPadding, _maxPadding)
                 : _maxPadding;
-            Debug.Print(DebugUtility.CreateReportString("FrameshiftPayloadMux", "GetPaddingLength",
-                "Padding length",
+            Debug.Print(DebugUtility.CreateReportString("FrameshiftPayloadMux", "NextPaddingLength", "Generated length value",
                 paddingLength));
 
             return paddingLength;
@@ -106,7 +105,7 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         /// <inheritdoc />
         protected override int GetHeaderLength()
         {
-            return GetPaddingLength();
+            return NextPaddingLength();
         }
 
         /// <inheritdoc />
@@ -138,7 +137,7 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         /// <inheritdoc />
         protected override int GetTrailerLength()
         {
-            return GetPaddingLength();
+            return NextPaddingLength();
         }
 
         /// <inheritdoc />
