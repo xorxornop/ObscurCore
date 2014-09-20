@@ -12,7 +12,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         private const byte IPAD = (byte)0x36;
         private const byte OPAD = (byte)0x5C;
 
-        private readonly IDigest digest;
+        private readonly IHash digest;
         private readonly int digestSize;
         private readonly int blockLength;
 
@@ -20,7 +20,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         private readonly byte[] outputPad;
 
         public HMac(
-            IDigest digest)
+            IHash digest)
         {
             this.digest = digest;
             this.digestSize = digest.DigestSize;
@@ -34,7 +34,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             get { return digest.AlgorithmName + "/HMAC"; }
         }
 
-        public IDigest UnderlyingDigest {
+        public IHash UnderlyingDigest {
             get { return digest; }
         }
 

@@ -17,7 +17,7 @@ using System;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
-	public class Blake2BDigest : IDigest
+	public class Blake2BDigest : IHash
 	{
 		private readonly Blake2BCore _core = new Blake2BCore();
 		protected int outputSize;

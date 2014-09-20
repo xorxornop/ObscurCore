@@ -7,7 +7,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
     ///     Base class for SHA-384 and SHA-512.
     /// </summary>
     public abstract class LongDigest
-        : IDigest
+        : IHash
     {
         private const int MyByteLength = 128;
 

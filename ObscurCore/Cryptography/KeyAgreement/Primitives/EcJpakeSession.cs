@@ -48,7 +48,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         ///     Provides hashing capability.
         ///     Together with field size of elliptic curve, sets security level.
         /// </summary>
-        private IDigest _digest;
+        private IHash _digest;
 
         /// <summary>
         ///     Domain parameters for elliptic curve system.
@@ -88,7 +88,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <param name="group">Elliptic curve group/domain (must be over F(<sub>p</sub>).</param>
         /// <param name="digest">Digest/hash function.</param>
         /// <param name="random">Random data generator/source.</param>
-        public ECJpakeSession(string participantId, string passphrase, ECDomainParameters group, IDigest digest,
+        public ECJpakeSession(string participantId, string passphrase, ECDomainParameters group, IHash digest,
             CsRng random)
         {
             if (String.IsNullOrEmpty(participantId)) {

@@ -8,7 +8,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         
     }
 
-    class WhirlpoolDigest : IDigest
+    class WhirlpoolDigest : IHash
     {
         #region Consts
 

@@ -118,7 +118,7 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\sc_clamp.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IStreamDecorator.cs" />
-    <Compile Include="Cryptography\Authentication\IDigest.cs" />
+    <Compile Include="Cryptography\Authentication\IHash.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Blake2BDigest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\Blake2BMac.cs" />

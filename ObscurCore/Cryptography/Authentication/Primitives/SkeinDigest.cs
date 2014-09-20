@@ -17,7 +17,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 	/// <seealso cref="SkeinEngine"/>
 	/// <seealso cref="SkeinParameters"/>
 	public class SkeinDigest
-		: IDigest, IMemoable
+		: IHash, IMemoable
 	{
 		/// <summary>
 		/// 256 bit block size - Skein-256

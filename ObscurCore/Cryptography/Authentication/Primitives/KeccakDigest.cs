@@ -22,7 +22,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
     /// <summary>
     /// SHA-3/Keccak sponge construction implemented as a digest/hash function.
     /// </summary>
-    public partial class KeccakDigest : IDigest
+    public partial class KeccakDigest : IHash
     {
         private const int KeccakB = 1600;
         private const int KeccakNumberOfRounds = 24;

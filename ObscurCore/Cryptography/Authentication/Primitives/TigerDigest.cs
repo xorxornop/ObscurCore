@@ -8,7 +8,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
     *  http://www.cs.technion.ac.il/~biham/Reports/Tiger</a>
     */
     public class TigerDigest
-		: IDigest
+		: IHash
     {
         private const int MyByteLength = 64;
 

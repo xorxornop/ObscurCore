@@ -16,7 +16,7 @@
 namespace ObscurCore.Cryptography.Authentication
 {
     /// <summary>
-    ///     Hash/digest functions able to be used in a <see cref="HashStream" /> or as a <see cref="IDigest"/>.
+    ///     Hash/digest functions able to be used in a <see cref="HashStream" /> or as a <see cref="IHash"/>.
     /// </summary>
     public enum HashFunction
     {

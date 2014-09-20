@@ -43,7 +43,7 @@ namespace ObscurCore.Cryptography.Signing.Primitives
          * @param digest digest to build the HMAC on.
          */
 
-        public HmacDsaKCalculator(IDigest digest)
+        public HmacDsaKCalculator(IHash digest)
         {
             this._hmac = new HMac(digest);
             this._v = new byte[_hmac.MacSize];

@@ -41,11 +41,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             if (bytes == null) {
                 throw new ArgumentNullException();
             }
-            if (bytes.Length != 32) {
+            if (bytes.Length != PrivateKeySeedSizeInBytes) {
                 throw new ArgumentException("Seed entropy must be 32 bytes (256 bits) in length.", "bytes");
             }
-            var privateKey = new byte[32];
-            bytes.CopyBytes(0, privateKey, 0, 32);
+            var privateKey = new byte[PrivateKeySeedSizeInBytes];
+            bytes.CopyBytes(0, privateKey, 0, PrivateKeySeedSizeInBytes);
             privateKey[0] &= 0xF8;
             privateKey[31] &= 0x7F;
             privateKey[31] |= 0x40;
@@ -63,11 +63,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             if (privateKey == null) {
                 throw new ArgumentNullException();
             }
-            if (privateKey.Length != 32) {
+            if (privateKey.Length != PrivateKeySeedSizeInBytes) {
                 throw new ArgumentException("Private key must be 32 bytes (256-bit).", "privateKey");
             }
 
-            var publicKey = new byte[32];
+            var publicKey = new byte[SharedKeySizeInBytes];
 
             GroupElementP3 A;
             GroupOperations.ge_scalarmult_base(out A, publicKey, 0);
@@ -78,27 +78,25 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             return publicKey;
         }
 
-        public static byte[] CalculateSharedSecret(byte[] privKey, byte[] pubKey)
+        public static byte[] CalculateSharedSecret(byte[] privKey, byte[] pubKey, bool naclCompat = false)
         {
-            var key = new byte[32];
+            var key = new byte[SharedKeySizeInBytes];
             MontgomeryOperations.scalarmult(key, 0, privKey, 0, pubKey, 0);
-            KeyExchangeOutputHashNaCl(key, 0);
+            if (naclCompat)
+                KeyExchangeOutputHashNaCl(key, 0);
             return key;
         }
 
-        public static byte[] CalculateSharedSecret(ECKey privKey, ECKey pubKey)
+        public static byte[] CalculateSharedSecret(ECKey privKey, ECKey pubKey, bool naclCompat = false)
         {
             if (pubKey.CurveName.Equals(DjbCurve.Ed25519.ToString())) {
                 return Ed25519.KeyExchange(pubKey.EncodedKey, privKey.EncodedKey);
             }
-            if (pubKey.CurveName.Equals(DjbCurve.Ed25519.ToString())) {
-                //return MontgomeryCurve25519.KeyExchange(pubKey.EncodedKey, privKey.EncodedKey);
-                var key = new byte[32];
-                MontgomeryOperations.scalarmult(key, 0, privKey.EncodedKey, 0, pubKey.EncodedKey, 0);
-                KeyExchangeOutputHashNaCl(key, 0);
-                return key;
+            if (pubKey.CurveName.Equals(DjbCurve.Curve25519.ToString())) {
+
+                return CalculateSharedSecret(privKey.EncodedKey, pubKey.EncodedKey, naclCompat);
             }
-            throw new ArgumentException();
+            throw new ArgumentException("Curve not compatible.");
         }
 
         private static readonly byte[] HSalsaNonceZeroes = new byte[16];

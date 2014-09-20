@@ -161,7 +161,7 @@ namespace ObscurCore.Cryptography.Signing.Primitives
             return sharedKey;
         }
 
-        public static void KeyExchange(ArraySegment<byte> sharedKey, ArraySegment<byte> publicKey, ArraySegment<byte> privateKey)
+        public static void KeyExchange(ArraySegment<byte> sharedKey, ArraySegment<byte> publicKey, ArraySegment<byte> privateKey, bool naclCompat = false)
         {
             if (sharedKey.Array == null) {
                 throw new ArgumentNullException("sharedKey.Array");
@@ -172,13 +172,13 @@ namespace ObscurCore.Cryptography.Signing.Primitives
             if (privateKey.Array == null) {
                 throw new ArgumentNullException("privateKey");
             }
-            if (sharedKey.Count != 32) {
+            if (sharedKey.Count != SharedKeySizeInBytes) {
                 throw new ArgumentException("sharedKey.Count != 32");
             }
-            if (publicKey.Count != 32) {
+            if (publicKey.Count != PublicKeySizeInBytes) {
                 throw new ArgumentException("publicKey.Count != 32");
             }
-            if (privateKey.Count != 64) {
+            if (privateKey.Count != ExpandedPrivateKeySizeInBytes) {
                 throw new ArgumentException("privateKey.Count != 64");
             }
 
@@ -187,7 +187,7 @@ namespace ObscurCore.Cryptography.Signing.Primitives
             FieldOperations.fe_1(out edwardsZ);
             Curve25519.EdwardsToMontgomeryX(out montgomeryX, ref edwardsY, ref edwardsZ);
 
-            IDigest hasher = AuthenticatorFactory.CreateHashPrimitive(HashFunction.Sha512);
+            IHash hasher = AuthenticatorFactory.CreateHashPrimitive(HashFunction.Sha512);
             hasher.BlockUpdate(privateKey.Array, privateKey.Offset, 32);
             byte[] h = new byte[64];
             hasher.DoFinal(h, 0);
@@ -195,7 +195,9 @@ namespace ObscurCore.Cryptography.Signing.Primitives
             MontgomeryOperations.scalarmult(out sharedMontgomeryX, h, 0, ref montgomeryX);
             h.SecureWipe();
             FieldOperations.fe_tobytes(sharedKey.Array, sharedKey.Offset, ref sharedMontgomeryX);
-            Curve25519.KeyExchangeOutputHashNaCl(sharedKey.Array, sharedKey.Offset);
+
+            if (naclCompat)
+                Curve25519.KeyExchangeOutputHashNaCl(sharedKey.Array, sharedKey.Offset);
         }
     }
 }

@@ -7,7 +7,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
     * "Handbook of Applied Cryptography", pages 344 - 347.
     */
     public abstract class GeneralDigest
-		: IDigest
+		: IHash
     {
         private const int BYTE_LENGTH = 64;
 

@@ -13,14 +13,14 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
     {
         private const long CycleCount = 10;
 
-        private readonly IDigest _digest;
+        private readonly IHash _digest;
         private readonly byte[] _seed;
         private readonly byte[] _state;
         private long _seedCounter;
         private long _stateCounter;
 
         public DigestCsRng(
-            IDigest digest)
+            IHash digest)
         {
             this._digest = digest;
 

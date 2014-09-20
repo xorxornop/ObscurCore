@@ -27,14 +27,14 @@ namespace ObscurCore.Cryptography.Authentication
     /// </summary>
     public static class AuthenticatorFactory
     {
-        private static readonly IDictionary<HashFunction, Func<IDigest>> DigestInstantiators;
+        private static readonly IDictionary<HashFunction, Func<IHash>> DigestInstantiators;
 
         private static readonly IDictionary<MacFunction, Func<IMac>> MacInstantiators;
 
         static AuthenticatorFactory()
         {
             // ######################################## HASH FUNCTIONS ########################################
-            DigestInstantiators = new Dictionary<HashFunction, Func<IDigest>> {
+            DigestInstantiators = new Dictionary<HashFunction, Func<IHash>> {
                 { HashFunction.Blake2B256, () => new Blake2BDigest(256, true) },
                 { HashFunction.Blake2B384, () => new Blake2BDigest(384, true) },
                 { HashFunction.Blake2B512, () => new Blake2BDigest(512, true) },
@@ -69,9 +69,9 @@ namespace ObscurCore.Cryptography.Authentication
         /// </summary>
         /// <param name="hashEnum">Hash/digest function to instantiate.</param>
         /// <returns>
-        ///     An digest primitive as a <see cref="IDigest"/>.
+        ///     An digest primitive as a <see cref="IHash"/>.
         /// </returns>
-        public static IDigest CreateHashPrimitive(HashFunction hashEnum)
+        public static IHash CreateHashPrimitive(HashFunction hashEnum)
         {
             return DigestInstantiators[hashEnum]();
         }

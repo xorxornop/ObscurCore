@@ -341,6 +341,92 @@ namespace ObscurCore.Tests.Cryptography.Signing
             Assert.IsTrue(good);
         }
 
+        [Test]
+        public void DJB_Ed25519_Keccak256()
+        {
+            byte[] data = TEST;
+
+            var digest = new KeccakDigest(256, true);
+            var m = new byte[digest.DigestSize];
+            digest.BlockUpdate(data, 0, data.Length);
+            digest.DoFinal(m, 0);
+
+            ECKeypair keypair = KeypairFactory.GenerateECKeypair(DjbCurve.Ed25519.ToString());
+            byte[] sig = Ed25519.Sign(m, keypair.EncodedPrivateKey);
+            bool good = Ed25519.Verify(sig, m, keypair.EncodedPublicKey);
+
+            Assert.IsTrue(good);
+        }
+
+        [Test]
+        public void DJB_Ed25519_Blake2B256()
+        {
+            byte[] data = TEST;
+
+            var digest = new Blake2BDigest(256, true);
+            var m = new byte[digest.DigestSize];
+            digest.BlockUpdate(data, 0, data.Length);
+            digest.DoFinal(m, 0);
+
+            ECKeypair keypair = KeypairFactory.GenerateECKeypair(DjbCurve.Ed25519.ToString());
+            byte[] sig = Ed25519.Sign(m, keypair.EncodedPrivateKey);
+            bool good = Ed25519.Verify(sig, m, keypair.EncodedPublicKey);
+
+            Assert.IsTrue(good);
+        }
+
+        [Test]
+        public void DJB_Ed25519_SHA512()
+        {
+            byte[] data = TEST;
+
+            var digest = new Sha512Digest();
+            var m = new byte[digest.DigestSize];
+            digest.BlockUpdate(data, 0, data.Length);
+            digest.DoFinal(m, 0);
+
+            ECKeypair keypair = KeypairFactory.GenerateECKeypair(DjbCurve.Ed25519.ToString());
+            byte[] sig = Ed25519.Sign(m, keypair.EncodedPrivateKey);
+            bool good = Ed25519.Verify(sig, m, keypair.EncodedPublicKey);
+
+            Assert.IsTrue(good);
+        }
+
+        [Test]
+        public void DJB_Ed25519_Keccak512()
+        {
+            byte[] data = TEST;
+
+            var digest = new KeccakDigest(512, true);
+            var m = new byte[digest.DigestSize];
+            digest.BlockUpdate(data, 0, data.Length);
+            digest.DoFinal(m, 0);
+
+            ECKeypair keypair = KeypairFactory.GenerateECKeypair(DjbCurve.Ed25519.ToString());
+            byte[] sig = Ed25519.Sign(m, keypair.EncodedPrivateKey);
+            bool good = Ed25519.Verify(sig, m, keypair.EncodedPublicKey);
+
+            Assert.IsTrue(good);
+        }
+
+        [Test]
+        public void DJB_Ed25519_Blake2B512()
+        {
+            byte[] data = TEST;
+
+            var digest = new Blake2BDigest(512, true);
+            var m = new byte[digest.DigestSize];
+            digest.BlockUpdate(data, 0, data.Length);
+            digest.DoFinal(m, 0);
+
+            ECKeypair keypair = KeypairFactory.GenerateECKeypair(DjbCurve.Ed25519.ToString());
+            byte[] sig = Ed25519.Sign(m, keypair.EncodedPrivateKey);
+            bool good = Ed25519.Verify(sig, m, keypair.EncodedPublicKey);
+
+            Assert.IsTrue(good);
+        }
+
+
         private static ECKey GetPrivKey(EcCurveInformation curve, string encodedKey)
         {
             var bi = new BigInteger(encodedKey, 16);
@@ -355,17 +441,17 @@ namespace ObscurCore.Tests.Cryptography.Signing
             return privKey;
         }
 
-        private void DoTestHMacDetECDsaSample(IDigest digest, ECKey privKey, BigInteger r, BigInteger s)
+        private void DoTestHMacDetECDsaSample(IHash digest, ECKey privKey, BigInteger r, BigInteger s)
         {
             DoTestHMacDetECDsa(digest, SAMPLE, privKey, r, s);
         }
 
-        private void DoTestHMacDetECDsaTest(IDigest digest, ECKey privKey, BigInteger r, BigInteger s)
+        private void DoTestHMacDetECDsaTest(IHash digest, ECKey privKey, BigInteger r, BigInteger s)
         {
             DoTestHMacDetECDsa(digest, TEST, privKey, r, s);
         }
 
-        private void DoTestHMacDetECDsa(IDigest digest, byte[] data, ECKey privKey, BigInteger r, BigInteger s)
+        private void DoTestHMacDetECDsa(IHash digest, byte[] data, ECKey privKey, BigInteger r, BigInteger s)
         {
             var m = new byte[digest.DigestSize];
 

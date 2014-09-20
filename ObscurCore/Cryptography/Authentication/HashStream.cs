@@ -25,7 +25,7 @@ namespace ObscurCore.Cryptography.Authentication
     public sealed class HashStream : DecoratingStream
     {
         private const int BufferSize = 4096;
-        private readonly IDigest _digest;
+        private readonly IHash _digest;
         private readonly byte[] _output;
         private byte[] _buffer;
 
