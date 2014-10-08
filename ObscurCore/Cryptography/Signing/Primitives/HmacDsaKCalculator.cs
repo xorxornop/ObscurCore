@@ -26,16 +26,29 @@ using ObscurCore.Cryptography.Support.Math;
 namespace ObscurCore.Cryptography.Signing.Primitives
 {
     /// <summary>
-    ///     A deterministic K calculator based on the algorithm in section 3.2 of RFC 6979.
+    ///     A deterministic K-value calculator for use with DSA-type schemes. 
+    ///     Recommended to use instead of <see cref="RandomDsaKCalculator"/>, wherever the use-case allows for it.
     /// </summary>
+    /// <remarks>
+    ///     Reduces reliance on a secure, reliable, and high quality entropy source - 
+    ///     only true entropy is required for key generation. 
+    ///     Signature generation may simply use a derived entropy from this 
+    ///     deterministic generation scheme. Security properties are very likely 
+    ///     improved for doing so, due to uncertain trust in entropy sources, 
+    ///     and even if not, high-quality entropy being needlessly consumed is avoided. 
+    ///     Happily, compatibility is is no way affected by using this modification of the [EC]DSA specification - 
+    ///     to a 3rd party consuming the actual produced values, there is no practical or perceivable difference.
+    ///     <para>Based on the algorithm in section 3.2 of RFC 6979.</para>
+    /// </remarks>
+    /// <seealso cref="ECDsaSigner"/>
     public class HmacDsaKCalculator
         : IDsaKCalculator
     {
-        private readonly HMac _hmac;
+        private readonly Hmac _hmac;
         private readonly byte[] _k;
         private readonly byte[] _v;
 
-        private BigInteger n;
+        private BigInteger _n;
 
         /**
          * Base constructor.
@@ -45,9 +58,9 @@ namespace ObscurCore.Cryptography.Signing.Primitives
 
         public HmacDsaKCalculator(IHash digest)
         {
-            this._hmac = new HMac(digest);
-            this._v = new byte[_hmac.MacSize];
-            this._k = new byte[_hmac.MacSize];
+            this._hmac = new Hmac(digest);
+            this._v = new byte[_hmac.OutputSize];
+            this._k = new byte[_hmac.OutputSize];
         }
 
         public virtual bool IsDeterministic
@@ -57,16 +70,16 @@ namespace ObscurCore.Cryptography.Signing.Primitives
 
         public virtual void Init(BigInteger n, CsRng random)
         {
-            throw new InvalidOperationException("Operation not supported.");
+            throw new InvalidOperationException("Operation not supported/appropriate.");
         }
 
 
         public void Init(BigInteger n, BigInteger d, byte[] message)
         {
-            this.n = n;
+            this._n = n;
 
-            _v.FillArray((byte) 0x01);
-            _k.FillArray((byte) 0);
+            _v.Fill_NoChecks(0x01, 0, _v.Length);
+            _k.Fill_NoChecks(0x00, 0, _k.Length);
 
             var x = new byte[(n.BitLength + 7) / 8];
             byte[] dVal = d.ToByteArrayUnsigned();
@@ -116,7 +129,7 @@ namespace ObscurCore.Cryptography.Signing.Primitives
 
         public virtual BigInteger NextK()
         {
-            var t = new byte[((n.BitLength + 7) / 8)];
+            var t = new byte[((_n.BitLength + 7) / 8)];
 
             for (;;) {
                 int tOff = 0;
@@ -133,7 +146,7 @@ namespace ObscurCore.Cryptography.Signing.Primitives
 
                 BigInteger k = BitsToInt(t);
 
-                if (k.SignValue > 0 && k.CompareTo(n) < 0) {
+                if (k.SignValue > 0 && k.CompareTo(_n) < 0) {
                     return k;
                 }
 
@@ -154,8 +167,8 @@ namespace ObscurCore.Cryptography.Signing.Primitives
         {
             var v = new BigInteger(1, t);
 
-            if (t.Length * 8 > n.BitLength) {
-                v = v.ShiftRight(t.Length * 8 - n.BitLength);
+            if (t.Length * 8 > _n.BitLength) {
+                v = v.ShiftRight(t.Length * 8 - _n.BitLength);
             }
 
             return v;

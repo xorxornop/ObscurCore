@@ -88,6 +88,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
                     ContextPermissions = KeyUseContextPermission.ManifestHeader,
                     ConfirmationCanary = canary
                 };
+                privEntropy.SecureWipe();
             } else {
                 ECPoint Q;
                 BigInteger d;

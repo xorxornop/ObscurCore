@@ -1,4 +1,5 @@
 ﻿using System;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Support.Math.Field
 {

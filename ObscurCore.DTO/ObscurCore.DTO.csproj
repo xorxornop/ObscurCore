@@ -13,6 +13,8 @@
     <FileAlignment>512</FileAlignment>
     <UseMSBuildEngine>False</UseMSBuildEngine>
     <ReleaseVersion>0.8</ReleaseVersion>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -59,6 +61,10 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PerfCopy">
+      <HintPath>..\packages\PerfCopy.1.2.0\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\PerfCopy.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>
     </Reference>
@@ -67,11 +73,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsymmetricKeyUsePermission.cs" />
+    <Compile Include="ECDsaConfiguration.cs" />
     <Compile Include="ECKey.cs" />
     <Compile Include="ECKeypair.cs" />
+    <Compile Include="Ed25519Configuration.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="IAsymmetricKeyPermissions.cs" />
-    <Compile Include="IAuthenticationFunctionConfiguration.cs" />
+    <Compile Include="IAuthenticationConfiguration.cs" />
     <Compile Include="ICipherConfiguration.cs" />
     <Compile Include="ICloneableSafely.cs" />
     <Compile Include="IECKey.cs" />
@@ -86,6 +94,8 @@
     <Compile Include="ISymmetricKey.cs" />
     <Compile Include="IUm1HybridManifestCryptographyConfiguration.cs" />
     <Compile Include="KeyUseContextPermission.cs" />
+    <Compile Include="SignatureConfiguration.cs" />
+    <Compile Include="SignatureScheme.cs" />
     <Compile Include="SymmetricKeyUsePermission.cs" />
     <Compile Include="PayloadMuxEntropyScheme.cs" />
     <Compile Include="RangeConfiguration.cs" />
@@ -106,16 +116,17 @@
     <Compile Include="CipherConfiguration.cs" />
     <Compile Include="CipherType.cs" />
     <Compile Include="SymmetricManifestCryptographyConfiguration.cs" />
-    <Compile Include="AuthenticationFunctionConfiguration.cs" />
+    <Compile Include="AuthenticationConfiguration.cs" />
     <Compile Include="ECJpakeRound1.cs" />
     <Compile Include="ECJpakeRound2.cs" />
     <Compile Include="JpakeRound3.cs" />
-    <None Include="AxolotlState.cs" />
-    <None Include="AxolotlExchange.cs" />
+    <Compile Include="AxolotlSessionState.cs" />
+    <Compile Include="AxolotlExchange.cs" />
     <Compile Include="ScryptConfiguration.cs" />
     <Compile Include="Pbkdf2Configuration.cs" />
     <Compile Include="IAuthenticatibleClonable.cs" />
     <Compile Include="Um1HybridManifestCryptographyConfiguration.cs" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
@@ -138,4 +149,11 @@
       </Properties>
     </MonoDevelop>
   </ProjectExtensions>
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
 </Project>

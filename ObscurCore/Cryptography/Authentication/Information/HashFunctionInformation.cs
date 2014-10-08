@@ -18,9 +18,14 @@ namespace ObscurCore.Cryptography.Authentication.Information
     public sealed class HashFunctionInformation : IPrimitiveInformation
     {
         /// <summary>
+        ///     Size of the hash/digest produced in bytes.
+        /// </summary>
+        public int OutputSize { get { return OutputSizeBits.BitsToBytes(); } }
+
+        /// <summary>
         ///     Size of the hash/digest produced in bits.
         /// </summary>
-        public int OutputSize { get; internal set; }
+        public int OutputSizeBits { get; internal set; }
 
         /// <summary>
         ///     Name of the hash function (must be a member of <see cref="HashFunction"/>).

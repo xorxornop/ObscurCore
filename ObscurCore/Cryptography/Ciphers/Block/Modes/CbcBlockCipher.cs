@@ -1,4 +1,5 @@
 using System;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 {
@@ -37,7 +38,9 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
         /// </summary>
         public override void Reset()
         {
-            Array.Copy(IV, 0, _cbcV, 0, IV.Length);
+            if (IV != null) {
+                Array.Copy(IV, 0, _cbcV, 0, IV.Length);
+            }          
             _cbcNextV.SecureWipe();
 
             BlockCipher.Reset();
@@ -60,7 +63,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             /*
             * copy ciphertext to cbcV
             */
-            outBytes.CopyBytes(outOff, _cbcV, 0, _cbcV.Length);
+            outBytes.DeepCopy_NoChecks(outOff, _cbcV, 0, _cbcV.Length);
 
             return length;
         }
@@ -71,7 +74,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
             byte[] outBytes,
             int outOff)
         {
-            input.CopyBytes(inOff, _cbcNextV, 0, CipherBlockSize);
+            input.DeepCopy_NoChecks(inOff, _cbcNextV, 0, CipherBlockSize);
 
             int length = BlockCipher.ProcessBlock(input, inOff, outBytes, outOff);
 

@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using BitManipulator;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
-    internal interface IDirectIoDigest
-    {
-        
-    }
-
     class WhirlpoolDigest : IHash
     {
         #region Consts
@@ -47,8 +44,12 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
         private static ulong[] s_rc = new ulong[ROUNDS + 1];
 
+        private static readonly short[] EIGHT = new short[BITCOUNT_ARRAY_SIZE];
+
         static WhirlpoolDigest()
         {
+            EIGHT[BITCOUNT_ARRAY_SIZE - 1] = 8;
+
             for (int i = 0; i < 256; i++)
             {
                 uint v1 = s_SBOX[i];
@@ -68,19 +69,19 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
                 s_C7[i] = packIntoULong(v1, v4, v1, v8, v5, v2, v9, v1);
             }
 
-            s_rc[0] = 0;
+            s_rc[0] = 0UL;
 
             for (int r = 1; r <= ROUNDS; r++)
             {
                 int i = 8 * (r - 1);
-                s_rc[r] = (s_C0[i] & 0xff00000000000000) ^
-                          (s_C1[i + 1] & 0x00ff000000000000) ^
-                          (s_C2[i + 2] & 0x0000ff0000000000) ^
-                          (s_C3[i + 3] & 0x000000ff00000000) ^
-                          (s_C4[i + 4] & 0x00000000ff000000) ^
-                          (s_C5[i + 5] & 0x0000000000ff0000) ^
-                          (s_C6[i + 6] & 0x000000000000ff00) ^
-                          (s_C7[i + 7] & 0x00000000000000ff);
+                s_rc[r] = (s_C0[i] & 0xff00000000000000UL) ^
+                    (s_C1[i + 1] & 0x00ff000000000000UL) ^
+                    (s_C2[i + 2] & 0x0000ff0000000000UL) ^
+                    (s_C3[i + 3] & 0x000000ff00000000UL) ^
+                    (s_C4[i + 4] & 0x00000000ff000000UL) ^
+                    (s_C5[i + 5] & 0x0000000000ff0000UL) ^
+                    (s_C6[i + 6] & 0x000000000000ff00UL) ^
+                    (s_C7[i + 7] & 0x00000000000000ffUL);
             }
 
         }
@@ -106,11 +107,18 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
         #endregion
 
-        private readonly ulong[] m_hash = new ulong[8];
 
+        private const int BITCOUNT_ARRAY_SIZE = 32;
         private byte[] _buffer = new byte[BlockSizeBytes];
         private int _bufferFilled;
-        private int m_processed_bytes;
+        private short[] _bitCount = new short[BITCOUNT_ARRAY_SIZE];
+
+        // -- internal hash state --
+        private ulong[] _hash = new ulong[8];
+        private ulong[] _K = new ulong[8]; // the round key
+        private ulong[] _L = new ulong[8];
+        private ulong[] _block = new ulong[8]; // mu (buffer)
+        private ulong[] _state = new ulong[8]; // the current "cipher" state
 
         public WhirlpoolDigest()
         {
@@ -121,24 +129,76 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             get { return "Whirlpool"; }
         }
 
-        public int DigestSize
+        /// <summary>
+        ///     Enumerated function identity.
+        /// </summary>
+        public HashFunction Identity { get { return HashFunction.Whirlpool; } }
+
+        public int OutputSize
         {
             get { return 64; }
         }
 
-        public int ByteLength
+        public int StateSize
         {
             get { return BlockSizeBytes; }
         }
 
-        public void Update(byte input) {
-            if (_bufferFilled == BlockSizeBytes) {
-				Transform(_buffer, 0);
-				_bufferFilled = 0;
-			}
-
+        public void Update(byte input)
+        {
             _buffer[_bufferFilled++] = input;
-            m_processed_bytes++;
+
+            if (_bufferFilled == _buffer.Length) {
+                processFilledBuffer();
+            }
+
+            increment();
+        }
+
+        private void increment()
+        {
+            int carry = 0;
+            for (int i = _bitCount.Length - 1; i >= 0; i--) {
+                int sum = (_bitCount[i] & 0xff) + EIGHT[i] + carry;
+
+                carry = sum >> 8;
+                _bitCount[i] = (short)(sum & 0xff);
+            }
+        }
+
+        private void processFilledBuffer()
+        {
+            // copies into the block...
+            _buffer.BigEndianToUInt64_NoChecks(0, _block, 0, _block.Length);
+            processBlock();
+            _bufferFilled = 0;
+            Array.Clear(_buffer, 0, _buffer.Length);
+        }
+
+        private void processFilledBuffer(byte[] buffer, int offset)
+        {
+            // copies into the block...
+            //buffer.BigEndianToUInt64_NoChecks(offset, _block, 0, _block.Length);
+            for (int i = 0; i < _state.Length; i++) {
+                _block[i] = bytesToLongFromBuffer(_buffer, i * 8);
+            }
+            processBlock();
+            _bufferFilled = 0;
+            Array.Clear(_buffer, 0, _buffer.Length);
+        }
+
+        private static ulong bytesToLongFromBuffer(byte[] buffer, int startPos)
+        {
+            ulong rv = (((buffer[startPos + 0] & 0xffUL) << 56) |
+                ((buffer[startPos + 1] & 0xffUL) << 48) |
+                ((buffer[startPos + 2] & 0xffUL) << 40) |
+                ((buffer[startPos + 3] & 0xffUL) << 32) |
+                ((buffer[startPos + 4] & 0xffUL) << 24) |
+                ((buffer[startPos + 5] & 0xffUL) << 16) |
+                ((buffer[startPos + 6] & 0xffUL) << 8) |
+                ((buffer[startPos + 7]) & 0xffUL));
+
+            return rv;
         }
 
         public void BlockUpdate(byte[] input, int inOff, int len) {
@@ -149,232 +209,150 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			
 			if ((_bufferFilled > 0) && (count > bufferRemaining))
 			{
-                input.CopyBytes(offset, _buffer, _bufferFilled, bufferRemaining);
-				Transform(_buffer, 0);
+                input.DeepCopy_NoChecks(offset, _buffer, _bufferFilled, bufferRemaining);
+                processFilledBuffer();
 				offset += bufferRemaining;
 				count -= bufferRemaining;
 				_bufferFilled = 0;
 			}
 			
-			while (count > BlockSizeBytes)
+			while (count >= BlockSizeBytes)
 			{
-				Transform(input, offset);
+				processFilledBuffer(input, offset);
 				offset += BlockSizeBytes;
 				count -= BlockSizeBytes;
 			}
 			
 			if (count > 0)
 			{
-                input.CopyBytes(offset, _buffer, _bufferFilled, count);
+                input.DeepCopy_NoChecks(offset, _buffer, _bufferFilled, count);
 				_bufferFilled += count;
 			}
-
-            m_processed_bytes += len;
         }
+        private void processBlock()
+		{
+			// buffer contents have been transferred to the _block[] array via
+			// processFilledBuffer
 
-        //private static void ConvertBytesToULongsSwapOrder(byte[] a_in, int a_index, int a_length, ulong[] a_out)
-        //{
-        //    for (int i = 0; a_length > 0; a_length -= 8)
-        //    {
-        //        a_out[i++] =
-        //            (((ulong)a_in[a_index++] << 56) |
-        //            ((ulong)a_in[a_index++] << 48) |
-        //            ((ulong)a_in[a_index++] << 40) |
-        //            ((ulong)a_in[a_index++] << 32) |
-        //            ((ulong)a_in[a_index++] << 24) |
-        //            ((ulong)a_in[a_index++] << 16) |
-        //            ((ulong)a_in[a_index++] << 8) |
-        //            ((ulong)a_in[a_index++]));
-        //    }
-        //}
+			// compute and apply K^0
+			for (int i = 0; i < 8; i++)
+			{
+				_state[i] = _block[i] ^ (_K[i] = _hash[i]);
+			}
 
-#if INCLUDE_UNSAFE
-        private void Transform(byte[] input, int offset)
-        {
-            unsafe {
-                ulong* k = stackalloc ulong[8];
-                ulong* m = stackalloc ulong[8];
+			// iterate over the rounds
+			for (int round = 1; round <= ROUNDS; round++)
+			{
+				for (int i = 0; i < 8; i++)
+				{
+					_L[i] = 0;
+					_L[i] ^= s_C0[(int)(_K[(i - 0) & 7] >> 56) & 0xff];
+					_L[i] ^= s_C0[(int)(_K[(i - 1) & 7] >> 48) & 0xff];
+					_L[i] ^= s_C0[(int)(_K[(i - 2) & 7] >> 40) & 0xff];
+					_L[i] ^= s_C0[(int)(_K[(i - 3) & 7] >> 32) & 0xff];
+					_L[i] ^= s_C0[(int)(_K[(i - 4) & 7] >> 24) & 0xff];
+					_L[i] ^= s_C0[(int)(_K[(i - 5) & 7] >> 16) & 0xff];
+					_L[i] ^= s_C0[(int)(_K[(i - 6) & 7] >>  8) & 0xff];
+					_L[i] ^= s_C0[(int)(_K[(i - 7) & 7]) & 0xff];
+				}
 
-                ulong* temp = stackalloc ulong[8];
-                ulong* data = stackalloc ulong[8];
+				Array.Copy(_L, 0, _K, 0, _K.Length);
 
-                //ConvertBytesToULongsSwapOrder(input, offset, BlockSizeBytes, data);
-                for (int i = 0; i < 8; i++) {
-                    data[i] = input.BigEndianToUInt64(offset + (i * sizeof(ulong)));
-                }
+				_K[0] ^= s_rc[round];
 
-                for (int i = 0; i < 8; i++) {
-                    k[i] = m_hash[i];
-                    temp[i] = data[i] ^ k[i];
-                }
+				// apply the round transformation
+				for (int i = 0; i < 8; i++)
+				{
+					_L[i] = _K[i];
 
-                for (int round = 1; round <= ROUNDS; round++) {
-                    for (int i = 0; i < 8; i++) {
-                        m[i] = 0;
-                        m[i] ^= s_C0[(byte)(k[(i - 0) & 7] >> 56)];
-                        m[i] ^= s_C1[(byte)(k[(i - 1) & 7] >> 48)];
-                        m[i] ^= s_C2[(byte)(k[(i - 2) & 7] >> 40)];
-                        m[i] ^= s_C3[(byte)(k[(i - 3) & 7] >> 32)];
-                        m[i] ^= s_C4[(byte)(k[(i - 4) & 7] >> 24)];
-                        m[i] ^= s_C5[(byte)(k[(i - 5) & 7] >> 16)];
-                        m[i] ^= s_C6[(byte)(k[(i - 6) & 7] >> 8)];
-                        m[i] ^= s_C7[(byte)(k[(i - 7) & 7])];
-                    }
+					_L[i] ^= s_C0[(int)(_state[(i - 0) & 7] >> 56) & 0xff];
+					_L[i] ^= s_C0[(int)(_state[(i - 1) & 7] >> 48) & 0xff];
+					_L[i] ^= s_C0[(int)(_state[(i - 2) & 7] >> 40) & 0xff];
+					_L[i] ^= s_C0[(int)(_state[(i - 3) & 7] >> 32) & 0xff];
+					_L[i] ^= s_C0[(int)(_state[(i - 4) & 7] >> 24) & 0xff];
+					_L[i] ^= s_C0[(int)(_state[(i - 5) & 7] >> 16) & 0xff];
+					_L[i] ^= s_C0[(int)(_state[(i - 6) & 7] >> 8) & 0xff];
+					_L[i] ^= s_C0[(int)(_state[(i - 7) & 7]) & 0xff];
+				}
 
-                    Copy(m, k, 8);
+				// save the current state
+				Array.Copy(_L, 0, _state, 0, _state.Length);
+			}
 
-                    k[0] ^= s_rc[round];
+			// apply Miuaguchi-Preneel compression
+			for (int i = 0; i < 8; i++)
+			{
+				_hash[i] ^= _state[i] ^ _block[i];
+			}
 
-                    for (int i = 0; i < 8; i++) {
-                        m[i] = k[i];
-
-                        m[i] ^= s_C0[(byte)(temp[(i - 0) & 7] >> 56)];
-                        m[i] ^= s_C1[(byte)(temp[(i - 1) & 7] >> 48)];
-                        m[i] ^= s_C2[(byte)(temp[(i - 2) & 7] >> 40)];
-                        m[i] ^= s_C3[(byte)(temp[(i - 3) & 7] >> 32)];
-                        m[i] ^= s_C4[(byte)(temp[(i - 4) & 7] >> 24)];
-                        m[i] ^= s_C5[(byte)(temp[(i - 5) & 7] >> 16)];
-                        m[i] ^= s_C6[(byte)(temp[(i - 6) & 7] >> 8)];
-                        m[i] ^= s_C7[(byte)(temp[(i - 7) & 7])];
-                    }
-
-                    Copy(m, temp, 8);
-                }
-
-                for (int i = 0; i < 8; i++)
-                    //m_hash[i] ^= temp[i] ^ data[i];
-                    m_hash[i] ^= m[i] ^ data[i];
-            }
-        }
-
-        private unsafe void Copy(ulong* src, ulong* dst, int len)
-        {
-            for (int i = 0; i < len; i++) {
-                *dst = *src;
-                dst ++;
-                src ++;
-            }
-        }
-#else
-        private void Transform(byte[] input, int offset)
-        {
- 	        ulong[] k = new ulong[8];
-            ulong[] m = new ulong[8];
-
-            ulong[] temp = new ulong[8];
-            ulong[] data = new ulong[8];
-
-            //ConvertBytesToULongsSwapOrder(input, offset, BlockSizeBytes, data);
-            for (int i = 0; i < data.Length; i++) {
-                data[i] = input.BigEndianToUInt64(offset + (i * sizeof(ulong)));
-            }
-
-            for (int i = 0; i < 8; i++)
-            {
-                k[i] = m_hash[i];
-                temp[i] = data[i] ^ k[i];
-            }
-
-            for (int round = 1; round <= ROUNDS; round++)
-            {
-                for (int i = 0; i < 8; i++)
-                {
-                    m[i] = 0;
-                    m[i] ^= s_C0[(byte)(k[(i - 0) & 7] >> 56)];
-                    m[i] ^= s_C1[(byte)(k[(i - 1) & 7] >> 48)];
-                    m[i] ^= s_C2[(byte)(k[(i - 2) & 7] >> 40)];
-                    m[i] ^= s_C3[(byte)(k[(i - 3) & 7] >> 32)];
-                    m[i] ^= s_C4[(byte)(k[(i - 4) & 7] >> 24)];
-                    m[i] ^= s_C5[(byte)(k[(i - 5) & 7] >> 16)];
-                    m[i] ^= s_C6[(byte)(k[(i - 6) & 7] >> 8)];
-                    m[i] ^= s_C7[(byte)(k[(i - 7) & 7])];
-                }
-
-                Array.Copy(m, 0, k, 0, k.Length);
-
-                k[0] ^= s_rc[round];
-
-                for (int i = 0; i < 8; i++)
-                {
-                    m[i] = k[i];
-
-                    m[i] ^= s_C0[(byte)(temp[(i - 0) & 7] >> 56)];
-                    m[i] ^= s_C1[(byte)(temp[(i - 1) & 7] >> 48)];
-                    m[i] ^= s_C2[(byte)(temp[(i - 2) & 7] >> 40)];
-                    m[i] ^= s_C3[(byte)(temp[(i - 3) & 7] >> 32)];
-                    m[i] ^= s_C4[(byte)(temp[(i - 4) & 7] >> 24)];
-                    m[i] ^= s_C5[(byte)(temp[(i - 5) & 7] >> 16)];
-                    m[i] ^= s_C6[(byte)(temp[(i - 6) & 7] >> 8)];
-                    m[i] ^= s_C7[(byte)(temp[(i - 7) & 7])];
-                }
-
-                //Array.Copy(m, 0, temp, 0, temp.Length);
-            }
-
-            for (int i = 0; i < 8; i++)
-                //m_hash[i] ^= temp[i] ^ data[i];
-                m_hash[i] ^= m[i] ^ data[i];
-        }
-#endif
-
-        //private static void ConvertULongToBytesSwapOrder(ulong a_in, byte[] a_out, int a_index)
-        //{
-        //    Debug.Assert(a_index + 8 <= a_out.Length);
-
-        //    a_out[a_index++] = (byte)(a_in >> 56);
-        //    a_out[a_index++] = (byte)(a_in >> 48);
-        //    a_out[a_index++] = (byte)(a_in >> 40);
-        //    a_out[a_index++] = (byte)(a_in >> 32);
-        //    a_out[a_index++] = (byte)(a_in >> 24);
-        //    a_out[a_index++] = (byte)(a_in >> 16);
-        //    a_out[a_index++] = (byte)(a_in >> 8);
-        //    a_out[a_index++] = (byte)a_in;
-        //}
-
-        //private static byte[] ConvertULongsToBytesSwapOrder(ulong[] a_in, int a_index = 0, int a_length = -1)
-        //{
-        //    if (a_length == -1)
-        //        a_length = a_in.Length;
-
-        //    byte[] result = new byte[a_length * 8];
-
-        //    for (int j = 0; a_length > 0; a_length--, a_index++) {
-        //        result[j++] = (byte)(a_in[a_index] >> 56);
-        //        result[j++] = (byte)(a_in[a_index] >> 48);
-        //        result[j++] = (byte)(a_in[a_index] >> 40);
-        //        result[j++] = (byte)(a_in[a_index] >> 32);
-        //        result[j++] = (byte)(a_in[a_index] >> 24);
-        //        result[j++] = (byte)(a_in[a_index] >> 16);
-        //        result[j++] = (byte)(a_in[a_index] >> 8);
-        //        result[j++] = (byte)a_in[a_index];
-        //    }
-
-        //    return result;
-        //}
+		}
 
         public int DoFinal(byte[] output, int outOff)
         {
-            ulong bits = (ulong)(m_processed_bytes * sizeof(ulong));
+            finish();
 
-            int padindex = (_bufferFilled > 31) ? (120 - _bufferFilled) : (56 - _bufferFilled);
-
-            byte[] pad = new byte[padindex + sizeof(ulong)];
-
-            pad[0] = 0x80;
-
-            //ConvertULongToBytesSwapOrder(bits, pad, padindex);
-            bits.ToBigEndian(pad, padindex);
-            padindex += sizeof(ulong);
-
-            BlockUpdate(pad, 0, padindex);
-
-            //ConvertULongsToBytesSwapOrder(m_hash);
-            for (int i = 0; i < m_hash.Length; i++) {
-                m_hash[i].ToBigEndian(output, outOff);
-                outOff += sizeof(ulong);
+            //_hash.ToBigEndian_NoChecks(0, output, outOff, _hash.Length);
+            for (int i = 0; i < 8; i++) {
+                convertLongToByteArray(_hash[i], output, outOff + (i * 8));
             }
 
-            return DigestSize;
+            Reset();
+
+            return OutputSize;
+        }
+
+        private static void convertLongToByteArray(ulong inputLong, byte[] outputArray, int offSet)
+        {
+            for (int i = 0; i < 8; i++) {
+                outputArray[offSet + i] = (byte)((inputLong >> (56 - (i * 8))) & 0xff);
+            }
+        }
+
+        private void finish()
+        {
+            /*
+                * this makes a copy of the current bit length. at the expense of an
+                * object creation of 32 bytes rather than providing a _stopCounting
+                * boolean which was the alternative I could think of.
+                */
+            byte[] bitLength = copyBitLength();
+
+            _buffer[_bufferFilled++] |= 0x80;
+
+            if (_bufferFilled == _buffer.Length) {
+                processFilledBuffer();
+            }
+
+            /*
+                * Final block contains
+                * [ ... data .... ][0][0][0][ length ]
+                *
+                * if [ length ] cannot fit.  Need to create a new block.
+                */
+            if (_bufferFilled > 32) {
+                while (_bufferFilled != 0) {
+                    Update((byte)0);
+                }
+            }
+
+            while (_bufferFilled <= 32) {
+                Update((byte)0);
+            }
+
+            // copy the length information to the final 32 bytes of the
+            // 64 byte block....
+            Array.Copy(bitLength, 0, _buffer, 32, bitLength.Length);
+
+            processFilledBuffer();
+        }
+
+        private byte[] copyBitLength()
+        {
+            byte[] rv = new byte[BITCOUNT_ARRAY_SIZE];
+            for (int i = 0; i < rv.Length; i++) {
+                rv[i] = (byte)(_bitCount[i] & 0xff);
+            }
+            return rv;
         }
 
         public void Reset()

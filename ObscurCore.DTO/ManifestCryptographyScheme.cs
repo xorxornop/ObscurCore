@@ -17,18 +17,21 @@
 
 #endregion
 
+using ProtoBuf;
+
 namespace ObscurCore.DTO
 {
     /// <summary>
     ///     Types of cryptographic scheme used in initial/primary
     ///     key derivation for a <see cref="Manifest" />.
     /// </summary>
+    [ProtoContract]
     public enum ManifestCryptographyScheme
     {
         /// <summary>
         ///     No scheme is used.
         /// </summary>
-        None,
+        None = 0,
 
         /// <summary>
         ///     A key known to both parties (sender and recipient) is used.

@@ -1,6 +1,7 @@
 using System;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Support;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
@@ -115,7 +116,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         }
 
         /// <inheritdoc />
-        internal override void ProcessBytesInternal(byte[] input, int inOff, int length, byte[] output, int outOff)
+        protected internal override void ProcessBytesInternal(byte[] input, int inOff, int length, byte[] output, int outOff)
         {
             if (LimitExceeded((uint)length)) {
                 throw new MaxBytesExceededException("2^70 byte limit per IV would be exceeded; Change IV");
@@ -186,7 +187,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                 if (blen > length) {
                     blen = length;
                 }
-                _keyStream.CopyBytes(_index, buffer, offset, blen);
+                _keyStream.DeepCopy_NoChecks(_index, buffer, offset, blen);
                 _index += blen;
                 offset += blen;
                 length -= blen;
@@ -200,7 +201,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                 } else {
                     GenerateKeyStream(_keyStream, 0);
                     AdvanceCounter();
-                    _keyStream.CopyBytes(0, buffer, offset, length);
+                    _keyStream.DeepCopy_NoChecks(0, buffer, offset, length);
                     _index = length;
                     length = 0;
                 }

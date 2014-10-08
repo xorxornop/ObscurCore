@@ -19,6 +19,7 @@ using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Ciphers.Block.Padding;
 using ObscurCore.Cryptography.Ciphers.Stream;
 using ObscurCore.DTO;
+using PerfCopy;
 using RingByteBuffer;
 
 namespace ObscurCore.Cryptography.Ciphers
@@ -247,7 +248,7 @@ namespace ObscurCore.Cryptography.Ciphers
             // Process any leftovers
             int gapLength = _operationSize - _operationBufferOffset;
             if (_operationBufferOffset > 0 && count > gapLength) {
-                buffer.CopyBytes(offset, _operationBuffer, _operationBufferOffset, gapLength);
+                buffer.DeepCopy_NoChecks(offset, _operationBuffer, _operationBufferOffset, gapLength);
                 totalIn += gapLength;
                 iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
                 _operationBufferOffset = 0;
@@ -260,10 +261,7 @@ namespace ObscurCore.Cryptography.Ciphers
                 return;
             }
 
-            int remainder;
-            int operations = Math.DivRem(count, _operationSize, out remainder);
-
-            for (int i = 0; i < operations; i++) {
+            while (count > _operationSize) {
                 iterOut = _cipher.ProcessBytes(buffer, offset, _tempBuffer, 0);
                 totalIn += _operationSize;
                 offset += _operationSize;
@@ -279,9 +277,9 @@ namespace ObscurCore.Cryptography.Ciphers
             }
 
             // Store any remainder in operation buffer
-            buffer.CopyBytes(offset, _operationBuffer, _operationBufferOffset, remainder);
-            totalIn += remainder;
-            _operationBufferOffset += remainder;
+            buffer.DeepCopy_NoChecks(offset, _operationBuffer, _operationBufferOffset, count);
+            totalIn += count;
+            _operationBufferOffset += count;
 
             // Write out the processed data to the stream StreamBinding
             iterOut = _outBuffer.CurrentLength - _operationSize;
@@ -420,7 +418,7 @@ namespace ObscurCore.Cryptography.Ciphers
                             // Short operation
                             iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
                             int subOp = buffer.Length - offset;
-                            _tempBuffer.CopyBytes(0, buffer, offset, subOp);
+                            _tempBuffer.DeepCopy_NoChecks(0, buffer, offset, subOp);
                             totalOut += subOp;
                             _outBuffer.Put(_tempBuffer, count, iterOut - subOp);
                             count = 0;
@@ -429,7 +427,7 @@ namespace ObscurCore.Cryptography.Ciphers
                     } else {
                         // End of stream - finish the decryption
                         // Copy the previous operation block in to provide overrun protection
-                        buffer.CopyBytes(offset - _operationSize, _tempBuffer, 0, _operationSize);
+                        buffer.DeepCopy_NoChecks(offset - _operationSize, _tempBuffer, 0, _operationSize);
                         iterOut = FinishReading(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, _operationSize);
                         if (iterOut > 0) {
                             // Process the final decrypted data
@@ -437,11 +435,11 @@ namespace ObscurCore.Cryptography.Ciphers
                             if (remainingBufferSpace < 0) {
                                 // Not enough space in destination buffer
                                 int subOp = buffer.Length - offset;
-                                _tempBuffer.CopyBytes(_operationSize, buffer, offset, subOp);
+                                _tempBuffer.DeepCopy_NoChecks(_operationSize, buffer, offset, subOp);
                                 totalOut += subOp;
                                 _outBuffer.Put(_tempBuffer, _operationSize + subOp, iterOut - subOp);
                             } else {
-                                _tempBuffer.CopyBytes(_operationSize, buffer, offset, iterOut);
+                                _tempBuffer.DeepCopy_NoChecks(_operationSize, buffer, offset, iterOut);
                                 totalOut += iterOut;
                             }
                         } else {
@@ -460,201 +458,201 @@ namespace ObscurCore.Cryptography.Ciphers
         }
 
 
-        //		/// <summary>
-        //		/// Decrypt an exact amount of bytes from the stream StreamBinding and write them 
-        //		/// to a destination stream.
-        //		/// </summary>
-        //		/// <returns>The quantity of bytes written to the destination stream.</returns>
-        //		/// <param name="destination">Stream to write decrypted data to.</param>
-        //		/// <param name="length">Quantity of bytes to read.</param>
-        //		/// <param name="finishing">
-        //		/// If set to <c>true</c>, final ciphertext position is located at end of requested length.
-        //		/// </param>
-        //		/// <exception cref="InvalidOperationException">Stream is encrypting, not decrypting.</exception>
-        //		/// <exception cref="ArgumentNullException">Destination stream is null.</exception>
-        //		/// <exception cref="ArgumentException">Length supplied is negative.</exception>
-        //		/// <exception cref="EndOfStreamException">Required quantity of bytes could not be read.</exception>
-        //		public override long ReadExactlyTo (Stream destination, long length, bool finishing = false) {
-        //			CheckIfCanDecorate ();
-        //			if (Writing)
-        //				throw new InvalidOperationException (NotReadingError);
-        //			if (destination == null) {
-        //				throw new ArgumentNullException ("destination");
-        //			} else if (length < 0) {
-        //				throw new ArgumentException ("Length must be positive.", "length");
-        //			}
-        //
-        //			int totalIn = 0, totalOut = 0;
-        //			int iterIn = 0, iterOut = 0;
-        //
-        //			// Has ReadByte been used? If it has then we need to return the partial block
-        //			if(_outBuffer.Length > 0) {
-        //				iterOut = _outBuffer.Length;
-        //				_outBuffer.TakeTo (destination, iterOut);
-        //				totalOut += iterOut;
-        //			}
-        //
-        //			while (totalIn < length) {
-        //				var remaining = length - totalIn;
-        //				int opSize = _operationSize - _operationBufferOffset;
-        //				if (opSize > remaining)
-        //					opSize = (int)remaining;
-        //				iterIn = StreamBinding.Read (_operationBuffer, _operationBufferOffset, opSize);
-        //				_operationBufferOffset += iterIn;
-        //				totalIn += iterIn;
-        ////				length -= iterIn;
-        //				if ((finishing && remaining <= _operationSize) || iterIn == 0) {
-        //					// Finish the decryption - end of stream
-        //					iterOut = FinishReading(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);
-        //					destination.Write (_tempBuffer, 0, iterOut);
-        //					totalOut += iterOut;
-        //					_operationBufferOffset = 0;
-        //				} else if (_operationBufferOffset == _operationSize) {
-        //					// Normal processing (mid-stream)
-        //					iterOut = _cipher.ProcessBytes (_operationBuffer, 0, _tempBuffer, 0);
-        //					destination.Write (_tempBuffer, 0, iterOut);
-        //					totalOut += iterOut;
-        //					_operationBufferOffset = 0;
-        //				}
-        //			}
-        //
-        //			BytesIn += totalIn;
-        //			BytesOut += totalOut;
-        //			return totalOut;
-        //		}
-
-
         /// <summary>
-        ///     Decrypt an exact amount of bytes from <see cref="DecoratingStream.StreamBinding"/> and write them
-        ///     to a destination stream.
+        /// Decrypt an exact amount of bytes from the stream StreamBinding and write them 
+        /// to a destination stream.
         /// </summary>
         /// <returns>The quantity of bytes written to the destination stream.</returns>
         /// <param name="destination">Stream to write decrypted data to.</param>
         /// <param name="length">Quantity of bytes to read.</param>
         /// <param name="finishing">
-        ///     If set to <c>true</c>, final ciphertext position is located at end of requested length.
+        /// If set to <c>true</c>, final ciphertext position is located at end of requested length.
         /// </param>
         /// <exception cref="InvalidOperationException">Stream is encrypting, not decrypting.</exception>
         /// <exception cref="ArgumentNullException">Destination stream is null.</exception>
         /// <exception cref="ArgumentException">Length supplied is negative.</exception>
         /// <exception cref="EndOfStreamException">Required quantity of bytes could not be read.</exception>
-        public override long ReadExactlyTo(System.IO.Stream destination, long length, bool finishing = false)
-        {
-            CheckIfCanDecorate();
-            if (Writing) {
-                throw new InvalidOperationException(NotReadingError);
-            }
-            if (destination == null) {
-                throw new ArgumentNullException("destination");
-            }
-            if (length < 0) {
-                throw new ArgumentException("Length must be positive.", "length");
-            }
-
-            int totalIn = 0, totalOut = 0;
-            int iterIn, iterOut;
-
-            // Write out any partial completed block(s)
-            int outBufferLength = _outBuffer.CurrentLength;
-            if (outBufferLength > 0) {
-                _outBuffer.TakeTo(destination, outBufferLength);
-                totalOut += outBufferLength;
-                // No read took place, so no subtraction of length appropriate
-            }
-
-            // Process any remainder bytes from last call, if any, by filling the block/operation
-            if (_operationBufferOffset > 0) {
-                int readLength = _operationSize - _operationBufferOffset;
-                if (readLength <= length) {
-                    iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, readLength);
-                    length -= iterIn;
-                    totalIn += iterIn;
-                    // End of stream detection
-                    if (iterIn < readLength) {
-                        throw new EndOfStreamException();
-                    }
-                    iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
-                    destination.Write(_tempBuffer, 0, iterOut);
-                    totalOut += iterOut;
-                    _operationBufferOffset = 0;
-                }
-            }
-
-            long remainderLong;
-            var operations = (int)Math.DivRem(length, _operationSize, out remainderLong);
-            var remainder = (int)remainderLong;
-            // ^ Can be changed back to long if needed.
-            // Otherwise, though, we'll try to avoid pointless and costly repeated casts.
-
-            // Process all the whole blocks/operations
-            for (int i = 1; i <= operations; i++) {
-                iterIn = StreamBinding.Read(_operationBuffer, 0, _operationSize);
-                totalIn += iterIn;
-                // End of stream detection
-                if (iterIn < _operationSize) {
-                    BytesIn += totalIn;
-                    BytesOut += totalOut;
-                    throw new EndOfStreamException();
-                }
-
-                if (i == operations && finishing) {
-                    _operationBufferOffset = _operationSize;
-                    break;
-                }
-                iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
-                destination.Write(_tempBuffer, 0, iterOut);
-                totalOut += iterOut;
-            }
-
-            if (finishing == false) {
-                // Mid-stream
-                if (remainder > 0) {
-                    // Any remainder bytes are stored (not decrypted)
-                    iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, remainder);
-                    totalIn += iterIn;
-                    _operationBufferOffset += iterIn;
-                    // End of stream detection
-                    if (_operationBufferOffset < remainder) {
-                        throw new EndOfStreamException();
-                    }
-                }
-            } else {
-                // Finishing
-                int totalRemaining = remainder + _operationBufferOffset;
-                if (totalRemaining > _operationSize) {
-                    int finalReadLength = _operationSize - _operationBufferOffset;
-                    iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, finalReadLength);
-                    // End of stream detection
-                    if (iterIn < finalReadLength) {
-                        BytesIn += totalIn;
-                        BytesOut += totalOut;
-                        throw new EndOfStreamException();
-                    }
-                    remainder -= iterIn;
-                    totalIn += iterIn;
-                    iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
-                    destination.Write(_tempBuffer, 0, iterOut);
-                    totalOut += iterOut;
-                    _operationBufferOffset = 0;
-                }
-                iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, remainder);
-                if (iterIn < remainder) {
-                    BytesIn += totalIn;
-                    BytesOut += totalOut;
-                    throw new EndOfStreamException();
-                }
-                _operationBufferOffset += iterIn;
-                totalIn += iterIn;
-                iterOut = FinishReading(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);
-                destination.Write(_tempBuffer, 0, iterOut);
-                totalOut += iterOut;
-                _operationBufferOffset = 0;
-            }
-
-            BytesIn += totalIn;
-            BytesOut += totalOut;
-            return totalOut;
+        public override long ReadExactlyTo (System.IO.Stream destination, long length, bool finishing = false) {
+        	CheckIfCanDecorate ();
+        	if (Writing)
+        		throw new InvalidOperationException (NotReadingError);
+        	if (destination == null) {
+        		throw new ArgumentNullException ("destination");
+        	} else if (length < 0) {
+        		throw new ArgumentException ("Length must be positive.", "length");
+        	}
+        
+        	int totalIn = 0, totalOut = 0;
+        	int iterIn = 0, iterOut = 0;
+        
+        	// Has ReadByte been used? If it has then we need to return the partial block
+        	if(_outBuffer.CurrentLength > 0) {
+        		iterOut = _outBuffer.CurrentLength;
+        		_outBuffer.TakeTo (destination, iterOut);
+        		totalOut += iterOut;
+        	}
+        
+        	while (totalIn < length) {
+        		var remaining = length - totalIn;
+        		int opSize = _operationSize - _operationBufferOffset;
+        		if (opSize > remaining)
+        			opSize = (int)remaining;
+        		iterIn = StreamBinding.Read (_operationBuffer, _operationBufferOffset, opSize);
+        		_operationBufferOffset += iterIn;
+        		totalIn += iterIn;
+//				length -= iterIn;
+        		if ((finishing && remaining <= _operationSize) || iterIn == 0) {
+        			// Finish the decryption - end of stream
+        			iterOut = FinishReading(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);
+        			destination.Write (_tempBuffer, 0, iterOut);
+        			totalOut += iterOut;
+        			_operationBufferOffset = 0;
+        		} else if (_operationBufferOffset == _operationSize) {
+        			// Normal processing (mid-stream)
+        			iterOut = _cipher.ProcessBytes (_operationBuffer, 0, _tempBuffer, 0);
+        			destination.Write (_tempBuffer, 0, iterOut);
+        			totalOut += iterOut;
+        			_operationBufferOffset = 0;
+        		}
+        	}
+        
+        	BytesIn += totalIn;
+        	BytesOut += totalOut;
+        	return totalOut;
         }
+
+
+//        /// <summary>
+//        ///     Decrypt an exact amount of bytes from <see cref="DecoratingStream.StreamBinding"/> and write them
+//        ///     to a destination stream.
+//        /// </summary>
+//        /// <returns>The quantity of bytes written to the destination stream.</returns>
+//        /// <param name="destination">Stream to write decrypted data to.</param>
+//        /// <param name="length">Quantity of bytes to read.</param>
+//        /// <param name="finishing">
+//        ///     If set to <c>true</c>, final ciphertext position is located at end of requested length.
+//        /// </param>
+//        /// <exception cref="InvalidOperationException">Stream is encrypting, not decrypting.</exception>
+//        /// <exception cref="ArgumentNullException">Destination stream is null.</exception>
+//        /// <exception cref="ArgumentException">Length supplied is negative.</exception>
+//        /// <exception cref="EndOfStreamException">Required quantity of bytes could not be read.</exception>
+//        public override long ReadExactlyTo(System.IO.Stream destination, long length, bool finishing = false)
+//        {
+//            CheckIfCanDecorate();
+//            if (Writing) {
+//                throw new InvalidOperationException(NotReadingError);
+//            }
+//            if (destination == null) {
+//                throw new ArgumentNullException("destination");
+//            }
+//            if (length < 0) {
+//                throw new ArgumentException("Length must be positive.", "length");
+//            }
+//
+//            int totalIn = 0, totalOut = 0;
+//            int iterIn, iterOut;
+//
+//            // Write out any partial completed block(s)
+//            int outBufferLength = _outBuffer.CurrentLength;
+//            if (outBufferLength > 0) {
+//                _outBuffer.TakeTo(destination, outBufferLength);
+//                totalOut += outBufferLength;
+//                // No read took place, so no subtraction of length appropriate
+//            }
+//
+//            // Process any remainder bytes from last call, if any, by filling the block/operation
+//            if (_operationBufferOffset > 0) {
+//                int readLength = _operationSize - _operationBufferOffset;
+//                if (readLength <= length) {
+//                    iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, readLength);
+//                    length -= iterIn;
+//                    totalIn += iterIn;
+//                    // End of stream detection
+//                    if (iterIn < readLength) {
+//                        throw new EndOfStreamException();
+//                    }
+//                    iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+//                    destination.Write(_tempBuffer, 0, iterOut);
+//                    totalOut += iterOut;
+//                    _operationBufferOffset = 0;
+//                }
+//            }
+//
+//            long remainderLong;
+//            var operations = (int)Math.DivRem(length, _operationSize, out remainderLong);
+//            var remainder = (int)remainderLong;
+//            // ^ Can be changed back to long if needed.
+//            // Otherwise, though, we'll try to avoid pointless and costly repeated casts.
+//
+//            // Process all the whole blocks/operations
+//            for (int i = 1; i <= operations; i++) {
+//                iterIn = StreamBinding.Read(_operationBuffer, 0, _operationSize);
+//                totalIn += iterIn;
+//                // End of stream detection
+//                if (iterIn < _operationSize) {
+//                    BytesIn += totalIn;
+//                    BytesOut += totalOut;
+//                    throw new EndOfStreamException();
+//                }
+//
+//                if (i == operations && finishing) {
+//                    _operationBufferOffset = _operationSize;
+//                    break;
+//                }
+//                iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+//                destination.Write(_tempBuffer, 0, iterOut);
+//                totalOut += iterOut;
+//            }
+//
+//            if (finishing == false) {
+//                // Mid-stream
+//                if (remainder > 0) {
+//                    // Any remainder bytes are stored (not decrypted)
+//                    iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, remainder);
+//                    totalIn += iterIn;
+//                    _operationBufferOffset += iterIn;
+//                    // End of stream detection
+//                    if (_operationBufferOffset < remainder) {
+//                        throw new EndOfStreamException();
+//                    }
+//                }
+//            } else {
+//                // Finishing
+//                int totalRemaining = remainder + _operationBufferOffset;
+//                if (totalRemaining > _operationSize) {
+//                    int finalReadLength = _operationSize - _operationBufferOffset;
+//                    iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, finalReadLength);
+//                    // End of stream detection
+//                    if (iterIn < finalReadLength) {
+//                        BytesIn += totalIn;
+//                        BytesOut += totalOut;
+//                        throw new EndOfStreamException();
+//                    }
+//                    remainder -= iterIn;
+//                    totalIn += iterIn;
+//                    iterOut = _cipher.ProcessBytes(_operationBuffer, 0, _tempBuffer, 0);
+//                    destination.Write(_tempBuffer, 0, iterOut);
+//                    totalOut += iterOut;
+//                    _operationBufferOffset = 0;
+//                }
+//                iterIn = StreamBinding.Read(_operationBuffer, _operationBufferOffset, remainder);
+//                if (iterIn < remainder) {
+//                    BytesIn += totalIn;
+//                    BytesOut += totalOut;
+//                    throw new EndOfStreamException();
+//                }
+//                _operationBufferOffset += iterIn;
+//                totalIn += iterIn;
+//                iterOut = FinishReading(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);
+//                destination.Write(_tempBuffer, 0, iterOut);
+//                totalOut += iterOut;
+//                _operationBufferOffset = 0;
+//            }
+//
+//            BytesIn += totalIn;
+//            BytesOut += totalOut;
+//            return totalOut;
+//        }
 
         /// <summary>
         ///     Finishes the writing/encryption operation, processing the final block/stride.
@@ -690,7 +688,7 @@ namespace ObscurCore.Cryptography.Ciphers
             try {
                 finalByteQuantity += _cipher.ProcessFinal(input, inputOffset, length, output, outputOffset);
             } catch (Exception e) {
-                throw new CryptoException("Unexpected error on cipher finalising operation while reading.", e);
+                throw new CipherException("Unexpected error when finalising (reading). Inner exception may have additional information.", e);
             }
 
             base.Finish();
@@ -716,19 +714,29 @@ namespace ObscurCore.Cryptography.Ciphers
             if (Encrypting) {
                 FinishWriting();
             } else if (Encrypting == false && _operationBufferOffset > 0) {
-                throw new InvalidOperationException("Should never finish in this state when decrypting.");
+                throw new InvalidOperationException("Decryption finalisation in undefined state. It should never finish in this state.");
             }
             base.Finish();
         }
 
         protected override void Reset(bool finish = false)
         {
-            Array.Clear(_operationBuffer, 0, _operationBuffer.Length);
+            _operationBuffer.SecureWipe();
             _operationBufferOffset = 0;
-            Array.Clear(_tempBuffer, 0, _tempBuffer.Length);
+            _tempBuffer.SecureWipe();
             _outBuffer.Reset();
             _cipher.Reset();
             base.Reset(finish);
         }
+    }
+
+    internal class CipherRingBuffer : SequentialRingBuffer
+    {
+        public CipherRingBuffer(int maximumCapacity, byte[] buffer = null, bool allowOverwrite = false)
+            : base(maximumCapacity, buffer, allowOverwrite)
+        {          
+        }
+
+
     }
 }

@@ -17,6 +17,7 @@ using System;
 using System.Linq;
 using ObscurCore.Cryptography.Ciphers.Information;
 using ObscurCore.DTO;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Ciphers.Block
 {
@@ -139,7 +140,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         protected override void ThrowIfKeySizeIncompatible()
         {
             if (Athena.Cryptography.BlockCiphers[BlockCipher]
-                .AllowableKeySizes.Contains(Configuration.KeySizeBits) == false) {
+                .IsKeySizeInSpecification(Configuration.KeySizeBits) == false) {
                     throw new CipherKeySizeException(BlockCipher, Configuration.KeySizeBits);
             }
         }
@@ -147,7 +148,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         protected void ThrowIfBlockSizeIncompatible()
         {
             if (Athena.Cryptography.BlockCiphers[BlockCipher]
-                .AllowableBlockSizes.Contains(Configuration.BlockSizeBits.Value) == false) {
+                .IsBlockSizeInSpecification(Configuration.BlockSizeBits.Value) == false) {
                 throw new BlockSizeException(BlockCipher, Configuration.BlockSizeBits.Value);
             }
         }

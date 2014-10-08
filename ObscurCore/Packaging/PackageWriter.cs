@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using BitManipulator;
 using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
@@ -192,7 +193,7 @@ namespace ObscurCore.Packaging
         /// <summary>
         ///     Configuration of function used in verifying the authenticity and integrity of the manifest.
         /// </summary>
-        internal AuthenticationFunctionConfiguration ManifestAuthentication
+        internal AuthenticationConfiguration ManifestAuthentication
         {
             get { return _manifestHeaderCryptoConfig == null ? null : _manifestHeaderCryptoConfig.Authentication; }
             private set
@@ -240,7 +241,7 @@ namespace ObscurCore.Packaging
         ///     Configuration of key confirmation used for confirming the cryptographic key
         ///     to be used as the basis for key derivation.
         /// </summary>
-        internal AuthenticationFunctionConfiguration ManifestKeyConfirmation
+        internal AuthenticationConfiguration ManifestKeyConfirmation
         {
             get { return _manifestHeaderCryptoConfig == null ? null : _manifestHeaderCryptoConfig.KeyConfirmation; }
             private set
@@ -335,7 +336,7 @@ namespace ObscurCore.Packaging
                 ? CreateDefaultManifestCipherConfiguration()
                 : _manifestHeaderCryptoConfig.SymmetricCipher ?? CreateDefaultManifestCipherConfiguration();
 
-            AuthenticationFunctionConfiguration authenticationConfig = _manifestHeaderCryptoConfig == null
+            AuthenticationConfiguration authenticationConfig = _manifestHeaderCryptoConfig == null
                 ? CreateDefaultManifestAuthenticationConfiguration()
                 : _manifestHeaderCryptoConfig.Authentication ?? CreateDefaultManifestAuthenticationConfiguration();
 
@@ -345,7 +346,7 @@ namespace ObscurCore.Packaging
                   CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits.BitsToBytes());
 
             byte[] keyConfirmationOutput;
-            AuthenticationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration
+            AuthenticationConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration
                 (
                     canary, out keyConfirmationOutput);
 
@@ -390,7 +391,7 @@ namespace ObscurCore.Packaging
                 ? CreateDefaultManifestCipherConfiguration()
                 : _manifestHeaderCryptoConfig.SymmetricCipher ?? CreateDefaultManifestCipherConfiguration();
 
-            AuthenticationFunctionConfiguration authenticationConfig = _manifestHeaderCryptoConfig == null
+            AuthenticationConfiguration authenticationConfig = _manifestHeaderCryptoConfig == null
                 ? CreateDefaultManifestAuthenticationConfiguration()
                 : _manifestHeaderCryptoConfig.Authentication ?? CreateDefaultManifestAuthenticationConfiguration();
 
@@ -400,7 +401,7 @@ namespace ObscurCore.Packaging
                   CreateDefaultManifestKeyDerivation(cipherConfig.KeySizeBits.BitsToBytes());
 
             byte[] keyConfirmationOutput;
-            AuthenticationFunctionConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration
+            AuthenticationConfiguration keyConfirmationConfig = CreateDefaultManifestKeyConfirmationConfiguration
                 (
                     senderKeypair,
                     recipientKey,
@@ -509,7 +510,7 @@ namespace ObscurCore.Packaging
         /// </summary>
         /// <remarks>Default configuration uses the MAC primitive SHA-3-512 (Keccak-512).</remarks>
         /// <returns></returns>
-        private static AuthenticationFunctionConfiguration CreateDefaultManifestAuthenticationConfiguration()
+        private static AuthenticationConfiguration CreateDefaultManifestAuthenticationConfiguration()
         {
             int outputSize;
             return AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(MacFunction.Keccak512,
@@ -522,11 +523,11 @@ namespace ObscurCore.Packaging
         /// <remarks>Default configuration uses HMAC-SHA3-256 (HMAC-Keccak-256).</remarks>
         /// <param name="canary">Canary (associated with a key) to generate confirmation configuration for.</param>
         /// <param name="verifiedOutput">Output of verification function.</param>
-        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(
+        private static AuthenticationConfiguration CreateDefaultManifestKeyConfirmationConfiguration(
             byte[] canary,
             out byte[] verifiedOutput)
         {
-            AuthenticationFunctionConfiguration config =
+            AuthenticationConfiguration config =
                 ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak256);
             // Using HMAC (key can be any length)
             verifiedOutput = ConfirmationUtility.GenerateVerifiedOutput(config, canary);
@@ -540,11 +541,11 @@ namespace ObscurCore.Packaging
         /// <remarks>Default configuration uses HMAC-SHA3-256 (HMAC-Keccak-256).</remarks>
         /// <param name="key">Key to generate confirmation configuration for.</param>
         /// <param name="verifiedOutput">Output of verification function.</param>
-        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(
+        private static AuthenticationConfiguration CreateDefaultManifestKeyConfirmationConfiguration(
             SymmetricKey key,
             out byte[] verifiedOutput)
         {
-            AuthenticationFunctionConfiguration config =
+            AuthenticationConfiguration config =
                 ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak256);
             // Using HMAC (key can be any length)
             verifiedOutput = ConfirmationUtility.GenerateVerifiedOutput(config, key);
@@ -552,11 +553,11 @@ namespace ObscurCore.Packaging
             return config;
         }
 
-        private static AuthenticationFunctionConfiguration CreateDefaultManifestKeyConfirmationConfiguration(
+        private static AuthenticationConfiguration CreateDefaultManifestKeyConfirmationConfiguration(
             ECKeypair senderKey,
             ECKey recipientKey, out byte[] verifiedOutput)
         {
-            AuthenticationFunctionConfiguration config =
+            AuthenticationConfiguration config =
                 ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak256);
             // Using HMAC (key can be any length)
             verifiedOutput = ConfirmationUtility.GenerateVerifiedOutput(config, senderKey, recipientKey);
@@ -729,7 +730,7 @@ namespace ObscurCore.Packaging
                                               string relativePath, SymmetricKey preKey, bool lowEntropyKey = true)
         {
             byte[] keyConfirmationVerifiedOutput;
-            AuthenticationFunctionConfiguration keyConfirmatConf =
+            AuthenticationConfiguration keyConfirmatConf =
                 CreateDefaultPayloadItemKeyConfirmationConfiguration(preKey,
                     out keyConfirmationVerifiedOutput);
             KeyDerivationConfiguration kdfConf = CreateDefaultPayloadItemKeyDerivation(preKey.Key.Length, lowEntropyKey);
@@ -764,7 +765,7 @@ namespace ObscurCore.Packaging
         ///     Creates a default payload item authentication configuration.
         /// </summary>
         /// <remarks>Default configuration uses the hybrid MAC-cipher construction Poly1305-AES.</remarks>
-        private static AuthenticationFunctionConfiguration CreateDefaultPayloadItemAuthenticationConfiguration()
+        private static AuthenticationConfiguration CreateDefaultPayloadItemAuthenticationConfiguration()
         {
             return AuthenticationConfigurationFactory.CreateAuthenticationConfigurationPoly1305(BlockCipher.Aes);
         }
@@ -775,10 +776,10 @@ namespace ObscurCore.Packaging
         /// <remarks>Default configuration uses HMAC-SHA3-256 (HMAC-Keccak-256).</remarks>
         /// <param name="key">Key to generate confirmation configuration for.</param>
         /// <param name="verifiedOutput">Output of verification function.</param>
-        private static AuthenticationFunctionConfiguration CreateDefaultPayloadItemKeyConfirmationConfiguration(
+        private static AuthenticationConfiguration CreateDefaultPayloadItemKeyConfirmationConfiguration(
             SymmetricKey key, out byte[] verifiedOutput)
         {
-            AuthenticationFunctionConfiguration config =
+            AuthenticationConfiguration config =
                 ConfirmationConfigurationFactory.GenerateConfiguration(HashFunction.Keccak256);
             verifiedOutput = ConfirmationUtility.GenerateVerifiedOutput(config, key);
 
@@ -967,7 +968,7 @@ namespace ObscurCore.Packaging
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static int GetOutputSize(AuthenticationFunctionConfiguration config)
+        public static int GetOutputSize(AuthenticationConfiguration config)
         {
             if (config.FunctionType == AuthenticationFunctionType.Mac) {
                 MacFunction macEnum;
@@ -994,7 +995,7 @@ namespace ObscurCore.Packaging
                         throw new ConfigurationInvalidException(
                             "HMAC configuration specifies an unknown/invalid internal hash/digest function.", e);
                     }
-                    return Athena.Cryptography.HashFunctions[hashFunctionEnum].OutputSize;
+                    return Athena.Cryptography.HashFunctions[hashFunctionEnum].OutputSizeBits;
                 } else if (macEnum == MacFunction.Cmac) {
                     string cipherName = Encoding.UTF8.GetString(config.FunctionConfiguration);
                     if (String.IsNullOrEmpty(cipherName)) {
@@ -1007,7 +1008,7 @@ namespace ObscurCore.Packaging
                         throw new ConfigurationInvalidException(
                             "CMAC configuration specifies an unknown/invalid internal block cipher.", e);
                     }
-                    int[] cipherBlockSizes = Athena.Cryptography.BlockCiphers[cipherEnum].AllowableBlockSizes;
+                    int[] cipherBlockSizes = Athena.Cryptography.BlockCiphers[cipherEnum].AllowableBlockSizesBits;
                     if ((128).IsOneOf(cipherBlockSizes)) {
                         return 16;
                     } else if ((64).IsOneOf(cipherBlockSizes)) {
@@ -1028,7 +1029,7 @@ namespace ObscurCore.Packaging
                 } catch (Exception e) {
                     throw new ConfigurationInvalidException("Configuration specifies an unknown/invalid hash/digest function.", e);
                 }
-                return Athena.Cryptography.HashFunctions[hashFunctionEnum].OutputSize;
+                return Athena.Cryptography.HashFunctions[hashFunctionEnum].OutputSizeBits;
             } else if (config.FunctionType == AuthenticationFunctionType.Kdf) {
                 KeyDerivationFunction kdfEnum;
                 try {
@@ -1052,7 +1053,7 @@ namespace ObscurCore.Packaging
                         throw new ConfigurationInvalidException(
                             "PBKDF2 key derivation function configuration specifies an unknown/invalid hash/digest function.", e);
                     }
-                    return Athena.Cryptography.HashFunctions[hashFunctionEnum].OutputSize;
+                    return Athena.Cryptography.HashFunctions[hashFunctionEnum].OutputSizeBits;
 
                 } else if (kdfEnum == KeyDerivationFunction.Pbkdf2) {
                     var scryptConfig = config.FunctionConfiguration.DeserialiseDto<ScryptConfiguration>();
@@ -1079,7 +1080,7 @@ namespace ObscurCore.Packaging
         {
             var manifestMacEnum = _manifestHeaderCryptoConfig.Authentication.FunctionName.ToEnum<MacFunction>();
             // TODO: Detect for corner cases such as HMAC/CMAC
-            // ... where Athena OutputSize.Value will be null (have to base on digest/cipher, respectively)
+            // ... where Athena HashSize.Value will be null (have to base on digest/cipher, respectively)
             int manifestMacOutputSizeBytes = Athena.Cryptography.MacFunctions[manifestMacEnum].OutputSize.Value.BitsToBytes();
             ManifestHeader mhTemp = GetManifestHeader(new byte[manifestMacOutputSizeBytes]);
 
@@ -1096,7 +1097,7 @@ namespace ObscurCore.Packaging
                     // Insert item MAC output placeholder
                     var itemMacEnum = item.Authentication.FunctionName.ToEnum<MacFunction>();
                     // TODO: Detect for corner cases such as HMAC/CMAC
-                    // ... where Athena OutputSize.Value will be null (have to base on digest/cipher, respectively)
+                    // ... where Athena HashSize.Value will be null (have to base on digest/cipher, respectively)
                     int itemMacOutputSizeBytes = Athena.Cryptography.MacFunctions[itemMacEnum].OutputSize.Value.BitsToBytes();
                     item.AuthenticationVerifiedOutput = new byte[itemMacOutputSizeBytes];
                     // Don't have to put a placeholder for item internal length since the DTO field is fixed-size.
@@ -1154,7 +1155,7 @@ namespace ObscurCore.Packaging
 
             return new ManifestHeader {
                 FormatVersion = _formatVersion,
-                CryptographySchemeName = _manifestHeaderCryptoScheme.ToString(),
+                CryptographyScheme = _manifestHeaderCryptoScheme,
                 CryptographySchemeConfiguration = schemeConfig
             };
         }

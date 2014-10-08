@@ -78,7 +78,8 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         }
 
         /// <inheritdoc />
-	    internal override void ProcessBytesInternal (byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff) {
+        protected internal override void ProcessBytesInternal(byte[] inBytes, int inOff, int len, byte[] outBytes, int outOff)
+        {
 			if (_keyStreamPtr < 16) {
 				var blockLength = 16 - _keyStreamPtr;
 				if (blockLength > len) {

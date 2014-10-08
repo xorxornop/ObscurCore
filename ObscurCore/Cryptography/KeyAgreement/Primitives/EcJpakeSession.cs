@@ -467,7 +467,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             byte[] expectedMacTagBytes = expectedTag.ToByteArrayUnsigned();
             byte[] receivedMacTagBytes = receivedTag.ToByteArrayUnsigned();
 
-            if (expectedMacTagBytes.SequenceEqualConstantTime(receivedMacTagBytes) == false) {
+            if (expectedMacTagBytes.SequenceEqual_ConstantTime(receivedMacTagBytes) == false) {
                 throw new CryptoException("Key confirmation failed - partner MAC tag failed to match expected value.");
             }
 
@@ -626,7 +626,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             _digest.BlockUpdate(lengthPrefix, 0, 4);
             _digest.BlockUpdate(kBytes, 0, kBytes.Length);
 
-            var hash = new byte[_digest.DigestSize];
+            var hash = new byte[_digest.OutputSize];
             _digest.DoFinal(hash, 0);
 
             return new BigInteger(1, hash);
@@ -662,7 +662,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             _digest.BlockUpdate(lengthPrefix, 0, 4);
             _digest.BlockUpdate(idBytes, 0, idBytes.Length);
 
-            var hash = new byte[_digest.DigestSize];
+            var hash = new byte[_digest.OutputSize];
             _digest.DoFinal(hash, 0);
 
             return new BigInteger(hash);
@@ -705,11 +705,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             byte[] constantBytes = MacKeyConstantBytes;
             _digest.BlockUpdate(constantBytes, 0, constantBytes.Length);
 
-            var macKey = new byte[_digest.DigestSize];
+            var macKey = new byte[_digest.OutputSize];
             _digest.DoFinal(macKey, 0);
 
             // Create and initialise HMAC primitive
-            var hmac = new HMac(_digest);
+            var hmac = new Hmac(_digest);
             hmac.Init(macKey);
 
             macKey.SecureWipe();
@@ -737,7 +737,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             byte[] gx4Bytes = gx4.GetEncoded();
             hmac.BlockUpdate(gx4Bytes, 0, gx4Bytes.Length);
 
-            var macTag = new byte[hmac.MacSize];
+            var macTag = new byte[hmac.OutputSize];
             hmac.DoFinal(macTag, 0);
             return new BigInteger(macTag);
         }

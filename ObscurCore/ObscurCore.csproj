@@ -17,6 +17,8 @@
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <ReleaseVersion>0.8</ReleaseVersion>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,6 +31,7 @@
     <CodeAnalysisRuleSet>SecurityRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -64,22 +67,29 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BitManipulator, Version=1.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\BitManipulator.1.0.4\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\BitManipulator.dll</HintPath>
+    </Reference>
     <Reference Include="LinqOptimizer.Base">
       <HintPath>..\packages\LinqOptimizer.CSharp.0.6.3\lib\LinqOptimizer.Base.dll</HintPath>
     </Reference>
     <Reference Include="LinqOptimizer.CSharp">
       <HintPath>..\packages\LinqOptimizer.CSharp.0.6.3\lib\LinqOptimizer.CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="ObscurCore.DTO.DtoSerialiser, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="ObscurCore.DTO.DtoSerialiser">
       <HintPath>..\ObscurCore.DTO\bin\Serialiser\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
+    </Reference>
+    <Reference Include="PerfCopy, Version=1.2.0.0, Culture=neutral, PublicKeyToken=44d78d0c5a37891d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\PerfCopy.1.2.0\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\PerfCopy.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>
     </Reference>
-    <Reference Include="RingByteBuffer, Version=1.4.5361.6420, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="RingByteBuffer, Version=1.5.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\RingBuffer.1.4.0\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\RingByteBuffer.dll</HintPath>
+      <HintPath>..\packages\RingBuffer.1.5.1\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\RingByteBuffer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable">
@@ -88,19 +98,25 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArrayExtensions.cs" />
+    <Compile Include="ValidationError.cs" />
+    <Compile Include="ArgumentValidationExtensions.cs" />
     <Compile Include="Athena.cs" />
-    <Compile Include="BitPackingExtensions.cs" />
-    <Compile Include="CopyExtensions.cs" />
+    <Compile Include="ConfigurationOutOfSpec.cs" />
     <Compile Include="Cryptography\Authentication\AuthenticationInformationStore.cs" />
+    <Compile Include="Cryptography\Authentication\HashEngine.cs" />
+    <Compile Include="Cryptography\Authentication\MacEngine.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigestSafe.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\KeccakDigestUnsafe.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\WhirlpoolDigest.cs" />
     <Compile Include="Cryptography\Ciphers\Block\BlockCipherModeBase.cs" />
+    <Compile Include="Cryptography\Ciphers\CipherException.cs" />
     <Compile Include="Cryptography\Ciphers\CipherInformationStore.cs" />
     <Compile Include="Cryptography\Ciphers\CipherStream.cs" />
     <Compile Include="Cryptography\Ciphers\Information\BlockCipherInformation.cs" />
     <Compile Include="Cryptography\Ciphers\Information\StreamCipherInformation.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\NullEngine.cs" />
+    <Compile Include="Cryptography\CryptographicException.cs" />
     <Compile Include="Cryptography\Entropy\CsprngInformationStore.cs" />
     <Compile Include="Cryptography\Entropy\CsRng.cs" />
     <Compile Include="Cryptography\Entropy\Primitives\ReversedRandomWindowRng.cs" />
@@ -110,13 +126,13 @@
     <Compile Include="Cryptography\Information\EllipticCurve\FpEcNamedCurveInformation.cs" />
     <Compile Include="Cryptography\Information\EllipticCurve\TpbF2mEcNamedCurveInformation.cs" />
     <Compile Include="Cryptography\KeyDerivation\KdfInformationStore.cs" />
-    <Compile Include="Cryptography\RotationExtensions.cs" />
     <Compile Include="Cryptography\Signing\IDsa.cs" />
     <Compile Include="Cryptography\Signing\Primitives\HmacDsaKCalculator.cs" />
     <Compile Include="Cryptography\Signing\Primitives\IDsaKCalculator.cs" />
     <Compile Include="Cryptography\Signing\Primitives\RandomDsaKCalculator.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Custom\Ed25519\sc_clamp.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="IEnumeratedPrimitiveInformation.cs" />
     <Compile Include="IStreamDecorator.cs" />
     <Compile Include="Cryptography\Authentication\IHash.cs" />
     <Compile Include="Cryptography\Authentication\IMac.cs" />
@@ -125,7 +141,7 @@
     <Compile Include="Cryptography\Authentication\Primitives\Blake2BCore.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\CMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\GeneralDigest.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\HMac.cs" />
+    <Compile Include="Cryptography\Authentication\Primitives\Hmac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\KeccakMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\LongDigest.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\RipeMD160Digest.cs" />
@@ -371,12 +387,12 @@
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\WNafUtilities.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\ZSignedDigitL2RMultiplier.cs" />
     <Compile Include="Cryptography\Support\Math\EllipticCurve\Multiplier\ZSignedDigitR2LMultiplier.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\SipHashMac.cs" />
+    <None Include="Cryptography\Authentication\Primitives\SipHashMac.cs" />
     <Compile Include="Cryptography\Ciphers\Stream\Primitives\ChaChaEngine.cs" />
     <None Include="Cryptography\Ciphers\Block\Primitives\Threefish256SimdEngine.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\SkeinEngine.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\SkeinDigest.cs" />
-    <Compile Include="Cryptography\Authentication\Primitives\SkeinMac.cs" />
+    <None Include="Cryptography\Authentication\Primitives\SkeinDigest.cs" />
+    <None Include="Cryptography\Authentication\Primitives\SkeinMac.cs" />
     <Compile Include="Cryptography\Authentication\Primitives\SkeinParameters.cs" />
     <Compile Include="IMemoable.cs" />
     <None Include="Cryptography\Authentication\Primitives\Skein.cs" />
@@ -469,4 +485,11 @@
     </MonoDevelop>
   </ProjectExtensions>
   <ItemGroup />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
 </Project>

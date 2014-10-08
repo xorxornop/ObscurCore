@@ -39,11 +39,11 @@ namespace ObscurCore.Cryptography.Authentication
         /// </summary>
         Blake2B512,
 
-        /// <summary>
-        ///     Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
-        ///     Supports additional salt parameter.
-        /// </summary>
-        Keccak224,
+//        /// <summary>
+//        ///     Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.
+//        ///     Supports additional salt parameter.
+//        /// </summary>
+//        Keccak224,
 
         /// <summary>
         ///     Winner of the SHA3 hash function competition selection. Innovative 'Sponge' construction.

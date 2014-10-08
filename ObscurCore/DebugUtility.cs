@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace ObscurCore
 {
@@ -30,6 +31,7 @@ namespace ObscurCore
             return returnStr;
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization)]
         public static string CreateReportString(string component, string locality, string description,
             int value, bool lineBreak = false)
         {

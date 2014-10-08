@@ -330,7 +330,7 @@ namespace ObscurCore.Tests.Cryptography.Signing
             byte[] data = TEST;
 
             var digest = new Sha256Digest();
-            var m = new byte[digest.DigestSize];
+            var m = new byte[digest.OutputSize];
             digest.BlockUpdate(data, 0, data.Length);
             digest.DoFinal(m, 0);
 
@@ -346,8 +346,8 @@ namespace ObscurCore.Tests.Cryptography.Signing
         {
             byte[] data = TEST;
 
-            var digest = new KeccakDigest(256, true);
-            var m = new byte[digest.DigestSize];
+            var digest = new KeccakDigest(256);
+            var m = new byte[digest.OutputSize];
             digest.BlockUpdate(data, 0, data.Length);
             digest.DoFinal(m, 0);
 
@@ -363,8 +363,8 @@ namespace ObscurCore.Tests.Cryptography.Signing
         {
             byte[] data = TEST;
 
-            var digest = new Blake2BDigest(256, true);
-            var m = new byte[digest.DigestSize];
+            var digest = new Blake2BDigest(256);
+            var m = new byte[digest.OutputSize];
             digest.BlockUpdate(data, 0, data.Length);
             digest.DoFinal(m, 0);
 
@@ -381,7 +381,7 @@ namespace ObscurCore.Tests.Cryptography.Signing
             byte[] data = TEST;
 
             var digest = new Sha512Digest();
-            var m = new byte[digest.DigestSize];
+            var m = new byte[digest.OutputSize];
             digest.BlockUpdate(data, 0, data.Length);
             digest.DoFinal(m, 0);
 
@@ -397,8 +397,8 @@ namespace ObscurCore.Tests.Cryptography.Signing
         {
             byte[] data = TEST;
 
-            var digest = new KeccakDigest(512, true);
-            var m = new byte[digest.DigestSize];
+            var digest = new KeccakDigest(512);
+            var m = new byte[digest.OutputSize];
             digest.BlockUpdate(data, 0, data.Length);
             digest.DoFinal(m, 0);
 
@@ -414,8 +414,8 @@ namespace ObscurCore.Tests.Cryptography.Signing
         {
             byte[] data = TEST;
 
-            var digest = new Blake2BDigest(512, true);
-            var m = new byte[digest.DigestSize];
+            var digest = new Blake2BDigest(512);
+            var m = new byte[digest.OutputSize];
             digest.BlockUpdate(data, 0, data.Length);
             digest.DoFinal(m, 0);
 
@@ -453,7 +453,7 @@ namespace ObscurCore.Tests.Cryptography.Signing
 
         private void DoTestHMacDetECDsa(IHash digest, byte[] data, ECKey privKey, BigInteger r, BigInteger s)
         {
-            var m = new byte[digest.DigestSize];
+            var m = new byte[digest.OutputSize];
 
             digest.BlockUpdate(data, 0, data.Length);
             digest.DoFinal(m, 0);

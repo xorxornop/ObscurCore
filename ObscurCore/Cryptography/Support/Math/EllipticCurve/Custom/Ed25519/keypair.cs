@@ -3,6 +3,7 @@ using ObscurCore.Cryptography.Authentication.Primitives;
 
 // From Chaos.NaCl, authored by CodesInChaos (https://github.com/CodesInChaos/Chaos.NaCl)
 // Modified to use ObscurCore SHA512
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.Ed25519
 {
@@ -17,8 +18,9 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.Ed25519
 
 			var sha512 = new Sha512Digest();
 			sha512.BlockUpdate(sk, skoffset, 32);
-			byte[] h = new byte[sha512.DigestSize];
+			byte[] h = new byte[sha512.OutputSize];
 			sha512.DoFinal(h, 0);
+            sha512 = null;
 
             h[0] &= 248;
             h[31] &= 63;

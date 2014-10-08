@@ -18,7 +18,6 @@
 #endregion
 
 using System;
-using System.Linq;
 using ProtoBuf;
 
 namespace ObscurCore.DTO
@@ -28,8 +27,8 @@ namespace ObscurCore.DTO
     ///     (e.g. MAC functions) and/or integrity (e.g. hash functions) of data.
     /// </summary>
     [ProtoContract]
-    public class AuthenticationFunctionConfiguration : IDataTransferObject, 
-        ICloneableSafely<AuthenticationFunctionConfiguration>, IEquatable<AuthenticationFunctionConfiguration>, IAuthenticationFunctionConfiguration
+    public class AuthenticationConfiguration : IDataTransferObject, 
+        ICloneableSafely<AuthenticationConfiguration>, IEquatable<AuthenticationConfiguration>, IAuthenticationConfiguration
     {
         /// <summary>
         ///     Category/type of the function primitive, e.g. Digest, MAC, or KDF.
@@ -74,8 +73,14 @@ namespace ObscurCore.DTO
         [ProtoMember(7, IsRequired = false)]
         public byte[] AdditionalData { get; set; }
 
+        /// <summary>
+        ///     Size of the output in bits from the authentication function, where applicable.
+        /// </summary>
+        [ProtoMember(7, IsRequired = false)]
+        public int? OutputSizeBits { get; set; }
+
         /// <inheritdoc />
-        public bool Equals(AuthenticationFunctionConfiguration other)
+        public bool Equals(AuthenticationConfiguration other)
         {
             if (ReferenceEquals(null, other)) {
                 return false;
@@ -83,10 +88,14 @@ namespace ObscurCore.DTO
             if (ReferenceEquals(this, other)) {
                 return true;
             }
+
             return String.Equals(FunctionName, other.FunctionName, StringComparison.OrdinalIgnoreCase) && 
-                FunctionConfiguration != null ? 
-                FunctionConfiguration.SequenceEqualShortCircuiting(other.FunctionConfiguration) : Salt != null ? 
-                Salt.SequenceEqualShortCircuiting(other.Salt) : AdditionalData == null || AdditionalData.SequenceEqualShortCircuiting(other.AdditionalData);
+                FunctionConfiguration == null ? other.FunctionConfiguration == null : FunctionConfiguration.SequenceEqualShortCircuiting(other.FunctionConfiguration) && 
+                KeySizeBits.Equals(other.KeySizeBits) &&
+                Nonce == null ? other.Nonce == null : Nonce.SequenceEqualShortCircuiting(other.Nonce) && 
+                Salt == null ? other.Salt == null : Salt.SequenceEqualShortCircuiting(other.Salt) && 
+                AdditionalData == null ? other.AdditionalData == null : AdditionalData.SequenceEqualShortCircuiting(other.AdditionalData) && 
+                OutputSizeBits.Equals(other.OutputSizeBits);
         }
 
         /// <inheritdoc />
@@ -101,7 +110,7 @@ namespace ObscurCore.DTO
             if (obj.GetType() != GetType()) {
                 return false;
             }
-            return Equals((AuthenticationFunctionConfiguration) obj);
+            return Equals((AuthenticationConfiguration) obj);
         }
 
         /// <inheritdoc />
@@ -115,14 +124,15 @@ namespace ObscurCore.DTO
                 hashCode = (hashCode * 397) ^ (Nonce != null ? Nonce.GetHashCodeExt() : 0);
                 hashCode = (hashCode * 397) ^ (Salt != null ? Salt.GetHashCodeExt() : 0);
                 hashCode = (hashCode * 397) ^ (AdditionalData != null ? AdditionalData.GetHashCodeExt() : 0);
+                hashCode = (hashCode * 397) ^ (OutputSizeBits.HasValue ? OutputSizeBits.Value.GetHashCode() : 0);
                 return hashCode;
             }
         }
 
         /// <inheritdoc />
-        public AuthenticationFunctionConfiguration CloneSafely()
+        public AuthenticationConfiguration CloneSafely()
         {
-            return new AuthenticationFunctionConfiguration {
+            return new AuthenticationConfiguration {
                 FunctionType = FunctionType,
                 FunctionName = String.Copy(FunctionName),
                 FunctionConfiguration = FunctionConfiguration.DeepCopy(),

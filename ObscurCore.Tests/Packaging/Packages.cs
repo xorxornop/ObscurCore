@@ -127,7 +127,7 @@ namespace ObscurCore.Tests.Packaging
         [Test]
         public void UM1FabricSmallPackage()
         {
-            UM1PackageTest("UM1FrameshiftSmallPackage", IOTestBase.SmallTextFileList, PayloadLayoutScheme.Fabric, false);
+            UM1PackageTest("UM1FabricSmallPackage", IOTestBase.SmallTextFileList, PayloadLayoutScheme.Fabric, false);
         }
 #endif      
 

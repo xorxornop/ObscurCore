@@ -62,6 +62,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             wOff = t.wOff;
         }
 
+        public abstract HashFunction Identity { get; }
+
         public void Update(
             byte input)
         {
@@ -323,13 +325,13 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817
         };
 
-        public int ByteLength
+        public int StateSize
         {
             get { return MyByteLength; }
         }
 
         public abstract string AlgorithmName { get; }
-        public abstract int DigestSize { get; }
+        public abstract int OutputSize { get; }
         public abstract int DoFinal(byte[] output, int outOff);
     }
 }

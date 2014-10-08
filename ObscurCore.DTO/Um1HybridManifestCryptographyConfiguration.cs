@@ -106,7 +106,7 @@ namespace ObscurCore.DTO
         ///     Note: this must be of a MAC type.
         /// </summary>
         [ProtoMember(2, IsRequired = true)]
-        public AuthenticationFunctionConfiguration Authentication { get; set; }
+        public AuthenticationConfiguration Authentication { get; set; }
 
         /// <summary>
         ///     Output of the <see cref="Authentication" /> scheme, given the correct input and key.
@@ -119,7 +119,7 @@ namespace ObscurCore.DTO
         ///     validity of keying material at respondent's side without disclosing the key itself.
         /// </summary>
         [ProtoMember(4, IsRequired = false)]
-        public AuthenticationFunctionConfiguration KeyConfirmation { get; set; }
+        public AuthenticationConfiguration KeyConfirmation { get; set; }
 
         /// <summary>
         ///     Output of the <see cref="KeyConfirmation" /> scheme, given the correct key.
@@ -138,6 +138,16 @@ namespace ObscurCore.DTO
         /// </summary>
         [ProtoMember(7, IsRequired = true)]
         public ECKey EphemeralKey { get; set; }
+
+        /// <summary>
+        ///     Signature of 
+        /// </summary>
+        [ProtoMember(8, IsRequired = false)]
+        public SignatureConfiguration Signature { get; set; }
+
+        [ProtoMember(9, IsRequired = false)]
+        public ECKey SignatureKey { get; set; }
+        
 
         #endregion
 

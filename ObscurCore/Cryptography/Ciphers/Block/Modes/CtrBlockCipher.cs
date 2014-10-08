@@ -1,4 +1,5 @@
 using System;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 {
@@ -41,7 +42,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
         /// <inheritdoc />
 	    public override void Reset()
 		{
-            IV.CopyBytes(0, _counter, 0, CipherBlockSize);
+            IV.DeepCopy_NoChecks(0, _counter, 0, CipherBlockSize);
             BlockCipher.Reset();
 		}
 	}

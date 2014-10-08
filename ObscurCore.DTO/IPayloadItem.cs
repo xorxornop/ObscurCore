@@ -87,7 +87,7 @@ namespace ObscurCore.DTO
         ///     Authentication configuration for the payload item.
         ///     Note: this must be of a MAC type.
         /// </summary>
-        AuthenticationFunctionConfiguration Authentication { get; }
+        AuthenticationConfiguration Authentication { get; }
 
         /// <summary>
         ///     Ephemeral key for authentication of the payload item.
@@ -107,7 +107,7 @@ namespace ObscurCore.DTO
         ///     Required if <see cref="SymmetricCipherKey" /> and <see cref="AuthenticationKey" /> are not
         ///     present.
         /// </summary>
-        AuthenticationFunctionConfiguration KeyConfirmation { get; set; }
+        AuthenticationConfiguration KeyConfirmation { get; set; }
 
         /// <summary>
         ///     Output of the <see cref="KeyConfirmation"/> scheme, given the correct key.

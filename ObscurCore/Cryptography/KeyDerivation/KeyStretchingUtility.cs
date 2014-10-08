@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using ObscurCore.DTO;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.KeyDerivation
 {
@@ -44,8 +45,8 @@ namespace ObscurCore.Cryptography.KeyDerivation
             // Retrieve the working encryption & authentication subkeys from the stretched manifest key
             cipherKey = new byte[cipherKeySize];
             macKey = new byte[macKeySize];
-            stretchedKeys.CopyBytes(0, cipherKey, 0, cipherKeySize);
-            stretchedKeys.CopyBytes(cipherKeySize, macKey, 0, macKeySize);
+            stretchedKeys.CopyBytes_NoChecks(0, cipherKey, 0, cipherKeySize);
+            stretchedKeys.CopyBytes_NoChecks(cipherKeySize, macKey, 0, macKeySize);
 
             // Clear the pre-key and stretched manifest working combination key from memory
             preKey.SecureWipe();

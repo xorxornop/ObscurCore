@@ -15,6 +15,7 @@
 
 using System;
 using System.IO;
+using BitManipulator;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Entropy.Primitives;
@@ -56,7 +57,7 @@ namespace ObscurCore
             var seed = new byte[InitialSeedSize];
             new ThreadedSeedRng().NextBytes(seed, 0, InitialSeedSize / 2);
             var rrwRng = new ReversedRandomWindowRng(digestRng,
-                Athena.Cryptography.HashFunctions[EntropyHashFunction].OutputSize.BitsToBytes());
+                Athena.Cryptography.HashFunctions[EntropyHashFunction].OutputSizeBits.BitsToBytes());
             rrwRng.NextBytes(seed, InitialSeedSize / 2, InitialSeedSize / 2);
             rrwRng.AddSeedMaterial(seed);
             rrwRng.NextBytes(seed);
@@ -85,6 +86,8 @@ namespace ObscurCore
             new ThreadedSeedRng().NextBytes(seed, 0, seed.Length);
             EntropySupplier.AddSeedMaterial(seed);
         }
+
+        #region Serialisation
 
         /// <summary>
         ///     Serialises a data transfer object (DTO) of type <typeparamref name="T"/> into 
@@ -148,6 +151,14 @@ namespace ObscurCore
                 outputObj = (T)Serialiser.Deserialize(input, outputObj, typeof(T));
             }
             return outputObj;
+        }
+
+        #endregion
+
+        internal static long Times()
+        {
+            const long nanosecondsPerTick = 100L;
+            return DateTime.UtcNow.Ticks * nanosecondsPerTick;
         }
     }
 }

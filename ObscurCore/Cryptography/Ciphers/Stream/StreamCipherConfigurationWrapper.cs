@@ -17,6 +17,7 @@ using System;
 using System.Linq;
 using ObscurCore.Cryptography.Ciphers.Information;
 using ObscurCore.DTO;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream
 {
@@ -72,13 +73,13 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
             {
                 StreamCipherInformation athenaInfo = Athena.Cryptography.StreamCiphers[StreamCipher];
 
-                if (athenaInfo.DefaultNonceSize == -1 && Configuration.InitialisationVector.IsNullOrZeroLength() == false) {
+                if (athenaInfo.DefaultNonceSizeBits == -1 && Configuration.InitialisationVector.IsNullOrZeroLength() == false) {
                     throw new ConfigurationInvalidException(
                         "NCipherKeySizeExceptiontion vector) should not be used with the " + StreamCipher + " cipher.");
                 }
-                if (athenaInfo.AllowableNonceSizes.Contains(Configuration.InitialisationVector.Length * 8) == false) {
+                if (athenaInfo.IsNonceSizeInSpecification(Configuration.InitialisationVector.Length * 8) == false) {
                     throw new ConfigurationInvalidException(
-                        "Nonce (initialisation vector) should not be a different length to the block size.");
+                        "Nonce (initialisation vector) size is not supported by the cipher specification.");
                 }
 
                 return Configuration.InitialisationVector == null ? null : Configuration.InitialisationVector.DeepCopy();
@@ -88,7 +89,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
 
         protected override void ThrowIfKeySizeIncompatible()
         {
-            if (Athena.Cryptography.StreamCiphers[StreamCipher].AllowableKeySizes.Contains(Configuration.KeySizeBits) ==
+            if (Athena.Cryptography.StreamCiphers[StreamCipher].AllowableKeySizesBits.Contains(Configuration.KeySizeBits) ==
                 false) {
                 throw new CipherKeySizeException(StreamCipher, Configuration.KeySizeBits);
             }

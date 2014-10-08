@@ -17,7 +17,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
     public class Sha512Digest
 		: LongDigest
     {
-        private const int DigestLength = 64;
+        private const int OutputLength = 64;
 
 		public Sha512Digest()
         {
@@ -38,8 +38,13 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			get { return "SHA-512"; }
 		}
 
-        public override int DigestSize {
-            get { return DigestLength; }
+        /// <summary>
+        ///     Enumerated function identity.
+        /// </summary>
+        public override HashFunction Identity { get { return HashFunction.Sha512; } }
+
+        public override int OutputSize {
+            get { return OutputLength; }
         }
 
         public override int DoFinal(
@@ -59,7 +64,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
             Reset();
 
-            return DigestLength;
+            return OutputLength;
 
         }
 

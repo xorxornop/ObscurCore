@@ -1,21 +1,27 @@
-﻿//
-//  Copyright 2014  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+﻿#region License
+
+//  	Copyright 2013-2014 Matthew Ducker
+//  	
+//  	Licensed under the Apache License, Version 2.0 (the "License");
+//  	you may not use this file except in compliance with the License.
+//  	
+//  	You may obtain a copy of the License at
+//  		
+//  		http://www.apache.org/licenses/LICENSE-2.0
+//  	
+//  	Unless required by applicable law or agreed to in writing, software
+//  	distributed under the License is distributed on an "AS IS" BASIS,
+//  	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  	See the License for the specific language governing permissions and 
+//  	limitations under the License.
+
+#endregion
 
 // Modified from https://bitbucket.org/jdluzen/sha3. Released under Modified BSD License.
 
 using System;
+using PerfCopy;
+using BitManipulator;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
@@ -25,16 +31,15 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         private ulong[] _stateTemp;
 
         /// <inheritdoc />
-        public void Update(byte input)
+        protected internal override void UpdateInternal(byte input)
         {
-            int sizeInBytes = ByteLength;
-            int stride = sizeInBytes >> 3;
-            if (BuffLength == sizeInBytes) {
+            int stride = _stateSizeBytes >> 3;
+            if (BuffLength == _stateSizeBytes) {
                 //buffer full
                 if (_stateTemp == null) {
                     _stateTemp = new ulong[stride];
                 }
-                Buffer.BlockCopy(_buffer, 0, _stateTemp, 0, sizeInBytes);
+                _buffer.LittleEndianToUInt64_NoChecks(0, _stateTemp, 0, _keccakR);
                 KeccakF(_stateTemp, stride);
                 BuffLength = 0;
             }
@@ -42,14 +47,14 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         }
 
         /// <inheritdoc />
-        public void Reset()
+        public override void Reset()
         {
             BuffLength = 0;
             _buffer.SecureWipe();
             _state.SecureWipe();
             if (_stateTemp != null) {
                 _stateTemp.SecureWipe();
-            } 
+            }
         }
 
         private void HashCore(byte[] array, int offset, int length)
@@ -57,49 +62,55 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             if (length == 0) {
                 return;
             }
-            int sizeInBytes = ByteLength;
             if (_buffer == null) {
-                _buffer = new byte[sizeInBytes];
+                _buffer = new byte[_stateSizeBytes];
             }
-            int stride = sizeInBytes >> 3;
-            if (BuffLength == sizeInBytes) {
+            int stride = _stateSizeBytes >> 3;
+            if (BuffLength == _stateSizeBytes) {
                 throw new Exception("Unexpected error, the internal buffer is full");
             }
             AddToBuffer(array, ref offset, ref length);
             if (_stateTemp == null) {
                 _stateTemp = new ulong[stride];
             }
-            if (BuffLength == sizeInBytes) //buffer full
+            if (BuffLength == _stateSizeBytes) //buffer full
             {
-                Buffer.BlockCopy(_buffer, 0, _stateTemp, 0, sizeInBytes);
+                _buffer.LittleEndianToUInt64_NoChecks(0, _stateTemp, 0, _stateSizeBytes / 8);
                 KeccakF(_stateTemp, stride);
                 BuffLength = 0;
             }
-            for (; length >= sizeInBytes; length -= sizeInBytes, offset += sizeInBytes) {
-                Buffer.BlockCopy(array, offset, _stateTemp, 0, sizeInBytes);
+            for (; length >= _stateSizeBytes; length -= _stateSizeBytes, offset += _stateSizeBytes) {
+                array.LittleEndianToUInt64_NoChecks(offset, _stateTemp, 0, _stateSizeBytes / 8);
                 KeccakF(_stateTemp, stride);
             }
             if (length > 0) //some left over
             {
-                array.CopyBytes(offset, _buffer, BuffLength, length);
+                array.CopyBytes_NoChecks(offset, _buffer, BuffLength, length);
                 BuffLength += length;
             }
         }
 
         private void HashFinal(byte[] array, int offset)
         {
-            int sizeInBytes = ByteLength;
             //    padding
-            Array.Clear(_buffer, BuffLength, sizeInBytes - BuffLength);
+            Array.Clear(_buffer, BuffLength, _stateSizeBytes - BuffLength);
             _buffer[BuffLength++] = 1;
-            _buffer[sizeInBytes - 1] |= 0x80;
-            int stride = sizeInBytes >> 3;
+            _buffer[_stateSizeBytes - 1] |= 0x80;
+            int stride = _stateSizeBytes >> 3;
             if (_stateTemp == null) {
                 _stateTemp = new ulong[stride];
             }
-            Buffer.BlockCopy(_buffer, 0, _stateTemp, 0, sizeInBytes);
+            _buffer.LittleEndianToUInt64(0, _stateTemp, 0, _stateSizeBytes / 8);
             KeccakF(_stateTemp, stride);
-            Buffer.BlockCopy(_state, 0, array, offset, DigestSize);
+
+            int remainderBytes;
+            int ulongs = Math.DivRem(OutputSize, 8, out remainderBytes);
+
+            _state.ToLittleEndian_NoChecks(0, array, offset, ulongs);
+            if (remainderBytes == 4) {
+                uint lastState = (uint)_state[ulongs];
+                lastState.ToLittleEndian_NoChecks(array, offset + (ulongs * 8));
+            }
         }
 
         private void KeccakF(ulong[] inb, int laneCount)

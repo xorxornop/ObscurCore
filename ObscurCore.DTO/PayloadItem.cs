@@ -150,7 +150,7 @@ namespace ObscurCore.DTO
         ///     Note: this must be of a MAC type.
         /// </summary>
         [ProtoMember(9, IsRequired = true)]
-        public AuthenticationFunctionConfiguration Authentication { get; set; }
+        public AuthenticationConfiguration Authentication { get; set; }
 
         /// <summary>
         ///     Ephemeral key for authentication of the payload item.
@@ -173,7 +173,7 @@ namespace ObscurCore.DTO
         ///     present.
         /// </summary>
         [ProtoMember(12, IsRequired = false)]
-        public AuthenticationFunctionConfiguration KeyConfirmation { get; set; }
+        public AuthenticationConfiguration KeyConfirmation { get; set; }
 
         /// <summary>
         ///     Output of the <see cref="KeyConfirmation" /> scheme, given the correct key.

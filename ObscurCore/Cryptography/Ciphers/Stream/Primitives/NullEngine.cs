@@ -17,6 +17,8 @@
 
 #endregion
 
+using PerfCopy;
+
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
 #if DEBUG
@@ -72,9 +74,9 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         /// <param name="outOff">
         ///     The offset in <paramref name="output" /> at which to write the output data to.
         /// </param>
-        internal override void ProcessBytesInternal(byte[] input, int inOff, int length, byte[] output, int outOff)
+        protected internal override void ProcessBytesInternal(byte[] input, int inOff, int length, byte[] output, int outOff)
         {
-            input.CopyBytes(inOff, output, outOff, length);
+            input.CopyBytes_NoChecks(inOff, output, outOff, length);
         }
     }
 #endif

@@ -1,6 +1,7 @@
 using System;
 using ObscurCore.Cryptography.Entropy;
 using ObscurCore.Cryptography.Support;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
@@ -98,7 +99,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		}
 
         /// <inheritdoc />
-        internal override void ProcessBytesInternal(
+        protected internal override void ProcessBytesInternal(
             byte[] inBytes,
             int inOff,
             int len,
@@ -163,7 +164,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                 var blen = StrideSize - _index;
                 if (blen > length)
                     blen = length;
-                _keyStream.CopyBytes(_index, buffer, offset, blen);
+                _keyStream.DeepCopy_NoChecks(_index, buffer, offset, blen);
                 _index += blen;
                 offset += blen;
                 length -= blen;
@@ -177,7 +178,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
                 } else {
                     GenerateKeyStream(_keyStream, 0);
                     AdvanceCounter();
-                    _keyStream.CopyBytes(0, buffer, offset, length);
+                    _keyStream.DeepCopy_NoChecks(0, buffer, offset, length);
                     _index = length;
                     length = 0;
                 }

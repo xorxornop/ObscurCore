@@ -65,7 +65,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.Ed25519
 			sha512.BlockUpdate(pk, pkoffset, 32);
 			sha512.BlockUpdate(m, moffset, mlen);
 
-			h = new byte[sha512.DigestSize];
+			h = new byte[sha512.OutputSize];
 			sha512.DoFinal (h, 0);
 
             ScalarOperations.sc_reduce(h);
@@ -74,8 +74,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.Ed25519
             Array.Copy(sig, sigoffset + 32, sm32, 0, 32);
             GroupOperations.ge_double_scalarmult_vartime(out R, h, ref A, sm32);
             GroupOperations.ge_tobytes(checkr, 0, ref R);
-			checkr.SequenceEqualConstantTime (checkr);
-			return checkr.SequenceEqualConstantTime(0, sig, sigoffset, 32);
+			checkr.SequenceEqual_ConstantTime (checkr);
+			return checkr.SequenceEqual_ConstantTime(0, sig, sigoffset, 32);
         }
     }
 }

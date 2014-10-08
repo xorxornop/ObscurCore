@@ -24,12 +24,14 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
         {
             this._digest = digest;
 
-            _seed = new byte[digest.DigestSize];
+            _seed = new byte[digest.OutputSize];
             _seedCounter = 1;
 
-            _state = new byte[digest.DigestSize];
+            _state = new byte[digest.OutputSize];
             _stateCounter = 1;
         }
+
+        public int StateSize { get { return _state.Length; } }
 
         /// <inheritdoc />
         public override void AddSeedMaterial(
@@ -40,6 +42,11 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
                 DigestUpdate(_seed);
                 DigestDoFinal(_seed);
             }
+        }
+
+        protected override CsRng CreateGenerator()
+        {
+            throw new System.NotImplementedException();
         }
 
         /// <inheritdoc />

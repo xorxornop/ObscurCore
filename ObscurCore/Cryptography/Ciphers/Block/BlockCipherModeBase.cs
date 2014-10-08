@@ -72,14 +72,8 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         {
             BlockCipher.Init(encrypting, key);
 
-            int ivLengthBits = iv.Length.BytesToBits();
             if (iv == null) {
                 throw new ArgumentNullException("iv", AlgorithmName + " initialisation requires an initialisation vector.");
-            //} else if (
-            //    ivLengthBits.IsOneOf(Athena.Cryptography.StreamCiphers[CipherIdentity].AllowableNonceSizes) == false) 
-            //{
-            //    throw new ArgumentException(AlgorithmName + " does not support a " + iv.Length + " byte nonce.",
-            //        "iv");
             }
             this.IV = iv;
 

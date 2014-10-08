@@ -17,8 +17,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 using System;
 using System.IO;
-
+using BitManipulator;
 using ObscurCore.Cryptography.Authentication;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 {
@@ -46,10 +47,10 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 			Helper.CheckNull("salt", salt);
 			//Check.Length("salt", salt, 0, int.MaxValue - 4);
 			Helper.CheckRange("iterations", iterations, 1, int.MaxValue);
-			if (hmacAlgorithm.MacSize == 0)
+			if (hmacAlgorithm.OutputSize == 0)
 			{ throw new ArgumentException("Unsupported hash size.", "hmacAlgorithm"); }
 
-			int hmacLength = hmacAlgorithm.MacSize;
+			int hmacLength = hmacAlgorithm.OutputSize;
 			_saltBuffer = new byte[salt.Length + 4]; Array.Copy(salt, _saltBuffer, salt.Length);
 			_iterations = iterations; _hmacAlgorithm = hmacAlgorithm;
 			_digest = new byte[hmacLength]; _digestT1 = new byte[hmacLength];
@@ -121,7 +122,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 
 		void ComputeBlock(uint pos)
 		{
-			pos.ToBigEndian (_saltBuffer, _saltBuffer.Length - 4);
+			pos.ToBigEndian_NoChecks(_saltBuffer, _saltBuffer.Length - 4);
 			ComputeHmac(_saltBuffer, _digestT1);
 			Array.Copy(_digestT1, _digest, _digestT1.Length);
 
@@ -171,7 +172,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 
 				int bytesSoFar = (int)(Position - _blockStart);
 				int bytesThisTime = (int)Math.Min(_digest.Length - bytesSoFar, count);
-				_digest.CopyBytes (bytesSoFar, buffer, bytes, bytesThisTime);
+                _digest.CopyBytes_NoChecks(bytesSoFar, buffer, bytes, bytesThisTime);
 				count -= bytesThisTime; bytes += bytesThisTime; Position += bytesThisTime;
 			}
 

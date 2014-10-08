@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System;
+using System.Diagnostics;
 
 namespace ObscurCore
 {
@@ -282,13 +283,13 @@ namespace ObscurCore
 #endif
         }
 
-#if INCLUDE_UNSAFE
         /// <summary>
         ///     Copy data from <paramref name="src"/> into <paramref name="dst"/>.
         /// </summary>
         /// <param name="src">Pointer to source of data.</param>
         /// <param name="dst">Pointer to destination for data.</param>
         /// <param name="length">Length of data to copy in bytes.</param>
+        [Conditional("INCLUDE_UNSAFE")]
         internal static unsafe void CopyMemory(byte* src, byte* dst, int length)
         {
             if (StratCom.PlatformWordSize == sizeof(uint)) {
@@ -338,6 +339,5 @@ namespace ObscurCore
                 *dst = *src;
             }
         }
-#endif
     }
 }

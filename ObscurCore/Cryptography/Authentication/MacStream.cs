@@ -45,7 +45,7 @@ namespace ObscurCore.Cryptography.Authentication
             : base(binding, writing, closeOnDispose)
         {
             _mac = AuthenticatorFactory.CreateMacPrimitive(function, key, salt, config, nonce);
-            _output = new byte[_mac.MacSize];
+            _output = new byte[_mac.OutputSize];
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace ObscurCore.Cryptography.Authentication
             output = _output;
         }
 
-        public MacStream(Stream binding, bool writing, IAuthenticationFunctionConfiguration config, byte[] key,
+        public MacStream(Stream binding, bool writing, IAuthenticationConfiguration config, byte[] key,
             bool closeOnDispose = true) : base(binding, writing, closeOnDispose)
         {
             if (config.FunctionType != AuthenticationFunctionType.Mac) {
@@ -77,10 +77,10 @@ namespace ObscurCore.Cryptography.Authentication
 
             _mac = AuthenticatorFactory.CreateMacPrimitive(config.FunctionName.ToEnum<MacFunction>(), key, config.Salt,
                 config.FunctionConfiguration, config.Nonce);
-            _output = new byte[_mac.MacSize];
+            _output = new byte[_mac.OutputSize];
         }
 
-        public MacStream(Stream binding, bool writing, IAuthenticationFunctionConfiguration config, out byte[] output,
+        public MacStream(Stream binding, bool writing, IAuthenticationConfiguration config, out byte[] output,
             byte[] key,
             bool closeOnDispose = true) : this(binding, writing, config, key, closeOnDispose)
         {
@@ -98,7 +98,7 @@ namespace ObscurCore.Cryptography.Authentication
             : base(binding, writing, closeOnDispose)
         {
             _mac = macPrimitive;
-            _output = new byte[_mac.MacSize];
+            _output = new byte[_mac.OutputSize];
         }
 
         /// <summary>

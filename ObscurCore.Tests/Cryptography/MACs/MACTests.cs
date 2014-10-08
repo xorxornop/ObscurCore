@@ -32,10 +32,10 @@ namespace ObscurCore.Tests.Cryptography.MACs
 			RunMacTest(MacFunction.Blake2B512, null, null, CreateRandomBytes(512), CreateRandomBytes(128));
         }
 
-        [Test]
-        public void Keccak224 () {
-			RunMacTest(MacFunction.Keccak224, null, null, CreateRandomBytes(224), CreateRandomBytes(128));
-        }
+//        [Test]
+//        public void Keccak224 () {
+//			RunMacTest(MacFunction.Keccak224, null, null, CreateRandomBytes(224), CreateRandomBytes(128));
+//        }
 
         [Test]
         public void Keccak256 () {

@@ -1,4 +1,5 @@
 using System;
+using BitManipulator;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve.ABC;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve.Endomorphism;
 using ObscurCore.Cryptography.Support.Math.Field;

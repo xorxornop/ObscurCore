@@ -35,13 +35,13 @@ namespace ObscurCore.Cryptography.Authentication
         {
             // ######################################## HASH FUNCTIONS ########################################
             DigestInstantiators = new Dictionary<HashFunction, Func<IHash>> {
-                { HashFunction.Blake2B256, () => new Blake2BDigest(256, true) },
-                { HashFunction.Blake2B384, () => new Blake2BDigest(384, true) },
-                { HashFunction.Blake2B512, () => new Blake2BDigest(512, true) },
-                { HashFunction.Keccak224, () => new KeccakDigest(224, true) },
-                { HashFunction.Keccak256, () => new KeccakDigest(256, true) },
-                { HashFunction.Keccak384, () => new KeccakDigest(384, true) },
-                { HashFunction.Keccak512, () => new KeccakDigest(512, true) },
+                { HashFunction.Blake2B256, () => new Blake2BDigest(256) },
+                { HashFunction.Blake2B384, () => new Blake2BDigest(384) },
+                { HashFunction.Blake2B512, () => new Blake2BDigest(512) },
+                { HashFunction.Keccak224, () => new KeccakDigest(224) },
+                { HashFunction.Keccak256, () => new KeccakDigest(256) },
+                { HashFunction.Keccak384, () => new KeccakDigest(384) },
+                { HashFunction.Keccak512, () => new KeccakDigest(512) },
 #if INCLUDE_SHA1
                 { HashFunction.Sha1, () => new Sha1Digest() },
 #endif
@@ -54,13 +54,13 @@ namespace ObscurCore.Cryptography.Authentication
 
             // ######################################## MAC FUNCTIONS ########################################
             MacInstantiators = new Dictionary<MacFunction, Func<IMac>> {
-                { MacFunction.Blake2B256, () => new Blake2BMac(256, true) },
-                { MacFunction.Blake2B384, () => new Blake2BMac(384, true) },
-                { MacFunction.Blake2B512, () => new Blake2BMac(512, true) },
-                { MacFunction.Keccak224, () => new KeccakMac(224, true) },
-                { MacFunction.Keccak256, () => new KeccakMac(256, true) },
-                { MacFunction.Keccak384, () => new KeccakMac(384, true) },
-                { MacFunction.Keccak512, () => new KeccakMac(512, true) }
+                { MacFunction.Blake2B256, () => new Blake2BMac(256) },
+                { MacFunction.Blake2B384, () => new Blake2BMac(384) },
+                { MacFunction.Blake2B512, () => new Blake2BMac(512) },
+//                { MacFunction.Keccak224, () => new KeccakMac(224) },
+                { MacFunction.Keccak256, () => new KeccakMac(256) },
+                { MacFunction.Keccak384, () => new KeccakMac(384) },
+                { MacFunction.Keccak512, () => new KeccakMac(512) }
             };
         }
 
@@ -140,7 +140,7 @@ namespace ObscurCore.Cryptography.Authentication
         /// <returns>Pre-initialised CMAC primitive as a <see cref="IMac"/>.</returns>
         public static IMac CreateCmacPrimitive(BlockCipher cipherEnum, byte[] key, byte[] salt = null)
         {
-            int? defaultBlockSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
+            int? defaultBlockSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSizeBits;
             if (defaultBlockSize != 64 && defaultBlockSize != 128) {
                 throw new NotSupportedException("CMAC/OMAC1 only supports ciphers with 64 / 128 bit block sizes.");
             }
@@ -163,7 +163,7 @@ namespace ObscurCore.Cryptography.Authentication
         /// <returns>Pre-initialised HMAC primitive as a <see cref="IMac"/>.</returns>
         public static IMac CreateHmacPrimitive(HashFunction hashEnum, byte[] key, byte[] salt = null)
         {
-            var macObj = new HMac(DigestInstantiators[hashEnum]());
+            var macObj = new Hmac(DigestInstantiators[hashEnum]());
             macObj.Init(key);
             if (salt.IsNullOrZeroLength() == false) {
                 macObj.BlockUpdate(salt, 0, salt.Length);
@@ -183,7 +183,7 @@ namespace ObscurCore.Cryptography.Authentication
         /// <returns>Pre-initialised Poly1305 MAC primitive as a <see cref="IMac"/>.</returns>
         public static IMac CreatePoly1305Primitive(BlockCipher cipherEnum, byte[] key, byte[] nonce, byte[] salt = null)
         {
-            if (Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize != 128) {
+            if (Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSizeBits != 128) {
                 throw new NotSupportedException();
             }
 

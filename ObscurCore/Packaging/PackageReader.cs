@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BitManipulator;
 using Nessos.LinqOptimizer.CSharp;
 using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
@@ -82,7 +83,7 @@ namespace ObscurCore.Packaging
         /// </summary>
         public ManifestCryptographyScheme ManifestCryptoScheme
         {
-            get { return _manifestHeader.CryptographySchemeName.ToEnum<ManifestCryptographyScheme>(); }
+            get { return _manifestHeader.CryptographyScheme; }
         }
 
         /// <summary>
@@ -96,7 +97,7 @@ namespace ObscurCore.Packaging
         /// <summary>
         ///     Configuration of function used in verifying the authenticity/integrity of the manifest.
         /// </summary>
-        public IAuthenticationFunctionConfiguration ManifestAuthentication
+        public IAuthenticationConfiguration ManifestAuthentication
         {
             get { return _manifestCryptoConfig.Authentication; }
         }
@@ -114,7 +115,7 @@ namespace ObscurCore.Packaging
         ///     Configuration of key confirmation used for confirming the cryptographic key
         ///     to be used as the basis for key derivation.
         /// </summary>
-        public IAuthenticationFunctionConfiguration ManifestKeyConfirmation
+        public IAuthenticationConfiguration ManifestKeyConfirmation
         {
             get { return _manifestCryptoConfig.KeyConfirmation; }
         }
@@ -313,8 +314,8 @@ namespace ObscurCore.Packaging
                 // In later versions, can redirect to diff. behaviour (and DTO objects) for diff. versions.
             }
 
-            cryptoScheme = manifestHeader.CryptographySchemeName.ToEnum<ManifestCryptographyScheme>();
-            switch (manifestHeader.CryptographySchemeName.ToEnum<ManifestCryptographyScheme>()) {
+            cryptoScheme = manifestHeader.CryptographyScheme;
+            switch (cryptoScheme) {
                 case ManifestCryptographyScheme.SymmetricOnly:
                     cryptoConfig =
                         manifestHeader.CryptographySchemeConfiguration
@@ -327,8 +328,8 @@ namespace ObscurCore.Packaging
                     break;
                 default:
                     throw new NotSupportedException(String.Format(
-                        "Package manifest cryptography scheme \"{0}\" as specified by the manifest header is unsupported/unknown.",
-                        manifestHeader.CryptographySchemeName));
+                        "Package manifest cryptography scheme \"{0}\" as specified by the manifest header is unsupported.",
+                        manifestHeader.CryptographyScheme));
             }
 
             return manifestHeader;
@@ -535,7 +536,7 @@ namespace ObscurCore.Packaging
                 }
 
                 // Verify that manifest authenticated successfully
-                if (manifestMac.SequenceEqualConstantTime(_manifestCryptoConfig.AuthenticationVerifiedOutput) == false) {
+                if (manifestMac.SequenceEqual_ConstantTime(_manifestCryptoConfig.AuthenticationVerifiedOutput) == false) {
                     throw new CiphertextAuthenticationException("Manifest failed authentication.");
                 }
                 decryptedManifestStream.Seek(0, SeekOrigin.Begin);

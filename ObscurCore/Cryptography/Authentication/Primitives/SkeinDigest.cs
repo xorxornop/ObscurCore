@@ -68,12 +68,12 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			get { return "Skein-" + (engine.BlockSize * 8) + "-" + (engine.OutputSize * 8); }
 		}
 
-		public int DigestSize
+		public int OutputSize
 		{
 			get { return engine.OutputSize; }
 		}
 
-		public int ByteLength
+		public int StateSize
 		{
 			get { return engine.BlockSize; }
 		}

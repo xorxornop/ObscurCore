@@ -1,4 +1,6 @@
 using System;
+using BitManipulator;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
@@ -7,7 +9,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		private bool _isInitialized;
 		
 		private int _bufferFilled;
-		private readonly byte[] _buf = new byte[128];
+        private readonly byte[] _buf = new byte[BlockSizeInBytes];
 		
 		private readonly ulong[] _m = new ulong[16];
 		private readonly ulong[] _h = new ulong[8];
@@ -54,7 +56,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
                 get { return OutputSizeInBytes * 8; }
                 set
                 {
-                    if (value % 8 == 0)
+                    if (value % 8 != 0)
                         throw new ArgumentException("Output size must be a multiple of 8 bits");
                     OutputSizeInBytes = value / 8;
                 }
@@ -85,45 +87,35 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         }
 
         #region IV builder
-        //private static readonly Blake2BTreeConfig SequentialTreeConfig = new Blake2BTreeConfig() { IntermediateHashSize = 0, LeafSize = 0, FanOut = 1, MaxHeight = 1 };
 
         public static ulong[] ConfigB(Blake2BConfig config)
         {
-            //bool isSequential = treeConfig == null;
-            //if (isSequential)
-            //    treeConfig = SequentialTreeConfig;
             var rawConfig = new ulong[8];
-            //var result = new ulong[8]; //TODO: Investigate this
 
             //digest length
             if (config.OutputSizeInBytes <= 0 | config.OutputSizeInBytes > 64)
-                throw new ArgumentOutOfRangeException("config.OutputSize");
-            rawConfig[0] |= (ulong)(uint)config.OutputSizeInBytes;
+                throw new ArgumentOutOfRangeException("config.HashSize");
+            rawConfig[0] |= (ulong)config.OutputSizeInBytes;
 
             //Key length
             if (config.Key != null) {
                 if (config.Key.Length > 64)
                     throw new ArgumentException("Key too long", "config.Key");
-                rawConfig[0] |= (ulong)((uint)config.Key.Length << 8);
+                rawConfig[0] |= ((ulong)config.Key.Length << 8);
             }
+
             // FanOut
-            //rawConfig[0] |= (uint)treeConfig.FanOut << 16;
-            rawConfig[0] |= (uint)1 << 16;
-            // Depth
-            //rawConfig[0] |= (uint)treeConfig.MaxHeight << 24;
-            rawConfig[0] |= (uint)1 << 24;
+            rawConfig[0] |= 1UL << 16;
+            // Depth/MaxHeight
+            rawConfig[0] |= 1UL << 24;
             // Leaf length
-            rawConfig[0] |= ((ulong)(uint)0) << 32;
-            // Inner length
-            //if (!isSequential && (treeConfig.IntermediateHashSize <= 0 || treeConfig.IntermediateHashSize > 64))
-            //    throw new ArgumentOutOfRangeException("treeConfig.TreeIntermediateHashSize");
-            rawConfig[2] |= (uint)0 << 8;
+            //rawConfig[0] |= 0UL << 32;
+            // Inner length / TreeIntermediateHashSize
+            //rawConfig[2] |= 0UL << 8;
             // Salt
             if (config.Salt != null) {
                 if (config.Salt.Length != 16)
                     throw new ArgumentException("config.Salt has invalid length");
-                //rawConfig[4] = Blake2BCore.BytesToUInt64(config.Salt, 0);
-                //rawConfig[5] = Blake2BCore.BytesToUInt64(config.Salt, 8);
                 rawConfig[4] = config.Salt.LittleEndianToUInt64();
                 rawConfig[5] = config.Salt.LittleEndianToUInt64(8);
             }
@@ -131,8 +123,6 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             if (config.Personalization != null) {
                 if (config.Personalization.Length != 16)
                     throw new ArgumentException("config.Personalization has invalid length");
-                //rawConfig[6] = Blake2BCore.BytesToUInt64(config.Personalization, 0);
-                //rawConfig[6] = Blake2BCore.BytesToUInt64(config.Personalization, 8);
                 rawConfig[6] = config.Personalization.LittleEndianToUInt64();
                 rawConfig[7] = config.Personalization.LittleEndianToUInt64(8);
             }
@@ -170,26 +160,24 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			for (int i = 0; i < 8; i++)
 				_h[i] ^= config[i];
 		}
+
+        public void HashCore(byte input)
+        {
+            _buf[_bufferFilled++] = input;
+            if (BlockSizeInBytes - _bufferFilled == 0) {
+                Compress(_buf, 0);
+                _bufferFilled = 0;
+            }
+        }
 		
 		public void HashCore(byte[] array, int start, int count)
 		{
-			if (!_isInitialized)
-				throw new InvalidOperationException("Not initialized");
-			if (array == null)
-				throw new ArgumentNullException("array");
-			if (start < 0)
-				throw new ArgumentOutOfRangeException("start");
-			if (count < 0)
-				throw new ArgumentOutOfRangeException("count");
-			if ((long)start + (long)count > array.Length)
-				throw new ArgumentOutOfRangeException("start+count");
 			int offset = start;
 			int bufferRemaining = BlockSizeInBytes - _bufferFilled;
 			
 			if ((_bufferFilled > 0) && (count > bufferRemaining))
 			{
-				//Array.Copy(array, offset, _buf, _bufferFilled, bufferRemaining);
-                array.CopyBytes(offset, _buf, _bufferFilled, bufferRemaining);
+                array.CopyBytes_NoChecks(offset, _buf, _bufferFilled, bufferRemaining);
 				_counter0 += BlockSizeInBytes;
 				if (_counter0 == 0)
 					_counter1++;
@@ -211,39 +199,39 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			
 			if (count > 0)
 			{
-				//Array.Copy(array, offset, _buf, _bufferFilled, count);
-                array.CopyBytes(offset, _buf, _bufferFilled, count);
+                array.CopyBytes_NoChecks(offset, _buf, _bufferFilled, count);
 				_bufferFilled += count;
 			}
 		}
 		
-		public byte[] HashFinal()
+		public byte[] HashFinal(bool isEndOfLayer = false)
 		{
-			return HashFinal(false);
-		}
-		
-		public byte[] HashFinal(bool isEndOfLayer)
-		{
-			if (!_isInitialized)
-				throw new InvalidOperationException("Not initialized");
-			_isInitialized = false;
-			
-			//Last compression
-			_counter0 += (uint)_bufferFilled;
-			_finalizationFlag0 = ulong.MaxValue;
-			if (isEndOfLayer)
-				_finalizationFlag1 = ulong.MaxValue;
-			for (int i = _bufferFilled; i < _buf.Length; i++)
-				_buf[i] = 0;
-			Compress(_buf, 0);
-			
 			//Output
 			byte[] hash = new byte[64];
-		    for (int i = 0; i < 8; ++i)
-		        //UInt64ToBytes(_h[i], hash, i << 3);
-		        _h[i].ToLittleEndian(hash, i << 3);
+            HashFinal(hash, 0, hash.Length, isEndOfLayer);
 			return hash;
 		}
+
+        public void HashFinal(byte[] buffer, int outOff, int outputSize = 64, bool isEndOfLayer = false)
+        {
+            if (!_isInitialized)
+                throw new InvalidOperationException("Not initialized");
+            _isInitialized = false;
+
+            //Last compression
+            _counter0 += (uint)_bufferFilled;
+            _finalizationFlag0 = ulong.MaxValue;
+            if (isEndOfLayer)
+                _finalizationFlag1 = ulong.MaxValue;
+            for (int i = _bufferFilled; i < _buf.Length; i++)
+                _buf[i] = 0;
+            Compress(_buf, 0);
+
+            if (!outputSize.IsBetween(32, 64)) {
+                throw new ArgumentOutOfRangeException("outputSize");
+            }
+            _h.ToLittleEndian_NoChecks(0, buffer, outOff, outputSize / 8);
+        }
 
         #region Compression function (fully unrolled)
         private void Compress(byte[] block, int start)
@@ -251,24 +239,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             var h = _h;
             var m = _m;
 
-            if (BitConverter.IsLittleEndian) {
-#if INCLUDE_UNSAFE
-                unsafe {
-                    fixed (byte* inPtr = block) {
-                        ulong* inUlongPtr = (ulong*)(inPtr + start);
-                        for (int i = 0; i < 16; ++i)
-                            //m[i] = BytesToUInt64(block, start + (i << 3));
-                            m[i] = inUlongPtr[i];
-                    }
-                }
-#else
-                Buffer.BlockCopy(block, start, m, 0, BlockSizeInBytes);
-#endif
-
-            } else {
-                for (int i = 0; i < 16; ++i)
-                    m[i] = block.LittleEndianToUInt64(start + (i << 3));
-            }
+            block.LittleEndianToUInt64(start, m, 0, 16);
 
             /*var m0 = m[0];
             var m1 = m[1];

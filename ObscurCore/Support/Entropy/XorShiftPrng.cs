@@ -14,6 +14,8 @@
 //    limitations under the License.
 
 using System;
+using BitManipulator;
+using PerfCopy;
 
 namespace ObscurCore.Support.Entropy
 {
@@ -48,9 +50,7 @@ namespace ObscurCore.Support.Entropy
                 if (seed.Length != stateSize * sizeof (ulong)) {
                     throw new ArgumentException("Seed incorrect length.", "seed");
                 }
-                for (int i = 0; i < stateSize; i++) {
-                    S[i] = seed.LittleEndianToUInt64(i * sizeof (ulong));
-                }
+                seed.LittleEndianToUInt64_NoChecks(0, S, 0, stateSize);
             }
         }
 

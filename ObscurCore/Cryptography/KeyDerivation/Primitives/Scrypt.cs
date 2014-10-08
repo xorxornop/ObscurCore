@@ -39,8 +39,10 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 using System;
 using System.Threading;
+using BitManipulator;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 {
@@ -176,12 +178,12 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
 
             var B0 = new uint[B.Length / sizeof(uint)];
             for (int i = 0; i < B0.Length; i++) {
-                B0[i] = B.LittleEndianToUInt32(i * sizeof(uint));
+                B0[i] = B.LittleEndianToUInt32_NoChecks(i * sizeof(uint));
             } // code is easier with uint[]
 
             ThreadSMixCalls(B0, MFLen, cost, blockSize, parallel, (int) maxThreads);
             for (int i = 0; i < B0.Length; i++) {
-                B0[i].ToLittleEndian(B, i * sizeof(uint));
+                B0[i].ToLittleEndian_NoChecks(B, i * sizeof(uint));
             }
             B0.SecureWipe();
 
@@ -211,7 +213,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
                 threadStackSize = defaultStackSize;
             }
 #else
-            threadStackSize = 8192;
+            threadStackSize = defaultStackSize;
 #endif
 
             int current = 0;
@@ -258,9 +260,9 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
                 v[i] = new uint[Bs];
             }
 
-            CopyExtensions.DeepCopyInternal(B, Boffset, x, 0, Bs);
+            B.DeepCopy_NoChecks(Boffset, x, 0, Bs);
             for (uint i = 0; i < N; i++) {
-                CopyExtensions.DeepCopyInternal(x, 0, v[i], 0, Bs);
+                x.DeepCopy_NoChecks(0, v[i], 0, Bs);
                 BlockMix(x, 0, x, 0, scratchX, scratchY, scratch1, /*scratch2,*/ r);
             }
             for (uint i = 0; i < N; i++) {
@@ -271,7 +273,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
                 }
                 BlockMix(scratchZ, 0, x, 0, scratchX, scratchY, scratch1, /*scratch2,*/ r);
             }
-            CopyExtensions.DeepCopyInternal(x, 0, Bp, Bpoffset, Bs);
+            x.DeepCopy_NoChecks(0, Bp, Bpoffset, Bs);
 
             //for (int i = 0; i < v.Length; i++) {
             //    Clear(v[i]);
@@ -319,7 +321,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
                 m += 16;
             }
 
-            CopyExtensions.DeepCopyInternal(y, 0, Bp, Bpoffset, y.Length);
+            y.DeepCopy_NoChecks(0, Bp, Bpoffset, y.Length);
         }
 
 #if INCLUDE_UNSAFE
@@ -358,7 +360,7 @@ namespace ObscurCore.Cryptography.KeyDerivation.Primitives
                 }
 
                 CryptographyExtensions.WipeMemory(x, Bs);
-                CryptographyExtensions.WipeMemory(scratchX, Bs);
+                CryptographyExtensions.WipeMemory(scratchX, 16);
                 CryptographyExtensions.WipeMemory(scratchY, Bs);
                 CryptographyExtensions.WipeMemory(scratchZ, Bs);
                 CryptographyExtensions.WipeMemory(scratch1, 16);

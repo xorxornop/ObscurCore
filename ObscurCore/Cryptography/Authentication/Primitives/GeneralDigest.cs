@@ -30,6 +30,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             byteCount = t.byteCount;
         }
 
+        public abstract HashFunction Identity { get; }
+
         public void Update(byte input)
         {
             xBuf[xBufOff++] = input;
@@ -103,7 +105,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			Array.Clear(xBuf, 0, xBuf.Length);
         }
 
-        public int ByteLength {
+        public int StateSize {
             get { return BYTE_LENGTH; }
         }
 
@@ -111,7 +113,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         internal abstract void ProcessLength(long bitLength);
         internal abstract void ProcessBlock();
         public abstract string AlgorithmName { get; }
-        public abstract int DigestSize { get; }
+        public abstract int OutputSize { get; }
         public abstract int DoFinal(byte[] output, int outOff);
     }
 }

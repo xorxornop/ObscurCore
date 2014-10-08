@@ -28,7 +28,7 @@ namespace ObscurCore.DTO
         /// <summary>
         ///     Data used for generating key confirmations.
         /// </summary>
-        /// <seealso cref="AuthenticationFunctionConfiguration"/>
+        /// <seealso cref="AuthenticationConfiguration"/>
         byte[] ConfirmationCanary { get; set; }
     }
 }

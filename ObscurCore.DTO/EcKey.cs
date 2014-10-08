@@ -87,7 +87,7 @@ namespace ObscurCore.DTO
         /// <remarks>
         ///     Setting <see cref="PublicComponent"/> to <c>false</c> will remove the current value.
         /// </remarks>
-        /// <seealso cref="AuthenticationFunctionConfiguration"/>
+        /// <seealso cref="AuthenticationConfiguration"/>
         [ProtoMember(6, IsRequired = false)]
         public byte[] ConfirmationCanary { get; set; }
 
@@ -104,7 +104,8 @@ namespace ObscurCore.DTO
                    String.Equals(CurveProviderName, other.CurveProviderName, StringComparison.OrdinalIgnoreCase) &&
                    String.Equals(CurveName, other.CurveName, StringComparison.OrdinalIgnoreCase) &&
                    EncodedKey.SequenceEqualShortCircuiting(other.EncodedKey) &&
-                   AdditionalData.SequenceEqualShortCircuiting(other.AdditionalData);
+                   AdditionalData == null ? other.AdditionalData == null : AdditionalData.SequenceEqualShortCircuiting(other.AdditionalData) && 
+                   ConfirmationCanary == null ? other.ConfirmationCanary == null : ConfirmationCanary.SequenceEqualShortCircuiting(other.ConfirmationCanary);
         }
 
         /// <inheritdoc />
@@ -131,6 +132,7 @@ namespace ObscurCore.DTO
                 hashCode = (hashCode * 397) ^ CurveName.ToLowerInvariant().GetHashCode();
                 hashCode = (hashCode * 397) ^ EncodedKey.GetHashCodeExt();
                 hashCode = (hashCode * 397) ^ (AdditionalData != null ? AdditionalData.GetHashCodeExt() : 0);
+                hashCode = (hashCode * 397) ^ (ConfirmationCanary != null ? ConfirmationCanary.GetHashCodeExt() : 0);
                 return hashCode;
             }
         }

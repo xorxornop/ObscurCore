@@ -25,7 +25,9 @@ using ObscurCore.Cryptography;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.DTO;
+using PerfCopy;
 using RingByteBuffer;
+
 
 namespace ObscurCore.Packaging.Multiplexing.Primitives
 {
@@ -39,11 +41,17 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         /// <summary>
         ///     Minimum permissible stripe length.
         /// </summary>
+        /// <remarks>
+        ///     Must be constant within a given DTO version lifetime (<see cref="Athena.Packaging.PackageFormatVersion"/>).
+        /// </remarks>
         public const int MinimumStripeLength = 8;
 
         /// <summary>
         ///     Maximum permissible stripe length.
         /// </summary>
+        /// <remarks>
+        ///     Must be constant within a given DTO version lifetime (<see cref="Athena.Packaging.PackageFormatVersion"/>).
+        /// </remarks>
         public const int MaximumStripeLength = 32768; // 32 KB
 
         /// <summary>
@@ -54,6 +62,9 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         /// <summary>
         ///     Used for <see cref="PayloadMuxEntropyScheme.Preallocation" /> scheme. Size in bytes.
         /// </summary>
+        /// <remarks>
+        ///     Must be constant within a given DTO version lifetime (<see cref="Athena.Packaging.PackageFormatVersion"/>).
+        /// </remarks>
         internal const int StripeFieldMaximumSize = sizeof(UInt16);
 
         private readonly Dictionary<Guid, MuxItemResourceContainer> _activeItemResources =
@@ -74,6 +85,7 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         /// <param name="payloadItems">Payload items to write.</param>
         /// <param name="itemPreKeys">Pre-keys for items (indexed by item identifiers).</param>
         /// <param name="config">Configuration of stream selection and stripe scheme.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Stripe size not within specification range.</exception>
         public FabricPayloadMux(bool writing, Stream multiplexedStream, IReadOnlyList<PayloadItem> payloadItems,
                                 IReadOnlyDictionary<Guid, byte[]> itemPreKeys, PayloadConfiguration config)
             : base(writing, multiplexedStream, payloadItems, itemPreKeys, config)
@@ -82,11 +94,11 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
 
             if (fabricConfig.Minimum < MinimumStripeLength) {
                 throw new ArgumentOutOfRangeException("config",
-                    "Minimum stripe length is set below specification minimum.");
+                    "Minimum stripe length is below specification minimum.");
             }
             if (fabricConfig.Maximum > MaximumStripeLength) {
                 throw new ArgumentOutOfRangeException("config",
-                    "Maximum stripe length is set above specification minimum.");
+                    "Maximum stripe length is above specification minimum.");
             }
 
             _minStripe = fabricConfig.Minimum;
@@ -112,6 +124,8 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
 
         protected override void ExecuteOperation()
         {
+            Debug.Assert(ItemCompletionRegister[Index] == false);
+
             PayloadItem item = PayloadItems[Index];
             Guid itemIdentifier = item.Identifier;
 
@@ -194,6 +208,7 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
             } else {
                 // Skipping
                 Debug.Assert(Writing == false, "Should not be skipping when writing!");
+
                 if (itemContainer.SkippedLength == 0) {
                     // Start of item
                     PayloadStream.Seek(opLength, SeekOrigin.Current);
@@ -244,6 +259,7 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
             // Final stages of Encrypt-then-MAC authentication scheme
             PayloadItem itemDto = item.CreateAuthenticatibleClone();
             byte[] itemDtoAuthBytes = itemDto.SerialiseDto();
+
             Debug.Print(DebugUtility.CreateReportString("FabricPayloadMux", "FinishItem", "Item DTO length",
                 itemDtoAuthBytes.Length));
 
@@ -256,7 +272,7 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
                 authenticator.Update(itemDtoAuthBytes, 0, itemDtoAuthBytes.Length);
                 authenticator.Close();
                 // Verify the authenticity of the item ciphertext and configuration
-                if (authenticator.Mac.SequenceEqualConstantTime(item.AuthenticationVerifiedOutput) == false) {
+                if (authenticator.Mac.SequenceEqual_ConstantTime(item.AuthenticationVerifiedOutput) == false) {
                     // Verification failed!
                     throw new CiphertextAuthenticationException("Payload item not authenticated.");
                 }

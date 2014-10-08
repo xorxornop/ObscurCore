@@ -42,11 +42,11 @@ namespace ObscurCore.Cryptography.Authentication
             : base(binding, writing, closeOnDispose)
         {
             _digest = AuthenticatorFactory.CreateHashPrimitive(function);
-            _output = new byte[_digest.DigestSize];
+            _output = new byte[_digest.OutputSize];
             output = _output;
         }
 
-        public HashStream(Stream binding, bool writing, IAuthenticationFunctionConfiguration config,
+        public HashStream(Stream binding, bool writing, IAuthenticationConfiguration config,
             bool closeOnDispose = true) : base(binding, writing, closeOnDispose)
         {
             if (config.FunctionType != AuthenticationFunctionType.Mac) {
@@ -54,7 +54,7 @@ namespace ObscurCore.Cryptography.Authentication
             }
 
             _digest = AuthenticatorFactory.CreateHashPrimitive(config.FunctionName.ToEnum<HashFunction>());
-            _output = new byte[_digest.DigestSize];
+            _output = new byte[_digest.OutputSize];
         }
 
         /// <summary>

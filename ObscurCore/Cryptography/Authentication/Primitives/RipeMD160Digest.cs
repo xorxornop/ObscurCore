@@ -9,7 +9,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
     public class RipeMD160Digest
 		: GeneralDigest
     {
-        private const int DigestLength = 20;
+        private const int OutputLength = 20;
 
         private int H0, H1, H2, H3, H4; // IV's
 
@@ -40,13 +40,18 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             xOff = t.xOff;
         }
 
+        /// <summary>
+        ///     Enumerated function identity.
+        /// </summary>
+        public override HashFunction Identity { get { return HashFunction.Ripemd160; } }
+
         public override string AlgorithmName
 		{
 			get { return "RIPEMD160"; }
 		}
 
-        public override int DigestSize {
-            get { return DigestLength; }
+        public override int OutputSize {
+            get { return OutputLength; }
         }
 
         internal override void ProcessWord(
@@ -99,7 +104,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
             Reset();
 
-            return DigestLength;
+            return OutputLength;
         }
 
         /**

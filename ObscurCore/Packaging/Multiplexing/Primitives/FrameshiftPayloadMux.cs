@@ -35,11 +35,17 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         /// <summary>
         ///     Minimum permissible padding length.
         /// </summary>
+        /// <remarks>
+        ///     Must be constant within a given DTO version lifetime (<see cref="Athena.Packaging.PackageFormatVersion"/>).
+        /// </remarks>
         public const int MinimumPaddingLength = 8;
 
         /// <summary>
         ///     Maximum permissible padding length.
         /// </summary>
+        /// <remarks>
+        ///     Must be constant within a given DTO version lifetime (<see cref="Athena.Packaging.PackageFormatVersion"/>).
+        /// </remarks>
         public const int MaximumPaddingLength = 512;
 
         /// <summary>
@@ -50,6 +56,9 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
         /// <summary>
         ///     Used for <see cref="PayloadMuxEntropyScheme.Preallocation" /> scheme. Size in bytes.
         /// </summary>
+        /// <remarks>
+        ///     Must be constant within a given DTO version lifetime (<see cref="Athena.Packaging.PackageFormatVersion"/>).
+        /// </remarks>
         internal const int PaddingFieldMaximumSize = sizeof(UInt16);
 
         private readonly int _maxPadding;
@@ -76,11 +85,11 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
                 config.SchemeConfiguration.DeserialiseDto<RangeConfiguration>();
             if (frameshiftConfig.Minimum < MinimumPaddingLength) {
                 throw new ArgumentOutOfRangeException("config",
-                    "Minimum padding length is set below specification minimum.");
+                    "Minimum padding length is below specification minimum.");
             }
             if (frameshiftConfig.Maximum < MaximumPaddingLength) {
                 throw new ArgumentOutOfRangeException("config",
-                    "Maximum padding length is set above specification maximum.");
+                    "Maximum padding length is above specification maximum.");
             }
 
             _minPadding = frameshiftConfig.Minimum;

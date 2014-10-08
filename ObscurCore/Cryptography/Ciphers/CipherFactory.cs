@@ -97,7 +97,7 @@ namespace ObscurCore.Cryptography.Ciphers
                     new InvalidOperationException("Cannot instantiate null block cipher."));
             }
             if (blockSize == null) {
-                blockSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSize;
+                blockSize = Athena.Cryptography.BlockCiphers[cipherEnum].DefaultBlockSizeBits;
             }
             return EngineInstantiatorsBlock[cipherEnum](blockSize.Value);
         }

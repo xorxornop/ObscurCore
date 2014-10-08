@@ -31,9 +31,9 @@ namespace ObscurCore.DTO
         int FormatVersion { get; }
 
         /// <summary>
-        ///     Name of the cryptographic scheme used to secure the Manifest.
+        ///     The cryptographic scheme used to secure the manifest.
         /// </summary>
-        string CryptographySchemeName { get; }
+        ManifestCryptographyScheme CryptographyScheme { get; }
 
         /// <summary>
         ///     Configuration of the cryptographic scheme used to secure the Manifest.

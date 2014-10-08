@@ -53,7 +53,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
         {
             CipherIdentity = cipherIdentity;
             Key = null;
-            _blockSize = blockSize ?? Athena.Cryptography.BlockCiphers[CipherIdentity].DefaultBlockSize.BitsToBytes();
+            _blockSize = blockSize ?? Athena.Cryptography.BlockCiphers[CipherIdentity].DefaultBlockSizeBits.BitsToBytes();
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
                 throw new ArgumentNullException("key", AlgorithmName + " initialisation requires a key.");
             } else if (
                 key.Length.BytesToBits()
-                   .IsOneOf(Athena.Cryptography.BlockCiphers[CipherIdentity].AllowableKeySizes) == false) {
+                   .IsOneOf(Athena.Cryptography.BlockCiphers[CipherIdentity].AllowableKeySizesBits) == false) {
                 throw new ArgumentException(AlgorithmName + " does not support a " + key.Length + " byte key.");
             }
             this.Key = key;
