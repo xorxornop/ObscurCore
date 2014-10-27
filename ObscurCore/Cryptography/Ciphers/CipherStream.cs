@@ -265,6 +265,7 @@ namespace ObscurCore.Cryptography.Ciphers
                 iterOut = _cipher.ProcessBytes(buffer, offset, _tempBuffer, 0);
                 totalIn += _operationSize;
                 offset += _operationSize;
+				count -= _operationSize;
                 _outBuffer.Put(_tempBuffer, 0, iterOut);
 
                 // Prevent possible writebuffer overflow

@@ -76,7 +76,7 @@ namespace ObscurCore.DTO
         /// <summary>
         ///     Size of the output in bits from the authentication function, where applicable.
         /// </summary>
-        [ProtoMember(7, IsRequired = false)]
+        [ProtoMember(8, IsRequired = false)]
         public int? OutputSizeBits { get; set; }
 
         /// <inheritdoc />

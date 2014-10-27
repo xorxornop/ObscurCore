@@ -35,8 +35,8 @@
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
-    <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseUnsafe|AnyCPU'">
+    <OutputPath>bin\ReleaseUnsafe\</OutputPath>
     <DefineConstants>INCLUDE_UNSAFE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
     <Optimize>true</Optimize>
     <ErrorReport>prompt</ErrorReport>
@@ -47,22 +47,21 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework">
-      <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ObscurCore.DTO.DtoSerialiser, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System" />
+    <Reference Include="ObscurCore.DTO.DtoSerialiser">
       <HintPath>..\ObscurCore.DTO\bin\Serialiser\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
     </Reference>
-    <Reference Include="PerfCopy">
-      <HintPath>..\packages\PerfCopy.1.2.0\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\PerfCopy.dll</HintPath>
+    <Reference Include="nunit.framework">
+      <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
+    <Reference Include="PerfCopy, Version=1.2.0.0, processorArchitecture=MSIL">
+        <HintPath>..\packages\PerfCopy.1.2.0\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\PerfCopy.dll</HintPath>
+        <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cryptography\Ciphers\Stream\Null.cs" />
