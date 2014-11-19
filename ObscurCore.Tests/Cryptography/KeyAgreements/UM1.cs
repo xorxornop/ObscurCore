@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using ObscurCore.Cryptography.Information.EllipticCurve;
 using ObscurCore.Cryptography.KeyAgreement;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.DTO;

@@ -25,17 +25,19 @@ using ObscurCore.Cryptography.Support.Math.EllipticCurve;
 namespace ObscurCore.Cryptography.Information.EllipticCurve
 {
     /// <summary>
-    ///     Information for a named elliptic curve over F2m with a trinomial polynomial basis (TPB).
+    ///     Information for a named elliptic curve over F(<sub>2</sub>)m with a pentanomial polynomial basis (PPB).
     /// </summary>
-    public class TpbF2mEcNamedCurveInformation : EcCurveInformation
+    public class PpbF2mEcCurveInformation : EcCurveInformation
     {
-        public TpbF2mEcNamedCurveInformation()
+        public PpbF2mEcCurveInformation()
         {
-            Field = CurveField.TpbF2m;
+            Field = CurveField.PpbF2m;
         }
 
         public int M { get; protected internal set; }
-        public int K { get; protected internal set; }
+        public int K1 { get; protected internal set; }
+        public int K2 { get; protected internal set; }
+        public int K3 { get; protected internal set; }
 
         public string A { get; protected internal set; }
         public string B { get; protected internal set; }
@@ -51,7 +53,7 @@ namespace ObscurCore.Cryptography.Information.EllipticCurve
         {
             var n = new BigInteger(N, 16);
             var h = new BigInteger(H, 16);
-            var curve = new F2mCurve(M, K, new BigInteger(A, 16), new BigInteger(B, 16), n, h);
+            var curve = new F2mCurve(M, K1, K2, K3, new BigInteger(A, 16), new BigInteger(B, 16), n, h);
             return new ECDomainParameters(curve, curve.DecodePoint(G.HexToBinary()), n, h,
                 String.IsNullOrEmpty(Seed) ? null : Seed.HexToBinary());
         }

@@ -66,6 +66,12 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             }
         }
 
+        protected override CsRng CreateGenerator()
+        {
+            // TODO: Fix shitty implementation that doesn't really do anything useful except prevent build error
+            return new ReversedWindowCsRng(_csRng, _windowCount);
+        }
+
         public override void NextBytes(
             byte[] buffer,
             int offset,

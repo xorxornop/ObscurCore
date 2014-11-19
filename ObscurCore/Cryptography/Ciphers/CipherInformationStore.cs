@@ -20,85 +20,85 @@ namespace ObscurCore.Cryptography.Ciphers
                     BlockCipher.Aes, new BlockCipherInformation {
                         Name = BlockCipher.Aes.ToString(),
                         DisplayName = "Advanced Encryption Standard (AES)",
-                        AllowableBlockSizes = new[] { 128 },
-                        DefaultBlockSize = 128,
-                        AllowableKeySizes = new[] { 128, 192, 256 },
-                        DefaultKeySize = 256
+                        AllowableBlockSizesBits = new[] { 128 },
+                        DefaultBlockSizeBits = 128,
+                        AllowableKeySizesBits = new[] { 128, 192, 256 },
+                        DefaultKeySizeBits = 256
                     }),
                 new KeyValuePair<BlockCipher, BlockCipherInformation>(
                     BlockCipher.Blowfish, new BlockCipherInformation {
                         Name = BlockCipher.Blowfish.ToString(),
                         DisplayName = "Blowfish",
-                        AllowableBlockSizes = new[] { 64 },
-                        DefaultBlockSize = 64,
-                        AllowableKeySizes =
+                        AllowableBlockSizesBits = new[] { 64 },
+                        DefaultBlockSizeBits = 64,
+                        AllowableKeySizesBits =
                             new[] { 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448 },
-                        DefaultKeySize = 256
+                        DefaultKeySizeBits = 256
                     }),
                 new KeyValuePair<BlockCipher, BlockCipherInformation>(
                     BlockCipher.Camellia, new BlockCipherInformation {
                         Name = BlockCipher.Camellia.ToString(),
                         DisplayName = "Camellia",
-                        AllowableBlockSizes = new[] { 128 },
-                        DefaultBlockSize = 128,
-                        AllowableKeySizes = new[] { 128, 192, 256 },
-                        DefaultKeySize = 256
+                        AllowableBlockSizesBits = new[] { 128 },
+                        DefaultBlockSizeBits = 128,
+                        AllowableKeySizesBits = new[] { 128, 192, 256 },
+                        DefaultKeySizeBits = 256
 #if INCLUDE_IDEA
                     }),
                 new KeyValuePair<BlockCipher, BlockCipherInformation>(
                     BlockCipher.Idea, new BlockCipherInformation {
                         Name = BlockCipher.Idea.ToString(),
                         DisplayName = "International Data Encryption Algorithm (IDEA)",
-                        AllowableBlockSizes = new[] { 64 },
-                        DefaultBlockSize = 64,
-                        AllowableKeySizes = new[] { 128 },
-                        DefaultKeySize = 128
+                        AllowableBlockSizesBits = new[] { 64 },
+                        DefaultBlockSizeBits = 64,
+                        AllowableKeySizesBits = new[] { 128 },
+                        DefaultKeySizeBits = 128
 #endif
                     }),
                 new KeyValuePair<BlockCipher, BlockCipherInformation>(
                     BlockCipher.Noekeon, new BlockCipherInformation {
                         Name = BlockCipher.Noekeon.ToString(),
                         DisplayName = "NOEKEON",
-                        AllowableBlockSizes = new[] { 128 },
-                        DefaultBlockSize = 128,
-                        AllowableKeySizes = new[] { 128 },
-                        DefaultKeySize = 128
+                        AllowableBlockSizesBits = new[] { 128 },
+                        DefaultBlockSizeBits = 128,
+                        AllowableKeySizesBits = new[] { 128 },
+                        DefaultKeySizeBits = 128
                     }),
                 new KeyValuePair<BlockCipher, BlockCipherInformation>(
                     BlockCipher.Rc6, new BlockCipherInformation {
                         Name = BlockCipher.Rc6.ToString(),
                         DisplayName = "RC6",
-                        AllowableBlockSizes = new[] { 128 },
-                        DefaultBlockSize = 128,
-                        AllowableKeySizes = new[] { 128, 192, 256 },
-                        DefaultKeySize = 256
+                        AllowableBlockSizesBits = new[] { 128 },
+                        DefaultBlockSizeBits = 128,
+                        AllowableKeySizesBits = new[] { 128, 192, 256 },
+                        DefaultKeySizeBits = 256
                     }),
                 new KeyValuePair<BlockCipher, BlockCipherInformation>(
                     BlockCipher.Serpent, new BlockCipherInformation {
                         Name = BlockCipher.Serpent.ToString(),
                         DisplayName = "Serpent",
-                        AllowableBlockSizes = new[] { 128 },
-                        DefaultBlockSize = 128,
-                        AllowableKeySizes = new[] { 128, 192, 256 },
-                        DefaultKeySize = 256
+                        AllowableBlockSizesBits = new[] { 128 },
+                        DefaultBlockSizeBits = 128,
+                        AllowableKeySizesBits = new[] { 128, 192, 256 },
+                        DefaultKeySizeBits = 256
                     }),
                 new KeyValuePair<BlockCipher, BlockCipherInformation>(
                     BlockCipher.Threefish, new BlockCipherInformation {
                         Name = BlockCipher.Threefish.ToString(),
                         DisplayName = "Threefish",
-                        AllowableBlockSizes = new[] { 256, 512, 1024 },
-                        DefaultBlockSize = 256,
-                        AllowableKeySizes = new[] { 256, 512, 1024 },
-                        DefaultKeySize = 256
+                        AllowableBlockSizesBits = new[] { 256, 512, 1024 },
+                        DefaultBlockSizeBits = 256,
+                        AllowableKeySizesBits = new[] { 256, 512, 1024 },
+                        DefaultKeySizeBits = 256
                     }),
                 new KeyValuePair<BlockCipher, BlockCipherInformation>(
                     BlockCipher.Twofish, new BlockCipherInformation {
                         Name = BlockCipher.Twofish.ToString(),
                         DisplayName = "Twofish",
-                        AllowableBlockSizes = new[] { 128 },
-                        DefaultBlockSize = 128,
-                        AllowableKeySizes = new[] { 128, 192, 256 },
-                        DefaultKeySize = 256
+                        AllowableBlockSizesBits = new[] { 128 },
+                        DefaultBlockSizeBits = 128,
+                        AllowableKeySizesBits = new[] { 128, 192, 256 },
+                        DefaultKeySizeBits = 256
                     })
             });
 
@@ -107,64 +107,64 @@ namespace ObscurCore.Cryptography.Ciphers
                     StreamCipher.Hc128, new StreamCipherInformation {
                         Name = StreamCipher.Hc128.ToString(),
                         DisplayName = "HC-128",
-                        AllowableNonceSizes = new[] { 128 },
-                        DefaultNonceSize = 128,
-                        AllowableKeySizes = new[] { 128 },
-                        DefaultKeySize = 128
+                        AllowableNonceSizesBits = new[] { 128 },
+                        DefaultNonceSizeBits = 128,
+                        AllowableKeySizesBits = new[] { 128 },
+                        DefaultKeySizeBits = 128
                     }),
                 new KeyValuePair<StreamCipher, StreamCipherInformation>(
                     StreamCipher.Hc256, new StreamCipherInformation {
                         Name = StreamCipher.Hc256.ToString(),
                         DisplayName = "HC-256",
-                        AllowableNonceSizes = new[] { 128, 256 },
-                        DefaultNonceSize = 256,
-                        AllowableKeySizes = new[] { 128, 256 },
-                        DefaultKeySize = 256
+                        AllowableNonceSizesBits = new[] { 128, 256 },
+                        DefaultNonceSizeBits = 256,
+                        AllowableKeySizesBits = new[] { 128, 256 },
+                        DefaultKeySizeBits = 256
                     }),
                 new KeyValuePair<StreamCipher, StreamCipherInformation>(
                     StreamCipher.Rabbit, new StreamCipherInformation {
                         Name = StreamCipher.Rabbit.ToString(),
                         DisplayName = "Rabbit",
-                        AllowableNonceSizes = new[] { 64 },
-                        DefaultNonceSize = 64,
-                        AllowableKeySizes = new[] { 128 },
-                        DefaultKeySize = 128
+                        AllowableNonceSizesBits = new[] { 64 },
+                        DefaultNonceSizeBits = 64,
+                        AllowableKeySizesBits = new[] { 128 },
+                        DefaultKeySizeBits = 128
                     }),
                 new KeyValuePair<StreamCipher, StreamCipherInformation>(
                     StreamCipher.Salsa20, new StreamCipherInformation {
                         Name = StreamCipher.Salsa20.ToString(),
                         DisplayName = "Salsa20",
-                        AllowableNonceSizes = new[] { 64 },
-                        DefaultNonceSize = 64,
-                        AllowableKeySizes = new[] { 128, 256 },
-                        DefaultKeySize = 256
+                        AllowableNonceSizesBits = new[] { 64 },
+                        DefaultNonceSizeBits = 64,
+                        AllowableKeySizesBits = new[] { 128, 256 },
+                        DefaultKeySizeBits = 256
                     }),
                 new KeyValuePair<StreamCipher, StreamCipherInformation>(
                     StreamCipher.ChaCha, new StreamCipherInformation {
                         Name = StreamCipher.ChaCha.ToString(),
                         DisplayName = "ChaCha",
-                        AllowableNonceSizes = new[] { 64 },
-                        DefaultNonceSize = 64,
-                        AllowableKeySizes = new[] { 128, 256 },
-                        DefaultKeySize = 256
+                        AllowableNonceSizesBits = new[] { 64 },
+                        DefaultNonceSizeBits = 64,
+                        AllowableKeySizesBits = new[] { 128, 256 },
+                        DefaultKeySizeBits = 256
                     }),
                 new KeyValuePair<StreamCipher, StreamCipherInformation>(
                     StreamCipher.XSalsa20, new StreamCipherInformation {
                         Name = StreamCipher.XSalsa20.ToString(),
                         DisplayName = "XSalsa20",
-                        AllowableNonceSizes = new[] { 64, 128, 192 },
-                        DefaultNonceSize = 192,
-                        AllowableKeySizes = new[] { 80, 128, 256 },
-                        DefaultKeySize = 256
+                        AllowableNonceSizesBits = new[] { 64, 128, 192 },
+                        DefaultNonceSizeBits = 192,
+                        AllowableKeySizesBits = new[] { 80, 128, 256 },
+                        DefaultKeySizeBits = 256
                     }),
                 new KeyValuePair<StreamCipher, StreamCipherInformation>(
                     StreamCipher.Sosemanuk, new StreamCipherInformation {
                         Name = StreamCipher.Sosemanuk.ToString(),
                         DisplayName = "SOSEMANUK",
-                        AllowableNonceSizes = new[] { 32, 48, 64, 80, 96, 112, 128 },
-                        DefaultNonceSize = 128,
-                        AllowableKeySizes = new[] { 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256 },
-                        DefaultKeySize = 128
+                        AllowableNonceSizesBits = new[] { 32, 48, 64, 80, 96, 112, 128 },
+                        DefaultNonceSizeBits = 128,
+                        AllowableKeySizesBits = new[] { 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256 },
+                        DefaultKeySizeBits = 128
                     })
                 // Null cipher - not actually a cipher - use ONLY for testing!
 #if DEBUG
@@ -173,10 +173,10 @@ namespace ObscurCore.Cryptography.Ciphers
                     StreamCipher.None, new StreamCipherInformation {
                         Name = StreamCipher.None.ToString(),
                         DisplayName = "Null Test Engine (not a cipher)",
-                        AllowableNonceSizes = new[] { 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256 },
-                        DefaultNonceSize = 64,
-                        AllowableKeySizes = new[] { 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256 },
-                        DefaultKeySize = 64
+                        AllowableNonceSizesBits = new[] { 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256 },
+                        DefaultNonceSizeBits = 64,
+                        AllowableKeySizesBits = new[] { 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256 },
+                        DefaultKeySizeBits = 64
                     })
 #endif
             });

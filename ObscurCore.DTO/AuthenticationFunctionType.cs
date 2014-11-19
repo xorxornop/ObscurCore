@@ -30,7 +30,7 @@ namespace ObscurCore.DTO
         /// <summary>
         ///     Not an authentication function.
         /// </summary>
-		None,
+		None = 0,
 
         /// <summary>
         ///     Digest/hash function.

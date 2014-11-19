@@ -7,7 +7,7 @@ using System.Text;
 namespace ObscurCore.Cryptography.Support.Math
 {
     [Serializable]
-    public class BigInteger
+    public class BigInteger : IDisposable
     {
         // The first few odd primes
         /*
@@ -3204,6 +3204,25 @@ namespace ObscurCore.Cryptography.Support.Math
             mag[mag.Length - 1 - (n >> 5)] ^= (1 << (n & 31)); // Flip bit
             //mag[mag.Length - 1 - (n / 32)] ^= (1 << (n % 32));
             return new BigInteger(this.sign, mag, false);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected void Dispose(bool disposing)
+        {
+            if (disposing) {
+                magnitude.SecureWipe();
+                sign = 0;
+                nBits = -1;
+                nBitLength = -1;
+            }
         }
     }
 }

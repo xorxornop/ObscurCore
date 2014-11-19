@@ -25,7 +25,7 @@ namespace ObscurCore.DTO
     ///     Interface for a configuration of a function or scheme used for checking the authenticity 
     ///     (e.g. MAC functions) and/or integrity (e.g. hash functions) of data.
     /// </summary>
-    public interface IAuthenticationFunctionConfiguration 
+    public interface IAuthenticationConfiguration 
     {
         /// <summary>
         ///     Category/type of the function primitive, e.g. Digest, MAC, or KDF.

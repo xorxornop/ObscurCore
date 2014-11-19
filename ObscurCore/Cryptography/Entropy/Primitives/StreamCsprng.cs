@@ -49,8 +49,8 @@ namespace ObscurCore.Cryptography.Entropy.Primitives
             var cipherEnum = csprng.ToString().ToEnum<StreamCipher>();
             var config = new StreamCipherCsprngConfiguration {
                 CipherName = csprng.ToString(),
-                Key = new byte[Athena.Cryptography.StreamCiphers[cipherEnum].DefaultKeySize / 8],
-                Nonce = new byte[Athena.Cryptography.StreamCiphers[cipherEnum].DefaultNonceSize / 8]
+                Key = new byte[Athena.Cryptography.StreamCiphers[cipherEnum].DefaultKeySizeBits / 8],
+                Nonce = new byte[Athena.Cryptography.StreamCiphers[cipherEnum].DefaultNonceSizeBits / 8]
             };
             StratCom.EntropySupplier.NextBytes(config.Key);
             StratCom.EntropySupplier.NextBytes(config.Nonce);

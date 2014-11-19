@@ -1,4 +1,5 @@
 ﻿using System;
+using BitManipulator;
 
 namespace ObscurCore.Cryptography.Support.Math.Field
 {

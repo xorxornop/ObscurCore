@@ -1,6 +1,7 @@
 using System;
 using ObscurCore.Cryptography.Ciphers.Block.Primitives;
 using System.Collections;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {

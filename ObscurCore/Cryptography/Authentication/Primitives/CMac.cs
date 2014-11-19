@@ -37,7 +37,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		private int _bufOff;
 
         private readonly CbcBlockCipher _cipher;
-		private readonly int macSize;
+		private readonly int _outputSize;
 
 		private byte[] L, Lu, Lu2;
 
@@ -87,7 +87,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			}
 
 			this._cipher = new CbcBlockCipher(cipher);
-			this.macSize = macSizeInBits / 8;
+			this._outputSize = macSizeInBits / 8;
 
 			_zeroes = new byte[cipher.BlockSize];
 			_nullCbcIv = new byte[cipher.BlockSize];
@@ -95,12 +95,17 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			_buf = new byte[cipher.BlockSize];
 			_bufOff = 0;
 
-			_mac = new byte[this.macSize];
+			_mac = new byte[this._outputSize];
 		}
 
-		public string AlgorithmName
+	    /// <summary>
+	    ///     Enumerated function identity.
+	    /// </summary>
+	    public MacFunction Identity { get { return MacFunction.Cmac; } }
+
+	    public string AlgorithmName
 		{
-			get { return _cipher.AlgorithmName; }
+			get { return _cipher.AlgorithmName + "/CMAC"; }
 		}
 
 		private static int ShiftLeft(byte[] block, byte[] output)
@@ -145,8 +150,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			_cipher.Init (true, key, _nullCbcIv);
 		}
 
-	    public int MacSize {
-	        get { return macSize; }
+	    public int OutputSize {
+	        get { return _outputSize; }
 	    }
 
 	    public void Update(
@@ -220,11 +225,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
 			_cipher.ProcessBlock(_buf, 0, _mac, 0);
 
-			Array.Copy(_mac, 0, outBytes, outOff, macSize);
+			Array.Copy(_mac, 0, outBytes, outOff, _outputSize);
 
 			Reset();
 
-			return macSize;
+			return _outputSize;
 		}
 
 		/**

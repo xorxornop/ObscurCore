@@ -47,17 +47,27 @@ namespace ObscurCore.Cryptography.Ciphers
         /// <exception cref="CipherKeySizeException">
         ///     Key size is inconsistent with that specified by KeySizeBits, or incompatible with cipher.
         /// </exception>
-        public int KeySizeBits
+        public void SetKeySizeBits(int value)
         {
-            get
-            {
-                if (Configuration.KeySizeBits == 0) {
-                    throw new ConfigurationInvalidException("Cipher cannot have a key size of 0 (zero).");
-                }
-                ThrowIfKeySizeIncompatible();
-                return Configuration.KeySizeBits;
+            Configuration.KeySizeBits = value;
+        }
+
+        /// <summary>
+        ///     Size of the key in bits.
+        /// </summary>
+        /// <exception cref="ConfigurationInvalidException">
+        ///     Key size is zero.
+        /// </exception>
+        /// <exception cref="CipherKeySizeException">
+        ///     Key size is inconsistent with that specified by KeySizeBits, or incompatible with cipher.
+        /// </exception>
+        public int GetKeySizeBits()
+        {
+            if (Configuration.KeySizeBits == 0) {
+                throw new ConfigurationInvalidException("Cipher cannot have a key size of 0 (zero).");
             }
-            set { Configuration.KeySizeBits = value; }
+            ThrowIfKeySizeIncompatible();
+            return Configuration.KeySizeBits;
         }
 
         /// <summary>
@@ -71,7 +81,7 @@ namespace ObscurCore.Cryptography.Ciphers
         /// </exception>
         public int KeySizeBytes
         {
-            get { return KeySizeBits / 8; }
+            get { return GetKeySizeBits() / 8; }
             set { Configuration.KeySizeBits = value * 8; }
         }
 

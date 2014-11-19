@@ -16,6 +16,8 @@
 // Modified from https://bitbucket.org/jdluzen/sha3. Released under Modified BSD License.
 
 using System;
+using BitManipulator;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
@@ -23,9 +25,9 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
     public partial class KeccakDigest
     {
         /// <inheritdoc />
-        public void Update(byte input)
+        protected internal override void UpdateInternal(byte input)
         {
-            int sizeInBytes = ByteLength;
+            int sizeInBytes = StateSize;
             int stride = sizeInBytes >> 3;
             unsafe {
                 if (BuffLength == sizeInBytes) {
@@ -40,7 +42,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         }
 
         /// <inheritdoc />
-        public void Reset()
+        public override void Reset()
         {
             BuffLength = 0;
             _buffer.SecureWipe();
@@ -52,7 +54,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             if (length == 0) {
                 return;
             }
-            int sizeInBytes = ByteLength;
+            int sizeInBytes = StateSize;
             if (_buffer == null) {
                 _buffer = new byte[sizeInBytes];
             }
@@ -79,14 +81,14 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             }
             if (length > 0) //some left over
             {
-                array.CopyBytes(offset, _buffer, BuffLength, length);
+                array.CopyBytes_NoChecks(offset, _buffer, BuffLength, length);
                 BuffLength += length;
             }
         }
 
         private unsafe void HashFinal(byte[] array, int offset)
         {
-            int sizeInBytes = ByteLength;
+            int sizeInBytes = StateSize;
             //    padding
             Array.Clear(_buffer, BuffLength, sizeInBytes - BuffLength);
             _buffer[BuffLength++] = 1;
@@ -94,7 +96,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             fixed (byte* ptr = &_buffer[0]) {
                 KeccakF((ulong*) ptr, sizeInBytes >> 3);
             }
-            Buffer.BlockCopy(_state, 0, array, offset, DigestSize);
+            _state.ToLittleEndian_NoChecks(0, array, offset, OutputSize / sizeof(ulong));
         }
 
         private unsafe void KeccakF(ulong* inb, int laneCount)

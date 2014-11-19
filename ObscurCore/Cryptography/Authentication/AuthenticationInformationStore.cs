@@ -31,81 +31,81 @@ namespace ObscurCore.Cryptography.Authentication
                     HashFunction.Blake2B256, new HashFunctionInformation {
                         Name = HashFunction.Blake2B256.ToString(),
                         DisplayName = "BLAKE-2B-256",
-                        OutputSize = 256
+                        OutputSizeBits = 256
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                     HashFunction.Blake2B384, new HashFunctionInformation {
                         Name = HashFunction.Blake2B384.ToString(),
                         DisplayName = "BLAKE-2B-384",
-                        OutputSize = 384
+                        OutputSizeBits = 384
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                     HashFunction.Blake2B512, new HashFunctionInformation {
                         Name = HashFunction.Blake2B512.ToString(),
                         DisplayName = "BLAKE-2B-512",
-                        OutputSize = 512
+                        OutputSizeBits = 512
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                     HashFunction.Keccak224, new HashFunctionInformation {
                         Name = HashFunction.Keccak224.ToString(),
                         DisplayName = "Keccak-224 (SHA-3-224)",
-                        OutputSize = 224
+                        OutputSizeBits = 224
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                     HashFunction.Keccak256, new HashFunctionInformation {
                         Name = HashFunction.Keccak256.ToString(),
                         DisplayName = "Keccak-256 (SHA-3-256)",
-                        OutputSize = 256
+                        OutputSizeBits = 256
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                     HashFunction.Keccak384, new HashFunctionInformation {
                         Name = HashFunction.Keccak384.ToString(),
                         DisplayName = "Keccak-384 (SHA-3-384)",
-                        OutputSize = 384
+                        OutputSizeBits = 384
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                     HashFunction.Keccak512, new HashFunctionInformation {
                         Name = HashFunction.Keccak512.ToString(),
                         DisplayName = "Keccak-512 (SHA-3-512)",
-                        OutputSize = 512
+                        OutputSizeBits = 512
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                     HashFunction.Ripemd160, new HashFunctionInformation {
                         Name = HashFunction.Ripemd160.ToString(),
                         DisplayName = "RIPEMD-160",
-                        OutputSize = 160
+                        OutputSizeBits = 160
 #if INCLUDE_SHA1
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                     HashFunction.Sha1, new HashFunctionInformation {
                         Name = HashFunction.Sha1.ToString(),
                         DisplayName = "SHA-1",
-                        OutputSize = 160
+                        OutputSizeBits = 160
 #endif
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                     HashFunction.Sha256, new HashFunctionInformation {
                         Name = HashFunction.Sha256.ToString(),
                         DisplayName = "SHA-2-256",
-                        OutputSize = 256
+                        OutputSizeBits = 256
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                     HashFunction.Sha512, new HashFunctionInformation {
                         Name = HashFunction.Sha512.ToString(),
                         DisplayName = "SHA-2-512",
-                        OutputSize = 512
+                        OutputSizeBits = 512
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                     HashFunction.Tiger, new HashFunctionInformation {
                         Name = HashFunction.Tiger.ToString(),
                         DisplayName = "Tiger",
-                        OutputSize = 192
+                        OutputSizeBits = 192
                     }),
                 new KeyValuePair<HashFunction, HashFunctionInformation>(
                 HashFunction.Whirlpool, new HashFunctionInformation {
                     Name = HashFunction.Whirlpool.ToString(),
                     DisplayName = "Whirlpool",
-                    OutputSize = 512
+                    OutputSizeBits = 512
                 })
             });
 
@@ -128,12 +128,12 @@ namespace ObscurCore.Cryptography.Authentication
                         DisplayName = "BLAKE-2B-512",
                         OutputSize = 512
                     }),
-                new KeyValuePair<MacFunction, MacFunctionInformation>(
-                    MacFunction.Keccak224, new MacFunctionInformation {
-                        Name = MacFunction.Keccak224.ToString(),
-                        DisplayName = "Keccak-224 (SHA-3-224)",
-                        OutputSize = 224
-                    }),
+//                new KeyValuePair<MacFunction, MacFunctionInformation>(
+//                    MacFunction.Keccak224, new MacFunctionInformation {
+//                        Name = MacFunction.Keccak224.ToString(),
+//                        DisplayName = "Keccak-224 (SHA-3-224)",
+//                        OutputSize = 224
+//                    }),
                 new KeyValuePair<MacFunction, MacFunctionInformation>(
                     MacFunction.Keccak256, new MacFunctionInformation {
                         Name = MacFunction.Keccak256.ToString(),

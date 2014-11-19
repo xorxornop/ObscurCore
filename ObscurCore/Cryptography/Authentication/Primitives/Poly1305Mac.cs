@@ -16,9 +16,11 @@
 // Ported and refactored/adapted from floodyberry's Poly1305Donna implementation in C
 
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ObscurCore.Cryptography.Ciphers.Block;
 using ObscurCore.Cryptography.Support;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
@@ -83,7 +85,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		}
 
 
-		public int MacSize 
+		public int OutputSize 
 		{
 			get { return BLOCK_SIZE; }
 		}
@@ -176,6 +178,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			}
 		}
 
+        /// <summary>
+        ///     Enumerated function identity.
+        /// </summary>
+        public MacFunction Identity { get { return MacFunction.Poly1305; } }
+
 		public void Update (byte input) {
 			currentBlock [currentBlockOffset++] = input;
 			if(currentBlockOffset == BLOCK_SIZE) {
@@ -234,7 +241,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			if (currentBlockOffset > 0) {
 				// Padding of block required
 				byte[] processingBlock = new byte[BLOCK_SIZE];
-				Array.Copy (currentBlock, 0, processingBlock, 0, currentBlockOffset);
+                currentBlock.CopyBytes_NoChecks(0, processingBlock, 0, currentBlockOffset);
 				processingBlock[currentBlockOffset] = 1;
 				for (int i = currentBlockOffset + 1; i < BLOCK_SIZE; i++) {
 					processingBlock[i] = 0;
@@ -287,9 +294,43 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 		public void Reset() {
 			h0 = h1 = h2 = h3 = h4 = 0;
 			currentBlockOffset = 0;
-			Array.Clear (currentBlock, 0, currentBlock.Length);
             currentBlock.SecureWipe();
 		}
+
+        private void ProcessBlock(byte[] block, int offset, bool padded)
+        {
+            ulong t0;
+            ulong t1;
+            ulong t2;
+            ulong t3;
+
+            t0 = Pack.LE_To_UInt32(block, offset + 0);
+            t1 = Pack.LE_To_UInt32(block, offset + 4);
+            t2 = Pack.LE_To_UInt32(block, offset + 8);
+            t3 = Pack.LE_To_UInt32(block, offset + 12);
+
+            h0 += (uint)(t0 & 0x3ffffffU);
+            h1 += (uint)((((t1 << 32) | t0) >> 26) & 0x3ffffff);
+            h2 += (uint)((((t2 << 32) | t1) >> 20) & 0x3ffffff);
+            h3 += (uint)((((t3 << 32) | t2) >> 14) & 0x3ffffff);
+            h4 += (uint)(t3 >> 8);
+
+            if (padded == false) h4 += (1 << 24);
+
+            ulong tp0 = mul32x32_64(h0, r0) + mul32x32_64(h1, s4) + mul32x32_64(h2, s3) + mul32x32_64(h3, s2) + mul32x32_64(h4, s1);
+            ulong tp1 = mul32x32_64(h0, r1) + mul32x32_64(h1, r0) + mul32x32_64(h2, s4) + mul32x32_64(h3, s3) + mul32x32_64(h4, s2);
+            ulong tp2 = mul32x32_64(h0, r2) + mul32x32_64(h1, r1) + mul32x32_64(h2, r0) + mul32x32_64(h3, s4) + mul32x32_64(h4, s3);
+            ulong tp3 = mul32x32_64(h0, r3) + mul32x32_64(h1, r2) + mul32x32_64(h2, r1) + mul32x32_64(h3, r0) + mul32x32_64(h4, s4);
+            ulong tp4 = mul32x32_64(h0, r4) + mul32x32_64(h1, r3) + mul32x32_64(h2, r2) + mul32x32_64(h3, r1) + mul32x32_64(h4, r0);
+
+            ulong b;
+            h0 = (uint)tp0 & 0x3ffffff; b = (tp0 >> 26);
+            tp1 += b; h1 = (uint)tp1 & 0x3ffffff; b = (tp1 >> 26);
+            tp2 += b; h2 = (uint)tp2 & 0x3ffffff; b = (tp2 >> 26);
+            tp3 += b; h3 = (uint)tp3 & 0x3ffffff; b = (tp3 >> 26);
+            tp4 += b; h4 = (uint)tp4 & 0x3ffffff; b = (tp4 >> 26);
+            h0 += (uint)(b * 5);
+        }
 
 #if INCLUDE_UNSAFE
         private unsafe void ProcessBlock(byte* block, bool padded) {
@@ -327,40 +368,6 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			h0 += (uint)(b * 5);
 		}
 #endif
-
-        private void ProcessBlock(byte[] block, int offset, bool padded) {
-            ulong t0;
-            ulong t1;
-            ulong t2;
-            ulong t3;
-
-			t0 = Pack.LE_To_UInt32(block, offset + 0);
-			t1 = Pack.LE_To_UInt32(block, offset + 4);
-			t2 = Pack.LE_To_UInt32(block, offset + 8);
-			t3 = Pack.LE_To_UInt32(block, offset + 12);
-
-			h0 += (uint)(t0 & 0x3ffffffU);
-			h1 += (uint)((((t1 << 32) | t0) >> 26) & 0x3ffffff);
-			h2 += (uint)((((t2 << 32) | t1) >> 20) & 0x3ffffff);
-			h3 += (uint)((((t3 << 32) | t2) >> 14) & 0x3ffffff);
-			h4 += (uint)(t3 >> 8);
-
-			if (padded == false) h4 += (1 << 24);
-
-			ulong tp0 = mul32x32_64(h0,r0) + mul32x32_64(h1,s4) + mul32x32_64(h2,s3) + mul32x32_64(h3,s2) + mul32x32_64(h4,s1);
-			ulong tp1 = mul32x32_64(h0,r1) + mul32x32_64(h1,r0) + mul32x32_64(h2,s4) + mul32x32_64(h3,s3) + mul32x32_64(h4,s2);
-			ulong tp2 = mul32x32_64(h0,r2) + mul32x32_64(h1,r1) + mul32x32_64(h2,r0) + mul32x32_64(h3,s4) + mul32x32_64(h4,s3);
-			ulong tp3 = mul32x32_64(h0,r3) + mul32x32_64(h1,r2) + mul32x32_64(h2,r1) + mul32x32_64(h3,r0) + mul32x32_64(h4,s4);
-			ulong tp4 = mul32x32_64(h0,r4) + mul32x32_64(h1,r3) + mul32x32_64(h2,r2) + mul32x32_64(h3,r1) + mul32x32_64(h4,r0);
-
-			ulong b;
-			h0 = (uint)tp0 & 0x3ffffff; b = (tp0 >> 26);
-			tp1 += b; h1 = (uint)tp1 & 0x3ffffff; b = (tp1 >> 26);
-			tp2 += b; h2 = (uint)tp2 & 0x3ffffff; b = (tp2 >> 26);
-			tp3 += b; h3 = (uint)tp3 & 0x3ffffff; b = (tp3 >> 26);
-			tp4 += b; h4 = (uint)tp4 & 0x3ffffff; b = (tp4 >> 26);
-			h0 += (uint)(b * 5);
-		}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ulong mul32x32_64 (uint i1, uint i2) {

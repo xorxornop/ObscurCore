@@ -6,8 +6,7 @@ using ObscurCore.Cryptography.Ciphers.Block;
 
 namespace ObscurCore.Cryptography.Ciphers
 {
-    [Serializable]
-    public class BlockSizeException : Exception
+    public class BlockSizeException : ConfigurationInvalidException
     {
         public BlockSizeException() {
             RequestedSize = null;
@@ -25,15 +24,13 @@ namespace ObscurCore.Cryptography.Ciphers
             AllowedSizes = null;
         }
 
-        protected BlockSizeException(SerializationInfo info, StreamingContext context) : base(info, context) {}
-
         public BlockSizeException(BlockCipher cipherEnum, int requestedSizeBits)
             : base(String.Format("The size {0} is not supported for use with the {1} cipher.", requestedSizeBits, 
                 Athena.Cryptography.BlockCiphers[cipherEnum].DisplayName))
         {
             RequestedSize = requestedSizeBits;
             Mode = cipherEnum;
-            AllowedSizes = Athena.Cryptography.BlockCiphers[cipherEnum].AllowableBlockSizes.ToList();
+            AllowedSizes = Athena.Cryptography.BlockCiphers[cipherEnum].AllowableBlockSizesBits.ToList();
         }
 
         /// <summary>

@@ -13,9 +13,12 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System.Linq;
+using ObscurCore.Cryptography.Ciphers.Block;
+
 namespace ObscurCore.Cryptography.Authentication.Information
 {
-    public sealed class MacFunctionInformation : IPrimitiveInformation
+    public class MacFunctionInformation : IPrimitiveInformation
     {
         /// <summary>
         ///     Size of the MAC produced in bits. Null if output size depends on configuration.
@@ -31,5 +34,20 @@ namespace ObscurCore.Cryptography.Authentication.Information
         ///     Name to show a user or for a detailed specification.
         /// </summary>
         public string DisplayName { get; internal set; }
+    }
+
+    public sealed class CmacInformation : MacFunctionInformation
+    {
+//        public int GetMaximumOutputSize(BlockCipher cipher)
+//        {
+//            
+//        }
+
+        private static readonly int[] BlockSizes = { 64, 128 };
+
+        public bool CanUseCipher(BlockCipher cipher)
+        {
+            return Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizesBits.NumberIsOneOf(BlockSizes);
+        }
     }
 }

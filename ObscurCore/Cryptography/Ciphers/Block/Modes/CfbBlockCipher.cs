@@ -1,4 +1,5 @@
 using System;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Ciphers.Block.Modes
 {
@@ -39,7 +40,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Modes
         {
             // Prepend the supplied IV with zeros (as per FIPS PUB 81)
             byte[] workingIv = new byte[CipherBlockSize];
-            IV.CopyBytes(0, workingIv, CipherBlockSize - IV.Length, IV.Length);
+            IV.CopyBytes_NoChecks(0, workingIv, CipherBlockSize - IV.Length, IV.Length);
             Array.Clear(workingIv, 0, CipherBlockSize - IV.Length);
             IV = workingIv;
 

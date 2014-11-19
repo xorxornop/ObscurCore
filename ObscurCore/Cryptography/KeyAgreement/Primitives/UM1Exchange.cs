@@ -18,6 +18,7 @@ using ObscurCore.Cryptography.Support;
 using ObscurCore.Cryptography.Support.Math;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve;
 using ObscurCore.DTO;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 {
@@ -66,8 +67,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 
             // Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
             var Z = new byte[Ze.Length + Zs.Length];
-            Ze.CopyBytes(0, Z, 0, Ze.Length);
-            Zs.CopyBytes(0, Z, Ze.Length, Zs.Length);
+            Ze.DeepCopy_NoChecks(0, Z, 0, Ze.Length);
+            Zs.DeepCopy_NoChecks(0, Z, Ze.Length, Zs.Length);
             ephemeralSenderPublicKey = Q_ephemeral_U;
 
             // Zero intermediate secrets
@@ -100,8 +101,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 
             // Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
             var Z = new byte[Ze_encoded.Length + Zs_encoded.Length];
-            Ze_encoded.CopyBytes(0, Z, 0, Ze_encoded.Length);
-            Zs_encoded.CopyBytes(0, Z, Ze_encoded.Length, Zs_encoded.Length);
+            Ze_encoded.DeepCopy_NoChecks(0, Z, 0, Ze_encoded.Length);
+            Zs_encoded.DeepCopy_NoChecks(0, Z, Ze_encoded.Length, Zs_encoded.Length);
             ephemeralSenderPublicKey = Q_ephemeral_V;
 
             // Zero intermediate secrets
@@ -141,8 +142,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 
             // Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
             var Z = new byte[Ze.Length + Zs.Length];
-            Ze.CopyBytes(0, Z, 0, Ze.Length);
-            Zs.CopyBytes(0, Z, Ze.Length, Zs.Length);
+            Ze.DeepCopy_NoChecks(0, Z, 0, Ze.Length);
+            Zs.DeepCopy_NoChecks(0, Z, Ze.Length, Zs.Length);
 
             // Zero intermediate secrets
             Ze.SecureWipe();
@@ -168,8 +169,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 
             // Concatenate Ze and Zs byte strings to form shared secret, pre-KDF : Ze||Zs
             var Z = new byte[Ze_encoded.Length + Zs_encoded.Length];
-            Ze_encoded.CopyBytes(0, Z, 0, Ze_encoded.Length);
-            Zs_encoded.CopyBytes(0, Z, Ze_encoded.Length, Zs_encoded.Length);
+            Ze_encoded.DeepCopy_NoChecks(0, Z, 0, Ze_encoded.Length);
+            Zs_encoded.DeepCopy_NoChecks(0, Z, Ze_encoded.Length, Zs_encoded.Length);
 
             // Zero intermediate secrets
             Ze_encoded.SecureWipe();

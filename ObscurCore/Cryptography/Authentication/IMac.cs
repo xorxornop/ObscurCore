@@ -27,35 +27,40 @@ namespace ObscurCore.Cryptography.Authentication
     public interface IMac
     {
         /// <summary>
-        ///     The name of the algorithm that the MAC implements.
+        ///     Enumerated function identity.
+        /// </summary>
+        MacFunction Identity { get; }
+
+        /// <summary>
+        ///     The name of the algorithm that the MAC function implements.
         /// </summary>
         string AlgorithmName { get; }
 
         /// <summary>
-        ///     Size of output in bytes that the MAC emits upon finalisation.
+        ///     Size of output in bytes that the MAC function emits upon finalisation.
         /// </summary>
-        int MacSize { get; }
+        int OutputSize { get; }
 
         /// <summary>
-        ///     Set the initial state of the MAC. Required before other use.
+        ///     Set the initial state of the MAC function. Required before other use.
         /// </summary>
         /// <param name="key"></param>
         void Init(byte[] key);
 
         /// <summary>
-        ///     Update the internal state of the MAC with a single byte.
+        ///     Update the internal state of the MAC function with a single byte.
         /// </summary>
         /// <param name="input">Byte to input.</param>
-        /// <exception cref="InvalidOperationException">The MAC is not initialised.</exception>
+        /// <exception cref="InvalidOperationException">The MAC function is not initialised.</exception>
         void Update(byte input);
 
         /// <summary>
-        ///     Update the internal state of the MAC with a chunk of bytes.
+        ///     Update the internal state of the MAC function with a chunk of bytes.
         /// </summary>
         /// <param name="input">The array containing the input.</param>
         /// <param name="inOff">The offset in <paramref name="input" /> that the input begins at.</param>
         /// <param name="len">The length of the input starting at <paramref name="inOff" />.</param>
-        /// <exception cref="InvalidOperationException">The MAC is not initialised.</exception>
+        /// <exception cref="InvalidOperationException">The MAC function is not initialised.</exception>
         void BlockUpdate(byte[] input, int inOff, int len);
 
         /// <summary>
@@ -65,12 +70,12 @@ namespace ObscurCore.Cryptography.Authentication
         /// <param name="outOff">
         ///     The offset into <paramref name="output" /> that the output is to start at.
         /// </param>
-        /// <exception cref="InvalidOperationException">The MAC is not initialised.</exception>
+        /// <exception cref="InvalidOperationException">The MAC function is not initialised.</exception>
         /// <returns>Size of the output in bytes.</returns>
         int DoFinal(byte[] output, int outOff);
 
         /// <summary>
-        ///     Reset the MAC back to the same state it was after the last init (if there was one).
+        ///     Reset the MAC function back to the same state it was after the last init (if there was one).
         /// </summary>
         void Reset();
     }

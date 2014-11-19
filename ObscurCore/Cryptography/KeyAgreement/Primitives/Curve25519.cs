@@ -19,9 +19,11 @@
 
 using System;
 using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
+using ObscurCore.Cryptography.Information.EllipticCurve;
 using ObscurCore.Cryptography.Signing.Primitives;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.Ed25519;
 using ObscurCore.DTO;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.KeyAgreement.Primitives
 {
@@ -45,7 +47,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
                 throw new ArgumentException("Seed entropy must be 32 bytes (256 bits) in length.", "bytes");
             }
             var privateKey = new byte[PrivateKeySeedSizeInBytes];
-            bytes.CopyBytes(0, privateKey, 0, PrivateKeySeedSizeInBytes);
+            bytes.DeepCopy_NoChecks(0, privateKey, 0, PrivateKeySeedSizeInBytes);
             privateKey[0] &= 0xF8;
             privateKey[31] &= 0x7F;
             privateKey[31] |= 0x40;
@@ -70,7 +72,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             var publicKey = new byte[SharedKeySizeInBytes];
 
             GroupElementP3 A;
-            GroupOperations.ge_scalarmult_base(out A, publicKey, 0);
+            GroupOperations.ge_scalarmult_base(out A, privateKey, 0);
             FieldElement publicKeyFE;
             EdwardsToMontgomeryX(out publicKeyFE, ref A.Y, ref A.Z);
             FieldOperations.fe_tobytes(publicKey, 0, ref publicKeyFE);

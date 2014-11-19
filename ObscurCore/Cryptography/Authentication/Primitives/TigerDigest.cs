@@ -539,7 +539,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             unchecked((long) 0xC83223F1720AEF96L)   /* 1022 */,    unchecked((long) 0xC3A0396F7363A51FL)   /* 1023 */
         };
 
-        private const int    DigestLength = 24;
+        private const int    OutputLength = 24;
 
         //
         // registers
@@ -588,11 +588,16 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			get { return "Tiger"; }
 		}
 
-        public int DigestSize {
-            get { return DigestLength; }
+        /// <summary>
+        ///     Enumerated function identity.
+        /// </summary>
+        public HashFunction Identity { get { return HashFunction.Tiger; } }
+
+        public int OutputSize {
+            get { return OutputLength; }
         }
 
-        public int ByteLength {
+        public int StateSize {
             get { return MyByteLength; }
         }
 
@@ -835,7 +840,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
             Reset();
 
-            return DigestLength;
+            return OutputLength;
         }
 
         /**

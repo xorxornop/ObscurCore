@@ -17,6 +17,8 @@
 
 #endregion
 
+using System;
+
 namespace ObscurCore.Cryptography.Authentication
 {
     /// <summary>
@@ -25,6 +27,11 @@ namespace ObscurCore.Cryptography.Authentication
     public interface IHash
     {
         /// <summary>
+        ///     Enumerated function identity.
+        /// </summary>
+        HashFunction Identity { get; }
+
+        /// <summary>
         ///     The name of the algorithm that the digest implements.
         /// </summary>
         string AlgorithmName { get; }
@@ -32,17 +39,18 @@ namespace ObscurCore.Cryptography.Authentication
         /// <summary>
         ///     Size of output in bytes that the digest emits upon finalisation.
         /// </summary>
-        int DigestSize { get; }
+        int OutputSize { get; }
 
         /// <summary>
         ///     Size in bytes of internal buffer.
         /// </summary>
-        int ByteLength { get; }
+        int StateSize { get; }
 
         /// <summary>
         ///     Update the internal state of the digest with a single byte.
         /// </summary>
         /// <param name="input">Byte to input.</param>
+        /// <exception cref="InvalidOperationException">The hash function is not initialised.</exception>
         void Update(byte input);
 
         /// <summary>

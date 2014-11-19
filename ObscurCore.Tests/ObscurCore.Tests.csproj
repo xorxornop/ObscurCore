@@ -11,6 +11,8 @@
     <AssemblyName>ObscurCore.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <ReleaseVersion>0.8</ReleaseVersion>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,8 +35,8 @@
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithUnsafe|AnyCPU'">
-    <OutputPath>bin\ReleaseWithUnsafe\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseUnsafe|AnyCPU'">
+    <OutputPath>bin\ReleaseUnsafe\</OutputPath>
     <DefineConstants>INCLUDE_UNSAFE;INCLUDE_IDEA;INCLUDE_SHA1;INCLUDE_FABRIC</DefineConstants>
     <Optimize>true</Optimize>
     <ErrorReport>prompt</ErrorReport>
@@ -45,17 +47,21 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework">
-      <HintPath>..\packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
-    </Reference>
-    <Reference Include="ObscurCore.DTO.DtoSerialiser, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System" />
+    <Reference Include="ObscurCore.DTO.DtoSerialiser">
       <HintPath>..\ObscurCore.DTO\bin\Serialiser\ObscurCore.DTO.DtoSerialiser.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework">
+      <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
+    <Reference Include="PerfCopy, Version=1.2.0.0, processorArchitecture=MSIL">
+      <HintPath>..\packages\PerfCopy.1.2.0\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\PerfCopy.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cryptography\Ciphers\Stream\Null.cs" />
@@ -101,15 +107,14 @@
     <Compile Include="Cryptography\KeyAgreements\JPake.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="..\ObscurCore\ObscurCore.csproj">
-      <Project>{E05A0E93-926A-409D-ABD3-B2A495D14533}</Project>
-      <Name>ObscurCore</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ObscurCore.DTO\ObscurCore.DTO.csproj">
       <Project>{FB25CBE4-2B49-4C7E-89CD-EF20B2493591}</Project>
       <Name>ObscurCore.DTO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObscurCore\ObscurCore.csproj">
+      <Project>{59547fe1-b5ac-4a85-847f-87584a8de562}</Project>
+      <Name>ObscurCore</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -117,4 +122,11 @@
     <None Include="Packaging\Serialisation\Compression.cs" />
   </ItemGroup>
   <ItemGroup />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
 </Project>

@@ -2,7 +2,7 @@ using System;
 
 namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 {
-    #if(INCLUDE_RIJNDAEL)
+#if INCLUDE_RIJNDAEL
 	/**
 	* an implementation of Rijndael, based on the documentation and reference implementation
 	* by Paulo Barreto, Vincent Rijmen, for v2.0 August '99.

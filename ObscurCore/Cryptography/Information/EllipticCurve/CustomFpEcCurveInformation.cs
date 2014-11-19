@@ -30,7 +30,7 @@ namespace ObscurCore.Cryptography.Information.EllipticCurve
     ///     Information for a named elliptic curve over F(<sub>p</sub>)
     ///     that uses a custom implementation for computations.
     /// </summary>
-    public class CustomFpEcNamedCurveInformation : EcCurveInformation
+    public class CustomFpEcCurveInformation : EcCurveInformation
     {
         protected readonly Func<ECCurve> CurveFunc;
         protected readonly GlvTypeBParameters GlvParameters;
@@ -41,7 +41,7 @@ namespace ObscurCore.Cryptography.Information.EllipticCurve
         /// </summary>
         /// <param name="curve">Custom curve function.</param>
         /// <param name="glvParams">GLV endomorphism parameters, if any.</param>
-        public CustomFpEcNamedCurveInformation(Func<ECCurve> curve, GlvTypeBParameters glvParams = null)
+        public CustomFpEcCurveInformation(Func<ECCurve> curve, GlvTypeBParameters glvParams = null)
         {
             Field = CurveField.Fp;
             GlvParameters = glvParams;

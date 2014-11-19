@@ -3,7 +3,7 @@ using ObscurCore.Cryptography.Support;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
-
+#if INCLUDE_SHA1
     /**
      * implementation of SHA-1 as outlined in "Handbook of Applied Cryptography", pages 346 - 349.
      *
@@ -13,7 +13,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
     public class Sha1Digest
 		: GeneralDigest
     {
-        private const int DigestLength = 20;
+        private const int OutputLength = 20;
 
         private uint H1, H2, H3, H4, H5;
 
@@ -42,13 +42,18 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             xOff = t.xOff;
         }
 
+        /// <summary>
+        ///     Enumerated function identity.
+        /// </summary>
+        public override HashFunction Identity { get { return HashFunction.Sha1; } }
+
 		public override string AlgorithmName
 		{
 			get { return "SHA-1"; }
 		}
 
-        public override int DigestSize {
-            get { return DigestLength; }
+        public override int OutputSize {
+            get { return OutputLength; }
         }
 
         internal override void ProcessWord(
@@ -88,7 +93,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
             Reset();
 
-            return DigestLength;
+            return OutputLength;
         }
 
         /**
@@ -258,4 +263,5 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			Array.Clear(X, 0, 16);
 		}
     }
+#endif
 }

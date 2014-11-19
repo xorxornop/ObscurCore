@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using BitManipulator;
 using ObscurCore.Packaging;
 using ObscurCore.Packaging.Multiplexing;
 

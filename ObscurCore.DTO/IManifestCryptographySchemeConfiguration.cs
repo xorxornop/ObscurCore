@@ -29,7 +29,7 @@ namespace ObscurCore.DTO
         ///     Used to validate the existence and validity of keying material
         ///     at the respondent's side without disclosing the key itself.
         /// </summary>
-        AuthenticationFunctionConfiguration KeyConfirmation { get; }
+        AuthenticationConfiguration KeyConfirmation { get; }
 
         /// <summary>
         ///     Output of the <see cref="KeyConfirmation"/> scheme, given the correct key.
@@ -50,7 +50,7 @@ namespace ObscurCore.DTO
         ///     Configuration of the function/scheme used in authentication of the manifest. 
         ///     Note: this must be of a MAC type.
         /// </summary>
-        AuthenticationFunctionConfiguration Authentication { get; }
+        AuthenticationConfiguration Authentication { get; }
 
         /// <summary>
         ///     Output of the <see cref="Authentication"/> scheme, given the correct input and key.

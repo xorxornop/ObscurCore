@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using ObscurCore.Cryptography.Information.EllipticCurve;
-using ObscurCore.Cryptography.KeyAgreement;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.SEC;
 
 namespace ObscurCore.Cryptography.Information
@@ -39,8 +38,8 @@ namespace ObscurCore.Cryptography.Information
         {
             CurveDictionary = ImmutableDictionary.CreateRange(new[] {
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Secp192k1.ToString(), new CustomFpEcNamedCurveInformation(
-                        () => new SecP192K1Curve(), CustomFpEcNamedCurveInformation.CreateEndomorphismParameters(
+                    Sec2EllipticCurve.Secp192k1.ToString(), new CustomFpEcCurveInformation(
+                        () => new SecP192K1Curve(), CustomFpEcCurveInformation.CreateEndomorphismParameters(
                             "BB85691939B869C1D087F601554B96B80CB4F55B35F433C2",
                             "3D84F26C12238D7B4F3D516613C1759033B1A5800175D0B1",
                             new[] {
@@ -62,7 +61,7 @@ namespace ObscurCore.Cryptography.Information
                                 Seed = null
                             }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Secp192r1.ToString(), new CustomFpEcNamedCurveInformation(
+                    Sec2EllipticCurve.Secp192r1.ToString(), new CustomFpEcCurveInformation(
                         () => new SecP192R1Curve()) {
                             Name = Sec2EllipticCurve.Secp192r1.ToString(),
                             DisplayName = "secp192r1",
@@ -72,8 +71,8 @@ namespace ObscurCore.Cryptography.Information
                             Seed = "3045AE6FC8422F64ED579528D38120EAE12196D5"
                         }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Secp224k1.ToString(), new CustomFpEcNamedCurveInformation(
-                        () => new SecP224K1Curve(), CustomFpEcNamedCurveInformation.CreateEndomorphismParameters(
+                    Sec2EllipticCurve.Secp224k1.ToString(), new CustomFpEcCurveInformation(
+                        () => new SecP224K1Curve(), CustomFpEcCurveInformation.CreateEndomorphismParameters(
                             "FE0E87005B4E83761908C5131D552A850B3F58B749C37CF5B84D6768",
                             "60DCD2104C4CBC0BE6EEEFC2BDD610739EC34E317F9B33046C9E4788",
                             new[] {
@@ -95,7 +94,7 @@ namespace ObscurCore.Cryptography.Information
                                 Seed = null
                             }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Secp224r1.ToString(), new CustomFpEcNamedCurveInformation(
+                    Sec2EllipticCurve.Secp224r1.ToString(), new CustomFpEcCurveInformation(
                         () => new SecP224R1Curve()) {
                             Name = Sec2EllipticCurve.Secp224r1.ToString(),
                             DisplayName = "secp224r1",
@@ -105,8 +104,8 @@ namespace ObscurCore.Cryptography.Information
                             Seed = "BD71344799D5C7FCDC45B59FA3B9AB8F6A948BC5"
                         }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Secp256k1.ToString(), new CustomFpEcNamedCurveInformation(
-                        () => new SecP256K1Curve(), CustomFpEcNamedCurveInformation.CreateEndomorphismParameters(
+                    Sec2EllipticCurve.Secp256k1.ToString(), new CustomFpEcCurveInformation(
+                        () => new SecP256K1Curve(), CustomFpEcCurveInformation.CreateEndomorphismParameters(
                             "7AE96A2B657C07106E64479EAC3434E99CF0497512F58995C1396C28719501EE",
                             "5363AD4CC05C30E0A5261C028812645A122E22EA20816678DF02967C1B23BD72",
                             new[] {
@@ -128,7 +127,7 @@ namespace ObscurCore.Cryptography.Information
                                 Seed = null
                             }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Secp256r1.ToString(), new CustomFpEcNamedCurveInformation(
+                    Sec2EllipticCurve.Secp256r1.ToString(), new CustomFpEcCurveInformation(
                         () => new SecP256R1Curve()) {
                             Name = Sec2EllipticCurve.Secp256r1.ToString(),
                             DisplayName = "secp256r1",
@@ -138,7 +137,7 @@ namespace ObscurCore.Cryptography.Information
                             Seed = "C49D360886E704936A6678E1139D26B7819F7E90"
                         }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Secp384r1.ToString(), new CustomFpEcNamedCurveInformation(
+                    Sec2EllipticCurve.Secp384r1.ToString(), new CustomFpEcCurveInformation(
                         () => new SecP384R1Curve()) {
                             Name = Sec2EllipticCurve.Secp384r1.ToString(),
                             DisplayName = "secp384r1",
@@ -148,7 +147,7 @@ namespace ObscurCore.Cryptography.Information
                             Seed = "A335926AA319A27A1D00896A6773A4827ACDAC73"
                         }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Secp521r1.ToString(), new CustomFpEcNamedCurveInformation(
+                    Sec2EllipticCurve.Secp521r1.ToString(), new CustomFpEcCurveInformation(
                         () => new SecP521R1Curve()) {
                             Name = Sec2EllipticCurve.Secp521r1.ToString(),
                             DisplayName = "secp521r1",
@@ -159,7 +158,7 @@ namespace ObscurCore.Cryptography.Information
                         }),
                 /* BEGIN BRAINPOOL CONSORTIUM CURVES */
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP160r1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP160r1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP160r1.ToString(),
                         DisplayName = "brainpoolP160r1",
                         BitLength = 160,
@@ -173,7 +172,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP160t1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP160t1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP160t1.ToString(),
                         DisplayName = "brainpoolP160t1",
                         BitLength = 160,
@@ -187,7 +186,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP192r1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP192r1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP192r1.ToString(),
                         DisplayName = "brainpoolP192r1",
                         BitLength = 192,
@@ -201,7 +200,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP192t1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP192t1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP192t1.ToString(),
                         DisplayName = "brainpoolP192t1",
                         BitLength = 192,
@@ -215,7 +214,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP224r1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP224r1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP224r1.ToString(),
                         DisplayName = "brainpoolP224r1",
                         BitLength = 224,
@@ -229,7 +228,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP224t1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP224t1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP224t1.ToString(),
                         DisplayName = "brainpoolP224t1",
                         BitLength = 224,
@@ -243,7 +242,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP256r1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP256r1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP256r1.ToString(),
                         DisplayName = "brainpoolP256r1",
                         BitLength = 256,
@@ -257,7 +256,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP256t1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP256t1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP256t1.ToString(),
                         DisplayName = "brainpoolP256t1",
                         BitLength = 256,
@@ -271,7 +270,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP320r1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP320r1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP320r1.ToString(),
                         DisplayName = "brainpoolP320r1",
                         BitLength = 320,
@@ -285,7 +284,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP320t1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP320t1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP320t1.ToString(),
                         DisplayName = "brainpoolP320t1",
                         BitLength = 320,
@@ -299,7 +298,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP384r1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP384r1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP384r1.ToString(),
                         DisplayName = "brainpoolP384r1",
                         BitLength = 384,
@@ -314,7 +313,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP384t1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP384t1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP384t1.ToString(),
                         DisplayName = "brainpoolP384t1",
                         BitLength = 384,
@@ -328,7 +327,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP512r1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP512r1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP512r1.ToString(),
                         DisplayName = "brainpoolP512r1",
                         BitLength = 512,
@@ -342,7 +341,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    BrainpoolEllipticCurve.BrainpoolP512t1.ToString(), new FpEcNamedCurveInformation {
+                    BrainpoolEllipticCurve.BrainpoolP512t1.ToString(), new FpEcCurveInformation {
                         Name = BrainpoolEllipticCurve.BrainpoolP512t1.ToString(),
                         DisplayName = "brainpoolP512t1",
                         BitLength = 512,
@@ -357,7 +356,7 @@ namespace ObscurCore.Cryptography.Information
                     }),
                 /* START SEC2/NIST FP CURVES (NON-CUSTOM-IMPLEMENTATION) */
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Secp160r1.ToString(), new FpEcNamedCurveInformation {
+                    Sec2EllipticCurve.Secp160r1.ToString(), new FpEcCurveInformation {
                         Name = Sec2EllipticCurve.Secp160r1.ToString(),
                         DisplayName = "secp160r1",
                         BitLength = 160,
@@ -371,7 +370,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = "1053CDE42C14D696E67687561517533BF3F83345"
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Secp160r2.ToString(), new FpEcNamedCurveInformation {
+                    Sec2EllipticCurve.Secp160r2.ToString(), new FpEcCurveInformation {
                         Name = Sec2EllipticCurve.Secp160r2.ToString(),
                         DisplayName = "secp160r2",
                         BitLength = 160,
@@ -386,7 +385,7 @@ namespace ObscurCore.Cryptography.Information
                     }),
                 /* START SEC2/NIST F2M CURVES (NON-CUSTOM-IMPLEMENTATION) */
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect163r1.ToString(), new PpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect163r1.ToString(), new PpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect163r1.ToString(),
                         DisplayName = "sect163r1",
                         BitLength = 163,
@@ -403,7 +402,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = "24B7B137C8A14D696E6768756151756FD0DA2E5C"
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect163r2.ToString(), new PpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect163r2.ToString(), new PpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect163r2.ToString(),
                         DisplayName = "sect163r2",
                         BitLength = 163,
@@ -420,7 +419,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = "85E25BFE5C86226CDB12016F7553F9D0E693A268"
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect193r1.ToString(), new TpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect193r1.ToString(), new TpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect193r1.ToString(),
                         DisplayName = "sect193r1",
                         BitLength = 193,
@@ -435,7 +434,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = "103FAEC74D696E676875615175777FC5B191EF30"
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect193r2.ToString(), new TpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect193r2.ToString(), new TpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect193r2.ToString(),
                         DisplayName = "sect193r2",
                         BitLength = 193,
@@ -450,7 +449,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = "10B7B4D696E676875615175137C8A16FD0DA2211"
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect233k1.ToString(), new TpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect233k1.ToString(), new TpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect233k1.ToString(),
                         DisplayName = "sect233k1",
                         BitLength = 233,
@@ -465,7 +464,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect233r1.ToString(), new TpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect233r1.ToString(), new TpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect233r1.ToString(),
                         DisplayName = "sect233r1",
                         BitLength = 233,
@@ -480,7 +479,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = "74D59FF07F6B413D0EA14B344B20A2DB049B50C3"
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect239k1.ToString(), new TpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect239k1.ToString(), new TpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect239k1.ToString(),
                         DisplayName = "sect239k1",
                         BitLength = 239,
@@ -495,7 +494,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect283k1.ToString(), new PpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect283k1.ToString(), new PpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect283k1.ToString(),
                         DisplayName = "sect283k1",
                         BitLength = 283,
@@ -512,7 +511,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect283r1.ToString(), new PpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect283r1.ToString(), new PpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect283r1.ToString(),
                         DisplayName = "sect283r1",
                         BitLength = 283,
@@ -529,7 +528,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = "77E2B07370EB0F832A6DD5B62DFC88CD06BB84BE"
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect409k1.ToString(), new TpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect409k1.ToString(), new TpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect409k1.ToString(),
                         DisplayName = "sect409k1",
                         BitLength = 409,
@@ -544,7 +543,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect409r1.ToString(), new TpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect409r1.ToString(), new TpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect409r1.ToString(),
                         DisplayName = "sect409r1",
                         BitLength = 409,
@@ -559,7 +558,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = "4099B5A457F9D69F79213D094C4BCD4D4262210B"
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect571k1.ToString(), new PpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect571k1.ToString(), new PpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect571k1.ToString(),
                         DisplayName = "sect571k1",
                         BitLength = 571,
@@ -576,7 +575,7 @@ namespace ObscurCore.Cryptography.Information
                         Seed = null
                     }),
                 new KeyValuePair<string, EcCurveInformation>(
-                    Sec2EllipticCurve.Sect571r1.ToString(), new PpbF2mEcNamedCurveInformation {
+                    Sec2EllipticCurve.Sect571r1.ToString(), new PpbF2mEcCurveInformation {
                         Name = Sec2EllipticCurve.Sect571r1.ToString(),
                         DisplayName = "sect571r1",
                         BitLength = 571,

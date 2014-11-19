@@ -7,112 +7,171 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
     *
     * H(K XOR opad, H(K XOR ipad, text))
     */
-    public class HMac : IMac
+    public class Hmac : MacEngine
     {
-        private const byte IPAD = (byte)0x36;
-        private const byte OPAD = (byte)0x5C;
+        private const byte Ipad = 0x36;
+        private const byte Opad = 0x5C;
 
-        private readonly IHash digest;
-        private readonly int digestSize;
-        private readonly int blockLength;
+        private readonly IHash _digest;
+        private readonly int _digestSize;
+        private readonly int _blockLength;
 
-		private readonly byte[] inputPad;
-        private readonly byte[] outputPad;
+        private readonly byte[] _inputPad;
+        private readonly byte[] _outputPad;
 
-        public HMac(
-            IHash digest)
+        public Hmac(IHash digest) : base(MacFunction.Hmac)
         {
-            this.digest = digest;
-            this.digestSize = digest.DigestSize;
-            this.blockLength = digest.ByteLength;
-            this.inputPad = new byte[blockLength];
-            this.outputPad = new byte[blockLength];
+            this._digest = digest;
+            this._digestSize = digest.OutputSize;
+            this._blockLength = digest.StateSize;
+            this._inputPad = new byte[_blockLength];
+            this._outputPad = new byte[_blockLength];
         }
 
-        public string AlgorithmName
+        /// <summary>
+        ///     The size of operation in bytes the MAC function implements internally, e.g. block buffer.
+        /// </summary>
+        /// <value>The size of the internal operation in bytes.</value>
+        public override int StateSize
         {
-            get { return digest.AlgorithmName + "/HMAC"; }
+            get { return _blockLength; }
         }
 
-        public IHash UnderlyingDigest {
-            get { return digest; }
-        }
-
-		public void Init (byte[] key) {
-			digest.Reset();
-
-			int keyLength = key.Length;
-			if (keyLength > blockLength) {
-				digest.BlockUpdate(key, 0, keyLength);
-				digest.DoFinal(inputPad, 0);
-
-				keyLength = digestSize;
-			} else {
-				Array.Copy(key, 0, inputPad, 0, keyLength);
-			}
-			Array.Clear(inputPad, keyLength, blockLength - keyLength);
-			Array.Copy(inputPad, 0, outputPad, 0, blockLength);
-			xor(inputPad, IPAD);
-			xor(outputPad, OPAD);
-
-			// Initialise the digest
-			digest.BlockUpdate(inputPad, 0, inputPad.Length);
-		}
-
-        public int MacSize {
-            get { return digestSize; }
-        }
-
-        public void Update(
-            byte input)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        ///     Returns for example 'HMAC-SHA-512' when using 
+        ///     SHA-512 as the internal hash function.
+        /// </remarks>
+        public override string AlgorithmName
         {
-            digest.Update(input);
+            get { return base.AlgorithmName + "-" + _digest.AlgorithmName; }
         }
 
-        public void BlockUpdate(
-            byte[] input,
-            int inOff,
-            int len)
+        /// <summary>
+        ///     Display-friendly name of the MAC function.
+        /// </summary>
+        /// <value>The display name of the MAC function.</value>
+        public override string DisplayName
         {
-            digest.BlockUpdate(input, inOff, len);
+            get {
+                var engine = _digest as HashEngine;
+                if (engine != null) {
+                    return base.DisplayName + " utilising " + engine.DisplayName;
+                } else {
+                    return base.DisplayName + " utilising " + _digest.AlgorithmName;
+                }         
+            }
         }
 
-        public int DoFinal(
-            byte[] output,
-            int outOff)
+        public IHash UnderlyingDigest
         {
-            var tmp = new byte[digestSize];
-            digest.DoFinal(tmp, 0);
+            get { return _digest; }
+        }
 
-            digest.BlockUpdate(outputPad, 0, outputPad.Length);
-            digest.BlockUpdate(tmp, 0, tmp.Length);
+        public override int OutputSize
+        {
+            get { return _digestSize; }
+        }
 
-            int len = digest.DoFinal(output, outOff);
-
-			// Initialise the digest
-            digest.BlockUpdate(inputPad, 0, inputPad.Length);
-
-            return len;
+        /// <summary>
+        ///     Update the internal state of the MAC function with a single byte. 
+        ///     Performs no checks on state validity - use only when pre-validated!
+        /// </summary>
+        /// <param name="input">Byte to input.</param>
+        protected internal override void UpdateInternal(byte input)
+        {
+            _digest.Update(input);
         }
 
         /**
         * Reset the mac generator.
         */
-        public void Reset()
+        public override void Reset()
         {
-			// Reset underlying digest
-            digest.Reset();
-
-			// Initialise the digest
-            digest.BlockUpdate(inputPad, 0, inputPad.Length);
+            // Reset underlying digest
+            _digest.Reset();
+            _digest.BlockUpdate(_inputPad, 0, _inputPad.Length);
         }
 
-		private static void xor(byte[] a, byte n)
-		{
-			for (int i = 0; i < a.Length; ++i)
-            {
+        /// <summary>
+        ///     Set up MAC function's internal state.
+        /// </summary>
+        protected override void InitState()
+        {
+            _digest.Reset();
+
+            int keyLength = Key.Length;
+            if (keyLength > _blockLength) {
+                _digest.BlockUpdate(Key, 0, keyLength);
+                _digest.DoFinal(_inputPad, 0);
+                keyLength = _digestSize;
+            } else {
+                Array.Copy(Key, 0, _inputPad, 0, keyLength);
+            }
+            Array.Clear(_inputPad, keyLength, _blockLength - keyLength);
+            Array.Copy(_inputPad, 0, _outputPad, 0, _blockLength);
+            XorSingle(_inputPad, Ipad);
+            XorSingle(_outputPad, Opad);
+
+            _digest.BlockUpdate(_inputPad, 0, _inputPad.Length);
+        }
+
+        /// <summary>
+        ///     Process bytes from <paramref name="input" />. 
+        ///     Performs no checks on argument or state validity - use only when pre-validated!
+        /// </summary>
+        /// <param name="input">The input byte array.</param>
+        /// <param name="inOff">
+        ///     The offset in <paramref name="input" /> at which the input data begins.
+        /// </param>
+        /// <param name="length">The number of bytes to be processed.</param>
+        protected internal override void BlockUpdateInternal(byte[] input, int inOff, int length)
+        {
+            var engine = _digest as HashEngine;
+            if (engine != null) {
+                engine.BlockUpdateInternal(input, inOff, length);
+            } else {
+                _digest.BlockUpdate(input, inOff, length);
+            }
+        }
+
+        /// <summary>
+        ///     Compute and output the final state, and reset the internal state of the MAC function. 
+        ///     Performs no checks on argument or state validity - use only when pre-validated!
+        /// </summary>
+        /// <param name="output">Array that the MAC is to be output to.</param>
+        /// <param name="outOff">
+        ///     The offset into <paramref name="output" /> that the output is to start at.
+        /// </param>
+        /// <returns>Size of the output in bytes.</returns>
+        protected internal override int DoFinalInternal(byte[] output, int outOff)
+        {
+            var tmp = new byte[_digestSize];
+            var engine = _digest as HashEngine;
+            if (engine != null) {
+                engine.DoFinalInternal(tmp, 0);
+                engine.BlockUpdateInternal(_outputPad, 0, _outputPad.Length);
+                engine.BlockUpdateInternal(tmp, 0, tmp.Length);
+                int len = engine.DoFinalInternal(output, outOff);
+                _digest.BlockUpdate(_inputPad, 0, _inputPad.Length);
+                return len;
+            } else {          
+                _digest.DoFinal(tmp, 0);
+                _digest.BlockUpdate(_outputPad, 0, _outputPad.Length);
+                _digest.BlockUpdate(tmp, 0, tmp.Length);
+                int len = _digest.DoFinal(output, outOff);
+                _digest.BlockUpdate(_inputPad, 0, _inputPad.Length);
+                return len;
+            }
+        }
+
+        private static void XorSingle(byte[] a, byte n)
+        {
+            for (int i = 0; i < a.Length; ++i) {
                 a[i] ^= n;
             }
-		}
+        }
     }
 }

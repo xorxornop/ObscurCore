@@ -106,6 +106,11 @@ namespace ObscurCore.Support
 		public static byte[] Decode(
 			string data)
 		{
+            if (data == null) 
+                return null;
+            if (data.Length == 0) 
+                return new byte[0];
+
 			MemoryStream bOut = new MemoryStream((data.Length + 1) / 2);
 
 			encoder.DecodeString(data, bOut);

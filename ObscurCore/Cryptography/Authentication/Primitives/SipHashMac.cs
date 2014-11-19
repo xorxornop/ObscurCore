@@ -45,7 +45,12 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			get { return "SipHash-" + c + "-" + d; }
 		}
 
-		public virtual int MacSize
+        /// <summary>
+        ///     Enumerated function identity.
+        /// </summary>
+        public HashFunction Identity { get { return MacFunction.Blake2B256; } }
+
+		public virtual int OutputSize
 		{
 			get { return 8; }
 		}

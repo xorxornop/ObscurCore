@@ -15,6 +15,8 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.IO;
 using System.Text;
 using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Authentication.Primitives;
@@ -91,22 +93,15 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         public ECJpakeSession(string participantId, string passphrase, ECDomainParameters group, IHash digest,
             CsRng random)
         {
-            if (String.IsNullOrEmpty(participantId)) {
-                throw new ArgumentException("Participant ID must not be null/empty.");
-            }
-            if (String.IsNullOrEmpty(passphrase)) {
-                throw new ArgumentException("Password must not be null/empty.");
-            }
+            Contract.Requires<ArgumentException>(String.IsNullOrEmpty(participantId) == false, 
+                "Participant ID must not be null/empty.");
 
-            if (group == null) {
-                throw new ArgumentNullException("group");
-            }
-            if (digest == null) {
-                throw new ArgumentNullException("digest");
-            }
-            if (random == null) {
-                throw new ArgumentNullException("random");
-            }
+            Contract.Requires<ArgumentException>(String.IsNullOrEmpty(passphrase) == false,
+                "Passphrase must not be null/empty.");
+
+            Contract.Requires(group != null);
+            Contract.Requires(digest != null);
+            Contract.Requires(random != null);
 
             ECCurve curve = group.Curve;
             var curveAsFp = group.Curve as FpCurve;
@@ -182,13 +177,8 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         public void RestoreState(byte[] x2, ECJpakeRound1 round1Created, ECJpakeRound1 round1Received = null,
             ECJpakeRound2 round2Created = null, ECJpakeRound2 round2Received = null, JpakeRound3 round3Created = null)
         {
-            if (ProtocolState != State.Initialised) {
-                throw new InvalidOperationException("Cannot restore state of already-active protocol session!");
-            }
-
-            if (round1Created == null) {
-                throw new ArgumentNullException("round1Created");
-            }
+            Contract.Requires(ProtocolState == State.Initialised, "Cannot restore state of already-active protocol session!");
+            Contract.Requires(round1Created != null);
 
             _gx1 = _domain.Curve.DecodePoint(round1Created.GX1);
             _gx2 = _domain.Curve.DecodePoint(round1Created.GX2);
@@ -251,9 +241,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// </summary>
         public ECJpakeRound1 CreateRound1ToSend()
         {
-            if (ProtocolState >= State.Round1Created) {
-                throw new InvalidOperationException("Round1 payload already created for " + ParticipantId);
-            }
+            Contract.Requires(ProtocolState < State.Round1Created, "Round 1 payload already created.");
 
             BigInteger x1 = BigInteger.CreateRandomInRange(BigInteger.One, _domain.N.Subtract(BigInteger.One),
                 EntropySupply);
@@ -286,13 +274,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// <param name="round1Received">Round 1 DTO received from partner participant.</param>
         public void ValidateRound1Received(ECJpakeRound1 round1Received)
         {
-            if (ProtocolState >= State.Round1Validated) {
-                throw new InvalidOperationException("Validation already attempted for round 1 payload for "
-                                                    + ParticipantId);
-            }
-            if (String.IsNullOrEmpty(round1Received.ParticipantId)) {
-                throw new ArgumentException("Partner participant ID in round 1 DTO received is null or empty.");
-            }
+            Contract.Requires<InvalidOperationException>(ProtocolState < State.Round1Validated, 
+                "Validation already attempted for round 1 payload.");
+
+            Contract.Requires<ConfigurationInvalidException>(String.IsNullOrEmpty(round1Received.ParticipantId) == false, 
+                "Partner participant ID in round 1 DTO received is null or empty.");
 
             PartnerParticipantId = round1Received.ParticipantId;
             _gx3 = _domain.Curve.DecodePoint(round1Received.GX1);
@@ -326,11 +312,10 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         public ECJpakeRound2 CreateRound2ToSend()
         {
             if (ProtocolState >= State.Round2Created) {
-                throw new InvalidOperationException("Round 2 payload already created for " + ParticipantId);
+                throw new InvalidOperationException("Round 2 payload already created.");
             }
             if (ProtocolState < State.Round1Validated) {
-                throw new InvalidOperationException("Round 1 payload must be validated prior to creating Round 2 payload for "
-                                                    + ParticipantId);
+                throw new InvalidOperationException("Round 1 payload must be validated prior to creating Round 2 payload.");
             }
 
             var s1 = new BigInteger(_passwordBytes);
@@ -362,24 +347,19 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         ///     Prior round (1) has not been completed yet, or method may have been called more than once.
         /// </exception>
         /// <exception cref="CryptoException">
-        ///     Verification of zero-knowledge proof failed. Possible attempted impersonation / MiTM.
+        ///     Verification of zero-knowledge proof failed. Possible attempted impersonation, e.g. MiTM.
         /// </exception>
         public void ValidateRound2Received(ECJpakeRound2 round2Received)
         {
-            if (ProtocolState >= State.Round2Validated) {
-                throw new InvalidOperationException("Validation already attempted for round 2 payload for " +
-                                                    ParticipantId);
-            }
-            if (ProtocolState < State.Round1Validated) {
-                throw new InvalidOperationException("Round 1 payload must be validated prior to validating round 2 payload for "
-                                                    + ParticipantId);
-            }
-            if (String.IsNullOrEmpty(round2Received.ParticipantId)) {
-                throw new ArgumentException("Partner participant ID in round 2 received is null or empty.");
-            }
-            if (PartnerParticipantId.Equals(round2Received.ParticipantId, StringComparison.Ordinal) == false) {
-                throw new CryptoException("Partner participant ID of round 2 DTO does not match value from round 1.");
-            }
+            Contract.Requires<InvalidOperationException>(ProtocolState < State.Round2Validated,
+                "Validation already attempted for round 2 payload.");
+            Contract.Requires<InvalidOperationException>(ProtocolState > State.Round1Validated,
+                "Round 1 payload must be validated prior to validating round 2 payload.");
+            
+            Contract.Requires<ConfigurationInvalidException>(String.IsNullOrEmpty(round2Received.ParticipantId) == false,
+                "Partner participant ID in round 2 DTO received is null or empty.");          
+            Contract.Requires<CryptoException>(PartnerParticipantId.Equals(round2Received.ParticipantId, StringComparison.Ordinal),
+                "Partner participant ID of round 2 DTO does not match value from round 1.");
 
             ECPoint X4sV = _domain.Curve.DecodePoint(round2Received.X2sV);
             var X4sR = new BigInteger(round2Received.X2sR);
@@ -407,9 +387,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// </exception>
         public JpakeRound3 CreateRound3ToSend()
         {
-            if (ProtocolState >= State.Round3Created) {
-                throw new InvalidOperationException("Round 3 already created for " + ParticipantId);
-            }
+            Contract.Requires<InvalidOperationException>(ProtocolState < State.Round3Created,
+                "Round 3 already created.");
+
+            Contract.Requires<InvalidOperationException>(ProtocolState == State.Round2Validated,
+                "Round 2 payload must be validated prior to creating round 3 payload.");
 
             _keyingMaterial = CalculateKeyingMaterialInternal();
             _macTag = CalculateMacTag(ParticipantId, PartnerParticipantId, _gx1, _gx2, _gx3, _gx4,
@@ -440,20 +422,17 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// </exception>
         public void ValidateRound3Received(JpakeRound3 round3Received, out byte[] keyingMaterial)
         {
-            if (ProtocolState == State.Round3Validated) {
-                throw new InvalidOperationException("Validation already attempted for round 3 for " + ParticipantId);
-            }
-            if (ProtocolState < State.KeyCalculated) {
-                throw new InvalidOperationException(
-                    "Keying material must be calculated validated prior to validating round 3 for " + ParticipantId);
-            }
+            Contract.Requires<InvalidOperationException>(ProtocolState < State.Round3Validated,
+                "Validation already attempted for round 3 payload.");
+//            Contract.Requires<InvalidOperationException>(ProtocolState > State.KeyCalculated,
+//                "Keying material must be calculated validated prior to validating round 3.");
+            Contract.Requires<InvalidOperationException>(ProtocolState > State.Round2Validated,
+                "Round 2 must be validated prior to validating round 3.");
 
-            if (String.IsNullOrEmpty(round3Received.ParticipantId)) {
-                throw new ArgumentException("Partner participant ID in round 3 DTO received is null or empty.");
-            }
-            if (PartnerParticipantId.Equals(round3Received.ParticipantId, StringComparison.Ordinal) == false) {
-                throw new CryptoException("Partner participant ID of round 3 does not match value from rounds 1 & 2.");
-            }
+            Contract.Requires<ConfigurationInvalidException>(String.IsNullOrEmpty(round3Received.ParticipantId) == false,
+                "Partner participant ID in round 3 DTO received is null or empty.");
+            Contract.Requires<CryptoException>(PartnerParticipantId.Equals(round3Received.ParticipantId, StringComparison.Ordinal),
+                "Partner participant ID of round 3 DTO does not match value from prior rounds (1 and 2).");
 
             var receivedTag = new BigInteger(round3Received.VerifiedOutput);
 
@@ -467,7 +446,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             byte[] expectedMacTagBytes = expectedTag.ToByteArrayUnsigned();
             byte[] receivedMacTagBytes = receivedTag.ToByteArrayUnsigned();
 
-            if (expectedMacTagBytes.SequenceEqualConstantTime(receivedMacTagBytes) == false) {
+            if (expectedMacTagBytes.SequenceEqual_ConstantTime(receivedMacTagBytes) == false) {
                 throw new CryptoException("Key confirmation failed - partner MAC tag failed to match expected value.");
             }
 
@@ -504,13 +483,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
         /// </summary>
         private BigInteger CalculateKeyingMaterialInternal()
         {
-            if (ProtocolState >= State.KeyCalculated) {
-                throw new InvalidOperationException("Key already calculated for " + ParticipantId);
-            }
-            if (ProtocolState < State.Round2Validated) {
-                throw new InvalidOperationException("Round 2 must be validated prior to creating key for " +
-                                                    ParticipantId);
-            }
+//            Contract.Requires<InvalidOperationException>(ProtocolState < State.KeyCalculated,
+//                "Key already calculated.");
+            Contract.Requires<InvalidOperationException>(ProtocolState == State.Round2Validated,
+                "Round 2 must be validated prior to calculating key.");
+            Contract.Ensures(Contract.Result<BigInteger>() != null);
 
             var s1 = new BigInteger(_passwordBytes);
 
@@ -529,7 +506,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             _b = null;
             // Do not clear GX1-4, as these are needed for key confirmation (round 3)
 
-            ProtocolState = State.KeyCalculated;
+//            ProtocolState = State.KeyCalculated;
 
             return Hash(preKey);
         }
@@ -626,7 +603,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             _digest.BlockUpdate(lengthPrefix, 0, 4);
             _digest.BlockUpdate(kBytes, 0, kBytes.Length);
 
-            var hash = new byte[_digest.DigestSize];
+            var hash = new byte[_digest.OutputSize];
             _digest.DoFinal(hash, 0);
 
             return new BigInteger(1, hash);
@@ -662,7 +639,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             _digest.BlockUpdate(lengthPrefix, 0, 4);
             _digest.BlockUpdate(idBytes, 0, idBytes.Length);
 
-            var hash = new byte[_digest.DigestSize];
+            var hash = new byte[_digest.OutputSize];
             _digest.DoFinal(hash, 0);
 
             return new BigInteger(hash);
@@ -705,11 +682,11 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             byte[] constantBytes = MacKeyConstantBytes;
             _digest.BlockUpdate(constantBytes, 0, constantBytes.Length);
 
-            var macKey = new byte[_digest.DigestSize];
+            var macKey = new byte[_digest.OutputSize];
             _digest.DoFinal(macKey, 0);
 
             // Create and initialise HMAC primitive
-            var hmac = new HMac(_digest);
+            var hmac = new Hmac(_digest);
             hmac.Init(macKey);
 
             macKey.SecureWipe();
@@ -737,7 +714,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             byte[] gx4Bytes = gx4.GetEncoded();
             hmac.BlockUpdate(gx4Bytes, 0, gx4Bytes.Length);
 
-            var macTag = new byte[hmac.MacSize];
+            var macTag = new byte[hmac.OutputSize];
             hmac.DoFinal(macTag, 0);
             return new BigInteger(macTag);
         }
@@ -756,7 +733,7 @@ namespace ObscurCore.Cryptography.KeyAgreement.Primitives
             Round1Validated = 0x04,
             Round2Created = 0x08,
             Round2Validated = 0x10,
-            KeyCalculated = 0x20,
+            //KeyCalculated = 0x20,
             Round3Created = 0x40,
             Round3Validated = 0x80
         }

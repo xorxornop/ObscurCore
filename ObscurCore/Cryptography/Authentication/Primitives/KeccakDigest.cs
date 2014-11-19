@@ -1,28 +1,31 @@
-﻿//
-//  Copyright 2013  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+﻿#region License
 
-// Modified from https://bitbucket.org/jdluzen/sha3. Released under Modified BSD License.
+//  	Copyright 2013-2014 Matthew Ducker
+//  	
+//  	Licensed under the Apache License, Version 2.0 (the "License");
+//  	you may not use this file except in compliance with the License.
+//  	
+//  	You may obtain a copy of the License at
+//  		
+//  		http://www.apache.org/licenses/LICENSE-2.0
+//  	
+//  	Unless required by applicable law or agreed to in writing, software
+//  	distributed under the License is distributed on an "AS IS" BASIS,
+//  	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  	See the License for the specific language governing permissions and 
+//  	limitations under the License.
+
+#endregion
 
 using System;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
     /// <summary>
-    /// SHA-3/Keccak sponge construction implemented as a digest/hash function.
+    ///     SHA-3/Keccak sponge construction implemented as a digest/hash function.
     /// </summary>
-    public partial class KeccakDigest : IHash
+    public partial class KeccakDigest : HashEngine
     {
         private const int KeccakB = 1600;
         private const int KeccakNumberOfRounds = 24;
@@ -55,40 +58,41 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             0x8000000080008008UL
         };
 
-        private ulong[] _state = new ulong[5 * 5]; //1600 bits
-        private byte[] _buffer;
-        protected int BuffLength;
-
-        private readonly int _hashSizeValue;
-
         private readonly int _keccakR;
+        private readonly int _stateSizeBytes;
+        protected int BuffLength;
+        private byte[] _buffer;
+        private ulong[] _state = new ulong[5 * 5]; //1600 bits
 
-        public KeccakDigest(int size, bool bits)
+        public KeccakDigest(int sizeInBits)
+            : base((HashFunction)Enum.Parse(typeof(HashFunction), "Keccak" + sizeInBits))
         {
-            if (!bits) {
-                size *= 8;
-            }
-
-            switch (size) {
-                case 224:
+            switch (HashIdentity) {
+                case HashFunction.Keccak224:
                     _keccakR = 1152;
                     break;
-                case 256:
+                case HashFunction.Keccak256:
                     _keccakR = 1088;
                     break;
-                case 384:
+                case HashFunction.Keccak384:
                     _keccakR = 832;
                     break;
-                case 512:
+                case HashFunction.Keccak512:
                     _keccakR = 576;
                     break;
                 default:
-                    throw new ArgumentException("Output size must be 224, 256, 384, or 512 bits", "size");
+                    throw new ArgumentException("");
             }
 
             BuffLength = 0;
-            _hashSizeValue = size;
-            _buffer = new byte[_keccakR / 8];
+            _stateSizeBytes = _keccakR / 8;
+            _buffer = new byte[_stateSizeBytes];
+        }
+
+        /// <inheritdoc />
+        public override int StateSize
+        {
+            get { return _stateSizeBytes; }
         }
 
         private static ulong ROL(ulong a, int offset)
@@ -99,8 +103,8 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
         private void AddToBuffer(byte[] array, ref int offset, ref int count)
         {
-            var amount = Math.Min(count, _buffer.Length - BuffLength);
-            array.CopyBytes(offset, _buffer, BuffLength, amount);
+            int amount = Math.Min(count, _buffer.Length - BuffLength);
+            array.DeepCopy_NoChecks(offset, _buffer, BuffLength, amount);
             offset += amount;
             BuffLength += amount;
             count -= amount;
@@ -109,42 +113,17 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         // Added interface members
 
         /// <inheritdoc />
-        public string AlgorithmName
+        protected internal override void BlockUpdateInternal(byte[] input, int inOff, int length)
         {
-            get { return "Keccak" + _hashSizeValue; }
-        }
-
-        /// <inheritdoc />
-        public int ByteLength
-        {
-            get { return _keccakR / 8; }
-        }
-
-        /// <inheritdoc />
-        public int DigestSize
-        {
-            get { return _hashSizeValue / 8; }
-        }
-
-        /// <inheritdoc />
-        public void BlockUpdate(byte[] input, int inOff, int length)
-        {
-            if (inOff < 0) {
-                throw new ArgumentOutOfRangeException("inOff", "Offset out of range.");
-            }
             HashCore(input, inOff, length);
         }
 
         /// <inheritdoc />
-        public int DoFinal(byte[] output, int outOff)
+        protected internal override int DoFinalInternal(byte[] output, int outOff)
         {
-            if (outOff < 0) {
-                throw new ArgumentOutOfRangeException("outOff", "Offset out of range.");
-            }
-
             HashFinal(output, outOff);
             Reset();
-            return DigestSize;
+            return OutputSize;
         }
     }
 }

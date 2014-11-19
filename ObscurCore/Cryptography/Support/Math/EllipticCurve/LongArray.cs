@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
 {

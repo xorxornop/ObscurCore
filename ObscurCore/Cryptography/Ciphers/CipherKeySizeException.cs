@@ -26,10 +26,10 @@ namespace ObscurCore.Cryptography.Ciphers
         }
 
         public CipherKeySizeException(BlockCipher cipherEnum, int requestedSizeBits)
-            : this(cipherEnum.ToString(), requestedSizeBits, Athena.Cryptography.BlockCiphers[cipherEnum].AllowableKeySizes.ToList()) {}
+            : this(cipherEnum.ToString(), requestedSizeBits, Athena.Cryptography.BlockCiphers[cipherEnum].AllowableKeySizesBits.ToList()) {}
 
         public CipherKeySizeException(StreamCipher cipherEnum, int requestedSizeBits)
-            : this(cipherEnum.ToString(), requestedSizeBits, Athena.Cryptography.StreamCiphers[cipherEnum].AllowableKeySizes.ToList()) {}
+            : this(cipherEnum.ToString(), requestedSizeBits, Athena.Cryptography.StreamCiphers[cipherEnum].AllowableKeySizesBits.ToList()) {}
 
         protected CipherKeySizeException(string cipherName, int requestedSizeBits, IReadOnlyList<int> allowedSizes)
             : base(String.Format("The size {0} is not supported for use with the {1} cipher.", requestedSizeBits, 

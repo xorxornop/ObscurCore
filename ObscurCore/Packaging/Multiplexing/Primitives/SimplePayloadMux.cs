@@ -29,6 +29,7 @@ using ObscurCore.Cryptography.Authentication;
 using ObscurCore.Cryptography.Ciphers;
 using ObscurCore.DTO;
 using ObscurCore.Packaging.Multiplexing.Entropy;
+using PerfCopy;
 
 namespace ObscurCore.Packaging.Multiplexing.Primitives
 {
@@ -185,7 +186,7 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
                 item.AuthenticationVerifiedOutput = authenticator.Mac.DeepCopy();
             } else {
                 // Verify the authenticity of the item ciphertext and configuration
-                if (authenticator.Mac.SequenceEqualConstantTime(item.AuthenticationVerifiedOutput) == false) {
+                if (authenticator.Mac.SequenceEqual_ConstantTime(item.AuthenticationVerifiedOutput) == false) {
                     // Verification failed!
                     throw new CiphertextAuthenticationException("Payload item not authenticated.");
                 }

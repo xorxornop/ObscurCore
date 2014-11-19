@@ -22,6 +22,7 @@ using ProtoBuf;
 
 namespace ObscurCore.DTO
 {
+
     /// <summary>
     ///     Header for a <see cref="Manifest" />.
     /// </summary>
@@ -40,8 +41,7 @@ namespace ObscurCore.DTO
                 return true;
             }
             return FormatVersion == other.FormatVersion &&
-                   String.Equals(CryptographySchemeName, other.CryptographySchemeName,
-                       StringComparison.OrdinalIgnoreCase) &&
+                   CryptographyScheme == other.CryptographyScheme &&
                    (CryptographySchemeConfiguration == null
                        ? other.CryptographySchemeConfiguration == null
                        : CryptographySchemeConfiguration.SequenceEqualShortCircuiting(
@@ -60,10 +60,10 @@ namespace ObscurCore.DTO
         public int FormatVersion { get; set; }
 
         /// <summary>
-        ///     Name of the cryptographic scheme used to secure the Manifest.
+        ///     The cryptographic scheme used to secure the manifest.
         /// </summary>
         [ProtoMember(2, IsRequired = true)]
-        public string CryptographySchemeName { get; set; }
+        public ManifestCryptographyScheme CryptographyScheme { get; set; }
 
         /// <summary>
         ///     Configuration of the cryptographic scheme used to secure the Manifest.
@@ -96,7 +96,7 @@ namespace ObscurCore.DTO
         {
             unchecked {
                 int hashCode = FormatVersion.GetHashCode();
-                hashCode = (hashCode * 397) ^ CryptographySchemeName.ToLowerInvariant().GetHashCode();
+                hashCode = (hashCode * 397) ^ CryptographyScheme.GetHashCode();
                 hashCode = (hashCode * 397) ^
                            (CryptographySchemeConfiguration != null ? CryptographySchemeConfiguration.GetHashCodeExt() : 0);
                 return hashCode;

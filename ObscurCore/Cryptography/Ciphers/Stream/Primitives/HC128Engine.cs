@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System;
+using BitManipulator;
 using ObscurCore.Cryptography.Support;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
@@ -36,12 +37,12 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 
         private static uint F1(uint x)
         {
-            return x.RotateRight(7) ^ x.RotateRight(18) ^ (x >> 3);
+            return x.RotateRight_NoChecks(7) ^ x.RotateRight_NoChecks(18) ^ (x >> 3);
         }
 
         private static uint F2(uint x)
         {
-            return x.RotateRight(17) ^ x.RotateRight(19) ^ (x >> 10);
+            return x.RotateRight_NoChecks(17) ^ x.RotateRight_NoChecks(19) ^ (x >> 10);
         }
 
         private uint Step()
@@ -56,10 +57,10 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
             uint dimJ12 = (j - 12) & 0x1FF;
 
             if (_cnt < 512) {
-                _p[j] += (_p[dimJ3].RotateRight(10) ^ _p[dimJ511].RotateRight(23)) + _p[dimJ10].RotateRight(8);
+                _p[j] += (_p[dimJ3].RotateRight_NoChecks(10) ^ _p[dimJ511].RotateRight_NoChecks(23)) + _p[dimJ10].RotateRight_NoChecks(8);
                 ret = (_q[_p[dimJ12] & 0xFF] + _q[((_p[dimJ12] >> 16) & 0xFF) + 256]) ^ _p[j];
             } else {
-                _q[j] += (_q[dimJ3].RotateLeft(10) ^ _q[dimJ511].RotateLeft(23)) + _q[dimJ10].RotateLeft(8);
+                _q[j] += (_q[dimJ3].RotateLeft_NoChecks(10) ^ _q[dimJ511].RotateLeft_NoChecks(23)) + _q[dimJ10].RotateLeft_NoChecks(8);
                 ret = (_p[_q[dimJ12] & 0xFF] + _p[((_q[dimJ12] >> 16) & 0xFF) + 256]) ^ _q[j];
             }
             _cnt = (_cnt + 1) & 0x3FF;
@@ -124,7 +125,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
         }
 
         /// <inheritdoc/>
-        internal override void ProcessBytesInternal(
+        protected internal override void ProcessBytesInternal(
             byte[] input,
             int inOff,
             int len,

@@ -43,17 +43,17 @@ namespace ObscurCore.Cryptography.Ciphers
             var config = new CipherConfiguration { Type = CipherType.Block };
 
             // Set the key size
-            int keySizeNonNull = keySize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultKeySize;
-            if (keySize == null || Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
+            int keySizeNonNull = keySize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultKeySizeBits;
+            if (keySize == null || Athena.Cryptography.BlockCiphers[cipher].AllowableKeySizesBits.Contains(keySizeNonNull)) {
                 config.KeySizeBits = keySizeNonNull;
             } else {
                 throw new CipherKeySizeException(cipher, keySizeNonNull);
             }
 
             // Set the block size
-            int blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSize;
+            int blockSizeNonNull = blockSize ?? Athena.Cryptography.BlockCiphers[cipher].DefaultBlockSizeBits;
             if (blockSize == null ||
-                Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizes.Contains(blockSizeNonNull)) {
+                Athena.Cryptography.BlockCiphers[cipher].AllowableBlockSizesBits.Contains(blockSizeNonNull)) {
                 config.BlockSizeBits = blockSizeNonNull;
             } else {
                 throw new BlockSizeException(cipher, blockSizeNonNull);
@@ -86,16 +86,16 @@ namespace ObscurCore.Cryptography.Ciphers
         {
             var config = new CipherConfiguration { Type = CipherType.Stream };
 
-            int keySizeNonNull = keySize ?? Athena.Cryptography.StreamCiphers[cipher].DefaultKeySize;
-            if (keySize == null || Athena.Cryptography.StreamCiphers[cipher].AllowableKeySizes.Contains(keySizeNonNull)) {
+            int keySizeNonNull = keySize ?? Athena.Cryptography.StreamCiphers[cipher].DefaultKeySizeBits;
+            if (keySize == null || Athena.Cryptography.StreamCiphers[cipher].AllowableKeySizesBits.Contains(keySizeNonNull)) {
                 config.KeySizeBits = keySizeNonNull;
             } else {
                 throw new CipherKeySizeException(cipher, keySizeNonNull);
             }
             config.CipherName = cipher.ToString();
 
-            if (Athena.Cryptography.StreamCiphers[cipher].DefaultNonceSize != -1) {
-                config.InitialisationVector = new byte[Athena.Cryptography.StreamCiphers[cipher].DefaultNonceSize / 8];
+            if (Athena.Cryptography.StreamCiphers[cipher].DefaultNonceSizeBits != -1) {
+                config.InitialisationVector = new byte[Athena.Cryptography.StreamCiphers[cipher].DefaultNonceSizeBits / 8];
                 StratCom.EntropySupplier.NextBytes(config.InitialisationVector);
             }
 

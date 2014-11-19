@@ -18,6 +18,7 @@
 #endregion
 
 using ObscurCore.Cryptography.Information;
+using ObscurCore.Cryptography.Information.EllipticCurve;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.Signing.Primitives;
 using ObscurCore.Cryptography.Support;
@@ -88,6 +89,7 @@ namespace ObscurCore.Cryptography.KeyAgreement
                     ContextPermissions = KeyUseContextPermission.ManifestHeader,
                     ConfirmationCanary = canary
                 };
+                privEntropy.SecureWipe();
             } else {
                 ECPoint Q;
                 BigInteger d;

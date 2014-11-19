@@ -15,6 +15,7 @@
 
 using System;
 using ObscurCore.Cryptography.Ciphers.Block.Padding;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Ciphers.Block
 {
@@ -112,11 +113,11 @@ namespace ObscurCore.Cryptography.Ciphers.Block
                     // Output block is truncated size
                     // Padding is pointless if cipher supports partial blocks, so we won't even support it
                     _cipher.ProcessBlock(input, inputOffset, workingBlock, 0);
-                    workingBlock.CopyBytes(0, output, outputOffset, length);
+                    workingBlock.DeepCopy_NoChecks(0, output, outputOffset, length);
                 } else {
                     // Output block is full block size
                     // Padding is required
-                    input.CopyBytes(inputOffset, workingBlock, 0, _blockSize);
+                    input.DeepCopy_NoChecks(inputOffset, workingBlock, 0, _blockSize);
                     length += _padding.AddPadding(workingBlock, length);
                     _cipher.ProcessBlock(workingBlock, 0, output, outputOffset);
                 }
@@ -124,7 +125,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
             } else {
                 if (_cipher.IsPartialBlockOkay) {
                     _cipher.ProcessBlock(input, inputOffset, workingBlock, 0);
-                    workingBlock.CopyBytes(0, output, outputOffset, length);
+                    workingBlock.DeepCopy_NoChecks(0, output, outputOffset, length);
                     Reset();
                 } else {
                     if (length != _blockSize) {
@@ -133,7 +134,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
                             if (outputOffset >= _blockSize) {
                                 outputOffset -= _blockSize;
                             }
-                            output.CopyBytes(outputOffset, workingBlock, 0, _blockSize);
+                            output.DeepCopy_NoChecks(outputOffset, workingBlock, 0, _blockSize);
                         } else {
                             throw new CryptoException();
                         }
@@ -144,7 +145,7 @@ namespace ObscurCore.Cryptography.Ciphers.Block
                     try {
                         // Determine the number of padding bytes
                         var paddingByteCount = _padding.PadCount(workingBlock);
-                        workingBlock.CopyBytes(0, output, outputOffset, _blockSize - paddingByteCount);
+                        workingBlock.DeepCopy_NoChecks(0, output, outputOffset, _blockSize - paddingByteCount);
                         length -= paddingByteCount;
                     }
                     finally {

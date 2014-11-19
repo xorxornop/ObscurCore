@@ -52,7 +52,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.Ed25519
 			var hasher = new Sha512Digest();
 			{
 				hasher.BlockUpdate(sk, skoffset, 32);
-				az = new byte[hasher.DigestSize];
+				az = new byte[hasher.OutputSize];
 				hasher.DoFinal (az, 0);
 
 				az[0] &= 248;
@@ -62,7 +62,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.Ed25519
 				hasher.Reset ();
 				hasher.BlockUpdate(az, 32, 32);
 				hasher.BlockUpdate(m, moffset, mlen);
-				r = new byte[hasher.DigestSize];
+				r = new byte[hasher.OutputSize];
 				hasher.DoFinal (r, 0);
 
 				ScalarOperations.sc_reduce(r);
@@ -73,7 +73,7 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.Ed25519
 				hasher.BlockUpdate(sig, sigoffset, 32);
 				hasher.BlockUpdate(sk, skoffset + 32, 32);
 				hasher.BlockUpdate(m, moffset, mlen);
-				hram = new byte[hasher.DigestSize];
+				hram = new byte[hasher.OutputSize];
 				hasher.DoFinal (hram, 0);
 
 				ScalarOperations.sc_reduce(hram);

@@ -56,6 +56,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			get { return "Skein-MAC-" + (engine.BlockSize * 8) + "-" + (engine.OutputSize * 8); }
 		}
 
+        /// <summary>
+        ///     Enumerated function identity.
+        /// </summary>
+        public MacFunction Identity { get { return MacFunction.Keccak512; } }
+
 		/// <summary>
 		/// Optionally initialises the Skein digest with the provided parameters.
 		/// </summary>
@@ -76,7 +81,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			engine.Init (skeinParameters);
 		}
 
-		public int MacSize
+		public int OutputSize
 		{
 			get { return engine.OutputSize; }
 		}

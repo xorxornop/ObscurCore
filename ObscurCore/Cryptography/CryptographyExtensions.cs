@@ -14,6 +14,8 @@
 //    limitations under the License.
 
 using System;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
 namespace ObscurCore.Cryptography
@@ -31,9 +33,9 @@ namespace ObscurCore.Cryptography
         /// <param name="a">Array to compare against.</param>
         /// <param name="b">Array to test for equality.</param>
         /// <returns>If <c>true</c>, array section tested is equal.</returns>
-        public static bool SequenceEqualConstantTime(this byte[] a, byte[] b)
+        public static bool SequenceEqual_ConstantTime(this byte[] a, byte[] b)
         {
-            return a.SequenceEqualConstantTime(0, b, 0, a.Length);
+            return a.SequenceEqual_ConstantTime(0, b, 0, a.Length);
         }
 
         /// <summary>
@@ -46,7 +48,7 @@ namespace ObscurCore.Cryptography
         /// <param name="yOffset">Index in <paramref name="y"/> to start comparison at.</param>
         /// <param name="length">Number of bytes to compare.</param>
         /// <returns>If <c>true</c>, array section tested is equal.</returns>
-        public static bool SequenceEqualConstantTime(this byte[] x, int xOffset, byte[] y, int yOffset, int length)
+        public static bool SequenceEqual_ConstantTime(this byte[] x, int xOffset, byte[] y, int yOffset, int length)
         {
             if (x == null && y == null) {
                 return true;
@@ -73,17 +75,17 @@ namespace ObscurCore.Cryptography
                 throw new ArgumentOutOfRangeException("length", "yOffset + length > y.Length");
             }
 
-            return InternalConstantTimeEquals(x, xOffset, y, yOffset, length) != 0;
+            return SequenceEqual_ConstantTime_NoChecks(x, xOffset, y, yOffset, length);
         }
 
         // From CodesInChaos
-        private static uint InternalConstantTimeEquals(byte[] x, int xOffset, byte[] y, int yOffset, int length)
+        private static bool SequenceEqual_ConstantTime_NoChecks(byte[] x, int xOffset, byte[] y, int yOffset, int length)
         {
             int differentbits = 0;
             for (int i = 0; i < length; i++) {
                 differentbits |= x[xOffset + i] ^ y[yOffset + i];
             }
-            return (1 & (((uint) differentbits - 1) >> 8));
+            return (1 & (((uint) differentbits - 1) >> 8)) != 0;
         }
 
         /// <summary>
@@ -205,50 +207,56 @@ namespace ObscurCore.Cryptography
 #if INCLUDE_UNSAFE
         internal static unsafe void XorMemory(byte* a, byte* b, byte* output, int length)
         {
-            if (StratCom.PlatformWordSize == sizeof(ulong)) { // 64-bit
-                while (length >= sizeof(ulong) * 2) {
-                    *(ulong*)output = *(ulong*)a ^ *(ulong*)b;
-                    output += sizeof(ulong);
-                    a += sizeof(ulong);
-                    *(ulong*)output = *(ulong*)a ^ *(ulong*)b;
-                    output += sizeof(ulong);
-                    a += sizeof(ulong);
-                    length -= sizeof(ulong) * 2;
+            byte* outputEnd = output + length;
+            const int u32Size = sizeof(UInt32);
+            if (StratCom.PlatformWordSize == u32Size) {
+                // 32-bit
+                while (output + (u32Size * 2) <= outputEnd) {
+                    *(UInt32*)output = *(UInt32*)a ^ *(UInt32*)b;
+                    a += u32Size;
+                    b += u32Size;
+                    output += u32Size;
+                    *(UInt32*)output = *(UInt32*)a ^ *(UInt32*)b;
+                    a += u32Size;
+                    b += u32Size;
+                    output += u32Size;
                 }
-
-                if (length >= sizeof(ulong)) {
-                    *(ulong*)output = *(ulong*)a ^ *(ulong*)b;
-                    output += sizeof(ulong);
-                    a += sizeof(ulong);
-                    length -= sizeof(ulong);
+            } else if (StratCom.PlatformWordSize == sizeof(UInt64)) {
+                // 64-bit
+                const int u64Size = sizeof(UInt64);
+                while (output + (u64Size * 2) <= outputEnd) {
+                    *(UInt32*)output = *(UInt32*)a ^ *(UInt32*)b;
+                    a += u64Size;
+                    b += u64Size;
+                    output += u64Size;
+                    *(UInt32*)output = *(UInt32*)a ^ *(UInt32*)b;
+                    a += u64Size;
+                    b += u64Size;
+                    output += u64Size;
                 }
-            } else if (StratCom.PlatformWordSize == sizeof(uint)) { // 32-bit
-                while (length >= sizeof(uint) * 2) {
-                    *(uint*)output = *(uint*)a ^ *(uint*)b;
-                    output += sizeof(uint);
-                    a += sizeof(uint);
-                    *(uint*)output = *(uint*)a ^ *(uint*)b;
-                    output += sizeof(uint);
-                    a += sizeof(uint);
-                    length -= sizeof(uint) * 2;
+                if (output + u64Size <= outputEnd) {
+                    *(UInt64*) output = *(UInt64*) a ^ *(UInt64*) b;
+                    a += u64Size;
+                    b += u64Size;
+                    output += u64Size;
                 }
             }
 
-            if (length >= sizeof(uint)) {
-                *(uint*)output = *(uint*)a ^ *(uint*)b;
-                output += sizeof(uint);
-                a += sizeof(uint);
-                length -= sizeof(uint);
+            if (output + u32Size <= outputEnd) {
+                *(UInt32*)output = *(UInt32*)a ^ *(UInt32*)b;
+                a += u32Size;
+                b += u32Size;
+                output += u32Size;
             }
 
-            if (length >= sizeof(ushort)) {
-                *(ushort*)output = (ushort)(*(ushort*)a ^ *(ushort*)b);
-                output += sizeof(ushort);
-                a += sizeof(ushort);
-                length -= sizeof(ushort);
+            if (output + sizeof(UInt16) <= outputEnd) {
+                *(UInt16*)output = (UInt16)(*(UInt16*)a ^ *(UInt16*)b);
+                a += sizeof(UInt16);
+                b += sizeof(UInt16);
+                output += sizeof(UInt16);
             }
 
-            if (length != 0) {
+            if (output + 1 <= outputEnd) {
                 *output = (byte)(*a ^ *b);
             }
         }
@@ -261,50 +269,49 @@ namespace ObscurCore.Cryptography
         /// <param name="length">Length of data to copy in bytes.</param>
         internal static unsafe void XorMemoryInPlace(byte* a, byte* b, int length)
         {
-            if (StratCom.PlatformWordSize == sizeof(UInt64)) { // 64-bit
-                while (length >= sizeof(UInt64) << 1) {
-                    *(UInt64*)a ^= *(UInt64*)b;
-                    a += sizeof(UInt64);
-                    b += sizeof(UInt64);
-                    *(UInt64*)a ^= *(UInt64*)b;
-                    a += sizeof(UInt64);
-                    b += sizeof(UInt64);
-                    length -= sizeof(UInt64) << 1;
-                }
-
-                if (length >= sizeof(UInt64)) {
-                    *(UInt64*)a ^= *(UInt64*)b;
-                    a += sizeof(UInt64);
-                    b += sizeof(UInt64);
-                    length -= sizeof(UInt64);
-                }
-            } else if (StratCom.PlatformWordSize == sizeof(UInt32)) { // 32-bit
-                while (length >= sizeof(UInt32) << 1) {
+            const int u32Size = sizeof(UInt32);
+            byte* aEnd = a + length;
+            if (StratCom.PlatformWordSize == u32Size) {
+                // 32-bit
+                while (a + u32Size * 2 <= aEnd) {
                     *(UInt32*) a ^= *(UInt32*) b;
-                    a += sizeof(UInt32);
-                    b += sizeof(UInt32);
+                    a += u32Size;
+                    b += u32Size;
                     *(UInt32*) a ^= *(UInt32*) b;
-                    a += sizeof(UInt32);
-                    b += sizeof(UInt32);
-                    length -= sizeof(UInt32) << 1;
+                    a += u32Size;
+                    b += u32Size;
+                }
+            } else if (StratCom.PlatformWordSize == sizeof(UInt64)) {
+                // 64-bit
+                const int u64Size = sizeof(UInt64);
+                while (a + u64Size * 2 <= aEnd) {
+                    *(UInt64*) a ^= *(UInt64*) b;
+                    a += u64Size;
+                    b += u64Size;
+                    *(UInt64*) a ^= *(UInt64*) b;
+                    a += u64Size;
+                    b += u64Size;
+                }
+                if (a + u64Size <= aEnd) {
+                    *(UInt64*) a ^= *(UInt64*) b;
+                    a += u64Size;
+                    b += u64Size;
                 }
             }
 
-            if (length >= sizeof(UInt32)) {
+            if (a + u32Size <= aEnd) {
                 *(UInt32*)a ^= *(UInt32*)b;
-                a += sizeof(UInt32);
-                b += sizeof(UInt32);
-                length -= sizeof(UInt32);
+                a += u32Size;
+                b += u32Size;
             }
 
-            if (length >= sizeof(UInt16)) {
+            if (a + sizeof(UInt16) >= aEnd) {
                 *(UInt16*)a ^= *(UInt16*)b;
                 a += sizeof(UInt16);
                 b += sizeof(UInt16);
-                length -= sizeof(UInt16);
             }
 
-            if (length != 0) {
+            if (a + 1 <= aEnd) {
                 *a ^= *b;
             }
         }
@@ -332,20 +339,24 @@ namespace ObscurCore.Cryptography
         /// <param name="count">Number of elements to erase.</param>
         public static void SecureWipe<T>(this T[] data, int offset, int count) where T : struct
         {
-            if (data == null) {
-                throw new ArgumentNullException("data");
-            }
-            if (offset < 0) {
-                throw new ArgumentOutOfRangeException("offset");
-            }
-            if (count < 0) {
-                throw new ArgumentOutOfRangeException("count", "Count must be positive.");
-            }
-            if (offset + count > data.Length) {
-                throw new ArgumentException("offset + count > data.Length");
-            }
+            Contract.Requires<ArgumentNullException>(data != null);
+            Contract.Requires<ArgumentOutOfRangeException>(offset >= 0);
+            Contract.Requires<ArgumentOutOfRangeException>(count > 0);
+
+            Contract.Ensures(offset + count <= data.Length);
 
             InternalWipe(data, offset, count);
+        }
+
+        /// <summary>
+        ///     Securely erase <paramref name="data"/> by clearing the memory used to store it.
+        /// </summary>
+        /// <param name="data">Data to erase.</param>
+        public static void SecureWipe(this byte[] data)
+        {
+            Contract.Requires<ArgumentNullException>(data != null);
+
+            InternalWipe(data, 0, data.Length);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -369,46 +380,107 @@ namespace ObscurCore.Cryptography
         }
 
 #if INCLUDE_UNSAFE
+        internal static unsafe void WipeMemory(ushort* src, int length)
+        {
+            WipeMemory((byte*)src, sizeof(ushort) * length);
+        }
+
         internal static unsafe void WipeMemory(uint* src, int length)
         {
-            WipeMemory((byte*)src, sizeof(uint));
+            WipeMemory((byte*)src, sizeof(uint) * length);
         }
 
         internal static unsafe void WipeMemory(ulong* src, int length)
         {
-            WipeMemory((byte*)src, sizeof(ulong));
+            WipeMemory((byte*)src, sizeof(ulong) * length);
         }
 
         internal static unsafe void WipeMemory(byte* src, int length)
         {
-            while (length >= sizeof(UInt64) << 1) {
-                *(UInt64*) src = default(UInt64);
-                src += sizeof(UInt64);
-                *(UInt64*) src = default(UInt64);
-                src += sizeof(UInt64);
-                length -= sizeof(UInt64) << 1;
+            const int u32Size = sizeof(UInt32);
+            if (StratCom.PlatformWordSize == u32Size) {               
+                while (length >= u32Size * 2) {
+                    *(UInt32*)src = 0u;
+                    src += u32Size;
+                    *(UInt32*)src = 0u;
+                    src += u32Size;
+                    length -= u32Size * 2;
+                }
+            } else if (StratCom.PlatformWordSize == sizeof(UInt64)) {
+                const int u64Size = sizeof(UInt64);
+                while (length >= u64Size * 2) {
+                    *(UInt64*)src = 0ul;
+                    src += u64Size;
+                    *(UInt64*)src = 0ul;
+                    src += u64Size;
+                    length -= u64Size * 2;
+                }
+                if (length >= u64Size) {
+                    *(UInt64*)src = 0ul;
+                    src += u64Size;
+                    length -= u64Size;
+                }
+            }
+            if (length >= u32Size) {
+                *(UInt32*) src = 0u;
+                src += u32Size;
+                length -= u32Size;
+            }
+            if (length >= sizeof(UInt16)) {
+                *(UInt16*)src = (UInt16)0u;
+                src += sizeof(UInt16);
+                length -= sizeof(UInt16);
+            }
+            if (length > 0) {
+                *src = (byte)0;
+            }
+        }
+
+        internal static unsafe void SetMemory(byte* src, byte val, int length)
+        {
+            byte* val64 = stackalloc byte[sizeof(UInt64)];
+            for (int i = 0; i < sizeof(UInt64); i++) {
+                val64[i] = val;
             }
 
-            if (length >= 8) {
-                *(UInt64*) src = default(UInt64);
-                src += sizeof(UInt64);
-                length -= sizeof(UInt64);
+            if (StratCom.PlatformWordSize == sizeof(UInt32)) {
+                while (length >= sizeof(UInt64)) {
+                    *(UInt32*)src = *(UInt32*)val64;
+                    src += sizeof(UInt32);
+                    *(UInt32*)src = *(UInt32*)val64;
+                    src += sizeof(UInt32);
+                    length -= sizeof(UInt64);
+                }
+            } else if (StratCom.PlatformWordSize == sizeof(UInt64)) {
+                while (length >= sizeof(UInt64) * 2) {
+                    *(UInt64*)src = *val64;
+                    src += sizeof(UInt64);
+                    *(UInt64*)src = *val64;
+                    src += sizeof(UInt64);
+                    length -= sizeof(UInt64) * 2;
+                }
+
+                if (length >= sizeof(UInt64)) {
+                    *(UInt64*)src = *val64;
+                    src += sizeof(UInt64);
+                    length -= sizeof(UInt64);
+                }
             }
 
-            if (length >= 4) {
-                *(UInt32*) src = default(UInt32);
+            if (length >= sizeof(UInt32)) {
+                *(UInt32*)src = *(UInt32*)val64;
                 src += sizeof(UInt32);
                 length -= sizeof(UInt32);
             }
 
-            if (length >= 2) {
-                *(UInt16*) src = default(UInt16);
+            if (length >= sizeof(UInt16)) {
+                *(UInt16*)src = *(UInt16*)val64;
                 src += sizeof(UInt16);
                 length -= sizeof(UInt16);
             }
 
-            if (length != 0) {
-                *src = default(byte);
+            if (length > 0) {
+                *src = val;
             }
         }
 #endif

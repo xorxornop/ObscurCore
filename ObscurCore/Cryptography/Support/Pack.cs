@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using BitManipulator;
 
 namespace ObscurCore.Cryptography.Support
 {
@@ -224,25 +225,7 @@ namespace ObscurCore.Cryptography.Support
 
 		internal static void LE_To_UInt32(byte[] bs, int off, uint[] ns)
 		{
-#if INCLUDE_UNSAFE
-            unsafe {
-                fixed (byte* inPtr = bs) {
-                    var inUintPtr = (uint*)inPtr + off;
-                    fixed (uint* outPtr = ns) {
-                        var nsLen = ns.Length;
-                        for (var i = 0; i < nsLen; i++) {
-                            outPtr[i] = inUintPtr[i];
-                        }
-                    }
-                }
-            }
-#else
-			for (int i = 0; i < ns.Length; ++i)
-			{
-				ns[i] = LE_To_UInt32(bs, off);
-				off += 4;
-			}
-#endif
+            bs.LittleEndianToUInt32_NoChecks(off, ns, 0, ns.Length);
 		}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

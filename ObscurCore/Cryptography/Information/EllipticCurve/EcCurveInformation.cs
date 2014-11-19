@@ -30,14 +30,29 @@ namespace ObscurCore.Cryptography.Information.EllipticCurve
     {
         public enum CurveField
         {
+            /// <summary>
+            /// Elliptic curve over the prime finite field F(<sub>p</sub>).
+            /// </summary>
             Fp,
+
+            /// <summary>
+            /// Elliptic curve over the binary finite field F(<sub>2</sub>)m with a trinomial polynomial basis (TPB).
+            /// </summary>
             TpbF2m,
+
+            /// <summary>
+            /// Elliptic curve over the binary finite field F(<sub>2</sub>)m with a pentanomial polynomial basis (PPB).
+            /// </summary>
             PpbF2m,
+
+            /// <summary>
+            /// Elliptic curve over a field other than F(<sub>p</sub>) or F(<sub>2</sub>)m.
+            /// </summary>
             Other
         }
 
         /// <summary>
-        ///     Field form of the curve.
+        ///     Field form of the curve (what field the curve is over).
         /// </summary>
         public CurveField Field { get; protected internal set; }
 

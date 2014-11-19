@@ -28,8 +28,8 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// Creates a configuration for key confirmation using a MAC construction. 
         /// </summary>
         /// <param name="macFunctionEnum">Hash function to use as basis of HMAC construction.</param>
-        /// <returns>A key confirmation configuration as a <see cref="AuthenticationFunctionConfiguration"/>.</returns>
-        public static AuthenticationFunctionConfiguration GenerateConfiguration(MacFunction macFunctionEnum)
+        /// <returns>A key confirmation configuration as a <see cref="AuthenticationConfiguration"/>.</returns>
+        public static AuthenticationConfiguration GenerateConfiguration(MacFunction macFunctionEnum)
         {
             int outputSize;
             var config = AuthenticationConfigurationFactory.CreateAuthenticationConfiguration(macFunctionEnum, out outputSize);
@@ -41,8 +41,8 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// Creates a configuration for key confirmation using an HMAC construction. 
         /// </summary>
         /// <param name="hashFunctionEnum">Hash function to use as basis of HMAC construction.</param>
-        /// <returns>A key confirmation configuration as a <see cref="AuthenticationFunctionConfiguration"/>.</returns>
-        public static AuthenticationFunctionConfiguration GenerateConfiguration(HashFunction hashFunctionEnum)
+        /// <returns>A key confirmation configuration as a <see cref="AuthenticationConfiguration"/>.</returns>
+        public static AuthenticationConfiguration GenerateConfiguration(HashFunction hashFunctionEnum)
         {
             int outputSize;
             var config = AuthenticationConfigurationFactory.CreateAuthenticationConfigurationHmac(hashFunctionEnum, out outputSize);
@@ -54,8 +54,8 @@ namespace ObscurCore.Cryptography.KeyConfirmation
         /// Creates a configuration for key confirmation using an CMAC/OMAC1 construction. 
         /// </summary>
         /// <param name="cipherEnum">Block cipher to use as basis of CMAC construction.</param>
-        /// <returns>A key confirmation configuration as a <see cref="AuthenticationFunctionConfiguration"/>.</returns>
-        public static AuthenticationFunctionConfiguration GenerateConfiguration(BlockCipher cipherEnum)
+        /// <returns>A key confirmation configuration as a <see cref="AuthenticationConfiguration"/>.</returns>
+        public static AuthenticationConfiguration GenerateConfiguration(BlockCipher cipherEnum)
         {
             int outputSize;
             var config = AuthenticationConfigurationFactory.CreateAuthenticationConfigurationCmac(cipherEnum, out outputSize);

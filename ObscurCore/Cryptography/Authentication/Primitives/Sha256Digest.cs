@@ -18,7 +18,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
     public class Sha256Digest
 		: GeneralDigest
     {
-        private const int DigestLength = 32;
+        private const int OutputLength = 32;
 
         private uint H1, H2, H3, H4, H5, H6, H7, H8;
         private uint[] X = new uint[64];
@@ -48,13 +48,18 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             xOff = t.xOff;
         }
 
+        /// <summary>
+        ///     Enumerated function identity.
+        /// </summary>
+        public override HashFunction Identity { get { return HashFunction.Sha256; } }
+
         public override string AlgorithmName
 		{
 			get { return "SHA-256"; }
 		}
 
-        public override int DigestSize {
-            get { return DigestLength; }
+        public override int OutputSize {
+            get { return OutputLength; }
         }
 
         internal override void ProcessWord(
@@ -98,7 +103,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 
             Reset();
 
-            return DigestLength;
+            return OutputLength;
         }
 
         /**

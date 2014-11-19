@@ -1,5 +1,8 @@
 using System;
+using System.Runtime.CompilerServices;
+using BitManipulator;
 using ObscurCore.Cryptography.Support;
+using PerfCopy;
 
 namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 {
@@ -38,7 +41,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				uint x = _p[(j - 3 & 0x3FF)];
 				uint y = _p[(j - 1023 & 0x3FF)];
 				_p[j] += _p[(j - 10 & 0x3FF)]
-                    + (x.RotateRight(10) ^ y.RotateRight(23))
+                    + (x.RotateRight_NoChecks(10) ^ y.RotateRight_NoChecks(23))
 					+ _q[((x ^ y) & 0x3FF)];
 
 				x = _p[(j - 12 & 0x3FF)];
@@ -51,7 +54,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 				uint x = _q[(j - 3 & 0x3FF)];
 				uint y = _q[(j - 1023 & 0x3FF)];
 				_q[j] += _q[(j - 10 & 0x3FF)]
-                    + (x.RotateRight(10) ^ y.RotateRight(23))
+                    + (x.RotateRight_NoChecks(10) ^ y.RotateRight_NoChecks(23))
 					+ _p[((x ^ y) & 0x3FF)];
 
 				x = _q[(j - 12 & 0x3FF)];
@@ -101,14 +104,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 			{
 				uint x = w[i - 2];
 				uint y = w[i - 15];
-                w[i] = (x.RotateRight(17) ^ x.RotateRight(19) ^ (x >> 10))
+                w[i] = (x.RotateRight_NoChecks(17) ^ x.RotateRight_NoChecks(19) ^ (x >> 10))
                     + w[i - 7]
-                    + (y.RotateRight(7) ^ y.RotateRight(18) ^ (y >> 3))
+                    + (y.RotateRight_NoChecks(7) ^ y.RotateRight_NoChecks(18) ^ (y >> 3))
                     + w[i - 16] + i;
 			}
 
-			Buffer.BlockCopy(w, 512 * sizeof(uint), _p, 0, 1024 * sizeof(uint));
-			Buffer.BlockCopy(w, 1536 * sizeof(uint), _q, 0, 1024 * sizeof(uint));
+			w.DeepCopy_NoChecks(512, _p, 0, 1024);
+            w.DeepCopy_NoChecks(1536, _q, 0, 1024);
 
 			for (int i = 0; i < 4096; i++)
 			{
@@ -152,7 +155,7 @@ namespace ObscurCore.Cryptography.Ciphers.Stream.Primitives
 		}
 
         /// <inheritdoc/>
-		internal override void ProcessBytesInternal(
+		protected internal override void ProcessBytesInternal(
 			byte[]	input,
 			int		inOff,
 			int		len,

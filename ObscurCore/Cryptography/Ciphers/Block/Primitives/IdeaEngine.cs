@@ -2,6 +2,7 @@ using System;
 
 namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
 {
+#if INCLUDE_IDEA
     /**
     * A class that provides a basic International Data Encryption Algorithm (IDEA) engine.
     * <p>
@@ -290,5 +291,5 @@ namespace ObscurCore.Cryptography.Ciphers.Block.Primitives
             }
         }
     }
+#endif
 }
-
