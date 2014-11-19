@@ -61,7 +61,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
                 cfg.Key.DeepCopy_NoChecks(0, _key, 0, cfg.Key.Length);
             }
             HashSize = cfg.OutputSizeInBytes;
-            Reset();
+            ResetCore();
         }
 
         #region HashEngine implementation
@@ -77,6 +77,11 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
         }
 
         public override void Reset()
+        {
+            ResetCore();
+        }
+
+        protected void ResetCore()
         {
             if (_rawConfig == null) {
                 throw new InvalidOperationException();

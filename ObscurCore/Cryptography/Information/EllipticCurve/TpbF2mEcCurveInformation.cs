@@ -25,47 +25,33 @@ using ObscurCore.Cryptography.Support.Math.EllipticCurve;
 namespace ObscurCore.Cryptography.Information.EllipticCurve
 {
     /// <summary>
-    ///     Information for a named elliptic curve over F(<sub>p</sub>).
+    ///     Information for a named elliptic curve over F(<sub>2</sub>)m with a trinomial polynomial basis (TPB).
     /// </summary>
-    public class FpEcNamedCurveInformation : EcCurveInformation
+    public class TpbF2mEcCurveInformation : EcCurveInformation
     {
-        public FpEcNamedCurveInformation()
+        public TpbF2mEcCurveInformation()
         {
-            Field = CurveField.Fp;
+            Field = CurveField.TpbF2m;
         }
 
-        public string Q { get; protected internal set; }
+        public int M { get; protected internal set; }
+        public int K { get; protected internal set; }
+
         public string A { get; protected internal set; }
         public string B { get; protected internal set; }
-
-        /// <summary>
-        ///     Base point
-        /// </summary>
         public string G { get; protected internal set; }
 
-        /// <summary>
-        ///     Order
-        /// </summary>
         public string N { get; protected internal set; }
-
-        /// <summary>
-        ///     Cofactor
-        /// </summary>
         public string H { get; protected internal set; }
 
-        public string Seed { get; internal set; }
+        public string Seed { get; protected internal set; }
 
         /// <inheritdoc />
         public override ECDomainParameters GetParameters()
         {
-            var n = new BigInteger(N, 16); // order
-            var h = new BigInteger(H, 16); // cofactor
-
-            BigInteger q = new BigInteger(Q, 16);
-            BigInteger a = new BigInteger(A, 16);
-            BigInteger b = new BigInteger(B, 16);
-
-            var curve = new FpCurve(q, a, b, n, h);
+            var n = new BigInteger(N, 16);
+            var h = new BigInteger(H, 16);
+            var curve = new F2mCurve(M, K, new BigInteger(A, 16), new BigInteger(B, 16), n, h);
             return new ECDomainParameters(curve, curve.DecodePoint(G.HexToBinary()), n, h,
                 String.IsNullOrEmpty(Seed) ? null : Seed.HexToBinary());
         }

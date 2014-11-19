@@ -17,7 +17,7 @@
 
 #endregion
 
-namespace ObscurCore.Cryptography.KeyAgreement
+namespace ObscurCore.Cryptography.Information.EllipticCurve
 {
     /// <summary>
     ///     Named elliptic curves over F(<sub>p</sub>) from the Brainpool consortium.

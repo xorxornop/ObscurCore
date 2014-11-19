@@ -95,7 +95,7 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
             //digest length
             if (config.OutputSizeInBytes <= 0 | config.OutputSizeInBytes > 64)
                 throw new ArgumentOutOfRangeException("config.HashSize");
-            rawConfig[0] |= (ulong)config.OutputSizeInBytes;
+            rawConfig[0] |= ((ulong)config.OutputSizeInBytes);
 
             //Key length
             if (config.Key != null) {

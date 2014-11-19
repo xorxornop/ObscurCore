@@ -3206,12 +3206,23 @@ namespace ObscurCore.Cryptography.Support.Math
             return new BigInteger(this.sign, mag, false);
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
         public void Dispose()
         {
-            magnitude.SecureWipe();
-            sign = 0;
-            nBits = -1;
-            nBitLength = -1;
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected void Dispose(bool disposing)
+        {
+            if (disposing) {
+                magnitude.SecureWipe();
+                sign = 0;
+                nBits = -1;
+                nBitLength = -1;
+            }
         }
     }
 }

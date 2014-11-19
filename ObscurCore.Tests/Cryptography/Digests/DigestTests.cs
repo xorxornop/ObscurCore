@@ -53,6 +53,7 @@ namespace ObscurCore.Tests.Cryptography.Digests
         }
     }
 
+#if INCLUDE_SHA1
     public class Sha1 : DigestTestBase
     {
         public Sha1()
@@ -61,6 +62,7 @@ namespace ObscurCore.Tests.Cryptography.Digests
             
         }
     }
+#endif
 
     public class Blake2B256 : DigestTestBase
     {

@@ -3,7 +3,7 @@ using ObscurCore.Cryptography.Support;
 
 namespace ObscurCore.Cryptography.Authentication.Primitives
 {
-
+#if INCLUDE_SHA1
     /**
      * implementation of SHA-1 as outlined in "Handbook of Applied Cryptography", pages 346 - 349.
      *
@@ -263,4 +263,5 @@ namespace ObscurCore.Cryptography.Authentication.Primitives
 			Array.Clear(X, 0, 16);
 		}
     }
+#endif
 }

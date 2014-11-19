@@ -50,46 +50,45 @@ namespace ObscurCore
         Authentication,
 
         /// <summary>
-        ///     Configuration for authentication is invalid.
+        ///     Configuration for cipher is invalid.
         /// </summary>
         /// <seealso cref="CipherConfiguration"/>
         Cipher,
 
         /// <summary>
-        ///     Configuration for authentication is invalid.
+        ///     Configuration for key agreement is invalid.
         /// </summary>
         KeyAgreement,
 
         /// <summary>
-        ///     Configuration for authentication is invalid.
+        ///     Configuration for key confirmation is invalid.
         /// </summary>
         /// <seealso cref="AuthenticationConfiguration"/>
         KeyConfirmation,
 
         /// <summary>
-        ///     Configuration for authentication is invalid.
+        ///     Configuration for key derivation is invalid.
         /// </summary>
         /// <seealso cref="KeyDerivationConfiguration"/>
         KeyDerivationFunction,
 
         /// <summary>
-        ///     Configuration for authentication is invalid.
+        ///     Configuration for signature is invalid.
         /// </summary>
         Signature,
 
-
         /// <summary>
-        ///     Configuration for authentication is invalid.
+        ///     Configuration for payload multiplexer is invalid.
         /// </summary>
         PayloadMultiplexer,
 
         /// <summary>
-        ///     Configuration for authentication is invalid.
+        ///     Configuration for package manifest header is invalid.
         /// </summary>
         PackageManifestHeader,
 
         /// <summary>
-        ///     Configuration for authentication is invalid.
+        ///     Configuration for package manifest is invalid.
         /// </summary>
         PackageManifest
     }

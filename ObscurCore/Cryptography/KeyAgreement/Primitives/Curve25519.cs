@@ -19,6 +19,7 @@
 
 using System;
 using ObscurCore.Cryptography.Ciphers.Stream.Primitives;
+using ObscurCore.Cryptography.Information.EllipticCurve;
 using ObscurCore.Cryptography.Signing.Primitives;
 using ObscurCore.Cryptography.Support.Math.EllipticCurve.Custom.Ed25519;
 using ObscurCore.DTO;

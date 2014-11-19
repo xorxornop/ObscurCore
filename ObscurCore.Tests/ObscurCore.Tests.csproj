@@ -59,8 +59,8 @@
       <HintPath>..\lib\protobuf-net\core\protobuf-net.dll</HintPath>
     </Reference>
     <Reference Include="PerfCopy, Version=1.2.0.0, processorArchitecture=MSIL">
-        <HintPath>..\packages\PerfCopy.1.2.0\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\PerfCopy.dll</HintPath>
-        <Private>True</Private>
+      <HintPath>..\packages\PerfCopy.1.2.0\lib\portable-net4+netcore45+wpa81+MonoAndroid1+MonoTouch1\PerfCopy.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -108,13 +108,13 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\ObscurCore\ObscurCore.csproj">
-      <Project>{E05A0E93-926A-409D-ABD3-B2A495D14533}</Project>
-      <Name>ObscurCore</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ObscurCore.DTO\ObscurCore.DTO.csproj">
       <Project>{FB25CBE4-2B49-4C7E-89CD-EF20B2493591}</Project>
       <Name>ObscurCore.DTO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObscurCore\ObscurCore.csproj">
+      <Project>{59547fe1-b5ac-4a85-847f-87584a8de562}</Project>
+      <Name>ObscurCore</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -17,7 +17,7 @@
 
 #endregion
 
-namespace ObscurCore.Cryptography.KeyAgreement
+namespace ObscurCore.Cryptography.Information.EllipticCurve
 {
     /// <summary>
     ///     Named elliptic curves over F(<sub>p</sub>) and F(<sub>2</sub>m) from SEC2 (Standards for Efficient Cryptography 2). 

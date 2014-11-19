@@ -15,6 +15,7 @@
 
 using NUnit.Framework;
 using ObscurCore.Cryptography.Information;
+using ObscurCore.Cryptography.Information.EllipticCurve;
 using ObscurCore.Cryptography.KeyAgreement;
 using ObscurCore.Cryptography.KeyAgreement.Primitives;
 using ObscurCore.Cryptography.Authentication;

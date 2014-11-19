@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObscurCore.Tests", "ObscurCore.Tests\ObscurCore.Tests.csproj", "{1BDFEC0A-A28F-4FE2-9B29-AE25ED1AAD5B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObscurCore", "ObscurCore\ObscurCore.csproj", "{E05A0E93-926A-409D-ABD3-B2A495D14533}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObscurCore.DTO", "ObscurCore.DTO\ObscurCore.DTO.csproj", "{FB25CBE4-2B49-4C7E-89CD-EF20B2493591}"
 EndProject
@@ -15,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{47905D
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObscurCore", "ObscurCore\ObscurCore.csproj", "{59547FE1-B5AC-4A85-847F-87584A8DE562}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,18 +29,18 @@ Global
 		{1BDFEC0A-A28F-4FE2-9B29-AE25ED1AAD5B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1BDFEC0A-A28F-4FE2-9B29-AE25ED1AAD5B}.ReleaseUnsafe|Any CPU.ActiveCfg = ReleaseUnsafe|Any CPU
 		{1BDFEC0A-A28F-4FE2-9B29-AE25ED1AAD5B}.ReleaseUnsafe|Any CPU.Build.0 = ReleaseUnsafe|Any CPU
-		{E05A0E93-926A-409D-ABD3-B2A495D14533}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E05A0E93-926A-409D-ABD3-B2A495D14533}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E05A0E93-926A-409D-ABD3-B2A495D14533}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E05A0E93-926A-409D-ABD3-B2A495D14533}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E05A0E93-926A-409D-ABD3-B2A495D14533}.ReleaseUnsafe|Any CPU.ActiveCfg = ReleaseUnsafe|Any CPU
-		{E05A0E93-926A-409D-ABD3-B2A495D14533}.ReleaseUnsafe|Any CPU.Build.0 = ReleaseUnsafe|Any CPU
 		{FB25CBE4-2B49-4C7E-89CD-EF20B2493591}.Debug|Any CPU.ActiveCfg = Release|Any CPU
 		{FB25CBE4-2B49-4C7E-89CD-EF20B2493591}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{FB25CBE4-2B49-4C7E-89CD-EF20B2493591}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB25CBE4-2B49-4C7E-89CD-EF20B2493591}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FB25CBE4-2B49-4C7E-89CD-EF20B2493591}.ReleaseUnsafe|Any CPU.ActiveCfg = ReleaseUnsafe|Any CPU
 		{FB25CBE4-2B49-4C7E-89CD-EF20B2493591}.ReleaseUnsafe|Any CPU.Build.0 = ReleaseUnsafe|Any CPU
+		{59547FE1-B5AC-4A85-847F-87584A8DE562}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59547FE1-B5AC-4A85-847F-87584A8DE562}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59547FE1-B5AC-4A85-847F-87584A8DE562}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59547FE1-B5AC-4A85-847F-87584A8DE562}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59547FE1-B5AC-4A85-847F-87584A8DE562}.ReleaseUnsafe|Any CPU.ActiveCfg = ReleaseUnsafe|Any CPU
+		{59547FE1-B5AC-4A85-847F-87584A8DE562}.ReleaseUnsafe|Any CPU.Build.0 = ReleaseUnsafe|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

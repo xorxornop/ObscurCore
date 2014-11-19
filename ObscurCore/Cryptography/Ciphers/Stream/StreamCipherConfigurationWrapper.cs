@@ -43,19 +43,23 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         /// <summary>
         ///     Stream cipher to be used e.g. Salsa20, HC-128, etc.
         /// </summary>
-        public StreamCipher StreamCipher
+        public void SetStreamCipher(StreamCipher value)
         {
-            get
-            {
-                StreamCipher streamCipherEnum;
-                try {
-                    streamCipherEnum = Configuration.CipherName.ToEnum<StreamCipher>();
-                } catch (EnumerationParsingException e) {
-                    throw new ConfigurationInvalidException("Cipher unknown/unsupported.", e);
-                }
-                return streamCipherEnum;
+            Configuration.CipherName = value.ToString();
+        }
+
+        /// <summary>
+        ///     Stream cipher to be used e.g. Salsa20, HC-128, etc.
+        /// </summary>
+        public StreamCipher GetStreamCipher()
+        {
+            StreamCipher streamCipherEnum;
+            try {
+                streamCipherEnum = Configuration.CipherName.ToEnum<StreamCipher>();
+            } catch (EnumerationParsingException e) {
+                throw new ConfigurationInvalidException("Cipher unknown/unsupported.", e);
             }
-            set { Configuration.CipherName = value.ToString(); }
+            return streamCipherEnum;
         }
 
         /// <summary>
@@ -67,31 +71,41 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         ///     They should not be reused when used with a given key (as their name suggests),
         ///     as it frequently results in total loss of security properties.
         /// </remarks>
-        public byte[] Nonce
+        public void SetNonce(byte[] value)
         {
-            get
-            {
-                StreamCipherInformation athenaInfo = Athena.Cryptography.StreamCiphers[StreamCipher];
+            Configuration.InitialisationVector = value;
+        }
 
-                if (athenaInfo.DefaultNonceSizeBits == -1 && Configuration.InitialisationVector.IsNullOrZeroLength() == false) {
-                    throw new ConfigurationInvalidException(
-                        "NCipherKeySizeExceptiontion vector) should not be used with the " + StreamCipher + " cipher.");
-                }
-                if (athenaInfo.IsNonceSizeInSpecification(Configuration.InitialisationVector.Length * 8) == false) {
-                    throw new ConfigurationInvalidException(
-                        "Nonce (initialisation vector) size is not supported by the cipher specification.");
-                }
+        /// <summary>
+        ///     Number-used-once for the cipher.
+        /// </summary>
+        /// <remarks>
+        ///     Nonces are sometimes called an initialisation vector, 
+        ///     although nonce is nearly always the correct term for stream ciphers.
+        ///     They should not be reused when used with a given key (as their name suggests),
+        ///     as it frequently results in total loss of security properties.
+        /// </remarks>
+        public byte[] GetNonce()
+        {
+            StreamCipherInformation athenaInfo = Athena.Cryptography.StreamCiphers[GetStreamCipher()];
 
-                return Configuration.InitialisationVector == null ? null : Configuration.InitialisationVector.DeepCopy();
+            if (athenaInfo.DefaultNonceSizeBits == -1 && Configuration.InitialisationVector.IsNullOrZeroLength() == false) {
+                throw new ConfigurationInvalidException(
+                    "NCipherKeySizeExceptiontion vector) should not be used with the " + GetStreamCipher() + " cipher.");
             }
-            set { Configuration.InitialisationVector = value; }
+            if (athenaInfo.IsNonceSizeInSpecification(Configuration.InitialisationVector.Length * 8) == false) {
+                throw new ConfigurationInvalidException(
+                    "Nonce (initialisation vector) size is not supported by the cipher specification.");
+            }
+
+            return Configuration.InitialisationVector == null ? null : Configuration.InitialisationVector.DeepCopy();
         }
 
         protected override void ThrowIfKeySizeIncompatible()
         {
-            if (Athena.Cryptography.StreamCiphers[StreamCipher].AllowableKeySizesBits.Contains(Configuration.KeySizeBits) ==
+            if (Athena.Cryptography.StreamCiphers[GetStreamCipher()].AllowableKeySizesBits.Contains(Configuration.KeySizeBits) ==
                 false) {
-                throw new CipherKeySizeException(StreamCipher, Configuration.KeySizeBits);
+                throw new CipherKeySizeException(GetStreamCipher(), Configuration.KeySizeBits);
             }
         }
 
@@ -101,14 +115,14 @@ namespace ObscurCore.Cryptography.Ciphers.Stream
         /// <param name="includeValues">Whether to include values of relevant byte arrays as hex strings.</param>
         public override string ToString(bool includeValues)
         {
-            string cipher = Athena.Cryptography.StreamCiphers[StreamCipher].DisplayName;
+            string cipher = Athena.Cryptography.StreamCiphers[GetStreamCipher()].DisplayName;
             if (includeValues) {
                 return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}\n" +
                                      "Nonce: {3}",
-                    CipherType.Stream, cipher, KeySizeBits, Nonce.IsNullOrZeroLength() ? "none" : Nonce.ToHexString());
+                    CipherType.Stream, cipher, GetKeySizeBits(), GetNonce().IsNullOrZeroLength() ? "none" : GetNonce().ToHexString());
             }
             return String.Format("Cipher type: {0}\nName: {1}\nKey size (bits): {2}",
-                CipherType.Stream, cipher, KeySizeBits);
+                CipherType.Stream, cipher, GetKeySizeBits());
         }
     }
 }

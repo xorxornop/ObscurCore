@@ -56,7 +56,7 @@ namespace ObscurCore.Tests.Packaging
 			DoMux (payloadConfig, items, SourceFiles, true);
 		}
 
-#if(INCLUDE_FABRIC)
+#if INCLUDE_FABRIC
         [Test]
 		public void Fabric () {
 			var items = Utilities.GetItemsStreamExample(SourceFiles);

@@ -460,8 +460,8 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
             this.m_r = FpFieldElement.CalculateResidue(q);
             this.m_infinity = new FpPoint(this, null, null);
 
-            this.m_a = FromBigInteger(a);
-            this.m_b = FromBigInteger(b);
+            this.m_a = FromBigInteger_Fp(a);
+            this.m_b = FromBigInteger_Fp(b);
             this.m_order = order;
             this.m_cofactor = cofactor;
             this.m_coord = FP_DEFAULT_COORDS;
@@ -520,6 +520,11 @@ namespace ObscurCore.Cryptography.Support.Math.EllipticCurve
         }
 
         public override ECFieldElement FromBigInteger(BigInteger x)
+        {
+            return FromBigInteger_Fp(x);
+        }
+
+        protected ECFieldElement FromBigInteger_Fp(BigInteger x)
         {
             return new FpFieldElement(this.m_q, this.m_r, x);
         }
