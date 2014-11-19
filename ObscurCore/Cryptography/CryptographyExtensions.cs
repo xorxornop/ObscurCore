@@ -15,6 +15,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
 namespace ObscurCore.Cryptography
@@ -338,20 +339,24 @@ namespace ObscurCore.Cryptography
         /// <param name="count">Number of elements to erase.</param>
         public static void SecureWipe<T>(this T[] data, int offset, int count) where T : struct
         {
-            if (data == null) {
-                throw new ArgumentNullException("data");
-            }
-            if (offset < 0) {
-                throw new ArgumentOutOfRangeException("offset");
-            }
-            if (count < 0) {
-                throw new ArgumentOutOfRangeException("count", "Count must be positive.");
-            }
-            if (offset + count > data.Length) {
-                throw new ArgumentException("offset + count > data.Length");
-            }
+            Contract.Requires<ArgumentNullException>(data != null);
+            Contract.Requires<ArgumentOutOfRangeException>(offset >= 0);
+            Contract.Requires<ArgumentOutOfRangeException>(count > 0);
+
+            Contract.Ensures(offset + count <= data.Length);
 
             InternalWipe(data, offset, count);
+        }
+
+        /// <summary>
+        ///     Securely erase <paramref name="data"/> by clearing the memory used to store it.
+        /// </summary>
+        /// <param name="data">Data to erase.</param>
+        public static void SecureWipe(this byte[] data)
+        {
+            Contract.Requires<ArgumentNullException>(data != null);
+
+            InternalWipe(data, 0, data.Length);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

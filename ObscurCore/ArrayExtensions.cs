@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -28,6 +29,8 @@ namespace ObscurCore
         /// <returns></returns>
         public static MemoryStream ToMemoryStream(byte[] data, bool writeable = true)
         {
+            Contract.Requires<ArgumentNullException>(data != null);
+
             return new MemoryStream(data, writeable);
         }
 
@@ -38,6 +41,9 @@ namespace ObscurCore
 
         public static int GetHashCodeExt(this byte[] data, int off, int count)
         {
+            Contract.Requires(off >= 0);
+            Contract.Requires(count > 0);
+
             if (data == null) {
                 return 0;
             }
@@ -60,6 +66,9 @@ namespace ObscurCore
 
         public static int GetHashCodeExt(this int[] data, int off, int count)
         {
+            Contract.Requires(off >= 0);
+            Contract.Requires(count > 0);
+
             if (data == null) {
                 return 0;
             }
@@ -82,6 +91,9 @@ namespace ObscurCore
 
         public static int GetHashCodeExt(this uint[] data, int off, int count)
         {
+            Contract.Requires(off >= 0);
+            Contract.Requires(count > 0);
+
             if (data == null) {
                 return 0;
             }
@@ -221,6 +233,9 @@ namespace ObscurCore
         /// <returns><c>true</c> if arrays are equal, <c>false</c> otherwise.</returns>
         public static bool SequenceEqualShortCircuiting(this byte[] a, byte[] b)
         {
+            Contract.Requires(a != null);
+            Contract.Requires(b != null);
+
             int i = a.Length;
             if (i != b.Length) {
                 return false;
@@ -244,6 +259,9 @@ namespace ObscurCore
         /// <returns><c>true</c> if arrays are equal, <c>false</c> otherwise.</returns>
         public static bool SequenceEqualShortCircuiting<T>(this T[] a, T[] b) where T : struct
         {
+            Contract.Requires(a != null);
+            Contract.Requires(b != null);
+
             int i = a.Length;
             if (i != b.Length) {
                 return false;
@@ -265,6 +283,8 @@ namespace ObscurCore
         /// <param name="value">Value to fill <paramref name="array"/> with.</param>
         public static void FillArray<T>(this T[] array, T value) where T : struct
         {
+            Contract.Requires(array != null);
+
             FillArray(array, value, 0, array.Length);
         }
 
@@ -279,6 +299,10 @@ namespace ObscurCore
         /// <param name="length">Repeats of <paramref name="value"/> to write.</param>
         public static void FillArray<T>(this T[] array, T value, int offset, int length) where T : struct
         {
+            Contract.Requires(array != null);
+            Contract.Requires(offset >= 0);
+            Contract.Requires(offset > 0);
+
             int endOffset = offset + length;
             for (int i = offset; i < endOffset; i++) {
                 array[i] = value;
@@ -295,6 +319,10 @@ namespace ObscurCore
         /// <param name="length">Repeats of <paramref name="value"/> to write.</param>
         public static void Fill(this byte[] array, byte value, int offset, int length)
         {
+            Contract.Requires(array != null);
+            Contract.Requires(offset >= 0);
+            Contract.Requires(offset > 0);
+
             Fill_NoChecks(array, value, offset, length);
         }
 
@@ -338,6 +366,10 @@ namespace ObscurCore
         /// <param name="length">Repeats of <paramref name="value"/> to write.</param>
         public static void Fill(this uint[] array, uint value, int offset, int length)
         {
+            Contract.Requires(array != null);
+            Contract.Requires(offset >= 0);
+            Contract.Requires(offset > 0);
+
             Fill_NoChecks(array, value, offset, length);
         }
 
@@ -381,6 +413,10 @@ namespace ObscurCore
         /// <param name="length">Repeats of <paramref name="value"/> to write.</param>
         public static void Fill(this ulong[] array, ulong value, int offset, int length)
         {
+            Contract.Requires(array != null);
+            Contract.Requires(offset >= 0);
+            Contract.Requires(offset > 0);
+
             Fill_NoChecks(array, value, offset, length);
         }
 

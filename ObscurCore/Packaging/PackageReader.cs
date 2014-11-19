@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -261,8 +262,16 @@ namespace ObscurCore.Packaging
 
         public void Dispose()
         {
-            if (_closeOnDispose && _readingStream != null) {
-                _readingStream.Close();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (disposing) {
+                if (_closeOnDispose && _readingStream != null) {
+                    _readingStream.Close();
+                }
             }
         }
 
@@ -512,6 +521,8 @@ namespace ObscurCore.Packaging
                         }
                         // Authenticate manifest length tag
                         authenticator.Update(manifestLengthLe, 0, manifestLengthLe.Length);
+
+                        Contract.Assert(authenticator.BytesIn == manifestLength);
 
                         byte[] manifestCryptoDtoForAuth;
                         switch (manifestScheme) {

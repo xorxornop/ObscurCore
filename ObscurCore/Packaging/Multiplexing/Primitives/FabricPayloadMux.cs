@@ -28,7 +28,6 @@ using ObscurCore.DTO;
 using PerfCopy;
 using RingByteBuffer;
 
-
 namespace ObscurCore.Packaging.Multiplexing.Primitives
 {
 #if INCLUDE_FABRIC
@@ -118,7 +117,7 @@ namespace ObscurCore.Packaging.Multiplexing.Primitives
             MacStream authenticator;
             CreateEtMDecorator(item, out encryptor, out authenticator);
             var container = new MuxItemResourceContainer(encryptor, authenticator,
-                _maxStripe + encryptor.BufferSizeRequirement);
+                _maxStripe + encryptor.OutputBufferSize);
             return container;
         }
 

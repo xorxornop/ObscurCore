@@ -108,6 +108,11 @@ namespace ObscurCore.Cryptography.Ciphers
 
         public bool Finished { get; private set; }
 
+        internal int OutputBufferSize 
+        {
+            get { return _outBuffer.MaximumCapacity; }
+        }
+
         /// <summary>
         ///     What mode is active - encryption or decryption?
         /// </summary>
@@ -290,19 +295,19 @@ namespace ObscurCore.Cryptography.Ciphers
         private void Finish()
         {
             if (_disposed) {
-                throw new ObjectDisposedException("CipherStream has been disposed.");
-            }
-            if (Finished) {
+                throw new ObjectDisposedException(this.GetType().Name);
+            } else if (Finished) {
                 return;
             }
 
             if (Encrypting) {
                 FinishWriting();
-            } else if (Encrypting == false && _operationBufferOffset > 0) {
-                throw new InvalidOperationException("Decryption finalisation in undefined state. Data remaining in buffers.");
             }
-
             Finished = true;
+
+            if (Encrypting == false) {
+                Contract.Assert(_operationBufferOffset == 0, "Decryption finalisation in undefined state. Data remaining in buffers.");
+            }
         }
 
         /// <summary>
@@ -331,13 +336,14 @@ namespace ObscurCore.Cryptography.Ciphers
             BytesOut += finalLength;
         }
 
-        private int FinishReading(byte[] input, int inputOffset, int length, byte[] output, int outputOffset)
+        private int FinishReading(byte[] output, int outputOffset)
         {
             int finalByteQuantity = _outBuffer.CurrentLength;
             _outBuffer.Take(output, outputOffset, finalByteQuantity);
             outputOffset += finalByteQuantity;
             try {
-                finalByteQuantity += _cipher.ProcessFinal(input, inputOffset, length, output, outputOffset);
+                finalByteQuantity += _cipher.ProcessFinal(_operationBuffer, 0, _operationBufferOffset, output, outputOffset);
+                _operationBufferOffset = 0;
             } catch (Exception e) {
                 throw new CipherException("Unexpected error when finalising (reading). Inner exception may have additional information.", e);
             }
@@ -346,12 +352,8 @@ namespace ObscurCore.Cryptography.Ciphers
             return finalByteQuantity;
         }
 
-        private void Reset(bool finish = false)
+        public void Reset()
         {
-            if (finish) {
-                Finish();
-            }
-
             _operationBuffer.SecureWipe();
             _operationBufferOffset = 0;
             _tempBuffer.SecureWipe();
@@ -614,7 +616,7 @@ namespace ObscurCore.Cryptography.Ciphers
                         // End of stream - finish the decryption
                         // Copy the previous operation block in to provide overrun protection
                         buffer.DeepCopy_NoChecks(offset - _operationSize, _tempBuffer, 0, _operationSize);
-                        iterOut = FinishReading(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, _operationSize);
+                        iterOut = FinishReading(_tempBuffer, _operationSize);
                         if (iterOut > 0) {
                             // Process the final decrypted data
                             int remainingBufferSpace = buffer.Length - (offset + iterOut);
@@ -693,7 +695,7 @@ namespace ObscurCore.Cryptography.Ciphers
                 //				length -= iterIn;
                 if ((finishing && remaining <= _operationSize) || iterIn == 0) {
                     // Finish the decryption - end of stream
-                    iterOut = FinishReading(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);
+                    iterOut = FinishReading(_tempBuffer, 0);
                     destination.Write(_tempBuffer, 0, iterOut);
                     totalOut += iterOut;
                     _operationBufferOffset = 0;
@@ -729,7 +731,7 @@ namespace ObscurCore.Cryptography.Ciphers
                 BytesIn += iterIn;
                 _operationBufferOffset += iterIn;
                 if (iterIn == 0) {
-                    int iterOut = FinishReading(_operationBuffer, 0, _operationBufferOffset, _tempBuffer, 0);
+                    int iterOut = FinishReading(_tempBuffer, 0);
                     _operationBufferOffset = 0;
                     _outBuffer.Put(_tempBuffer, 0, iterOut);
                     BytesOut++;

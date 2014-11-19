@@ -1,17 +1,21 @@
-//
-//  Copyright 2013  Matthew Ducker
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+#region License
+
+//  	Copyright 2013-2014 Matthew Ducker
+//  	
+//  	Licensed under the Apache License, Version 2.0 (the "License");
+//  	you may not use this file except in compliance with the License.
+//  	
+//  	You may obtain a copy of the License at
+//  		
+//  		http://www.apache.org/licenses/LICENSE-2.0
+//  	
+//  	Unless required by applicable law or agreed to in writing, software
+//  	distributed under the License is distributed on an "AS IS" BASIS,
+//  	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  	See the License for the specific language governing permissions and 
+//  	limitations under the License.
+
+#endregion
 
 using System;
 using System.Diagnostics.Contracts;
@@ -26,14 +30,13 @@ namespace ObscurCore.Cryptography.Authentication
     public sealed class HashStream : Stream, IStreamDecorator
     {
         private const int BufferSize = 8192; // 8 KB
+        private readonly bool _closeOnDispose;
         private readonly IHash _digest;
         private readonly byte[] _output;
         private byte[] _buffer;
 
-        private readonly bool _closeOnDispose;
-
+        private bool _disposed;
         private Stream _streamBinding;
-        private bool _disposed = false;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="HashStream" /> class.
@@ -44,9 +47,9 @@ namespace ObscurCore.Cryptography.Authentication
         /// <param name="output">Byte array where the finished hash will be output to.</param>
         /// <param name="closeOnDispose">If set to <c>true</c>, bound stream will be closed on dispose/close.</param>
         public HashStream(Stream binding, bool writing, HashFunction function, out byte[] output,
-            bool closeOnDispose = true)
+                          bool closeOnDispose = true)
         {
-            Contract.Requires(binding != null);
+            Contract.Requires<ArgumentNullException>(binding != null);
 
             _streamBinding = binding;
             Writing = writing;
@@ -55,11 +58,11 @@ namespace ObscurCore.Cryptography.Authentication
             _digest = AuthenticatorFactory.CreateHashPrimitive(function);
             _buffer = new byte[BufferSize];
             _output = new byte[_digest.OutputSize];
-            output = _output;          
+            output = _output;
         }
 
         public HashStream(Stream binding, bool writing, IAuthenticationConfiguration config,
-            bool closeOnDispose = true)
+                          bool closeOnDispose = true)
         {
             Contract.Requires(binding != null);
 
@@ -135,6 +138,87 @@ namespace ObscurCore.Cryptography.Authentication
 
         public long BytesOut { get; private set; }
 
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            Contract.Requires(buffer != null);
+            Contract.Requires(offset >= 0);
+            Contract.Requires(count > 0);
+
+            CheckIfCanDecorate();
+
+            _streamBinding.Write(buffer, offset, count);
+            _digest.BlockUpdate(buffer, offset, count);
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            Contract.Requires(buffer != null);
+            Contract.Requires(offset >= 0);
+            Contract.Requires(count > 0);
+            CheckIfCanDecorate();
+
+            int readBytes = _streamBinding.Read(buffer, offset, count);
+            if (readBytes > 0) {
+                _digest.BlockUpdate(buffer, offset, readBytes);
+            }
+            return readBytes;
+        }
+
+        public long WriteExactlyFrom(Stream source, long length)
+        {
+            Contract.Requires<ArgumentNullException>(source != null);
+            Contract.Requires<ArgumentOutOfRangeException>(length >= 0);
+
+            CheckIfCanDecorate();
+
+            if (_buffer == null) {
+                _buffer = new byte[BufferSize];
+            }
+            long totalIn = 0;
+            while (length > 0) {
+                int iterIn = source.Read(_buffer, 0, (int) Math.Min(BufferSize, length));
+                if (iterIn == 0) {
+                    throw new EndOfStreamException();
+                }
+                totalIn += iterIn;
+                _digest.BlockUpdate(_buffer, 0, iterIn);
+                _streamBinding.Write(_buffer, 0, iterIn);
+                length -= iterIn;
+            }
+
+            return totalIn;
+        }
+
+        public long ReadExactlyTo(Stream destination, long length, bool finishing = false)
+        {
+            Contract.Requires<ArgumentNullException>(destination != null);
+            Contract.Requires<ArgumentOutOfRangeException>(length >= 0);
+
+            if (_disposed) {
+                throw new ObjectDisposedException(this.GetType().Name);
+            }
+
+            if (_buffer == null) {
+                _buffer = new byte[BufferSize];
+            }
+            long totalIn = 0;
+            while (length > 0) {
+                int iterIn = Binding.Read(_buffer, 0, (int) Math.Min(BufferSize, length));
+                if (iterIn == 0) {
+                    throw new EndOfStreamException();
+                }
+                totalIn += iterIn;
+                _digest.BlockUpdate(_buffer, 0, iterIn);
+                destination.Write(_buffer, 0, iterIn);
+                length -= iterIn;
+            }
+            if (finishing) {
+                Finish();
+            }
+
+            return totalIn;
+        }
+
         #endregion
 
         /// <summary>
@@ -160,14 +244,7 @@ namespace ObscurCore.Cryptography.Authentication
                 }
                 _streamBinding = null;
             }
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            CheckIfCanDecorate();
-
-            _streamBinding.Write(buffer, offset, count);
-            _digest.BlockUpdate(buffer, offset, count);
+            _disposed = true;
         }
 
         public override void WriteByte(byte b)
@@ -190,7 +267,8 @@ namespace ObscurCore.Cryptography.Authentication
         }
 
         /// <summary>
-        /// When overridden in a derived class, clears all buffers for this stream and causes any buffered data to be written to the underlying device.
+        ///     When overridden in a derived class, clears all buffers for this stream and causes any buffered data to be written
+        ///     to the underlying device.
         /// </summary>
         /// <exception cref="T:System.IO.IOException">An I/O error occurs. </exception>
         public override void Flush()
@@ -203,12 +281,22 @@ namespace ObscurCore.Cryptography.Authentication
         }
 
         /// <summary>
-        /// When overridden in a derived class, sets the position within the current stream.
+        ///     When overridden in a derived class, sets the position within the current stream.
         /// </summary>
         /// <returns>
-        /// The new position within the current stream.
+        ///     The new position within the current stream.
         /// </returns>
-        /// <param name="offset">A byte offset relative to the <paramref name="origin"/> parameter. </param><param name="origin">A value of type <see cref="T:System.IO.SeekOrigin"/> indicating the reference point used to obtain the new position. </param><exception cref="T:System.IO.IOException">An I/O error occurs. </exception><exception cref="T:System.NotSupportedException">The stream does not support seeking, such as if the stream is constructed from a pipe or console output. </exception><exception cref="T:System.ObjectDisposedException">Methods were called after the stream was closed. </exception>
+        /// <param name="offset">A byte offset relative to the <paramref name="origin" /> parameter. </param>
+        /// <param name="origin">
+        ///     A value of type <see cref="T:System.IO.SeekOrigin" /> indicating the reference point used to
+        ///     obtain the new position.
+        /// </param>
+        /// <exception cref="T:System.IO.IOException">An I/O error occurs. </exception>
+        /// <exception cref="T:System.NotSupportedException">
+        ///     The stream does not support seeking, such as if the stream is
+        ///     constructed from a pipe or console output.
+        /// </exception>
+        /// <exception cref="T:System.ObjectDisposedException">Methods were called after the stream was closed. </exception>
         public override long Seek(long offset, SeekOrigin origin)
         {
             CheckIfCanDecorate();
@@ -220,9 +308,15 @@ namespace ObscurCore.Cryptography.Authentication
         }
 
         /// <summary>
-        /// When overridden in a derived class, sets the length of the current stream.
+        ///     When overridden in a derived class, sets the length of the current stream.
         /// </summary>
-        /// <param name="value">The desired length of the current stream in bytes. </param><exception cref="T:System.IO.IOException">An I/O error occurs. </exception><exception cref="T:System.NotSupportedException">The stream does not support both writing and seeking, such as if the stream is constructed from a pipe or console output. </exception><exception cref="T:System.ObjectDisposedException">Methods were called after the stream was closed. </exception>
+        /// <param name="value">The desired length of the current stream in bytes. </param>
+        /// <exception cref="T:System.IO.IOException">An I/O error occurs. </exception>
+        /// <exception cref="T:System.NotSupportedException">
+        ///     The stream does not support both writing and seeking, such as if the
+        ///     stream is constructed from a pipe or console output.
+        /// </exception>
+        /// <exception cref="T:System.ObjectDisposedException">Methods were called after the stream was closed. </exception>
         public override void SetLength(long value)
         {
             CheckIfCanDecorate();
@@ -230,86 +324,27 @@ namespace ObscurCore.Cryptography.Authentication
             _streamBinding.SetLength(value);
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            CheckIfCanDecorate();
-
-            int readBytes = _streamBinding.Read(buffer, offset, count);
-            if (readBytes > 0) {
-                _digest.BlockUpdate(buffer, offset, readBytes);
-            }
-            return readBytes;
-        }
-
-        public long WriteExactlyFrom(Stream source, long length)
-        {
-            CheckIfCanDecorate();
-
-            Contract.Requires<ArgumentNullException>(source != null);
-            Contract.Requires<ArgumentOutOfRangeException>(length >= 0);
-
-            if (_buffer == null) {
-                _buffer = new byte[BufferSize];
-            }
-            long totalIn = 0;
-            while (length > 0) {
-                int iterIn = source.Read(_buffer, 0, (int) Math.Min(BufferSize, length));
-                if (iterIn == 0) {
-                    throw new EndOfStreamException();
-                }
-                totalIn += iterIn;
-                _digest.BlockUpdate(_buffer, 0, iterIn);
-                _streamBinding.Write(_buffer, 0, iterIn);
-                length -= iterIn;
-            }
-
-            return totalIn;
-        }
-
-        public long ReadExactlyTo(Stream destination, long length, bool finishing = false)
+        public void Finish()
         {
             if (_disposed) {
                 throw new ObjectDisposedException(this.GetType().Name);
             }
-
-            Contract.Requires<ArgumentNullException>(destination != null);
-            Contract.Requires<ArgumentOutOfRangeException>(length >= 0);
-
-            if (_buffer == null) {
-                _buffer = new byte[BufferSize];
-            }
-            long totalIn = 0;
-            while (length > 0) {
-                int iterIn = Binding.Read(_buffer, 0, (int) Math.Min(BufferSize, length));
-                if (iterIn == 0) {
-                    throw new EndOfStreamException();
-                }
-                totalIn += iterIn;
-                _digest.BlockUpdate(_buffer, 0, iterIn);
-                destination.Write(_buffer, 0, iterIn);
-                length -= iterIn;
-            }
-            if (finishing) {
-                Finish();
+            if (Finished) {
+                return;
             }
 
-            return totalIn;
-        }
-
-        protected void Finish()
-        {
-            if (_disposed) {
-                throw new ObjectDisposedException(this.GetType().Name);
-            }
             _digest.DoFinal(_output, 0);
-            base.Finish();
+            Finished = true;
         }
 
-        protected void Reset(bool finish = false)
+        public void Reset()
         {
-            base.Reset(finish);
             _digest.Reset();
-            Array.Clear(_output, 0, _output.Length);
+            _output.SecureWipe();
+
+            BytesIn = 0;
+            BytesOut = 0;
+            Finished = false;
         }
     }
 }

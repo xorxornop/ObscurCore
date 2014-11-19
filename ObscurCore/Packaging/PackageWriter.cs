@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -85,6 +86,8 @@ namespace ObscurCore.Packaging
         public PackageWriter(SymmetricKey key, bool lowEntropy = false,
                              PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
         {
+            Contract.Requires(key != null);
+
             _manifest = new Manifest();
             _manifestHeaderCryptoScheme = ManifestCryptographyScheme.SymmetricOnly;
             SetManifestCryptoSymmetric(key, lowEntropy);
@@ -101,6 +104,9 @@ namespace ObscurCore.Packaging
         public PackageWriter(byte[] key, byte[] canary, bool lowEntropy = false,
                              PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
         {
+            Contract.Requires(key != null);
+            Contract.Requires(canary != null);
+
             _manifest = new Manifest();
             _manifestHeaderCryptoScheme = ManifestCryptographyScheme.SymmetricOnly;
             SetManifestCryptoSymmetric(key, canary, lowEntropy);
@@ -128,6 +134,9 @@ namespace ObscurCore.Packaging
         public PackageWriter(ECKeypair sender, ECKeypair recipient,
                              PayloadLayoutScheme layoutScheme = DefaultLayoutScheme)
         {
+            Contract.Requires(sender != null);
+            Contract.Requires(recipient != null);
+
             _manifest = new Manifest();
             _manifestHeaderCryptoScheme = ManifestCryptographyScheme.Um1Hybrid;
 
@@ -824,26 +833,17 @@ namespace ObscurCore.Packaging
         /// </exception>
         public void Write(Stream outputStream, bool closeOnComplete = true)
         {
-            // Sanity checks
-            if (_writingComplete) {
-                throw new InvalidOperationException(
-                    "Multiple writes from one package are not supported; it may compromise security properties.");
-            }
-            if (_manifestHeaderCryptoConfig == null) {
-                throw new ConfigurationInvalidException(
-                    "Manifest cryptography scheme and its configuration is not set up.");
-            }
+            Contract.Requires<ArgumentNullException>(outputStream != null);
+            Contract.Requires(outputStream != Stream.Null, "Stream is set to where bits go to die.");
+            Contract.Requires(outputStream.CanWrite, "Cannot write to output stream.");
+
+//            Contract.Ensures(_writingComplete == false,
+//                "Multiple writes from one package are not supported; it may compromise security properties.");
+//            Contract.Ensures(_manifestHeaderCryptoConfig != null,
+//                "Manifest cryptography scheme and its configuration is not set up.");
+
             if (_manifest.PayloadItems.Count == 0) {
-                throw new InvalidOperationException("No payload items have been added.");
-            }
-            if (outputStream == null) {
-                throw new ArgumentNullException("outputStream");
-            }
-            if (outputStream == Stream.Null) {
-                throw new ArgumentException("Stream is set to where bits go to die.", "outputStream");
-            }
-            if (outputStream.CanWrite == false) {
-                throw new IOException("Cannot write to output stream.");
+                throw new InvalidOperationException("No payload items.");
             }
 
             // Check if any payload items are missing stream bindings or keys before proceeding
