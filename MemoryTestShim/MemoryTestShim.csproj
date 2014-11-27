@@ -32,9 +32,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework">
-      <HintPath>..\packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -52,17 +49,17 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ObscurCore.DTO\ObscurCore.DTO.csproj">
+    <ProjectReference Include="..\Obscur.Core\Obscur.Core.csproj">
+      <Project>{e05a0e93-926a-409d-abd3-b2a495d14533}</Project>
+      <Name>ObscurCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Obscur.Core.DTO\Obscur.Core.DTO.csproj">
       <Project>{fb25cbe4-2b49-4c7e-89cd-ef20b2493591}</Project>
       <Name>ObscurCore.DTO</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ObscurCore.Tests\ObscurCore.Tests.csproj">
+    <ProjectReference Include="..\Obscur.Core.Tests\Obscur.Core.Tests.csproj">
       <Project>{1bdfec0a-a28f-4fe2-9b29-ae25ed1aad5b}</Project>
       <Name>ObscurCore.Tests</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObscurCore\ObscurCore.csproj">
-      <Project>{e05a0e93-926a-409d-abd3-b2a495d14533}</Project>
-      <Name>ObscurCore</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
