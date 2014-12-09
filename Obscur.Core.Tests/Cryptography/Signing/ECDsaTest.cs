@@ -28,7 +28,7 @@ using Obscur.Core.Cryptography.Support.Math;
 using Obscur.Core.DTO;
 using Obscur.Core.Support;
 
-namespace ObscurCore.Tests.Cryptography.Signing
+namespace Obscur.Core.Tests.Cryptography.Signing
 {
     /// <summary>
     ///     Tests are taken from RFC 6979 -

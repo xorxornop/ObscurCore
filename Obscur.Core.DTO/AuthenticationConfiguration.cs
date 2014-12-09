@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using PerfCopy;
 using ProtoBuf;
 
 namespace Obscur.Core.DTO
@@ -89,12 +90,12 @@ namespace Obscur.Core.DTO
                 return true;
             }
 
-            return String.Equals(FunctionName, other.FunctionName, StringComparison.OrdinalIgnoreCase) && 
-                FunctionConfiguration == null ? other.FunctionConfiguration == null : FunctionConfiguration.SequenceEqualShortCircuiting(other.FunctionConfiguration) && 
+            return String.Equals(FunctionName, other.FunctionName, StringComparison.OrdinalIgnoreCase) &&
+                FunctionConfiguration == null ? other.FunctionConfiguration == null : FunctionConfiguration.SequenceEqualVariableTime(other.FunctionConfiguration) && 
                 KeySizeBits.Equals(other.KeySizeBits) &&
-                Nonce == null ? other.Nonce == null : Nonce.SequenceEqualShortCircuiting(other.Nonce) && 
-                Salt == null ? other.Salt == null : Salt.SequenceEqualShortCircuiting(other.Salt) && 
-                AdditionalData == null ? other.AdditionalData == null : AdditionalData.SequenceEqualShortCircuiting(other.AdditionalData) && 
+                Nonce == null ? other.Nonce == null : Nonce.SequenceEqualVariableTime(other.Nonce) &&
+                Salt == null ? other.Salt == null : Salt.SequenceEqualVariableTime(other.Salt) &&
+                AdditionalData == null ? other.AdditionalData == null : AdditionalData.SequenceEqualVariableTime(other.AdditionalData) && 
                 OutputSizeBits.Equals(other.OutputSizeBits);
         }
 

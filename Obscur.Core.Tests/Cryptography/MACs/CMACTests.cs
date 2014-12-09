@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using NUnit.Framework;
 using Obscur.Core.Cryptography.Authentication;
 using Obscur.Core.Cryptography.Ciphers.Block;
 
-namespace ObscurCore.Tests.Cryptography.MACs
+namespace Obscur.Core.Tests.Cryptography.MACs
 {
     class CMACTests : MacTestBase
     {

@@ -116,8 +116,8 @@ namespace Obscur.Core.DTO
             }
 
             if (constantTime == false) {
-                return Key.SequenceEqualShortCircuiting(other.Key) &&
-                       ConfirmationCanary.SequenceEqualShortCircuiting(other.ConfirmationCanary);
+                return Key.SequenceEqualVariableTime(other.Key) &&
+                       ConfirmationCanary.SequenceEqualVariableTime(other.ConfirmationCanary);
             }
             return Key.SequenceEqualConstantTime(other.Key) &&
                    ConfirmationCanary.SequenceEqualConstantTime(other.ConfirmationCanary);

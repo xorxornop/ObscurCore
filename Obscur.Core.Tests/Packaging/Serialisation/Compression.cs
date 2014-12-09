@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using NUnit.Framework;
 
-namespace ObscurCore.Tests.Packaging.Serialisation
+namespace Obscur.Core.Tests.Packaging.Serialisation
 {
     class Compression : SerialisationTestBase
     {

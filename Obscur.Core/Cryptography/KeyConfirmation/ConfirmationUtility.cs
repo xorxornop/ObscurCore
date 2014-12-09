@@ -134,7 +134,7 @@ namespace Obscur.Core.Cryptography.KeyConfirmation
             Parallel.ForEach(potentialKeys, (key, state) =>
             {
                 byte[] validationOut = validator(key.ConfirmationCanary);
-                if (validationOut.SequenceEqual_ConstantTime(verifiedOutput)) {
+                if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
                     preKey = key;
                     // Terminate all other validation function instances - we have found the key
                     state.Stop();
@@ -213,7 +213,7 @@ namespace Obscur.Core.Cryptography.KeyConfirmation
                     foreach (ECKey sKey in viableSenderKeys) {
                         byte[] canary = XorCanaryBytes(sKey.ConfirmationCanary, rKeypair.ConfirmationCanary);
                         byte[] validationOut = validator(canary);
-                        if (validationOut.SequenceEqual_ConstantTime(verifiedOutput)) {
+                        if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
                             oSK = sKey;
                             oRKP = rKeypair;
                             state.Stop();
@@ -225,7 +225,7 @@ namespace Obscur.Core.Cryptography.KeyConfirmation
                     foreach (var rKeypair in viableRecipientKeypairs) {
                         byte[] canary = XorCanaryBytes(sKey.ConfirmationCanary, rKeypair.ConfirmationCanary);
                         byte[] validationOut = validator(canary);
-                        if (validationOut.SequenceEqual_ConstantTime(verifiedOutput)) {
+                        if (validationOut.SequenceEqualConstantTime(verifiedOutput)) {
                             oSK = sKey;
                             oRKP = rKeypair;
                             state.Stop();

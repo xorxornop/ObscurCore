@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using NUnit.Framework;
 using Obscur.Core.Cryptography.Entropy;
 using Obscur.Core.DTO;
 
-namespace ObscurCore.Tests.Packaging.Serialisation
+namespace Obscur.Core.Tests.Packaging.Serialisation
 {
     class CSPRNG : SerialisationTestBase
     {

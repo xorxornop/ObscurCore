@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ObscurCore")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Obscur.Core")]
+[assembly: AssemblyDescription("Security-oriented data packaging and general-purpose cryptographic library")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Cryptonomico")]
 [assembly: AssemblyProduct("ObscurCore")]
-[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyCopyright("Copyright © Matthew Ducker 2013-2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

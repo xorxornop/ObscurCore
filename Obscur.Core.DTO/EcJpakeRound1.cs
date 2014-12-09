@@ -64,10 +64,10 @@ namespace Obscur.Core.DTO
             }
             return
                 String.Equals(ParticipantId, other.ParticipantId, StringComparison.Ordinal) &&
-                GX1.SequenceEqualShortCircuiting(other.GX1) && X1V.SequenceEqualShortCircuiting(other.X1V) &&
-                X1R.SequenceEqualShortCircuiting(other.X1R) &&
-                GX2.SequenceEqualShortCircuiting(other.GX2) && X2V.SequenceEqualShortCircuiting(other.X2V) &&
-                X2R.SequenceEqualShortCircuiting(other.X2R);
+                GX1.SequenceEqualVariableTime(other.GX1) && X1V.SequenceEqualVariableTime(other.X1V) &&
+                X1R.SequenceEqualVariableTime(other.X1R) &&
+                GX2.SequenceEqualVariableTime(other.GX2) && X2V.SequenceEqualVariableTime(other.X2V) &&
+                X2R.SequenceEqualVariableTime(other.X2R);
         }
 
         /// <inheritdoc />

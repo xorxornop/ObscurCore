@@ -85,11 +85,11 @@ namespace Obscur.Core.DTO
             return String.Equals(SchemeName, other.SchemeName, StringComparison.OrdinalIgnoreCase) &&
                    (SchemeConfiguration == null
                        ? other.SchemeConfiguration == null
-                       : SchemeConfiguration.SequenceEqualShortCircuiting(other.SchemeConfiguration)) &&
+                       : SchemeConfiguration.SequenceEqualVariableTime(other.SchemeConfiguration)) &&
                    EntropyScheme == other.EntropyScheme &&
                    (EntropySchemeData == null
                        ? other.EntropySchemeData == null
-                       : EntropySchemeData.SequenceEqualShortCircuiting(other.EntropySchemeData));
+                       : EntropySchemeData.SequenceEqualVariableTime(other.EntropySchemeData));
         }
 
         /// <inheritdoc />

@@ -547,7 +547,7 @@ namespace Obscur.Core.Packaging
                 }
 
                 // Verify that manifest authenticated successfully
-                if (manifestMac.SequenceEqual_ConstantTime(_manifestCryptoConfig.AuthenticationVerifiedOutput) == false) {
+                if (manifestMac.SequenceEqualConstantTime(_manifestCryptoConfig.AuthenticationVerifiedOutput) == false) {
                     throw new CiphertextAuthenticationException("Manifest failed authentication.");
                 }
                 decryptedManifestStream.Seek(0, SeekOrigin.Begin);

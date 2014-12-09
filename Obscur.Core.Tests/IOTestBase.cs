@@ -19,7 +19,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
-namespace ObscurCore.Tests
+namespace Obscur.Core.Tests
 {
     public abstract class IOTestBase
     {
@@ -59,35 +59,39 @@ namespace ObscurCore.Tests
 		public static readonly List<FileInfo> LargeBinaryFileList = new List<FileInfo>();
 
 
-		static IOTestBase ()
+		static IOTestBase()
 		{
             foreach (var file in SmallTextFilesSourceDirectory.EnumerateFiles().Where(file 
                 => !file.Extension.Equals(RawPayloadExtension)))
             {
-				if (file.Name.EndsWith (".DS_Store"))
+				if (file.Name.EndsWith(".DS_Store"))
 					continue;
-			    SmallTextFileList.Add (file);
+			    SmallTextFileList.Add(file);
 			}
-			var fs = SmallTextFileList [0].OpenRead ();
-			fs.CopyTo(SmallTextFile);
-		    fs.Close();
+		    if (SmallTextFileList.Count > 0) {
+		        var fsSmall = SmallTextFileList[0].OpenRead();
+			    fsSmall.CopyTo(SmallTextFile);
+		        fsSmall.Close();
+		    }
 
 			foreach (var file in LargeBinaryFilesSourceDirectory.EnumerateFiles().Where(file 
                 => !file.Extension.Equals(RawPayloadExtension)))
             {
-				if (file.Name.EndsWith (".DS_Store"))
+				if (file.Name.EndsWith(".DS_Store"))
 					continue;
-			    LargeBinaryFileList.Add (file);
+			    LargeBinaryFileList.Add(file);
 			}
-			fs = LargeBinaryFileList [0].OpenRead ();
-			fs.CopyTo(LargeBinaryFile);
-            fs.Close();
+		    if (SmallTextFileList.Count > 0) {
+		        var fsLarge = LargeBinaryFileList[0].OpenRead();
+		        fsLarge.CopyTo(LargeBinaryFile);
+		        fsLarge.Close();
+		    }
 		}
 
         [SetUp]
         public void InitTest () {
-			SmallTextFile.Seek (0, SeekOrigin.Begin);
-			LargeBinaryFile.Seek (0, SeekOrigin.Begin);
+			SmallTextFile.Seek(0, SeekOrigin.Begin);
+			LargeBinaryFile.Seek(0, SeekOrigin.Begin);
             AuxPerTestInit();
         }
 

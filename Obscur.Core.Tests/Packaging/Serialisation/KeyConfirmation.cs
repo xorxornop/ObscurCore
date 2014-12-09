@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using Obscur.Core.DTO;
 
-namespace ObscurCore.Tests.Packaging.Serialisation
+namespace Obscur.Core.Tests.Packaging.Serialisation
 {
     class KeyConfirmation : SerialisationTestBase
     {

@@ -16,15 +16,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.IO;
 using NUnit.Framework;
-using Obscur.Core;
 using Obscur.Core.DTO;
 using Obscur.Core.Packaging.Multiplexing;
 using Obscur.Core.Packaging.Multiplexing.Primitives;
 
-namespace ObscurCore.Tests.Packaging
+namespace Obscur.Core.Tests.Packaging
 {
 	public class Payload
 	{

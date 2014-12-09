@@ -4,7 +4,7 @@ using Obscur.Core.Cryptography.Ciphers.Block;
 using Obscur.Core.Cryptography.Ciphers.Stream;
 using Obscur.Core.DTO;
 
-namespace ObscurCore.Tests.Packaging.Serialisation
+namespace Obscur.Core.Tests.Packaging.Serialisation
 {
 	public class SymmetricCipherConfiguration : SerialisationTestBase
 	{

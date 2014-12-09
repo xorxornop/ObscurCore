@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Obscur.Core;
 using Obscur.Core.Cryptography.Authentication;
 using Obscur.Core.Cryptography.Ciphers;
 using Obscur.Core.Cryptography.Ciphers.Block;
 using Obscur.Core.Cryptography.Ciphers.Stream;
 using Obscur.Core.DTO;
 
-namespace ObscurCore.Tests.Packaging
+namespace Obscur.Core.Tests.Packaging
 {
     class Utilities
     {

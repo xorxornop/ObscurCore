@@ -271,7 +271,7 @@ namespace Obscur.Core.Packaging.Multiplexing.Primitives
                 authenticator.Update(itemDtoAuthBytes, 0, itemDtoAuthBytes.Length);
                 authenticator.Close();
                 // Verify the authenticity of the item ciphertext and configuration
-                if (authenticator.Mac.SequenceEqual_ConstantTime(item.AuthenticationVerifiedOutput) == false) {
+                if (authenticator.Mac.SequenceEqualConstantTime(item.AuthenticationVerifiedOutput) == false) {
                     // Verification failed!
                     throw new CiphertextAuthenticationException("Payload item not authenticated.");
                 }

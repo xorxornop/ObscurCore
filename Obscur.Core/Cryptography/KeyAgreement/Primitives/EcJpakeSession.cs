@@ -445,7 +445,7 @@ namespace Obscur.Core.Cryptography.KeyAgreement.Primitives
             byte[] expectedMacTagBytes = expectedTag.ToByteArrayUnsigned();
             byte[] receivedMacTagBytes = receivedTag.ToByteArrayUnsigned();
 
-            if (expectedMacTagBytes.SequenceEqual_ConstantTime(receivedMacTagBytes) == false) {
+            if (expectedMacTagBytes.SequenceEqualConstantTime(receivedMacTagBytes) == false) {
                 throw new CryptoException("Key confirmation failed - partner MAC tag failed to match expected value.");
             }
 

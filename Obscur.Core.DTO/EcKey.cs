@@ -103,9 +103,9 @@ namespace Obscur.Core.DTO
             return PublicComponent == other.PublicComponent &&
                    String.Equals(CurveProviderName, other.CurveProviderName, StringComparison.OrdinalIgnoreCase) &&
                    String.Equals(CurveName, other.CurveName, StringComparison.OrdinalIgnoreCase) &&
-                   EncodedKey.SequenceEqualShortCircuiting(other.EncodedKey) &&
-                   AdditionalData == null ? other.AdditionalData == null : AdditionalData.SequenceEqualShortCircuiting(other.AdditionalData) && 
-                   ConfirmationCanary == null ? other.ConfirmationCanary == null : ConfirmationCanary.SequenceEqualShortCircuiting(other.ConfirmationCanary);
+                   EncodedKey.SequenceEqualVariableTime(other.EncodedKey) &&
+                   AdditionalData == null ? other.AdditionalData == null : AdditionalData.SequenceEqualVariableTime(other.AdditionalData) &&
+                   ConfirmationCanary == null ? other.ConfirmationCanary == null : ConfirmationCanary.SequenceEqualVariableTime(other.ConfirmationCanary);
         }
 
         /// <inheritdoc />

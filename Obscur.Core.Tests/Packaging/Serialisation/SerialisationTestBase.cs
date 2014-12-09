@@ -1,8 +1,9 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using Obscur.Core.DTO;
 
-namespace ObscurCore.Tests.Packaging.Serialisation
+namespace Obscur.Core.Tests.Packaging.Serialisation
 {
 	public abstract class SerialisationTestBase
 	{

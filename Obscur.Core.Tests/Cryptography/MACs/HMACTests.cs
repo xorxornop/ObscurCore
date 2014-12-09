@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using Obscur.Core.Cryptography.Authentication;
 
-namespace ObscurCore.Tests.Cryptography.MACs
+namespace Obscur.Core.Tests.Cryptography.MACs
 {
     class HMACTests : MacTestBase
     {

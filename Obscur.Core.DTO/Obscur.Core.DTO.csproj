@@ -252,6 +252,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RangeConfiguration.cs" />
     <Compile Include="ScryptConfiguration.cs" />
+    <Compile Include="Shared.cs" />
     <Compile Include="SignatureConfiguration.cs" />
     <Compile Include="SignatureScheme.cs" />
     <Compile Include="StreamCipherCsprngConfiguration.cs" />

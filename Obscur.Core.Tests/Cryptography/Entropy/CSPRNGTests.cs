@@ -17,13 +17,12 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
-using Obscur.Core;
 using Obscur.Core.Cryptography.Ciphers;
 using Obscur.Core.Cryptography.Ciphers.Stream;
 using Obscur.Core.Cryptography.Entropy;
 using Obscur.Core.Cryptography.Entropy.Primitives;
 
-namespace ObscurCore.Tests.Cryptography.Entropy
+namespace Obscur.Core.Tests.Cryptography.Entropy
 {
     [TestFixture]
     class CsprngTests

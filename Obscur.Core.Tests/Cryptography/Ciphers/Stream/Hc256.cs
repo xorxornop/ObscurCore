@@ -15,7 +15,7 @@
 
 using Obscur.Core.Cryptography.Ciphers.Stream;
 
-namespace ObscurCore.Tests.Cryptography.Ciphers.Stream
+namespace Obscur.Core.Tests.Cryptography.Ciphers.Stream
 {
     internal class Hc256 : StreamCipherTestBase
 	{

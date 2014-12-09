@@ -14,13 +14,12 @@
 //    limitations under the License.
 
 using NUnit.Framework;
-using Obscur.Core;
 using Obscur.Core.Cryptography.Authentication;
 using Obscur.Core.Cryptography.Information;
 using Obscur.Core.Cryptography.Information.EllipticCurve;
 using Obscur.Core.Cryptography.KeyAgreement.Primitives;
 
-namespace ObscurCore.Tests.Cryptography.KeyAgreements
+namespace Obscur.Core.Tests.Cryptography.KeyAgreements
 {
 	[TestFixture]
 	public class JPake

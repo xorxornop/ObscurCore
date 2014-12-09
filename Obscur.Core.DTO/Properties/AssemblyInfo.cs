@@ -5,10 +5,10 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Obscur.Core.DTO")]
-[assembly: AssemblyDescription("Obscur.Core Data Transfer Objects")]
+[assembly: AssemblyDescription("Data Transfer Objects for ObscurCore")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Obscur.Core")]
+[assembly: AssemblyProduct("ObscurCore")]
 [assembly: AssemblyCopyright("Copyright © Matthew Ducker 2013-2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

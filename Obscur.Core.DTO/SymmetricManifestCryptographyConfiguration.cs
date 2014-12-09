@@ -81,11 +81,11 @@ namespace Obscur.Core.DTO
                 (KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) &&
                 (KeyConfirmationVerifiedOutput == null
                     ? other.KeyConfirmation == null
-                    : KeyConfirmationVerifiedOutput.SequenceEqualShortCircuiting(other.KeyConfirmationVerifiedOutput)) &&
+                    : KeyConfirmationVerifiedOutput.SequenceEqualVariableTime(other.KeyConfirmationVerifiedOutput)) &&
                 KeyDerivation.Equals(other.KeyDerivation) &&
                 SymmetricCipher.Equals(other.SymmetricCipher) &&
                 Authentication.Equals(other.Authentication) &&
-                AuthenticationVerifiedOutput.SequenceEqualShortCircuiting(other.AuthenticationVerifiedOutput);
+                AuthenticationVerifiedOutput.SequenceEqualVariableTime(other.AuthenticationVerifiedOutput);
         }
 
         #endregion

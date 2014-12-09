@@ -71,7 +71,7 @@ namespace Obscur.Core.DTO
                    KeySizeBits == other.KeySizeBits &&
                    (InitialisationVector == null
                        ? other.InitialisationVector == null
-                       : InitialisationVector.SequenceEqualShortCircuiting(other.InitialisationVector)) &&
+                       : InitialisationVector.SequenceEqualVariableTime(other.InitialisationVector)) &&
                    String.Equals(ModeName, other.ModeName, StringComparison.OrdinalIgnoreCase) &&
                    BlockSizeBits == other.BlockSizeBits &&
                    String.Equals(PaddingName, other.PaddingName, StringComparison.OrdinalIgnoreCase);

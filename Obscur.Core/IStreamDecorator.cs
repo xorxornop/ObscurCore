@@ -3,7 +3,7 @@ using System.IO;
 namespace Obscur.Core
 {
     /// <summary>
-    ///     Interface for stream decorators - streams that modify data as they read and/or write it.
+    ///     Interface for stream decorators - streams that modify/transform data as they write and/or read it.
     /// </summary>
     public interface IStreamDecorator
     {
@@ -24,7 +24,7 @@ namespace Obscur.Core
         long BytesOut { get; }
 
         /// <summary>
-        ///     Stream that is being decorated/de-decorated.
+        ///     Stream that is being decorated/un-decorated.
         /// </summary>
         Stream Binding { get; }
 
@@ -55,14 +55,17 @@ namespace Obscur.Core
         /// <param name="length">
         ///     Quantity of bytes to write to the <see cref="Binding" /> stream, after decoration.
         /// </param>
-        long WriteExactly(Stream source, long length);
+        /// <param name="finishing">
+        ///     If used in derived class, and set to <c>true</c>, causes special behaviour if this is the last read.
+        /// </param>
+        long WriteExactly(Stream source, long length, bool finishing);
 
         /// <summary>
-        ///     Reads and de-decorates data from the <see cref="Binding" /> stream
+        ///     Reads and un-decorates data from the <see cref="Binding" /> stream
         ///     and writes it to <paramref name="buffer" />.
         /// </summary>
         /// <param name="buffer">
-        ///     Where to write de-decorated data to.
+        ///     Where to write un-decorated data to.
         /// </param>
         /// <param name="offset">
         ///     Index in <paramref name="buffer" /> from which to write to.
@@ -76,8 +79,8 @@ namespace Obscur.Core
         int Read(byte[] buffer, int offset, int count);
 
         /// <summary>
-        ///     Reads an exact amount of bytes from the <see cref="Binding" /> stream, and writing
-        ///     as necessary (after de-decoration) to the <paramref name="destination" /> stream.
+        ///     Reads an exact amount of bytes from the <see cref="Binding" /> stream, writing
+        ///     as necessary (after un-decoration) to the <paramref name="destination" /> stream.
         /// </summary>
         /// <returns>
         ///     The quantity of bytes written to the <paramref name="destination" /> stream.
@@ -86,7 +89,7 @@ namespace Obscur.Core
         ///     Stream to write output to.
         /// </param>
         /// <param name="length">
-        ///     Quantity of bytes to read from the <see cref="Binding" /> stream, before de-decoration.
+        ///     Quantity of bytes to read from the <see cref="Binding" /> stream, before un-decoration.
         /// </param>
         /// <param name="finishing">
         ///     If used in derived class, and set to <c>true</c>, causes special behaviour if this is the last read.

@@ -311,7 +311,7 @@
     <Compile Include="Cryptography\CiphertextAuthenticationException.cs" />
     <Compile Include="Cryptography\CryptoException.cs" />
     <Compile Include="Cryptography\CryptographicException.cs" />
-    <Compile Include="Cryptography\CryptographyExtensions.cs" />
+    <Compile Include="Cryptography\CryptographicExtensions.cs" />
     <Compile Include="Cryptography\Entropy\CSPRNG.cs" />
     <Compile Include="Cryptography\Entropy\CsprngFactory.cs" />
     <Compile Include="Cryptography\Entropy\CsprngInformationStore.cs" />

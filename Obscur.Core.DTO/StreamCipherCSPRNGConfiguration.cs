@@ -56,8 +56,8 @@ namespace Obscur.Core.DTO
                 return true;
             }
             return String.Equals(CipherName, other.CipherName, StringComparison.OrdinalIgnoreCase) &&
-                   (Key == null ? other.Key == null : Key.SequenceEqualShortCircuiting(other.Key)) &&
-                   (Nonce == null ? other.Nonce == null : Nonce.SequenceEqualShortCircuiting(other.Nonce));
+                   (Key == null ? other.Key == null : Key.SequenceEqualVariableTime(other.Key)) &&
+                   (Nonce == null ? other.Nonce == null : Nonce.SequenceEqualVariableTime(other.Nonce));
         }
 
         /// <inheritdoc />

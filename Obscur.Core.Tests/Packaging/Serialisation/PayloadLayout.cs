@@ -1,12 +1,11 @@
 using System.IO;
 using NUnit.Framework;
-using Obscur.Core;
 using Obscur.Core.Cryptography.Entropy;
 using Obscur.Core.DTO;
 using Obscur.Core.Packaging.Multiplexing;
 using Obscur.Core.Packaging.Multiplexing.Primitives;
 
-namespace ObscurCore.Tests.Packaging.Serialisation
+namespace Obscur.Core.Tests.Packaging.Serialisation
 {
     class PayloadLayout : SerialisationTestBase
     {

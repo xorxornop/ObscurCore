@@ -19,6 +19,7 @@
 
 using System;
 using System.IO;
+using PerfCopy;
 using ProtoBuf;
 
 namespace Obscur.Core.DTO
@@ -277,17 +278,17 @@ namespace Obscur.Core.DTO
                     : String.Equals(FormatName, other.FormatName, StringComparison.Ordinal)) &&
                 (FormatData == null
                     ? other.FormatData == null
-                    : FormatData.SequenceEqualShortCircuiting(other.FormatData)) &&
+                    : FormatData.SequenceEqualVariableTime(other.FormatData)) &&
                 SymmetricCipher.Equals(other.SymmetricCipher) &&
                 Authentication.Equals(other.Authentication) &&
                 (AuthenticationKey == null
                     ? other.AuthenticationKey == null
-                    : AuthenticationKey.SequenceEqualShortCircuiting(other.AuthenticationKey)) &&
-                AuthenticationVerifiedOutput.SequenceEqualShortCircuiting(other.AuthenticationVerifiedOutput) &&
+                    : AuthenticationKey.SequenceEqualVariableTime(other.AuthenticationKey)) &&
+                AuthenticationVerifiedOutput.SequenceEqualVariableTime(other.AuthenticationVerifiedOutput) &&
                 (KeyConfirmation == null ? other.KeyConfirmation == null : KeyConfirmation.Equals(other.KeyConfirmation)) &&
                 (KeyConfirmationVerifiedOutput == null
                     ? other.KeyConfirmationVerifiedOutput == null
-                    : KeyConfirmationVerifiedOutput.SequenceEqualShortCircuiting(other.KeyConfirmationVerifiedOutput)) &&
+                    : KeyConfirmationVerifiedOutput.SequenceEqualVariableTime(other.KeyConfirmationVerifiedOutput)) &&
                 KeyDerivation == null
                     ? other.KeyDerivation == null
                     : KeyDerivation.Equals((other.KeyDerivation));

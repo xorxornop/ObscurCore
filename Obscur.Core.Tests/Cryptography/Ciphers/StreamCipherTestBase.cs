@@ -1,9 +1,9 @@
-﻿using Obscur.Core.Cryptography.Ciphers;
+﻿using NUnit.Framework;
+using Obscur.Core.Cryptography.Ciphers;
 using Obscur.Core.Cryptography.Ciphers.Stream;
-using NUnit.Framework;
 using Obscur.Core.DTO;
 
-namespace ObscurCore.Tests.Cryptography.Ciphers
+namespace Obscur.Core.Tests.Cryptography.Ciphers
 {
     internal abstract class StreamCipherTestBase : CipherTestBase
     {

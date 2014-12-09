@@ -4,12 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
-using Obscur.Core;
 using Obscur.Core.Packaging;
 using Obscur.Core.Packaging.Multiplexing;
-using ObscurCore.Tests.Cryptography;
+using Obscur.Core.Tests.Cryptography;
 
-namespace ObscurCore.Tests.Packaging
+namespace Obscur.Core.Tests.Packaging
 {
     public class Packages
     {

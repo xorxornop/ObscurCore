@@ -23,10 +23,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
-using Obscur.Core;
 using Obscur.Core.Cryptography.Authentication;
 
-namespace ObscurCore.Tests.Cryptography
+namespace Obscur.Core.Tests.Cryptography
 {
     public abstract class DigestTestBase : IOTestBase
     {

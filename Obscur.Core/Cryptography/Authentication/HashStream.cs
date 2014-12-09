@@ -164,7 +164,7 @@ namespace Obscur.Core.Cryptography.Authentication
             return readBytes;
         }
 
-        public long WriteExactly(Stream source, long length)
+        public long WriteExactly(Stream source, long length, bool finishing = false)
         {
             Contract.Requires<ArgumentNullException>(source != null);
             Contract.Requires<ArgumentOutOfRangeException>(length >= 0);

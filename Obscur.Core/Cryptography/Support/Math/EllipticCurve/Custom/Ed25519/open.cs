@@ -74,8 +74,8 @@ namespace Obscur.Core.Cryptography.Support.Math.EllipticCurve.Custom.Ed25519
             Array.Copy(sig, sigoffset + 32, sm32, 0, 32);
             GroupOperations.ge_double_scalarmult_vartime(out R, h, ref A, sm32);
             GroupOperations.ge_tobytes(checkr, 0, ref R);
-			checkr.SequenceEqual_ConstantTime (checkr);
-			return checkr.SequenceEqual_ConstantTime(0, sig, sigoffset, 32);
+			checkr.SequenceEqualConstantTime (checkr);
+			return checkr.SequenceEqualConstantTime(0, sig, sigoffset, 32);
         }
     }
 }

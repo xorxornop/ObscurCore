@@ -8,8 +8,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{1BDFEC0A-A28F-4FE2-9B29-AE25ED1AAD5B}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>ObscurCore.Tests</RootNamespace>
-    <AssemblyName>ObscurCore.Tests</AssemblyName>
+    <RootNamespace>Obscur.Core.Tests</RootNamespace>
+    <AssemblyName>Obscur.Core.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <ReleaseVersion>0.8</ReleaseVersion>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -49,7 +49,7 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ObscurCore.DTO.DtoSerialiser">
+    <Reference Include="Obscur.Core.DTO.DtoSerialiser">
       <HintPath>..\Obscur.Core.DTO\bin\Serialiser\Obscur.Core.DTO.DtoSerialiser.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">

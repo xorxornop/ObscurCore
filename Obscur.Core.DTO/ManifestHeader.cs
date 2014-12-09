@@ -44,7 +44,7 @@ namespace Obscur.Core.DTO
                    CryptographyScheme == other.CryptographyScheme &&
                    (CryptographySchemeConfiguration == null
                        ? other.CryptographySchemeConfiguration == null
-                       : CryptographySchemeConfiguration.SequenceEqualShortCircuiting(
+                       : CryptographySchemeConfiguration.SequenceEqualVariableTime(
                            other.CryptographySchemeConfiguration));
         }
 

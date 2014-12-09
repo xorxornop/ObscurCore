@@ -1,29 +1,28 @@
-﻿#region License
-
-// 	Copyright 2013-2014 Matthew Ducker
-// 	
-// 	Licensed under the Apache License, Version 2.0 (the "License");
-// 	you may not use this file except in compliance with the License.
-// 	
-// 	You may obtain a copy of the License at
-// 		
-// 		http://www.apache.org/licenses/LICENSE-2.0
-// 	
-// 	Unless required by applicable law or agreed to in writing, software
-// 	distributed under the License is distributed on an "AS IS" BASIS,
-// 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// 	See the License for the specific language governing permissions and 
-// 	limitations under the License.
-
-#endregion
+//
+//  Copyright 2013  Matthew Ducker
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//        http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
 
 using System;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
-namespace Obscur.Core.DTO
+namespace Obscur.Core.Cryptography
 {
-    internal static class ExtensionMethods
+    /// <summary>
+    /// Extension methods for cryptographic use.
+    /// </summary>
+    public static class CryptographicExtensions
     {
         #region Equality checking for arrays
 
@@ -348,7 +347,7 @@ namespace Obscur.Core.DTO
                     if (differentBits32 != 0u)
                         return false;
                 }
-            } else if (Shared.PlatformWordSize == u64Size) {
+            } else if (StratCom.PlatformWordSize == u64Size) {
                 const int u128Size = u64Size * 2;
                 while (aPtr + u128Size <= aEndPtr) {
                     differentBits64 |= *(UInt64*)aPtr ^ *(UInt64*)bPtr;
@@ -368,7 +367,7 @@ namespace Obscur.Core.DTO
                     bPtr += u64Size;
                 }
             }
-            if (Shared.PlatformWordSize == u32Size && aPtr + u32Size <= aEndPtr) {
+            if (StratCom.PlatformWordSize == u32Size && aPtr + u32Size <= aEndPtr) {
                 if (*(UInt32*)aPtr != *(UInt32*)bPtr) {
                     return false;
                 }
@@ -388,6 +387,243 @@ namespace Obscur.Core.DTO
             return true;
         }
 
+#endif
+        
+        #endregion
+
+        #region XOR for arrays
+
+        /// <summary>
+        ///     XOR byte arrays <paramref name="a"/> and <paramref name="b"/> together into <paramref name="output"/>.
+        /// </summary>
+        /// <param name="a">Source #0 array.</param>
+        /// <param name="aOff">Source array #0 offset.</param>
+        /// <param name="b">Source #1 array.</param>
+        /// <param name="bOff">Source #1 array offset.</param>
+        /// <param name="output">Output array.</param>
+        /// <param name="outputOff">Output array offset.</param>
+        /// <param name="length">Length to XOR.</param>
+        public static void Xor(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff, int length)
+        {
+            if (length <= 0) {
+                throw new ArgumentException("Length is not positive.", "length");
+            }
+            if (a == null) {
+                throw new ArgumentNullException("a");
+            }
+            if (aOff < 0) {
+                throw new ArgumentOutOfRangeException("aOff", "aOff must be 0 or positive.");
+            }
+            if (aOff + length > a.Length) {
+                throw new ArgumentException("Insufficient length.", "a");
+            }
+            if (b == null) {
+                throw new ArgumentNullException("b");
+            }
+            if (bOff < 0) {
+                throw new ArgumentOutOfRangeException("bOff", "bOff must be 0 or positive.");
+            }
+            if (bOff + length > b.Length) {
+                throw new ArgumentException("Insufficient length.", "b");
+            }
+            if (output == null) {
+                throw new ArgumentNullException("output");
+            }
+            if (outputOff < 0) {
+                throw new ArgumentOutOfRangeException("outputOff", "outputOff must be 0 or positive.");
+            }
+            if (outputOff + length > output.Length) {
+                throw new DataLengthException("Insufficient length.", "output");
+            }
+
+            XorInternal(a, aOff, b, bOff, output, outputOff, length);
+        }
+
+        private const int XorUnmanagedLengthThreshold = 128;
+
+        internal static void XorInternal(this byte[] a, int aOff, byte[] b, int bOff, byte[] output, int outputOff,
+            int length)
+        {
+#if (INCLUDE_UNSAFE)
+            if (length > XorUnmanagedLengthThreshold) {
+                unsafe {
+                    fixed (byte* aPtr = a) {
+                        fixed (byte* bPtr = b) {
+                            fixed (byte* outPtr = output) {
+                                XorMemory(aPtr + aOff, bPtr + bOff, outPtr + outputOff, length);
+                            }
+                            
+                        }
+                    }
+                }
+            }
+#endif
+            for (var i = 0; i < length; i++) {
+                output[outputOff + i] = (byte) (a[aOff + i] ^ b[bOff + i]);
+            }
+        }
+
+        /// <summary>
+        ///     XOR the specified byte array <paramref name="b"/> into <paramref name="a"/> in-place.
+        /// </summary>
+        /// <param name="a">Destination and source #0 array.</param>
+        /// <param name="aOff">Destination and source array #0 offset.</param>
+        /// <param name="b">Source #1 array.</param>
+        /// <param name="bOff">Source #1 array offset.</param>
+        /// <param name="length">Length to XOR.</param>
+        public static void XorInPlace(this byte[] a, int aOff, byte[] b, int bOff, int length)
+        {
+            if (length <= 0) {
+                throw new ArgumentException("Length is not positive.", "length");
+            }
+            if (aOff < 0) {
+                throw new ArgumentOutOfRangeException("aOff", "aOff must be 0 or positive.");
+            }
+            if (aOff + length > a.Length) {
+                throw new ArgumentException("Insufficient length.", "a");
+            }
+            if (bOff < 0) {
+                throw new ArgumentOutOfRangeException("bOff", "bOff must be 0 or positive.");
+            }
+            if (bOff + length > b.Length) {
+                throw new ArgumentException("Insufficient length.", "b");
+            }
+
+            XorInPlaceInternal(a, aOff, b, bOff, length);
+        }
+
+        internal static void XorInPlaceInternal(this byte[] a, int aOff, byte[] b, int bOff, int length)
+        {
+#if (INCLUDE_UNSAFE)
+            if (length > XorUnmanagedLengthThreshold) {
+                unsafe {
+                    fixed (byte* aPtr = a) {
+                        fixed (byte* bPtr = b) {
+                            XorMemoryInPlace(aPtr + aOff, bPtr + bOff, length);
+                        }
+                    }
+                }
+            }
+#endif
+            for (var i = 0; i < length; i++) {
+                a[aOff + i] ^= b[bOff + i];
+            }
+        }
+#if INCLUDE_UNSAFE
+        internal static unsafe void XorMemory(byte* a, byte* b, byte* output, int length)
+        {
+            const int u32Size = sizeof(UInt32);
+            const int u64Size = sizeof(UInt64);
+
+            byte* outputEnd = output + length;
+            
+            if (StratCom.PlatformWordSize == u32Size) {
+                // 32-bit
+                while (output + (u32Size * 2) <= outputEnd) {
+                    *(UInt32*)output = *(UInt32*)a ^ *(UInt32*)b;
+                    a += u32Size;
+                    b += u32Size;
+                    output += u32Size;
+                    *(UInt32*)output = *(UInt32*)a ^ *(UInt32*)b;
+                    a += u32Size;
+                    b += u32Size;
+                    output += u32Size;
+                }
+            } else if (StratCom.PlatformWordSize == u64Size) {
+                // 64-bit
+                const int u128Size = u64Size * 2;
+                while (output + u128Size <= outputEnd) {
+                    *(UInt32*)output = *(UInt32*)a ^ *(UInt32*)b;
+                    a += u64Size;
+                    b += u64Size;
+                    output += u64Size;
+                    *(UInt32*)output = *(UInt32*)a ^ *(UInt32*)b;
+                    a += u64Size;
+                    b += u64Size;
+                    output += u64Size;
+                }
+                if (output + u64Size <= outputEnd) {
+                    *(UInt64*) output = *(UInt64*) a ^ *(UInt64*) b;
+                    a += u64Size;
+                    b += u64Size;
+                    output += u64Size;
+                }
+            }
+
+            if (output + u32Size <= outputEnd) {
+                *(UInt32*)output = *(UInt32*)a ^ *(UInt32*)b;
+                a += u32Size;
+                b += u32Size;
+                output += u32Size;
+            }
+
+            if (output + sizeof(UInt16) <= outputEnd) {
+                *(UInt16*)output = (UInt16)(*(UInt16*)a ^ *(UInt16*)b);
+                a += sizeof(UInt16);
+                b += sizeof(UInt16);
+                output += sizeof(UInt16);
+            }
+
+            if (output + 1 <= outputEnd) {
+                *output = (byte)(*a ^ *b);
+            }
+        }
+
+        /// <summary>
+        ///      XOR the specified data in <paramref name="b"/> into <paramref name="a"/> in-place.
+        /// </summary>
+        /// <param name="a">Pointer to source of and destination for data.</param>
+        /// <param name="b">Pointer to source of data.</param>
+        /// <param name="length">Length of data to copy in bytes.</param>
+        internal static unsafe void XorMemoryInPlace(byte* a, byte* b, int length)
+        {
+            const int u32Size = sizeof(UInt32);
+            const int u64Size = sizeof(UInt64);
+
+            byte* aEnd = a + length;
+
+            if (StratCom.PlatformWordSize == u32Size) {
+                // 32-bit
+                while (a + u64Size <= aEnd) {
+                    *(UInt32*) a ^= *(UInt32*) b;
+                    a += u32Size;
+                    b += u32Size;
+                    *(UInt32*) a ^= *(UInt32*) b;
+                    a += u32Size;
+                    b += u32Size;
+                }
+            } else if (StratCom.PlatformWordSize == u64Size) {
+                // 64-bit
+                const int u128Size = u64Size * 2;
+                while (a + u128Size <= aEnd) {
+                    *(UInt64*) a ^= *(UInt64*) b;
+                    a += u64Size;
+                    b += u64Size;
+                    *(UInt64*) a ^= *(UInt64*) b;
+                    a += u64Size;
+                    b += u64Size;
+                }
+                if (a + u64Size <= aEnd) {
+                    *(UInt64*) a ^= *(UInt64*) b;
+                    a += u64Size;
+                    b += u64Size;
+                }
+            }
+            if (a + u32Size <= aEnd) {
+                *(UInt32*)a ^= *(UInt32*)b;
+                a += u32Size;
+                b += u32Size;
+            }
+            if (a + sizeof(UInt16) >= aEnd) {
+                *(UInt16*)a ^= *(UInt16*)b;
+                a += sizeof(UInt16);
+                b += sizeof(UInt16);
+            }
+
+            if (a + 1 <= aEnd) {
+                *a ^= *b;
+            }
+        }
 #endif
 
         #endregion
@@ -478,14 +714,14 @@ namespace Obscur.Core.DTO
 
             byte* targetEndPtr = targetPtr + length;
 
-            if (Shared.PlatformWordSize == u32Size) {
+            if (StratCom.PlatformWordSize == u32Size) {               
                 while (targetPtr + u64Size <= targetEndPtr) {
                     *(UInt32*)targetPtr = 0u;
                     targetPtr += u32Size;
                     *(UInt32*)targetPtr = 0u;
                     targetPtr += u32Size;
                 }
-            } else if (Shared.PlatformWordSize == u64Size) {
+            } else if (StratCom.PlatformWordSize == u64Size) {
                 const int u128Size = u64Size * 2;
                 while (targetPtr + u128Size <= targetEndPtr) {
                     *(UInt64*)targetPtr = 0ul;
@@ -499,7 +735,7 @@ namespace Obscur.Core.DTO
                 }
             }
             if (targetPtr + u32Size <= targetEndPtr) {
-                *(UInt32*)targetPtr = 0u;
+                *(UInt32*) targetPtr = 0u;
                 targetPtr += u32Size;
             }
             if (targetPtr + sizeof(UInt16) <= targetEndPtr) {
@@ -521,15 +757,15 @@ namespace Obscur.Core.DTO
             for (int i = 0; i < u64Size; i++) {
                 val64[i] = val;
             }
-
-            if (Shared.PlatformWordSize == u32Size) {
+            
+            if (StratCom.PlatformWordSize == u32Size) {
                 while (targetPtr + u64Size <= targetEndPtr) {
                     *(UInt32*)targetPtr = *(UInt32*)val64;
                     targetPtr += u32Size;
                     *(UInt32*)targetPtr = *(UInt32*)val64;
                     targetPtr += u32Size;
                 }
-            } else if (Shared.PlatformWordSize == u64Size) {
+            } else if (StratCom.PlatformWordSize == u64Size) {
                 const int u128Size = u64Size * 2;
                 while (targetPtr + u128Size <= targetEndPtr) {
                     *(UInt64*)targetPtr = *val64;
@@ -560,29 +796,5 @@ namespace Obscur.Core.DTO
 #endif
 
         #endregion
-
-        public static int GetHashCodeExt(this byte[] data)
-        {
-            return data.GetHashCodeExt(0, data.Length);
-        }
-
-        public static int GetHashCodeExt(this byte[] data, int off, int count)
-        {
-            if (data == null) {
-                return 0;
-            }
-
-            int i = off + count;
-            int hc = count + 1;
-
-            while (--i >= 0) {
-                hc *= 257;
-                hc ^= data[i];
-            }
-
-            return hc;
-        }
-
-
     }
 }

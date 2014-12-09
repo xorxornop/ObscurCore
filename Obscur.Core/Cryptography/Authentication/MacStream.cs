@@ -241,7 +241,7 @@ namespace Obscur.Core.Cryptography.Authentication
         /// <returns>The quantity of bytes taken from the source stream to fulfil the request.</returns>
         /// <param name="source">Source.</param>
         /// <param name="length">Length.</param>
-        public long WriteExactly(Stream source, long length)
+        public long WriteExactly(Stream source, long length, bool finishing = false)
         {
             Contract.Requires(source != null);
             Contract.Requires(length > 0);

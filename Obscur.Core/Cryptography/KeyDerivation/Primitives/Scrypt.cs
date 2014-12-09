@@ -359,12 +359,12 @@ namespace Obscur.Core.Cryptography.KeyDerivation.Primitives
                     v[i].SecureWipe();
                 }
 
-                CryptographyExtensions.WipeMemory(x, Bs);
-                CryptographyExtensions.WipeMemory(scratchX, 16);
-                CryptographyExtensions.WipeMemory(scratchY, Bs);
-                CryptographyExtensions.WipeMemory(scratchZ, Bs);
-                CryptographyExtensions.WipeMemory(scratch1, 16);
-                //CryptographyExtensions.WipeMemory(scratch2, 16);
+                CryptographicExtensions.WipeMemory(x, Bs);
+                CryptographicExtensions.WipeMemory(scratchX, 16);
+                CryptographicExtensions.WipeMemory(scratchY, Bs);
+                CryptographicExtensions.WipeMemory(scratchZ, Bs);
+                CryptographicExtensions.WipeMemory(scratch1, 16);
+                //CryptographicExtensions.WipeMemory(scratch2, 16);
             }
         }
 

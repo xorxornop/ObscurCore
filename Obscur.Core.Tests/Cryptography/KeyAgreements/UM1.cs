@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Obscur.Core;
 using Obscur.Core.Cryptography.Information.EllipticCurve;
 using Obscur.Core.Cryptography.KeyAgreement;
 using Obscur.Core.Cryptography.KeyAgreement.Primitives;
 using Obscur.Core.DTO;
 
-namespace ObscurCore.Tests.Cryptography.KeyAgreements
+namespace Obscur.Core.Tests.Cryptography.KeyAgreements
 {
 	[TestFixture]
 	public class UM1Agreements

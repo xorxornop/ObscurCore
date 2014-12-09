@@ -17,11 +17,9 @@
 
 #endregion
 
-using NUnit.Framework;
-using Obscur.Core;
 using Obscur.Core.Cryptography.Authentication;
 
-namespace ObscurCore.Tests.Cryptography.Digests
+namespace Obscur.Core.Tests.Cryptography.Digests
 {
     public class Sha512 : DigestTestBase
     {

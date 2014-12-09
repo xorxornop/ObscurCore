@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using PerfCopy;
 using ProtoBuf;
 
 namespace Obscur.Core.DTO
@@ -151,16 +152,16 @@ namespace Obscur.Core.DTO
             if (constantTime == false) {
                 return String.Equals(CurveProviderName, other.CurveProviderName, StringComparison.OrdinalIgnoreCase) &&
                        String.Equals(CurveName, other.CurveName, StringComparison.OrdinalIgnoreCase) &&
-                       EncodedPublicKey.SequenceEqualShortCircuiting(other.EncodedPublicKey) &&
+                       EncodedPublicKey.SequenceEqualVariableTime(other.EncodedPublicKey) &&
                        (EncodedPrivateKey == null
                            ? other.EncodedPrivateKey == null
-                           : EncodedPrivateKey.SequenceEqualShortCircuiting(other.EncodedPrivateKey)) &&
+                           : EncodedPrivateKey.SequenceEqualVariableTime(other.EncodedPrivateKey)) &&
                        (AdditionalData == null
                            ? other.AdditionalData == null
-                           : AdditionalData.SequenceEqualShortCircuiting(other.AdditionalData)) &&
+                           : AdditionalData.SequenceEqualVariableTime(other.AdditionalData)) &&
                        (ConfirmationCanary == null
                            ? other.ConfirmationCanary == null
-                           : ConfirmationCanary.SequenceEqualShortCircuiting(other.ConfirmationCanary));
+                           : ConfirmationCanary.SequenceEqualVariableTime(other.ConfirmationCanary));
             }
             return String.Equals(CurveProviderName, other.CurveProviderName, StringComparison.OrdinalIgnoreCase) &&
                    String.Equals(CurveName, other.CurveName, StringComparison.OrdinalIgnoreCase) &&

@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using PerfCopy;
 using ProtoBuf;
 
 namespace Obscur.Core.DTO
@@ -38,11 +39,11 @@ namespace Obscur.Core.DTO
             if (ReferenceEquals(this, other)) {
                 return true;
             }
-            return Salt.SequenceEqualShortCircuiting(other.Salt) &&
+            return Salt.SequenceEqualVariableTime(other.Salt) &&
                    String.Equals(FunctionName, other.FunctionName, StringComparison.OrdinalIgnoreCase) &&
                    (FunctionConfiguration == null
                        ? other.FunctionConfiguration == null
-                       : FunctionConfiguration.SequenceEqualShortCircuiting(other.FunctionConfiguration));
+                       : FunctionConfiguration.SequenceEqualVariableTime(other.FunctionConfiguration));
         }
 
         /// <summary>

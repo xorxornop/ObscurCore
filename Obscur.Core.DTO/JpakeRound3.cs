@@ -53,7 +53,7 @@ namespace Obscur.Core.DTO
             }
             return
                 String.Equals(ParticipantId, other.ParticipantId, StringComparison.Ordinal) &&
-                VerifiedOutput.SequenceEqualShortCircuiting(other.VerifiedOutput);
+                VerifiedOutput.SequenceEqualVariableTime(other.VerifiedOutput);
         }
 
         /// <inheritdoc />

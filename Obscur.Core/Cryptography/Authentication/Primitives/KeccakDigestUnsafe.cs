@@ -15,6 +15,10 @@
 
 // Modified from https://bitbucket.org/jdluzen/sha3. Released under Modified BSD License.
 
+using System;
+using BitManipulator;
+using PerfCopy;
+
 namespace Obscur.Core.Cryptography.Authentication.Primitives
 {
 #if INCLUDE_UNSAFE

@@ -24,11 +24,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using Obscur.Core;
 using Obscur.Core.Cryptography.Ciphers;
 using Obscur.Core.DTO;
 
-namespace ObscurCore.Tests.Cryptography.Ciphers
+namespace Obscur.Core.Tests.Cryptography.Ciphers
 {
     internal abstract class CipherTestBase : IOTestBase
     {

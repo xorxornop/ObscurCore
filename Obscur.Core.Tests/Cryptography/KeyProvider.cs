@@ -19,12 +19,11 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Obscur.Core;
 using Obscur.Core.Cryptography;
 using Obscur.Core.Cryptography.KeyAgreement;
 using Obscur.Core.DTO;
 
-namespace ObscurCore.Tests.Cryptography
+namespace Obscur.Core.Tests.Cryptography
 {
     public static class KeyProviders
     {
