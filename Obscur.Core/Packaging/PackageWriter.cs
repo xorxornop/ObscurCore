@@ -1055,7 +1055,7 @@ namespace Obscur.Core.Packaging
                     }
                     return Athena.Cryptography.HashFunctions[hashFunctionEnum].OutputSizeBits;
 
-                } else if (kdfEnum == KeyDerivationFunction.Pbkdf2) {
+                } else if (kdfEnum == KeyDerivationFunction.Scrypt) {
                     var scryptConfig = config.FunctionConfiguration.DeserialiseDto<ScryptConfiguration>();
                     //scryptConfig.
                 } else {
