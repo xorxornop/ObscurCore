@@ -131,13 +131,13 @@ namespace Obscur.Core.Cryptography.Support
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ushort LE_To_UInt16(byte[] bs)
 		{
-            return bs.BigEndianToUInt16();
+            return bs.LittleEndianToUInt16();
 		}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ushort LE_To_UInt16(byte[] bs, int off)
 		{
-            return bs.BigEndianToUInt16(off);
+            return bs.LittleEndianToUInt16(off);
 		}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
