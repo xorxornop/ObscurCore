@@ -87,13 +87,13 @@ namespace ObscurCore.Tests.Cryptography.Signing
             ECKey privKey = GetPrivKey(curve, key);
 
             DoTestHMacDetECDsaSample(
-                new Sha1Digest(),
+                new Sha512Digest(),
                 privKey,
                 new BigInteger("98C6BD12B23EAF5E2A2045132086BE3EB8EBD62ABF6698FF", 16),
                 new BigInteger("57A22B07DEA9530F8DE9471B1DC6624472E8E2844BC25B64", 16));
 
             DoTestHMacDetECDsaTest(
-                new Sha1Digest(),
+                new Sha512Digest(),
                 privKey,
                 new BigInteger("0F2141A0EBBC44D2E1AF90A50EBCFCE5E197B3B7D4DE036D", 16),
                 new BigInteger("EB18BC9E1F3D7387500CB99CF5F7C157070A8961E38700B7", 16));
